@@ -1,6 +1,9 @@
 import { createAdminClient } from "@paywatch/database";
 import { Card, Title, Text, Metric, Flex, Grid, BarList, DonutChart, AreaChart } from "@tremor/react";
 
+// This ensures the dashboard always fetches the latest data from Supabase
+export const dynamic = "force-dynamic";
+
 async function getStats() {
   const supabase = createAdminClient();
 
