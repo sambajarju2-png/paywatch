@@ -1,7 +1,7 @@
 import { createAdminClient } from "@paywatch/database";
 import { Card, Title, Text, Metric, Flex, Grid, BarList, DonutChart, AreaChart } from "@tremor/react";
 
-// This ensures the dashboard always fetches the latest data from Supabase
+// This line tells Next.js to fetch fresh data on every page load
 export const dynamic = "force-dynamic";
 
 async function getStats() {
