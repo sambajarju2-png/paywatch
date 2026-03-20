@@ -12,13 +12,16 @@ export async function createServerClient() {
         getAll() {
           return cookieStore.getAll();
         },
-       setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
+        // FIX 1: Explicit type for cookiesToSet
+        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
+              // FIX 2: Cast options 'as any' to satisfy Next.js internal types
+              cookieStore.set(name, value, options as any)
             );
           } catch {
-            // Called from Server Component — read-only
+            // This catch is necessary because Server Components 
+            // are often read-only for cookies.
           }
         },
       },
