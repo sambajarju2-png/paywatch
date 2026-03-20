@@ -1,4 +1,4 @@
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
@@ -13,8 +13,9 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
+        // FIX: Added explicit types to cookiesToSet
+        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+          cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
           response = NextResponse.next({ request: { headers: request.headers } });
@@ -33,11 +34,11 @@ export async function middleware(request: NextRequest) {
   // Not logged in → redirect to login
   if (!user) {
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("redirectTo", request.pathname);
+    loginUrl.searchParams.set("redirectTo", request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Check admin role in user_settings
+  // Check admin role in user_settings table
   const { data: settings } = await supabase
     .from("user_settings")
     .select("role")
@@ -53,7 +54,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Protect everything except login, unauthorized, and static files
     "/((?!login|unauthorized|_next/static|_next/image|favicon.ico).*)",
   ],
 };
