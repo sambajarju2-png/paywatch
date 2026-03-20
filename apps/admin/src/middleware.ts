@@ -1,4 +1,4 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
@@ -13,14 +13,15 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        // FIX: Added explicit types to cookiesToSet
-        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+        // CHANGE 1: Using Record<string, unknown> for broader compatibility
+        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
           response = NextResponse.next({ request: { headers: request.headers } });
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
+            // CHANGE 2: Casting options "as any" to bypass strict Next.js type checks
+            response.cookies.set(name, value, options as any)
           );
         },
       },
@@ -31,14 +32,12 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Not logged in → redirect to login
   if (!user) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirectTo", request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Check admin role in user_settings table
   const { data: settings } = await supabase
     .from("user_settings")
     .select("role")
