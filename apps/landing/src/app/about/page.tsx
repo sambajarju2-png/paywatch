@@ -29,9 +29,9 @@ export default function AboutPage() {
         <h2 className="text-xl font-bold text-[var(--navy)] text-center mb-8">
           {lang === "nl" ? "Ons team" : "Our team"}
         </h2>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 max-w-4xl mx-auto">
+        <div className="flex flex-wrap justify-center gap-6 max-w-4xl mx-auto">
           {founders.map((person) => (
-            <div key={person.name} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+            <div key={person.name} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 w-full sm:w-80">
               {/*
                 PHOTO: Replace the placeholder below with a real image.
                 Option A — Add image to /public/team/ and use:
@@ -86,7 +86,7 @@ export default function AboutPage() {
       {/* Company info */}
       <div className="bg-[var(--surface)] border-t border-[var(--border)]">
         <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 text-center">
-          <h3 className="text-lg font-bold text-[var(--navy)] mb-4">PayWatch B.V.</h3>
+          <h3 className="text-lg font-bold text-[var(--navy)] mb-4">PayWatch</h3>
           <div className="flex flex-wrap justify-center gap-6 text-sm text-[var(--muted)]">
             <div className="flex items-center gap-2">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>

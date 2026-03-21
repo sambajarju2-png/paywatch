@@ -89,8 +89,16 @@ export default function BlogPostContent({ slug }: { slug: string }) {
           ))}
         </div>
 
-        {/* Tags / keywords */}
+        {/* Tags / keywords — clickable, link to blog filtered by category */}
         <div className="mt-10 pt-6 border-t border-[var(--border)]">
+          <p className="text-xs font-semibold text-[var(--navy)] mb-2">{isNl ? "Categorieën" : "Categories"}</p>
+          <div className="flex flex-wrap gap-2 mb-4">
+            <Link href={`/blog?category=${post.categorySlug}`}
+              className="rounded border border-[var(--blue)] bg-[var(--blue-light)] px-3 py-1 text-xs font-semibold text-[var(--blue)] hover:opacity-80 transition-opacity">
+              {post.category[lang]}
+            </Link>
+          </div>
+          <p className="text-xs font-semibold text-[var(--navy)] mb-2">{isNl ? "Tags" : "Tags"}</p>
           <div className="flex flex-wrap gap-2">
             {post.keywords.map((kw) => (
               <span key={kw} className="rounded border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1 text-xs text-[var(--muted)]">

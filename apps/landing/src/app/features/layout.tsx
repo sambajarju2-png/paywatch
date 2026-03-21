@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Functies — Alle features van PayWatch",
-  description: "Ontdek alle functies: Gmail scanning, escalatie tracking, AI-brieven, cashflow voorspelling, financiële gezondheid score, QR betalen en meer.",
+  description: "Ontdek alle functies: Gmail scanning, escalatie tracking, AI-brieven, cashflow voorspelling, financiële gezondheid score, betaallinks en meer.",
   alternates: { canonical: "https://paywatch.app/features" },
   openGraph: {
     title: "PayWatch Functies — Alles wat je nodig hebt",

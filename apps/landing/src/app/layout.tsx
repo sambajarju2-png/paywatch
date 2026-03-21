@@ -26,9 +26,9 @@ export const metadata: Metadata = {
     "schuldhulp", "factuur herinnering", "aanmaning", "incasso",
     "PayWatch", "huishoudelijke rekeningen", "financieel overzicht",
   ],
-  authors: [{ name: "PayWatch B.V." }],
-  creator: "PayWatch B.V.",
-  publisher: "PayWatch B.V.",
+  authors: [{ name: "PayWatch" }],
+  creator: "PayWatch",
+  publisher: "PayWatch",
   robots: {
     index: true,
     follow: true,
@@ -80,7 +80,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               "@context": "https://schema.org",
               "@type": "Organization",
               name: "PayWatch",
-              legalName: "PayWatch B.V.",
+              legalName: "PayWatch",
               url: "https://paywatch.app",
               description: "Dutch household bill tracker that scans emails, tracks escalation stages, and helps users avoid unnecessary collection costs.",
               foundingDate: "2025",
@@ -110,7 +110,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               offers: { "@type": "Offer", price: "0", priceCurrency: "EUR", description: "Free in beta" },
               description: "AI-powered household bill tracker for the Netherlands. Scans Gmail for invoices, tracks escalation stages, and helps avoid collection costs.",
               availableLanguage: ["nl", "en"],
-              featureList: "Gmail scanning, Escalation tracking, AI draft letters, Cashflow forecast, Financial health score, QR payments",
+              featureList: "Gmail scanning, Escalation tracking, AI draft letters, Cashflow forecast, Financial health score, Payment links",
             }),
           }}
         />

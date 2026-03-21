@@ -72,7 +72,7 @@ export default function JobsPage() {
                     {t.jobs.readMore}
                   </Link>
                   <Link
-                    href="/contact"
+                    href={`/jobs/${job.id}#apply`}
                     className="inline-flex rounded bg-[var(--blue)] px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
                   >
                     {t.jobs.apply} →

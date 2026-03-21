@@ -9,7 +9,7 @@ import ScrollReveal from "@/components/ScrollReveal";
 import { siteConfig } from "@/lib/config";
 
 export default function HomePage() {
-  const { t } = useApp();
+  const { lang, t } = useApp();
 
   return (
     <>
@@ -77,9 +77,9 @@ export default function HomePage() {
             <h2 className="text-center text-2xl sm:text-3xl font-bold text-[var(--navy)] tracking-tight">{t.features.title}</h2>
             <p className="text-center text-sm text-[var(--muted)] mt-2 mb-12">{t.features.subtitle}</p>
           </ScrollReveal>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {t.features.items.map((feature, i) => (
-              <ScrollReveal key={i} delay={(i % 3) * 100}>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {t.features.items.slice(0, 3).map((feature, i) => (
+              <ScrollReveal key={i} delay={i * 100}>
                 <div className="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-5 hover:border-[var(--blue)] transition-all h-full">
                   {/* IMAGE PLACEHOLDER: Add feature screenshot */}
                   <div className="rounded-lg border-2 border-dashed border-[var(--border)] bg-[var(--surface)] h-28 mb-3 flex flex-col items-center justify-center gap-1.5">
@@ -91,6 +91,11 @@ export default function HomePage() {
                 </div>
               </ScrollReveal>
             ))}
+          </div>
+          <div className="flex justify-center mt-8">
+            <Link href="/features" className="rounded border border-[var(--border)] bg-[var(--bg)] px-6 py-3 text-sm font-semibold text-[var(--text)] hover:border-[var(--blue)] transition-colors">
+              {lang === "nl" ? "Alle functies bekijken" : "View all features"} →
+            </Link>
           </div>
         </div>
       </section>

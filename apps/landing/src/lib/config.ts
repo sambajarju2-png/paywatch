@@ -6,7 +6,7 @@ export const siteConfig = {
   appDomain: "app.paywatch.app",
   adminDomain: "admin.paywatch.app",
   company: {
-    name: "PayWatch B.V.",
+    name: "PayWatch",
     kvk: "83474889",
     location: "Rotterdam, Netherlands",
     emails: {
@@ -112,7 +112,7 @@ export const pricingFeatures: PricingFeature[] = [
   { text: { nl: "Escalatiefases bekijken", en: "View escalation stages" }, free: true, full: true },
   { text: { nl: "Betalingen bijhouden", en: "Track payments" }, free: true, full: true },
   { text: { nl: "Kostenvoorspelling", en: "Cost prediction" }, free: true, full: true },
-  { text: { nl: "QR betalen", en: "QR payments" }, free: true, full: true },
+  { text: { nl: "Betaallinks", en: "Payment links" }, free: true, full: true },
   { text: { nl: "Moodtracker", en: "Mood tracker" }, free: true, full: true },
   { text: { nl: "Donkere modus", en: "Dark mode" }, free: true, full: true },
   { text: { nl: "AI-inzichten", en: "AI insights" }, free: "2x", full: true },

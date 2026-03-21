@@ -147,10 +147,10 @@ export const blogPostsFull: BlogPostFull[] = [
         },
       },
       {
-        heading: { nl: "Tip 4: Gebruik de QR-betaalfunctie", en: "Tip 4: Use the QR payment feature" },
+        heading: { nl: "Tip 4: Gebruik betaallinks", en: "Tip 4: Use payment links" },
         body: {
-          nl: "Soms is het simpelweg te ingewikkeld om een IBAN over te typen. PayWatch genereert een EPC QR-code voor je rekeningen die je direct kunt scannen met je bank-app. Het juiste bedrag, de juiste referentie — geen fouten. Betalen is nog nooit zo makkelijk geweest.",
-          en: "Sometimes it's simply too complicated to retype an IBAN. PayWatch generates an EPC QR code for your bills that you can scan directly with your banking app. The right amount, the right reference — no mistakes. Paying has never been this easy.",
+          nl: "Soms is het simpelweg te ingewikkeld om een IBAN over te typen. PayWatch herkent betaallinks in je rekeningen. Klik op de link in de app en betaal direct — zonder IBAN over te typen, zonder fouten. Betalen is nog nooit zo makkelijk geweest.",
+          en: "PayWatch detects payment links in your bills. Click the link in the app and pay directly — without retyping IBANs, without mistakes. Paying has never been this easy.",
         },
       },
       {

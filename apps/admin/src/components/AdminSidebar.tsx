@@ -8,6 +8,7 @@ const navItems = [
   { href: "/", label: "Dashboard", icon: "grid" },
   { href: "/users", label: "Users", icon: "users" },
   { href: "/bills", label: "Bills", icon: "card" },
+  { href: "/applications", label: "Applications", icon: "briefcase" },
   { href: "/contacts", label: "Contacts", icon: "mail" },
 ];
 
@@ -87,6 +88,7 @@ function NavIcon({ type, active }: { type: string; active: boolean }) {
     case "users": return <svg {...s}><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>;
     case "card": return <svg {...s}><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>;
     case "mail": return <svg {...s}><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 5L2 7"/></svg>;
+    case "briefcase": return <svg {...s}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>;
     default: return <svg {...s}><circle cx="12" cy="12" r="10"/></svg>;
   }
 }

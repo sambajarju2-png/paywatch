@@ -9,7 +9,7 @@ const privacyContent = {
     sections: [
       {
         title: "1. Wie zijn wij?",
-        body: `PayWatch B.V. (KVK: ${siteConfig.company.kvk}) is verantwoordelijk voor de verwerking van persoonsgegevens zoals beschreven in dit privacybeleid. Ons kantoor is gevestigd in Rotterdam, Nederland. Voor vragen over privacy kunt u contact opnemen via ${siteConfig.company.emails.privacy}.`,
+        body: `PayWatch (KVK: ${siteConfig.company.kvk}) is verantwoordelijk voor de verwerking van persoonsgegevens zoals beschreven in dit privacybeleid. Ons kantoor is gevestigd in Rotterdam, Nederland. Voor vragen over privacy kunt u contact opnemen via ${siteConfig.company.emails.privacy}.`,
       },
       {
         title: "2. Welke gegevens verzamelen wij?",
@@ -54,7 +54,7 @@ const privacyContent = {
     sections: [
       {
         title: "1. Who are we?",
-        body: `PayWatch B.V. (KVK: ${siteConfig.company.kvk}) is responsible for the processing of personal data as described in this privacy policy. Our office is located in Rotterdam, Netherlands. For privacy questions, contact us at ${siteConfig.company.emails.privacy}.`,
+        body: `PayWatch (KVK: ${siteConfig.company.kvk}) is responsible for the processing of personal data as described in this privacy policy. Our office is located in Rotterdam, Netherlands. For privacy questions, contact us at ${siteConfig.company.emails.privacy}.`,
       },
       {
         title: "2. What data do we collect?",

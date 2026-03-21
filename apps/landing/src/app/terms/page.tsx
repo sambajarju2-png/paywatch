@@ -9,7 +9,7 @@ const termsContent = {
     sections: [
       {
         title: "1. Definities",
-        body: `In deze voorwaarden wordt verstaan onder: "PayWatch" — PayWatch B.V., gevestigd te Rotterdam, KVK: ${siteConfig.company.kvk}. "Dienst" — de PayWatch webapplicatie en alle bijbehorende functionaliteiten. "Gebruiker" — iedere natuurlijke persoon die een account aanmaakt en de Dienst gebruikt.`,
+        body: `In deze voorwaarden wordt verstaan onder: "PayWatch" — PayWatch, gevestigd te Rotterdam, KVK: ${siteConfig.company.kvk}. "Dienst" — de PayWatch webapplicatie en alle bijbehorende functionaliteiten. "Gebruiker" — iedere natuurlijke persoon die een account aanmaakt en de Dienst gebruikt.`,
       },
       {
         title: "2. Toepasselijkheid",
@@ -37,7 +37,7 @@ const termsContent = {
       },
       {
         title: "8. Intellectueel eigendom",
-        body: "Alle rechten op de Dienst, inclusief software, ontwerp, logo's en content, berusten bij PayWatch B.V. Het is niet toegestaan de Dienst te kopiëren, reverse-engineeren of voor commerciële doeleinden te gebruiken zonder toestemming.",
+        body: "Alle rechten op de Dienst, inclusief software, ontwerp, logo's en content, berusten bij PayWatch Het is niet toegestaan de Dienst te kopiëren, reverse-engineeren of voor commerciële doeleinden te gebruiken zonder toestemming.",
       },
       {
         title: "9. Beëindiging",
@@ -62,7 +62,7 @@ const termsContent = {
     sections: [
       {
         title: "1. Definitions",
-        body: `In these terms: "PayWatch" — PayWatch B.V., registered in Rotterdam, KVK: ${siteConfig.company.kvk}. "Service" — the PayWatch web application and all associated functionalities. "User" — any natural person who creates an account and uses the Service.`,
+        body: `In these terms: "PayWatch" — PayWatch, registered in Rotterdam, KVK: ${siteConfig.company.kvk}. "Service" — the PayWatch web application and all associated functionalities. "User" — any natural person who creates an account and uses the Service.`,
       },
       {
         title: "2. Applicability",
@@ -90,7 +90,7 @@ const termsContent = {
       },
       {
         title: "8. Intellectual property",
-        body: "All rights to the Service, including software, design, logos and content, belong to PayWatch B.V. It is not permitted to copy, reverse-engineer, or use the Service for commercial purposes without permission.",
+        body: "All rights to the Service, including software, design, logos and content, belong to PayWatch It is not permitted to copy, reverse-engineer, or use the Service for commercial purposes without permission.",
       },
       {
         title: "9. Termination",
