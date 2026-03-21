@@ -3,6 +3,11 @@
 import { useState, useEffect } from "react";
 
 interface Stats {
+  users: {
+    total: number;
+    completed: number;
+    recentWeek: number;
+  };
   bills: {
     total: number;
     paid: number;
