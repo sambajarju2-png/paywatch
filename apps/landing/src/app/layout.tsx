@@ -14,27 +14,107 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "PayWatch — Grip op je rekeningen",
-  description: "PayWatch scant je e-mail, herkent rekeningen, toont escalatiefases en helpt je handelen voordat het duurder wordt. Gratis in beta.",
   metadataBase: new URL("https://paywatch.app"),
+  title: {
+    default: "PayWatch — Grip op je rekeningen",
+    template: "%s | PayWatch",
+  },
+  description: "PayWatch scant je e-mail, herkent rekeningen, toont escalatiefases en helpt je handelen voordat het duurder wordt. Gratis beschikbaar in 43+ gemeenten.",
+  keywords: [
+    "rekeningen bijhouden", "schulden tracker", "incassokosten besparen",
+    "escalatie tracking", "bill tracker", "debt management", "Netherlands",
+    "schuldhulp", "factuur herinnering", "aanmaning", "incasso",
+    "PayWatch", "huishoudelijke rekeningen", "financieel overzicht",
+  ],
+  authors: [{ name: "PayWatch B.V." }],
+  creator: "PayWatch B.V.",
+  publisher: "PayWatch B.V.",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-video-preview": -1, "max-image-preview": "large", "max-snippet": -1 },
+  },
+  alternates: {
+    canonical: "https://paywatch.app",
+    languages: { "nl-NL": "https://paywatch.app", "en": "https://paywatch.app" },
+  },
   openGraph: {
     title: "PayWatch — Grip op je rekeningen",
-    description: "PayWatch scant je e-mail, herkent rekeningen, toont escalatiefases en helpt je handelen voordat het duurder wordt.",
+    description: "Scan je inbox. Herken rekeningen. Bespaar op incassokosten. Gratis in beta.",
     url: "https://paywatch.app",
     siteName: "PayWatch",
     locale: "nl_NL",
+    alternateLocale: "en_US",
     type: "website",
+    /* IMAGE PLACEHOLDER: Add OG image at /public/og-image.png (1200x630) then uncomment:
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "PayWatch — Grip op je rekeningen" }],
+    */
   },
   twitter: {
     card: "summary_large_image",
     title: "PayWatch — Grip op je rekeningen",
     description: "Scan je inbox. Herken rekeningen. Bespaar op incassokosten.",
+    /* IMAGE PLACEHOLDER: Add twitter image then uncomment:
+    images: ["/og-image.png"],
+    */
   },
+  /* IMAGE PLACEHOLDER: Add favicon files to /public/ then uncomment:
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon-16x16.png",
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/site.webmanifest",
+  */
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="nl" suppressHydrationWarning>
+      <head>
+        {/* JSON-LD — Organization */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "PayWatch",
+              legalName: "PayWatch B.V.",
+              url: "https://paywatch.app",
+              description: "Dutch household bill tracker that scans emails, tracks escalation stages, and helps users avoid unnecessary collection costs.",
+              foundingDate: "2025",
+              founders: [
+                { "@type": "Person", name: "Samba", jobTitle: "Co-founder & CTO", url: "https://www.linkedin.com/in/sambajarju/" },
+                { "@type": "Person", name: "Mariama", jobTitle: "Co-founder & CMO", url: "https://www.linkedin.com/in/hadja-mariama-sesay-3a5392228/" },
+              ],
+              address: { "@type": "PostalAddress", addressLocality: "Rotterdam", addressCountry: "NL" },
+              contactPoint: { "@type": "ContactPoint", email: "info@paywatch.nl", contactType: "customer service", availableLanguage: ["Dutch", "English"] },
+              sameAs: [
+                "https://www.linkedin.com/in/sambajarju/",
+                "https://www.linkedin.com/in/hadja-mariama-sesay-3a5392228/",
+              ],
+            }),
+          }}
+        />
+        {/* JSON-LD — SoftwareApplication */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              name: "PayWatch",
+              applicationCategory: "FinanceApplication",
+              operatingSystem: "Web",
+              offers: { "@type": "Offer", price: "0", priceCurrency: "EUR", description: "Free in beta" },
+              description: "AI-powered household bill tracker for the Netherlands. Scans Gmail for invoices, tracks escalation stages, and helps avoid collection costs.",
+              availableLanguage: ["nl", "en"],
+              featureList: "Gmail scanning, Escalation tracking, AI draft letters, Cashflow forecast, Financial health score, QR payments",
+            }),
+          }}
+        />
+      </head>
       <body className={`${jakarta.variable} font-sans`}>
         <AppProvider>
           <Header />
