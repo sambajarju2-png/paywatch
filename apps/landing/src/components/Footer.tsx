@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { siteConfig } from "@/lib/config";
 import { useApp } from "@/components/AppProvider";
@@ -31,7 +33,6 @@ export function Footer() {
               ))}
             </div>
           </div>
-
           {siteConfig.footerColumns.map((col) => (
             <div key={col.title.en}>
               <h4 className="text-[11px] font-semibold text-white/30 uppercase tracking-wider mb-4">
@@ -47,7 +48,6 @@ export function Footer() {
             </div>
           ))}
         </div>
-
         <div className="border-t border-white/[0.08] pt-5 flex justify-between items-center">
           <span className="text-[11px] text-white/25">
             © 2026 {siteConfig.name} B.V. — KVK {siteConfig.kvk} — {siteConfig.city}
