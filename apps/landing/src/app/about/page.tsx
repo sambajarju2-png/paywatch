@@ -1,36 +1,87 @@
 "use client";
 
-import { siteConfig } from "@/lib/config";
 import { useApp } from "@/components/AppProvider";
+import { founders } from "@/lib/config";
 
 export default function AboutPage() {
-  const { lang } = useApp();
+  const { lang, t } = useApp();
+  const isNl = lang === "nl";
+
   return (
-    <section className="py-16 px-6 bg-pw-bg min-h-screen">
-      <div className="max-w-[800px] mx-auto">
-        <span className="text-[12px] font-semibold text-pw-blue tracking-widest uppercase">{lang === "nl" ? "Over ons" : "About us"}</span>
-        <h1 className="text-[40px] font-extrabold text-pw-navy mt-2 mb-5 tracking-tight leading-tight">
-          {lang === "nl" ? "Gebouwd uit frustratie." : "Built from frustration."}<br />{lang === "nl" ? "Gedreven door empathie." : "Driven by empathy."}
-        </h1>
-        <p className="text-[16px] text-pw-muted leading-[1.7] mb-10 max-w-[600px]">
-          {lang === "nl" ? "We zagen het om ons heen: mensen die niet snapten waarom een rekening van €50 opeens €200 was geworden. Het incassosysteem in Nederland is ingewikkeld, onpersoonlijk en duur. Dat moest anders." : "We saw it around us: people who didn't understand why a €50 bill suddenly became €200. The Dutch collection system is complex, impersonal, and expensive. That had to change."}
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-          {Object.values(siteConfig.founders).map((p) => (
-            <div key={p.name} className="bg-white rounded-card p-7 border border-pw-border">
-              <div className="w-14 h-14 rounded-2xl bg-pw-blue-light flex items-center justify-center mb-4">
-                <span className="text-[24px] font-extrabold text-pw-navy">{p.name[0]}</span>
+    <div className="bg-[var(--bg)]">
+      {/* Header */}
+      <div className="mx-auto max-w-6xl px-4 pt-12 pb-4 sm:px-6 sm:pt-20 sm:pb-8 text-center">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-[var(--navy)] tracking-tight">{t.about.title}</h1>
+        <p className="text-base text-[var(--muted)] mt-3 max-w-xl mx-auto">{t.about.subtitle}</p>
+      </div>
+
+      {/* Story section */}
+      <div className="mx-auto max-w-3xl px-4 sm:px-6 pb-12">
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-10">
+          <p className="text-base text-[var(--text)] leading-relaxed">{t.about.story}</p>
+          <div className="mt-8 pt-6 border-t border-[var(--border)]">
+            <h3 className="text-lg font-bold text-[var(--navy)] mb-2">{t.about.missionTitle}</h3>
+            <p className="text-base text-[var(--muted)] leading-relaxed italic">&ldquo;{t.about.mission}&rdquo;</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Founder cards */}
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 pb-16 sm:pb-24">
+        <div className="grid gap-6 sm:grid-cols-2 max-w-3xl mx-auto">
+          {founders.map((founder) => (
+            <div key={founder.name} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+              {/* IMAGE PLACEHOLDER: Add founder photo here */}
+              <div className="w-20 h-20 rounded-full bg-[var(--blue-light)] border-2 border-[var(--border)] flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl font-extrabold text-[var(--blue)]">{founder.name[0]}</span>
               </div>
-              <h3 className="text-[18px] font-bold text-pw-navy">{p.name}</h3>
-              <p className="text-[12px] font-semibold text-pw-blue mb-3">{p.role}</p>
-              <p className="text-[14px] text-pw-muted leading-relaxed">{p.desc[lang]}</p>
+
+              <div className="text-center">
+                <h3 className="text-lg font-bold text-[var(--navy)]">{founder.name}</h3>
+                <p className="text-sm font-medium text-[var(--blue)] mb-3">{founder.role[lang]}</p>
+                <p className="text-sm text-[var(--muted)] leading-relaxed mb-4">{founder.bio[lang]}</p>
+
+                {/* Social links */}
+                <div className="flex items-center justify-center gap-3">
+                  <a
+                    href={founder.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-lg border border-[var(--border)] flex items-center justify-center hover:border-[var(--blue)] transition-colors"
+                    aria-label={`${founder.name} LinkedIn`}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--muted)">
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    </svg>
+                  </a>
+                  <a
+                    href={`mailto:${founder.email}`}
+                    className="w-9 h-9 rounded-lg border border-[var(--border)] flex items-center justify-center hover:border-[var(--blue)] transition-colors"
+                    aria-label={`${founder.name} Email`}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="1.5">
+                      <rect x="2" y="4" width="20" height="16" rx="2" />
+                      <path d="M22 7l-10 5L2 7" />
+                    </svg>
+                  </a>
+                </div>
+              </div>
             </div>
           ))}
         </div>
-        <div className="bg-pw-blue-light rounded-card p-7 text-center border border-pw-blue/10">
-          <p className="text-[20px] font-bold text-pw-navy italic">&ldquo;{lang === "nl" ? "Gebouwd in Nederland, voor Nederland." : "Built in the Netherlands, for the Netherlands."}&rdquo;</p>
+      </div>
+
+      {/* Company info */}
+      <div className="bg-[var(--surface)] border-t border-[var(--border)]">
+        <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 text-center">
+          <h3 className="text-lg font-bold text-[var(--navy)] mb-4">PayWatch B.V.</h3>
+          <div className="flex flex-wrap justify-center gap-6 text-sm text-[var(--muted)]">
+            <span>📍 Rotterdam, Netherlands</span>
+            <span>🏢 KVK: 83474889</span>
+            <span>📧 info@paywatch.nl</span>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

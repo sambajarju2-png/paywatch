@@ -1,79 +1,166 @@
 "use client";
 
 import { useState } from "react";
-import { siteConfig } from "@/lib/config";
 import { useApp } from "@/components/AppProvider";
+import { siteConfig } from "@/lib/config";
 
 export default function ContactPage() {
-  const { lang } = useApp();
-  const n = lang === "nl";
-  const [contactType, setContactType] = useState<"consumer" | "business">("consumer");
-  const [submitted, setSubmitted] = useState(false);
-  const reasons = contactType === "consumer"
-    ? [n ? "Vragen over de app" : "App questions", "Privacy & AVG", n ? "Foutmelding" : "Bug report", n ? "Overig" : "Other"]
-    : [n ? "Samenwerking" : "Partnership", n ? "Vermelding als jurist" : "Listing as lawyer", n ? "Technische vragen" : "Technical questions", n ? "Algemeen" : "General"];
+  const { lang, t } = useApp();
+  const isNl = lang === "nl";
+
+  const [form, setForm] = useState({ name: "", email: "", type: "consumer", message: "" });
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setStatus("sending");
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, lang }),
+      });
+
+      if (res.ok) {
+        setStatus("sent");
+        setForm({ name: "", email: "", type: "consumer", message: "" });
+      } else {
+        setStatus("error");
+      }
+    } catch {
+      setStatus("error");
+    }
+  }
 
   return (
-    <section className="py-16 px-6 bg-pw-bg min-h-screen">
-      <div className="max-w-[900px] mx-auto">
-        <h1 className="text-hero text-pw-navy mb-2">Contact</h1>
-        <p className="text-body text-pw-muted mb-8">{n ? "Vraag, opmerking of wil je samenwerken?" : "Question, comment or partnership?"}</p>
-        <div className="flex gap-2 mb-6">
-          {(["consumer", "business"] as const).map((t) => (
-            <button key={t} onClick={() => setContactType(t)} className={`px-5 py-2 rounded-input text-[13px] font-semibold border-[1.5px] transition-colors ${contactType === t ? "border-pw-blue bg-pw-blue-light text-pw-blue" : "border-pw-border bg-white text-pw-muted"}`}>
-              {t === "consumer" ? (n ? "Consument" : "Consumer") : (n ? "Bedrijf" : "Business")}
-            </button>
-          ))}
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="bg-white rounded-card p-8 border border-pw-border">
-            {submitted ? (
-              <div className="text-center py-8">
-                <h3 className="text-section-head text-pw-navy mb-2">{n ? "Bedankt!" : "Thank you!"}</h3>
-                <p className="text-body text-pw-muted">{n ? "We nemen zo snel mogelijk contact op." : "We will get back to you ASAP."}</p>
-              </div>
-            ) : (
-              <form onSubmit={(e) => { e.preventDefault(); setSubmitted(true); }} className="space-y-4">
-                <div>
-                  <label className="text-label text-pw-muted block mb-1.5">{n ? "Naam" : "Name"}</label>
-                  <input required className="w-full px-3.5 py-2.5 rounded-input border border-pw-border text-body bg-pw-bg outline-none focus:border-pw-blue" />
+    <div className="bg-[var(--bg)]">
+      {/* Header */}
+      <div className="mx-auto max-w-6xl px-4 pt-12 pb-4 sm:px-6 sm:pt-20 sm:pb-8 text-center">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-[var(--navy)] tracking-tight">{t.contact.title}</h1>
+        <p className="text-base text-[var(--muted)] mt-3">{t.contact.subtitle}</p>
+      </div>
+
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 pb-16 sm:pb-24">
+        <div className="grid gap-8 sm:grid-cols-5">
+          {/* Form */}
+          <div className="sm:col-span-3">
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8">
+              {status === "sent" ? (
+                <div className="text-center py-12">
+                  <div className="w-14 h-14 rounded-full bg-[var(--green-light)] flex items-center justify-center mx-auto mb-4">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  </div>
+                  <p className="text-base font-semibold text-[var(--navy)]">{t.contact.success}</p>
                 </div>
-                <div>
-                  <label className="text-label text-pw-muted block mb-1.5">E-mail</label>
-                  <input required type="email" className="w-full px-3.5 py-2.5 rounded-input border border-pw-border text-body bg-pw-bg outline-none focus:border-pw-blue" />
-                </div>
-                <div>
-                  <label className="text-label text-pw-muted block mb-1.5">{n ? "Onderwerp" : "Subject"}</label>
-                  <select className="w-full px-3.5 py-2.5 rounded-input border border-pw-border text-body bg-pw-bg outline-none focus:border-pw-blue">
-                    {reasons.map((r) => (<option key={r}>{r}</option>))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-label text-pw-muted block mb-1.5">{n ? "Bericht" : "Message"}</label>
-                  <textarea required rows={4} className="w-full px-3.5 py-2.5 rounded-input border border-pw-border text-body bg-pw-bg outline-none focus:border-pw-blue resize-y" />
-                </div>
-                <button type="submit" className="w-full bg-pw-blue text-white rounded-button py-3 text-[14px] font-semibold hover:bg-blue-700 transition-colors">{n ? "Verstuur" : "Send"}</button>
-              </form>
-            )}
+              ) : (
+                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                  {/* Name */}
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">{t.contact.nameLabel}</label>
+                    <input
+                      type="text"
+                      required
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-4 py-2.5 text-sm text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)]"
+                    />
+                  </div>
+
+                  {/* Email */}
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">{t.contact.emailLabel}</label>
+                    <input
+                      type="email"
+                      required
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-4 py-2.5 text-sm text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)]"
+                    />
+                  </div>
+
+                  {/* Type toggle */}
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">{t.contact.typeLabel}</label>
+                    <div className="flex gap-2 bg-[var(--bg)] rounded-lg border border-[var(--border)] p-1">
+                      {(["consumer", "business"] as const).map((type) => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => setForm({ ...form, type })}
+                          className={`flex-1 rounded-md py-2 text-sm font-semibold transition-colors ${
+                            form.type === type
+                              ? "bg-[var(--surface)] text-[var(--text)] shadow-sm"
+                              : "text-[var(--muted)]"
+                          }`}
+                        >
+                          {type === "consumer" ? t.contact.typeConsumer : t.contact.typeBusiness}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Message */}
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">{t.contact.messageLabel}</label>
+                    <textarea
+                      required
+                      rows={5}
+                      value={form.message}
+                      onChange={(e) => setForm({ ...form, message: e.target.value })}
+                      className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-4 py-2.5 text-sm text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] resize-none"
+                    />
+                  </div>
+
+                  {/* Submit */}
+                  <button
+                    type="submit"
+                    disabled={status === "sending"}
+                    className="rounded bg-[var(--blue)] px-6 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity disabled:opacity-50"
+                  >
+                    {status === "sending" ? "..." : t.contact.send}
+                  </button>
+
+                  {status === "error" && (
+                    <p className="text-sm text-[var(--red)]">
+                      {isNl ? "Er ging iets mis. Probeer het opnieuw." : "Something went wrong. Please try again."}
+                    </p>
+                  )}
+                </form>
+              )}
+            </div>
           </div>
-          <div className="bg-white rounded-card p-7 border border-pw-border h-fit">
-            <h3 className="text-section-head text-pw-navy mb-4">{n ? "Onze gegevens" : "Our details"}</h3>
-            {[
-              { label: n ? "Bedrijf" : "Company", value: "PayWatch B.V." },
-              { label: n ? "Locatie" : "Location", value: "Rotterdam, Nederland" },
-              { label: "KVK", value: siteConfig.kvk },
-              { label: n ? "Pers" : "Press", value: siteConfig.emails.press },
-              { label: n ? "Zakelijk" : "Business", value: siteConfig.emails.business },
-              { label: n ? "Algemeen" : "General", value: siteConfig.emails.general },
-            ].map((c, i, arr) => (
-              <div key={c.label} className={`flex justify-between py-2 ${i < arr.length - 1 ? "border-b border-pw-border" : ""}`}>
-                <span className="text-[13px] text-pw-muted">{c.label}</span>
-                <span className="text-[13px] font-semibold text-pw-text">{c.value}</span>
+
+          {/* Sidebar info */}
+          <div className="sm:col-span-2">
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+              <h3 className="text-base font-bold text-[var(--navy)] mb-4">{t.contact.info}</h3>
+              <div className="flex flex-col gap-4">
+                <div>
+                  <p className="text-xs font-medium text-[var(--muted)] mb-0.5">{isNl ? "Bedrijf" : "Company"}</p>
+                  <p className="text-sm font-semibold text-[var(--text)]">{siteConfig.company.name}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-[var(--muted)] mb-0.5">KVK</p>
+                  <p className="text-sm font-semibold text-[var(--text)]">{siteConfig.company.kvk}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-[var(--muted)] mb-0.5">{isNl ? "Locatie" : "Location"}</p>
+                  <p className="text-sm font-semibold text-[var(--text)]">{siteConfig.company.location}</p>
+                </div>
+                <div className="border-t border-[var(--border)] pt-4">
+                  <p className="text-xs font-medium text-[var(--muted)] mb-2">E-mail</p>
+                  <div className="flex flex-col gap-2">
+                    <a href={`mailto:${siteConfig.company.emails.info}`} className="text-sm text-[var(--blue)] hover:underline">{siteConfig.company.emails.info}</a>
+                    <a href={`mailto:${siteConfig.company.emails.business}`} className="text-sm text-[var(--blue)] hover:underline">{siteConfig.company.emails.business}</a>
+                    <a href={`mailto:${siteConfig.company.emails.press}`} className="text-sm text-[var(--blue)] hover:underline">{siteConfig.company.emails.press}</a>
+                  </div>
+                </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

@@ -1,38 +1,36 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useApp } from "@/components/AppProvider";
-import { t } from "@/lib/config";
+import { useApp } from "./AppProvider";
 
-export function CookieBanner() {
+export default function CookieBanner() {
+  const { t } = useApp();
   const [show, setShow] = useState(false);
-  const { lang } = useApp();
-  const tx = t[lang];
 
   useEffect(() => {
     const dismissed = localStorage.getItem("pw-cookie-dismissed");
     if (!dismissed) setShow(true);
   }, []);
 
-  const dismiss = () => {
+  function dismiss() {
     setShow(false);
-    localStorage.setItem("pw-cookie-dismissed", "true");
-  };
+    localStorage.setItem("pw-cookie-dismissed", "1");
+  }
 
   if (!show) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[100] p-4 md:p-6">
-      <div className="max-w-[680px] mx-auto bg-pw-navy dark:bg-[#111827] rounded-2xl p-5 flex items-center gap-5 shadow-[0_-4px_40px_rgba(0,0,0,0.15)]">
-        <div className="flex-1">
-          <p className="text-[14px] font-semibold text-white mb-1">{tx.cookieTitle}</p>
-          <p className="text-[12px] text-white/50 leading-relaxed">{tx.cookieSub}</p>
+    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 sm:p-6">
+      <div className="mx-auto max-w-2xl rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-lg flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <div className="flex items-start gap-3 flex-1">
+          <span className="text-lg flex-shrink-0">🍪</span>
+          <p className="text-sm text-[var(--muted)] leading-relaxed">{t.cookie.message}</p>
         </div>
         <button
           onClick={dismiss}
-          className="bg-pw-blue text-white border-none rounded-lg px-5 py-[10px] text-[13px] font-semibold cursor-pointer shrink-0 hover:bg-blue-700 transition-colors"
+          className="rounded bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity flex-shrink-0"
         >
-          {tx.cookieBtn}
+          {t.cookie.accept}
         </button>
       </div>
     </div>

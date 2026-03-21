@@ -10,48 +10,346 @@ interface AppContextType {
   setLang: (l: Lang) => void;
   theme: Theme;
   setTheme: (t: Theme) => void;
+  t: typeof translations.nl;
 }
 
-const AppContext = createContext<AppContextType>({
-  lang: "nl", setLang: () => {},
-  theme: "light", setTheme: () => {},
-});
+/* ─── Translations ─── */
+const translations = {
+  nl: {
+    nav: {
+      features: "Functies",
+      about: "Over ons",
+      resources: "Hulpmiddelen",
+      jobs: "Vacatures",
+      contact: "Contact",
+      login: "Inloggen",
+      cta: "Start gratis",
+    },
+    hero: {
+      badge: "🇪🇺 Gemaakt in de EU",
+      title: "Grip op je rekeningen.",
+      subtitle: "PayWatch scant je e-mail, herkent rekeningen, laat zien in welke escalatiefase ze zitten — en helpt je handelen voordat het duurder wordt.",
+      cta: "Start gratis",
+      secondary: "Bekijk functies",
+      trust: "Beschikbaar in 43+ gemeenten",
+    },
+    trustBar: {
+      eu: "EU Product",
+      gdpr: "AVG/GDPR",
+      soc2: "SOC 2",
+      encryption: "AES-256",
+    },
+    howItWorks: {
+      title: "Hoe het werkt",
+      subtitle: "In 3 stappen van chaos naar controle",
+      steps: [
+        { title: "Verbind je e-mail", desc: "Koppel je Gmail en PayWatch scant automatisch je inbox op rekeningen. Veilig, privé, en binnen een minuut klaar." },
+        { title: "AI herkent alles", desc: "Onze AI leest je rekeningen, herkent bedragen, vervaldata en escalatiefases. Geen handmatig invoeren meer." },
+        { title: "Handel op tijd", desc: "Zie precies wat je moet betalen, wat er achterstallig is, en bespaar op incassokosten. Met AI-hulp en lokale hulpverleners." },
+      ],
+    },
+    features: {
+      title: "Functies",
+      subtitle: "Alles wat je nodig hebt om je rekeningen bij te houden",
+      items: [
+        { title: "Gmail scan", desc: "Automatisch rekeningen herkennen uit je inbox met AI." },
+        { title: "Escalatie tracking", desc: "Zie in welke fase elke rekening zit: factuur, herinnering, aanmaning, incasso of deurwaarder." },
+        { title: "Kostenvoorspelling", desc: "Weet precies hoeveel extra kosten je bespaart door op tijd te betalen." },
+        { title: "AI-brieven", desc: "Laat AI een bezwaarbrief of betalingsvoorstel schrijven, klaar om te versturen." },
+        { title: "Cashflow voorspelling", desc: "Zie wat er binnenkomt en wat er uitgaat. Plan vooruit, geen verrassingen." },
+        { title: "Financiële gezondheid", desc: "Een persoonlijke score die laat zien hoe goed je op weg bent." },
+        { title: "Hulpverleners", desc: "Vind lokale schuldhulpverleners, juridisch adviseurs en hulporganisaties in jouw gemeente." },
+        { title: "QR betalen", desc: "Betaal rekeningen direct via EPC QR-code vanuit je bank-app." },
+        { title: "Moodtracker", desc: "Houd bij hoe je je voelt. Financiële stress is menselijk — wij helpen je ermee." },
+        { title: "Donkere modus", desc: "Minder licht, meer rust. Werkt automatisch of handmatig." },
+      ],
+    },
+    motivation: {
+      title: "Waarom PayWatch?",
+      subtitle: "Omdat niemand wakker zou moeten liggen van rekeningen.",
+      stats: [
+        { value: "€ 760", label: "gemiddeld bespaard aan incassokosten" },
+        { value: "43+", label: "gemeenten beschikbaar" },
+        { value: "2 min", label: "om je inbox te scannen" },
+        { value: "100%", label: "gratis in beta" },
+      ],
+    },
+    cta: {
+      title: "Klaar om te beginnen?",
+      subtitle: "Gratis. Veilig. Zonder verplichtingen.",
+      button: "Start nu gratis",
+    },
+    footer: {
+      product: "Product",
+      company: "Bedrijf",
+      legal: "Juridisch",
+      support: "Hulp",
+      privacy: "Privacybeleid",
+      terms: "Voorwaarden",
+      dataProcessing: "Gegevensverwerking",
+      madeWith: "Gemaakt met ♥ vanuit de EU 🇪🇺",
+      copyright: "© 2026 PayWatch B.V. KVK: 83474889",
+    },
+    cookie: {
+      message: "PayWatch gebruikt geen trackers of advertentie-cookies. We slaan alleen je taalvoorkeur en thema-instelling op.",
+      accept: "Begrepen",
+    },
+    contact: {
+      title: "Contact",
+      subtitle: "Neem contact met ons op",
+      nameLabel: "Naam",
+      emailLabel: "E-mailadres",
+      typeLabel: "Ik ben een...",
+      typeConsumer: "Particulier",
+      typeBusiness: "Bedrijf / Gemeente",
+      messageLabel: "Bericht",
+      send: "Verstuur bericht",
+      success: "Bedankt! We nemen zo snel mogelijk contact op.",
+      info: "Bedrijfsinformatie",
+    },
+    about: {
+      title: "Over PayWatch",
+      subtitle: "Twee Rotterdammers met een missie: niemand onnodig in de schulden.",
+      story: "PayWatch is geboren uit frustratie. Te veel mensen in Nederland betalen onnodig honderden euro's extra aan incassokosten — simpelweg omdat ze het overzicht kwijt zijn. Wij willen dat veranderen.",
+      missionTitle: "Onze missie",
+      mission: "Iedereen verdient grip op z'n rekeningen. Zonder schaamte, zonder stress, zonder onnodige kosten.",
+    },
+    jobs: {
+      title: "Werken bij PayWatch",
+      subtitle: "Help mee om financiële stress in Nederland te verminderen",
+      apply: "Solliciteer",
+      remote: "Remote",
+      hybrid: "Hybride",
+      office: "Kantoor",
+      noJobs: "Momenteel geen openstaande vacatures.",
+    },
+    resources: {
+      title: "Hulpmiddelen",
+      subtitle: "Hulporganisaties, juristen en gemeentelijke ondersteuning",
+      aidOrgs: "Hulporganisaties",
+      lawyers: "Juridisch advies",
+      filterLabel: "Filter op categorie",
+      all: "Alles",
+      legal: "Juridisch",
+      debtHelp: "Schuldhulp",
+      financial: "Financieel",
+      visit: "Bezoek website",
+      call: "Bel",
+    },
+    dataProcessing: {
+      title: "Gegevensverwerking",
+      subtitle: "Transparantie over hoe we je data verwerken",
+      service: "Service",
+      purpose: "Doel",
+      dataProcessed: "Data verwerkt",
+      location: "Locatie",
+      gdprStatus: "AVG status",
+      security: "Beveiligingsmaatregelen",
+    },
+    privacy: {
+      title: "Privacybeleid",
+      subtitle: "Jouw privacy, onze prioriteit",
+    },
+    terms: {
+      title: "Algemene voorwaarden",
+      subtitle: "Onze afspraken met jou",
+    },
+    gemeente: {
+      title: "Zoek jouw gemeente",
+      placeholder: "Typ je gemeente...",
+      available: "beschikbaar",
+      noResults: "Geen resultaten gevonden",
+    },
+  },
+  en: {
+    nav: {
+      features: "Features",
+      about: "About",
+      resources: "Resources",
+      jobs: "Jobs",
+      contact: "Contact",
+      login: "Log in",
+      cta: "Start free",
+    },
+    hero: {
+      badge: "🇪🇺 Made in the EU",
+      title: "Take control of your bills.",
+      subtitle: "PayWatch scans your email, recognizes bills, shows their escalation stage — and helps you act before it gets expensive.",
+      cta: "Start free",
+      secondary: "View features",
+      trust: "Available in 43+ municipalities",
+    },
+    trustBar: {
+      eu: "EU Product",
+      gdpr: "AVG/GDPR",
+      soc2: "SOC 2",
+      encryption: "AES-256",
+    },
+    howItWorks: {
+      title: "How it works",
+      subtitle: "From chaos to control in 3 steps",
+      steps: [
+        { title: "Connect your email", desc: "Link your Gmail and PayWatch automatically scans your inbox for bills. Secure, private, and done in a minute." },
+        { title: "AI recognizes everything", desc: "Our AI reads your bills, recognizes amounts, due dates and escalation stages. No more manual entry." },
+        { title: "Act on time", desc: "See exactly what you need to pay, what's overdue, and save on collection costs. With AI help and local support organizations." },
+      ],
+    },
+    features: {
+      title: "Features",
+      subtitle: "Everything you need to stay on top of your bills",
+      items: [
+        { title: "Gmail scan", desc: "Automatically recognize bills from your inbox with AI." },
+        { title: "Escalation tracking", desc: "See what stage each bill is at: invoice, reminder, formal notice, collection or bailiff." },
+        { title: "Cost prediction", desc: "Know exactly how much extra costs you save by paying on time." },
+        { title: "AI letters", desc: "Let AI draft an objection letter or payment proposal, ready to send." },
+        { title: "Cashflow forecast", desc: "See what's coming in and going out. Plan ahead, no surprises." },
+        { title: "Financial health", desc: "A personal score that shows how well you're doing." },
+        { title: "Support organizations", desc: "Find local debt counselors, legal advisors and aid organizations in your municipality." },
+        { title: "QR payments", desc: "Pay bills directly via EPC QR code from your banking app." },
+        { title: "Mood tracker", desc: "Track how you feel. Financial stress is human — we help you manage it." },
+        { title: "Dark mode", desc: "Less light, more calm. Works automatically or manually." },
+      ],
+    },
+    motivation: {
+      title: "Why PayWatch?",
+      subtitle: "Because nobody should lose sleep over bills.",
+      stats: [
+        { value: "€ 760", label: "average saved in collection costs" },
+        { value: "43+", label: "municipalities available" },
+        { value: "2 min", label: "to scan your inbox" },
+        { value: "100%", label: "free in beta" },
+      ],
+    },
+    cta: {
+      title: "Ready to start?",
+      subtitle: "Free. Secure. No strings attached.",
+      button: "Start free now",
+    },
+    footer: {
+      product: "Product",
+      company: "Company",
+      legal: "Legal",
+      support: "Support",
+      privacy: "Privacy Policy",
+      terms: "Terms of Service",
+      dataProcessing: "Data Processing",
+      madeWith: "Built with ♥ from the EU 🇪🇺",
+      copyright: "© 2026 PayWatch B.V. KVK: 83474889",
+    },
+    cookie: {
+      message: "PayWatch doesn't use trackers or advertising cookies. We only store your language preference and theme setting.",
+      accept: "Got it",
+    },
+    contact: {
+      title: "Contact",
+      subtitle: "Get in touch with us",
+      nameLabel: "Name",
+      emailLabel: "Email address",
+      typeLabel: "I am a...",
+      typeConsumer: "Consumer",
+      typeBusiness: "Business / Municipality",
+      messageLabel: "Message",
+      send: "Send message",
+      success: "Thanks! We'll get back to you as soon as possible.",
+      info: "Company information",
+    },
+    about: {
+      title: "About PayWatch",
+      subtitle: "Two Rotterdammers on a mission: stop unnecessary debt.",
+      story: "PayWatch was born from frustration. Too many people in the Netherlands pay hundreds of euros in unnecessary collection costs — simply because they lost track. We want to change that.",
+      missionTitle: "Our mission",
+      mission: "Everyone deserves to be in control of their bills. Without shame, without stress, without unnecessary costs.",
+    },
+    jobs: {
+      title: "Work at PayWatch",
+      subtitle: "Help us reduce financial stress in the Netherlands",
+      apply: "Apply",
+      remote: "Remote",
+      hybrid: "Hybrid",
+      office: "Office",
+      noJobs: "No open positions at the moment.",
+    },
+    resources: {
+      title: "Resources",
+      subtitle: "Support organizations, lawyers and municipal assistance",
+      aidOrgs: "Support organizations",
+      lawyers: "Legal advice",
+      filterLabel: "Filter by category",
+      all: "All",
+      legal: "Legal",
+      debtHelp: "Debt help",
+      financial: "Financial",
+      visit: "Visit website",
+      call: "Call",
+    },
+    dataProcessing: {
+      title: "Data Processing",
+      subtitle: "Transparency about how we process your data",
+      service: "Service",
+      purpose: "Purpose",
+      dataProcessed: "Data processed",
+      location: "Location",
+      gdprStatus: "GDPR status",
+      security: "Security measures",
+    },
+    privacy: {
+      title: "Privacy Policy",
+      subtitle: "Your privacy, our priority",
+    },
+    terms: {
+      title: "Terms of Service",
+      subtitle: "Our agreement with you",
+    },
+    gemeente: {
+      title: "Find your municipality",
+      placeholder: "Type your municipality...",
+      available: "available",
+      noResults: "No results found",
+    },
+  },
+};
 
-export function AppProvider({ children }: { children: ReactNode }) {
+const AppContext = createContext<AppContextType | null>(null);
+
+export function useApp(): AppContextType {
+  const ctx = useContext(AppContext);
+  if (!ctx) throw new Error("useApp must be used inside AppProvider");
+  return ctx;
+}
+
+export default function AppProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("nl");
   const [theme, setThemeState] = useState<Theme>("light");
 
+  /* Hydrate from localStorage */
   useEffect(() => {
-    const savedLang = localStorage.getItem("pw-lang") as Lang;
-    const savedTheme = localStorage.getItem("pw-theme") as Theme;
+    const savedLang = localStorage.getItem("pw-lang") as Lang | null;
+    const savedTheme = localStorage.getItem("pw-theme") as Theme | null;
     if (savedLang) setLangState(savedLang);
     if (savedTheme) setThemeState(savedTheme);
-    if (savedTheme === "dark") document.documentElement.classList.add("dark");
+    else if (window.matchMedia("(prefers-color-scheme: dark)").matches) setThemeState("dark");
   }, []);
 
-  const setLang = (l: Lang) => {
+  /* Sync theme class + lang attribute on <html> */
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.setAttribute("lang", lang);
+  }, [theme, lang]);
+
+  function setLang(l: Lang) {
     setLangState(l);
     localStorage.setItem("pw-lang", l);
-    document.documentElement.lang = l;
-  };
-
-  const setTheme = (t: Theme) => {
+  }
+  function setTheme(t: Theme) {
     setThemeState(t);
     localStorage.setItem("pw-theme", t);
-    if (t === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  };
+  }
+
+  const t = translations[lang];
 
   return (
-    <AppContext.Provider value={{ lang, setLang, theme, setTheme }}>
+    <AppContext.Provider value={{ lang, setLang, theme, setTheme, t }}>
       {children}
     </AppContext.Provider>
   );
-}
-
-export function useApp() {
-  return useContext(AppContext);
 }

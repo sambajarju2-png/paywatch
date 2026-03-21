@@ -1,146 +1,123 @@
 "use client";
 
 import Link from "next/link";
-import { siteConfig, t } from "@/lib/config";
 import { useApp } from "@/components/AppProvider";
-import { TrustBar } from "@/components/TrustBar";
-import { GemeenteSearch } from "@/components/GemeenteSearch";
+import TrustBar from "@/components/TrustBar";
+import GemeenteSearch from "@/components/GemeenteSearch";
+import HeroBanner from "@/components/HeroBanner";
+import { siteConfig } from "@/lib/config";
 
 export default function HomePage() {
-  const { lang } = useApp();
-  const tx = t[lang];
+  const { t } = useApp();
 
   return (
     <>
-      {/* ─── HERO ─── */}
-      <section className="pt-20 pb-14 px-6 bg-pw-bg dark:bg-[#0B1120]">
-        <div className="max-w-[1140px] mx-auto flex items-center gap-14">
-          <div className="flex-1">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-pw-blue-light dark:bg-pw-blue/10 text-pw-blue text-[12px] font-semibold mb-6">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
-              {tx.heroTag}
-            </div>
-            <h1 className="text-[48px] font-extrabold text-pw-navy dark:text-white leading-[1.08] tracking-[-1.5px] mb-4">
-              {tx.heroTitle1}<br />
-              <span className="text-pw-blue">{tx.heroTitle2}</span>
-            </h1>
-            <p className="text-[17px] text-pw-muted dark:text-[#94A3B8] leading-relaxed mb-8 max-w-[460px]">
-              {tx.heroSub}
-            </p>
-            <div className="flex gap-3 items-center">
-              <Link href={siteConfig.appUrl} className="bg-pw-blue text-white text-[15px] font-semibold px-7 py-3 rounded-button hover:bg-blue-700 transition-colors">
-                {tx.ctaPrimary}
-              </Link>
-              <Link href="/features" className="text-[15px] font-medium text-pw-blue hover:underline">
-                {tx.ctaSecondary} →
-              </Link>
-            </div>
+      {/* ─── Hero ─── */}
+      <section className="bg-[var(--bg)]">
+        <div className="mx-auto max-w-6xl px-4 pt-12 pb-8 sm:px-6 sm:pt-20 sm:pb-12">
+          {/* Badge */}
+          <div className="flex justify-center mb-6">
+            <span className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-1.5 text-xs font-semibold text-[var(--navy)]">
+              {t.hero.badge}
+            </span>
           </div>
 
-          {/* ─── PHONE MOCKUP PLACEHOLDER ─── */}
-          {/* Replace this div with your HeroBannerMockup or DashboardMockup component */}
-          <div className="w-[300px] h-[600px] rounded-[42px] bg-black shadow-[0_40px_80px_-20px_rgba(0,0,0,0.25)] overflow-hidden relative shrink-0">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120px] h-[26px] bg-black rounded-b-[14px] z-10" />
-            <div className="absolute top-[30px] left-0 right-0 bottom-0 bg-pw-bg dark:bg-[#0B1120] overflow-hidden">
-              {/* Topbar */}
-              <div className="flex items-center justify-between px-3 py-2 bg-white/90 dark:bg-[#1E293B]/90 backdrop-blur-sm border-b border-pw-border dark:border-[#334155]">
-                <span className="text-[12px] font-bold text-pw-navy dark:text-white">PayWatch</span>
-                <span className="text-[9px] font-bold text-pw-blue">🔥 12d</span>
-              </div>
-              {/* Debt card */}
-              <div className="mx-2.5 mt-2.5 bg-gradient-to-br from-pw-navy to-[#2D3B4E] rounded-xl p-3.5">
-                <p className="text-[8px] text-white/60">{lang === "nl" ? "Totaal openstaand" : "Total outstanding"}</p>
-                <p className="text-[22px] font-extrabold text-white tracking-tight">€ 2.847,50</p>
-                <div className="flex gap-1 mt-1">
-                  <span className="text-[7px] bg-white/12 text-white/70 px-1.5 py-0.5 rounded">{lang === "nl" ? "12 rekeningen" : "12 bills"}</span>
-                  <span className="text-[7px] bg-green-500/30 text-green-300 px-1.5 py-0.5 rounded">€847 {lang === "nl" ? "bespaard" : "saved"}</span>
-                </div>
-              </div>
-              {/* Stat cards */}
-              <div className="grid grid-cols-2 gap-1 mx-2.5 mt-2">
-                {[
-                  { l: lang === "nl" ? "Kritiek" : "Critical", v: "3", c: "text-red-500", bg: "bg-red-50 dark:bg-red-900/20", bt: "border-t-2 border-red-500" },
-                  { l: lang === "nl" ? "Binnenkort" : "Upcoming", v: "4", c: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-900/20", bt: "border-t-2 border-amber-500" },
-                  { l: lang === "nl" ? "Openstaand" : "Outstanding", v: "5", c: "text-pw-blue", bg: "bg-blue-50 dark:bg-blue-900/20", bt: "border-t-2 border-pw-blue" },
-                  { l: lang === "nl" ? "Betaald" : "Paid", v: "8", c: "text-green-600 dark:text-green-400", bg: "bg-green-50 dark:bg-green-900/20", bt: "border-t-2 border-green-500" },
-                ].map((s) => (
-                  <div key={s.l} className={`${s.bg} ${s.bt} rounded-md p-2`}>
-                    <p className="text-[7px] text-pw-muted dark:text-[#94A3B8]">{s.l}</p>
-                    <p className={`text-[16px] font-extrabold ${s.c}`}>{s.v}</p>
-                  </div>
-                ))}
-              </div>
-              {/* Bills */}
-              <div className="mx-2.5 mt-2 space-y-1">
-                {[
-                  { name: "Vattenfall", amt: "€245", stage: lang === "nl" ? "Aanmaning" : "Notice", color: "#DC2626" },
-                  { name: "Ziggo", amt: "€89,50", stage: lang === "nl" ? "Herinnering" : "Reminder", color: "#D97706" },
-                  { name: "Gemeente", amt: "€412", stage: lang === "nl" ? "Openstaand" : "Outstanding", color: "#2563EB" },
-                  { name: "VGZ", amt: "€134", stage: lang === "nl" ? "Betaald" : "Paid", color: "#059669" },
-                ].map((b) => (
-                  <div key={b.name} className="bg-white dark:bg-[#1E293B] rounded-md p-2 border border-pw-border dark:border-[#334155] flex justify-between items-center">
-                    <div>
-                      <p className="text-[10px] font-semibold text-pw-text dark:text-white">{b.name}</p>
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <div className="w-[5px] h-[5px] rounded-full" style={{ background: b.color }} />
-                        <span className="text-[7px] font-semibold" style={{ color: b.color }}>{b.stage}</span>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-bold text-pw-text dark:text-white">{b.amt}</span>
-                  </div>
-                ))}
-              </div>
-              {/* Bottom nav */}
-              <div className="absolute bottom-0 left-0 right-0 h-[44px] bg-white dark:bg-[#1E293B] border-t border-pw-border dark:border-[#334155] flex justify-around items-center">
-                {[
-                  lang === "nl" ? "Overzicht" : "Overview",
-                  lang === "nl" ? "Rekeningen" : "Bills",
-                  "Stats",
-                  "Cashflow",
-                ].map((t, i) => (
-                  <div key={t} className="text-center">
-                    {i === 0 && <div className="w-1 h-1 rounded-full bg-pw-blue mx-auto mb-0.5" />}
-                    <span className={`text-[7px] font-medium ${i === 0 ? "text-pw-blue" : "text-pw-muted/50 dark:text-white/30"}`}>{t}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+          {/* Headline */}
+          <h1 className="text-center text-3xl sm:text-5xl lg:text-6xl font-extrabold text-[var(--navy)] tracking-tight leading-tight max-w-3xl mx-auto">
+            {t.hero.title}
+          </h1>
+          <p className="text-center text-base sm:text-lg text-[var(--muted)] mt-4 max-w-2xl mx-auto leading-relaxed">
+            {t.hero.subtitle}
+          </p>
+
+          {/* CTA buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
+            <Link
+              href={`https://${siteConfig.appDomain}`}
+              className="rounded bg-[var(--blue)] px-6 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity w-full sm:w-auto text-center"
+            >
+              {t.hero.cta}
+            </Link>
+            <Link
+              href="/features"
+              className="rounded border border-[var(--border)] bg-[var(--surface)] px-6 py-3 text-sm font-semibold text-[var(--text)] hover:border-[var(--muted)] transition-colors w-full sm:w-auto text-center"
+            >
+              {t.hero.secondary}
+            </Link>
+          </div>
+
+          {/* Trust text */}
+          <p className="text-center text-xs text-[var(--muted)] mt-4">
+            {t.hero.trust}
+          </p>
+
+          {/* Auto-scrolling hero phone */}
+          <div className="mt-8 flex justify-center">
+            <HeroBanner />
           </div>
         </div>
       </section>
 
-      {/* ─── TRUST BAR ─── */}
+      {/* ─── Trust Bar ─── */}
       <TrustBar />
 
-      {/* ─── HOW IT WORKS ─── */}
-      <section className="py-20 px-6 bg-white dark:bg-[#111827]">
-        <div className="max-w-[1140px] mx-auto">
-          <div className="text-center mb-14">
-            <span className="text-[12px] font-semibold text-pw-blue tracking-widest uppercase">{tx.howLabel}</span>
-            <h2 className="text-[36px] font-extrabold text-pw-navy dark:text-white mt-2 tracking-tight">{tx.howTitle}</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { num: "01", title: tx.step1, desc: tx.step1d, icon: "M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zM22 6l-10 7L2 6", color: "bg-pw-blue-light dark:bg-pw-blue/10", iconColor: "#2563EB" },
-              { num: "02", title: tx.step2, desc: tx.step2d, icon: "M22 7l-8.5 8.5-5-5L2 17M16 7h6v6", color: "bg-amber-50 dark:bg-amber-500/10", iconColor: "#D97706" },
-              { num: "03", title: tx.step3, desc: tx.step3d, icon: "M13 2L3 14h9l-1 8 10-12h-9l1-8z", color: "bg-purple-50 dark:bg-purple-500/10", iconColor: "#7C3AED" },
-            ].map((step) => (
-              <div key={step.num} className="bg-pw-bg dark:bg-[#0B1120] rounded-2xl p-8 border border-pw-border dark:border-[#334155]">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className={`w-11 h-11 rounded-xl ${step.color} flex items-center justify-center`}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={step.iconColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d={step.icon} />
-                    </svg>
-                  </div>
-                  <span className="text-[32px] font-extrabold text-pw-border dark:text-[#334155]">{step.num}</span>
+      {/* ─── How it Works ─── */}
+      <section id="how-it-works" className="bg-[var(--bg)]">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+          <h2 className="text-center text-2xl sm:text-3xl font-bold text-[var(--navy)] tracking-tight">{t.howItWorks.title}</h2>
+          <p className="text-center text-sm text-[var(--muted)] mt-2 mb-12">{t.howItWorks.subtitle}</p>
+
+          <div className="grid gap-8 sm:grid-cols-3">
+            {t.howItWorks.steps.map((step, i) => (
+              <div key={i} className="relative rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
+                {/* Step number */}
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[var(--blue-light)] mb-4">
+                  <span className="text-lg font-extrabold text-[var(--blue)]">{i + 1}</span>
                 </div>
-                <h3 className="text-[18px] font-bold text-pw-navy dark:text-white mb-2">{step.title}</h3>
-                <p className="text-[14px] text-pw-muted dark:text-[#94A3B8] leading-relaxed">{step.desc}</p>
-                {/* PLACEHOLDER: Add mockup screenshot or component here */}
-                <div className="mt-4 h-[120px] rounded-xl bg-pw-border/30 dark:bg-white/5 flex items-center justify-center">
-                  <span className="text-[11px] text-pw-muted dark:text-white/30">{lang === "nl" ? "Mockup placeholder" : "Mockup placeholder"}</span>
+
+                {/* Mockup placeholder */}
+                <div className="rounded-lg border border-[var(--border)] bg-[var(--bg)] h-32 mb-4 flex items-center justify-center overflow-hidden">
+                  {i === 0 && <StepVisual1 />}
+                  {i === 1 && <StepVisual2 />}
+                  {i === 2 && <StepVisual3 />}
+                </div>
+
+                <h3 className="text-base font-bold text-[var(--navy)] mb-2">{step.title}</h3>
+                <p className="text-sm text-[var(--muted)] leading-relaxed">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Features Grid ─── */}
+      <section className="bg-[var(--surface)]">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+          <h2 className="text-center text-2xl sm:text-3xl font-bold text-[var(--navy)] tracking-tight">{t.features.title}</h2>
+          <p className="text-center text-sm text-[var(--muted)] mt-2 mb-12">{t.features.subtitle}</p>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {t.features.items.map((feature, i) => (
+              <div
+                key={i}
+                className="group relative rounded-xl border border-[var(--border)] bg-[var(--bg)] p-5 hover:border-[var(--blue)] transition-colors"
+              >
+                {/* Feature icon placeholder */}
+                <div className="w-9 h-9 rounded-lg bg-[var(--blue-light)] flex items-center justify-center mb-3">
+                  <FeatureIcon index={i} />
+                </div>
+                <h3 className="text-sm font-bold text-[var(--navy)] mb-1">{feature.title}</h3>
+                <p className="text-sm text-[var(--muted)] leading-relaxed">{feature.desc}</p>
+
+                {/* Hover mockup preview */}
+                <div className="absolute inset-0 rounded-xl bg-[var(--surface)] border border-[var(--blue)] p-4 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-12 h-12 rounded-xl bg-[var(--blue-light)] flex items-center justify-center mx-auto mb-2">
+                      <FeatureIcon index={i} />
+                    </div>
+                    <p className="text-sm font-bold text-[var(--navy)]">{feature.title}</p>
+                    <p className="text-xs text-[var(--muted)] mt-1">{feature.desc}</p>
+                  </div>
                 </div>
               </div>
             ))}
@@ -148,115 +125,129 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── FEATURES PREVIEW ─── */}
-      <section className="py-20 px-6 bg-pw-bg dark:bg-[#0B1120]">
-        <div className="max-w-[1140px] mx-auto">
-          <div className="text-center mb-14">
-            <span className="text-[12px] font-semibold text-pw-blue tracking-widest uppercase">{tx.featLabel}</span>
-            <h2 className="text-[36px] font-extrabold text-pw-navy dark:text-white mt-2 mb-3 tracking-tight">{tx.featTitle}</h2>
-            <p className="text-[15px] text-pw-muted dark:text-[#94A3B8] max-w-[480px] mx-auto">{tx.featSub}</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {[
-              { icon: "M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zM22 6l-10 7L2 6", title: { nl: "Inbox Scanner", en: "Inbox Scanner" }, desc: { nl: "Gmail verbinden en klaar. AI pikt facturen eruit en voegt ze toe.", en: "Connect Gmail and done. AI picks out invoices and adds them." }, tag: "AI" },
-              { icon: "M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2zM12 13a4 4 0 100-8 4 4 0 000 8z", title: { nl: "Brief Scanner", en: "Letter Scanner" }, desc: { nl: "Maak een foto van een brief. AI leest alles en voegt het direct toe.", en: "Snap a photo. AI reads everything and adds it instantly." }, tag: "Camera" },
-              { icon: "M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0", title: { nl: "Escalatie Ladder", en: "Escalation Ladder" }, desc: { nl: "Zie in welke fase je rekening zit. Van factuur tot deurwaarder.", en: "See what stage your bill is in. From invoice to bailiff." }, tag: { nl: "5 fases", en: "5 stages" } },
-              { icon: "M13 2L3 14h9l-1 8 10-12h-9l1-8z", title: { nl: "AI Reactiebrieven", en: "AI Response Letters" }, desc: { nl: "Bezwaarschrift, betalingsregeling, klacht of uitstel — AI schrijft een nette brief.", en: "Objection, payment plan, complaint or delay — AI writes a formal letter." }, tag: "4 templates" },
-              { icon: "M22 7l-8.5 8.5-5-5L2 17M16 7h6v6", title: { nl: "Cashflow Voorspelling", en: "Cashflow Forecast" }, desc: { nl: "Weet wat er aankomt. Zie welke rekeningen binnenkort vervallen.", en: "Know what's coming. See which bills are due soon." }, tag: "Forecast" },
-              { icon: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z", title: { nl: "Streaks & Badges", en: "Streaks & Badges" }, desc: { nl: "Blijf gemotiveerd. Schulden beheren mag ook leuk zijn.", en: "Stay motivated. Managing debt can be rewarding too." }, tag: { nl: "Motivatie", en: "Motivation" } },
-            ].map((f, i) => (
-              <div key={typeof f.title === "string" ? f.title : f.title.en} className="bg-white dark:bg-[#1E293B] rounded-card p-6 border border-pw-border dark:border-[#334155] flex gap-4 hover:border-pw-blue/30 dark:hover:border-pw-blue/30 transition-colors group">
-                <div className={`w-[42px] h-[42px] rounded-[10px] ${i % 2 === 0 ? "bg-pw-blue-light dark:bg-pw-blue/10" : "bg-purple-50 dark:bg-purple-500/10"} flex items-center justify-center shrink-0`}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={i % 2 === 0 ? "#2563EB" : "#7C3AED"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d={f.icon} />
-                  </svg>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-[15px] font-bold text-pw-navy dark:text-white">{typeof f.title === "string" ? f.title : f.title[lang]}</h3>
-                    <span className="text-[9px] font-semibold text-pw-blue bg-pw-blue-light dark:bg-pw-blue/10 px-2 py-0.5 rounded">{typeof f.tag === "string" ? f.tag : f.tag[lang]}</span>
-                  </div>
-                  <p className="text-[13px] text-pw-muted dark:text-[#94A3B8] leading-relaxed">{typeof f.desc === "string" ? f.desc : f.desc[lang]}</p>
-                  {/* PLACEHOLDER: Add feature mockup/screenshot here */}
-                  <div className="mt-3 h-[80px] rounded-lg bg-pw-bg dark:bg-white/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-[10px] text-pw-muted dark:text-white/30">{lang === "nl" ? "Screenshot / mockup placeholder" : "Screenshot / mockup placeholder"}</span>
-                  </div>
-                </div>
+      {/* ─── Motivation / Stats ─── */}
+      <section className="bg-[var(--bg)]">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+          <h2 className="text-center text-2xl sm:text-3xl font-bold text-[var(--navy)] tracking-tight">{t.motivation.title}</h2>
+          <p className="text-center text-sm text-[var(--muted)] mt-2 mb-12">{t.motivation.subtitle}</p>
+
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {t.motivation.stats.map((stat, i) => (
+              <div key={i} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 text-center">
+                <p className="text-2xl sm:text-3xl font-extrabold text-[var(--blue)] tracking-tight">{stat.value}</p>
+                <p className="text-xs text-[var(--muted)] mt-1">{stat.label}</p>
               </div>
             ))}
           </div>
-          <div className="text-center mt-8">
-            <Link href="/features" className="text-[14px] font-semibold text-pw-blue hover:underline">{tx.featAll}</Link>
-          </div>
         </div>
       </section>
 
-      {/* ─── MOTIVATION ─── */}
-      <section className="py-20 px-6 bg-white dark:bg-[#111827]">
-        <div className="max-w-[1140px] mx-auto flex items-center gap-14">
-          <div className="flex-1">
-            <span className="text-[12px] font-semibold text-amber-600 dark:text-amber-400 tracking-widest uppercase">{tx.motLabel}</span>
-            <h2 className="text-[32px] font-extrabold text-pw-navy dark:text-white mt-2 mb-4 tracking-tight">{tx.motTitle}</h2>
-            <p className="text-[15px] text-pw-muted dark:text-[#94A3B8] leading-relaxed mb-6">{tx.motSub}</p>
-            <div className="flex gap-3 flex-wrap">
-              {[
-                { icon: "M12 3q1 4 4 6.5t3 5.5a1 1 0 01-14 0 5 5 0 011-3 1 1 0 005 0c0-2-1.5-3-1.5-5q0-2 2.5-4z", label: tx.streaks, color: "#D97706" },
-                { icon: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z", label: tx.badges, color: "#2563EB" },
-                { icon: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z", label: tx.savings, color: "#059669" },
-              ].map((m) => (
-                <div key={m.label} className="flex items-center gap-2 px-3 py-2 rounded-[10px] bg-pw-bg dark:bg-white/5 border border-pw-border dark:border-[#334155]">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={m.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d={m.icon} />
-                  </svg>
-                  <span className="text-[12px] font-semibold text-pw-text dark:text-white">{m.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="w-[340px] h-[220px] rounded-2xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center shrink-0">
-            <div className="text-center">
-              <div className="text-[48px] mb-2">🔥</div>
-              <p className="text-[32px] font-extrabold text-amber-600 dark:text-amber-400">12 {tx.days}</p>
-              <p className="text-[13px] text-pw-muted dark:text-[#94A3B8]">{tx.activeStreak}</p>
-            </div>
-          </div>
+      {/* ─── Gemeente Search ─── */}
+      <section className="bg-[var(--surface)]">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 text-center">
+          <GemeenteSearch />
         </div>
       </section>
-
-      {/* ─── STATS BAR ─── */}
-      <section className="py-16 px-6 bg-pw-navy dark:bg-[#070B14]">
-        <div className="max-w-[1140px] mx-auto flex justify-around text-center">
-          {[
-            { value: "€2.3B", label: lang === "nl" ? "Incassokosten per jaar in NL" : "Collection costs per year in NL" },
-            { value: "1.4M", label: lang === "nl" ? "Huishoudens met betalingsproblemen" : "Households with payment issues" },
-            { value: "87%", label: lang === "nl" ? "Weet niet van escalatiestappen" : "Unaware of escalation steps" },
-          ].map((s) => (
-            <div key={s.label}>
-              <p className="text-[40px] font-extrabold text-white tracking-tight">{s.value}</p>
-              <p className="text-[13px] text-white/50">{s.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ─── MUNICIPALITY SEARCH ─── */}
-      <GemeenteSearch />
 
       {/* ─── CTA ─── */}
-      <section className="py-20 px-6 bg-pw-bg dark:bg-[#0B1120] text-center">
-        <div className="max-w-[520px] mx-auto">
-          <div className="w-14 h-14 rounded-2xl bg-pw-blue-light dark:bg-pw-blue/10 flex items-center justify-center mx-auto mb-5">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-          </div>
-          <h2 className="text-[32px] font-extrabold text-pw-navy dark:text-white mb-3 tracking-tight">{tx.ctaTitle}</h2>
-          <p className="text-[15px] text-pw-muted dark:text-[#94A3B8] leading-relaxed mb-7">{tx.ctaSub}</p>
-          <Link href={siteConfig.appUrl} className="inline-block bg-pw-blue text-white text-[15px] font-semibold px-9 py-3.5 rounded-button hover:bg-blue-700 transition-colors">
-            {tx.ctaBtn}
+      <section className="bg-[var(--bg)]">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[var(--navy)] tracking-tight">{t.cta.title}</h2>
+          <p className="text-sm text-[var(--muted)] mt-2 mb-8">{t.cta.subtitle}</p>
+          <Link
+            href={`https://${siteConfig.appDomain}`}
+            className="inline-flex rounded bg-[var(--blue)] px-8 py-3 text-base font-semibold text-white hover:opacity-90 transition-opacity"
+          >
+            {t.cta.button}
           </Link>
         </div>
       </section>
     </>
   );
+}
+
+/* ─── Step visuals for "How it works" section ─── */
+function StepVisual1() {
+  return (
+    <div className="flex items-center gap-2 px-3">
+      <div className="w-8 h-8 rounded-lg bg-[var(--red-light)] flex items-center justify-center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 5L2 7"/></svg>
+      </div>
+      <div className="flex-1">
+        <div className="h-2 w-16 rounded bg-[var(--border)]" />
+        <div className="h-1.5 w-10 rounded bg-[var(--border)] mt-1 opacity-50" />
+      </div>
+      <div className="flex flex-col gap-1">
+        <div className="h-1.5 w-8 rounded bg-[var(--green)]" />
+        <div className="h-1.5 w-6 rounded bg-[var(--amber)]" />
+        <div className="h-1.5 w-10 rounded bg-[var(--red)]" />
+      </div>
+    </div>
+  );
+}
+
+function StepVisual2() {
+  return (
+    <div className="flex items-center gap-2 px-3">
+      <div className="w-8 h-8 rounded-lg bg-[var(--purple-light)] flex items-center justify-center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" strokeWidth="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <div className="flex-1 flex flex-col gap-1">
+        <div className="flex gap-1">
+          <div className="h-4 flex-1 rounded bg-[var(--blue-light)] border border-[var(--border)]" />
+          <div className="h-4 flex-1 rounded bg-[var(--amber-light)] border border-[var(--border)]" />
+        </div>
+        <div className="flex gap-1">
+          <div className="h-4 flex-1 rounded bg-[var(--green-light)] border border-[var(--border)]" />
+          <div className="h-4 flex-1 rounded bg-[var(--red-light)] border border-[var(--border)]" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StepVisual3() {
+  return (
+    <div className="flex items-center gap-3 px-3">
+      <div className="w-8 h-8 rounded-lg bg-[var(--green-light)] flex items-center justify-center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div className="flex-1 flex flex-col gap-1.5">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-[var(--green)]" />
+          <div className="h-1.5 flex-1 rounded bg-[var(--green)] opacity-30" />
+          <div className="h-1.5 w-8 rounded bg-[var(--green)]" />
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-[var(--amber)]" />
+          <div className="h-1.5 flex-1 rounded bg-[var(--amber)] opacity-30" />
+          <div className="h-1.5 w-6 rounded bg-[var(--amber)]" />
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-[var(--red)]" />
+          <div className="h-1.5 flex-1 rounded bg-[var(--red)] opacity-30" />
+          <div className="h-1.5 w-10 rounded bg-[var(--red)]" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Feature icons (inline SVG, Lucide-style) ─── */
+function FeatureIcon({ index }: { index: number }) {
+  const cls = "text-[var(--blue)]";
+  const s = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.5 } as const;
+
+  switch (index) {
+    case 0: return <svg {...s} className={cls}><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 5L2 7"/></svg>;
+    case 1: return <svg {...s} className={cls}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
+    case 2: return <svg {...s} className={cls}><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="4"/></svg>;
+    case 3: return <svg {...s} className={cls}><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>;
+    case 4: return <svg {...s} className={cls}><polyline points="22 12 18 6 13 16 8 8 2 18"/></svg>;
+    case 5: return <svg {...s} className={cls}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>;
+    case 6: return <svg {...s} className={cls}><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>;
+    case 7: return <svg {...s} className={cls}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h.01M7 12h.01M7 17h.01M12 7h.01M12 12h.01M12 17h.01M17 7h.01M17 12h.01M17 17h.01"/></svg>;
+    case 8: return <svg {...s} className={cls}><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg>;
+    default: return <svg {...s} className={cls}><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>;
+  }
 }

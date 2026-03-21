@@ -1,90 +1,122 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { siteConfig } from "@/lib/config";
-import { useApp } from "@/components/AppProvider";
+import { useApp } from "./AppProvider";
+import { navItems, siteConfig } from "@/lib/config";
 
-export function Header() {
-  const pathname = usePathname();
-  const { lang, setLang, theme, setTheme } = useApp();
+export default function Header() {
+  const { lang, setLang, theme, setTheme, t } = useApp();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-pw-navy dark:bg-[#070B14]">
-      <div className="max-w-[1140px] mx-auto px-6 h-[60px] flex items-center justify-between">
+    <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[#0A2540] dark:bg-[#060D1B]">
+      <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-md bg-pw-blue flex items-center justify-center">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-          </div>
-          <span className="text-[17px] font-extrabold text-white tracking-tight">{siteConfig.name}</span>
+        <Link href="/" className="text-lg font-bold text-white tracking-tight">
+          {siteConfig.name}
         </Link>
 
-        {/* Nav links */}
-        <nav className="hidden md:flex items-center gap-7">
-          {siteConfig.nav.map((item) => (
+        {/* Desktop nav */}
+        <div className="hidden md:flex items-center gap-6">
+          {navItems.map((item) => (
             <Link
-              key={item.href}
+              key={item.key}
               href={item.href}
-              className={`text-[13px] font-medium transition-colors ${
-                pathname === item.href ? "text-white" : "text-white/60 hover:text-white/90"
-              }`}
+              className="text-sm font-medium text-slate-300 hover:text-white transition-colors"
             >
-              {item.label[lang]}
+              {t.nav[item.key as keyof typeof t.nav]}
             </Link>
           ))}
-        </nav>
+        </div>
 
-        {/* Controls */}
-        <div className="flex items-center gap-2.5">
+        {/* Right side: controls */}
+        <div className="flex items-center gap-3">
           {/* Language toggle */}
           <button
             onClick={() => setLang(lang === "nl" ? "en" : "nl")}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-white/15 text-[12px] font-semibold text-white/70 hover:bg-white/5 transition-colors"
-            title={lang === "nl" ? "Switch to English" : "Schakel naar Nederlands"}
+            className="flex items-center justify-center w-8 h-8 rounded-full border border-slate-600 text-xs hover:border-slate-400 transition-colors"
+            aria-label="Toggle language"
           >
-            <span>{lang === "nl" ? "🇳🇱" : "🇬🇧"}</span>
-            <span>{lang === "nl" ? "NL" : "EN"}</span>
+            {lang === "nl" ? "🇬🇧" : "🇳🇱"}
           </button>
 
-          {/* Dark mode toggle */}
+          {/* Theme toggle */}
           <button
             onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            className="w-8 h-8 rounded-md border border-white/15 flex items-center justify-center text-white/70 hover:bg-white/5 transition-colors"
-            title={theme === "light" ? "Dark mode" : "Light mode"}
+            className="flex items-center justify-center w-8 h-8 rounded-full border border-slate-600 text-xs hover:border-slate-400 transition-colors"
+            aria-label="Toggle dark mode"
           >
             {theme === "light" ? (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-slate-300">
                 <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
               </svg>
             ) : (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-yellow-400">
                 <circle cx="12" cy="12" r="5" />
-                <line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
               </svg>
             )}
           </button>
 
-          {/* Login + CTA */}
+          {/* Login link - hidden on mobile */}
           <Link
-            href={siteConfig.appUrl}
-            className="text-[13px] font-medium text-white/70 px-4 py-[7px] rounded-lg border border-white/15 hover:bg-white/5 transition-colors hidden sm:inline-block"
+            href={`https://${siteConfig.appDomain}`}
+            className="hidden sm:inline-flex text-sm font-medium text-slate-300 hover:text-white transition-colors"
           >
-            {lang === "nl" ? "Inloggen" : "Log in"}
+            {t.nav.login}
           </Link>
+
+          {/* CTA button */}
           <Link
-            href={siteConfig.appUrl}
-            className="text-[13px] font-semibold text-white px-[18px] py-[7px] rounded-lg bg-pw-blue hover:bg-blue-700 transition-colors"
+            href={`https://${siteConfig.appDomain}`}
+            className="hidden sm:inline-flex items-center rounded bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
           >
-            {lang === "nl" ? "Start gratis" : "Start free"}
+            {t.nav.cta}
           </Link>
+
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="md:hidden flex flex-col gap-1.5 p-1"
+            aria-label="Toggle menu"
+          >
+            <span className={`block h-0.5 w-5 bg-slate-300 transition-transform ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
+            <span className={`block h-0.5 w-5 bg-slate-300 transition-opacity ${menuOpen ? "opacity-0" : ""}`} />
+            <span className={`block h-0.5 w-5 bg-slate-300 transition-transform ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
+          </button>
         </div>
-      </div>
+      </nav>
+
+      {/* Mobile menu */}
+      {menuOpen && (
+        <div className="md:hidden border-t border-slate-700 bg-[#0A2540] dark:bg-[#060D1B] px-4 pb-4">
+          {navItems.map((item) => (
+            <Link
+              key={item.key}
+              href={item.href}
+              onClick={() => setMenuOpen(false)}
+              className="block py-3 text-sm font-medium text-slate-300 hover:text-white border-b border-slate-700/50"
+            >
+              {t.nav[item.key as keyof typeof t.nav]}
+            </Link>
+          ))}
+          <div className="flex gap-3 mt-4">
+            <Link
+              href={`https://${siteConfig.appDomain}`}
+              className="flex-1 text-center rounded border border-slate-600 px-4 py-2 text-sm font-medium text-slate-300 hover:text-white"
+            >
+              {t.nav.login}
+            </Link>
+            <Link
+              href={`https://${siteConfig.appDomain}`}
+              className="flex-1 text-center rounded bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white"
+            >
+              {t.nav.cta}
+            </Link>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

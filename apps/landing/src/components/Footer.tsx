@@ -1,46 +1,52 @@
 "use client";
 
 import Link from "next/link";
-import { siteConfig } from "@/lib/config";
-import { useApp } from "@/components/AppProvider";
+import { useApp } from "./AppProvider";
+import { footerColumns, siteConfig } from "@/lib/config";
 
-export function Footer() {
-  const { lang } = useApp();
+export default function Footer() {
+  const { lang, t } = useApp();
+  const isNl = lang === "nl";
+
+  const columns = [
+    { title: t.footer.product, items: footerColumns.product },
+    { title: t.footer.company, items: footerColumns.company },
+    { title: t.footer.legal, items: footerColumns.legal },
+    { title: t.footer.support, items: footerColumns.support },
+  ];
 
   return (
-    <footer className="bg-pw-navy dark:bg-[#070B14] pt-14 pb-6 px-6">
-      <div className="max-w-[1140px] mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-10">
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 rounded-[5px] bg-pw-blue/20 flex items-center justify-center">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
-              </div>
-              <span className="text-[15px] font-extrabold text-white">{siteConfig.name}</span>
-            </div>
-            <p className="text-[13px] text-white/40 leading-relaxed max-w-[260px]">
-              {lang === "nl" ? "Gebouwd in Rotterdam, voor heel Nederland." : "Built in Rotterdam, for all of the Netherlands."}
-            </p>
-            <div className="flex gap-2 mt-4">
-              {["🇪🇺 EU", "GDPR/AVG", "AES-256"].map((badge) => (
-                <span key={badge} className="text-[9px] font-semibold text-white/30 bg-white/[0.06] px-2 py-[3px] rounded">{badge}</span>
-              ))}
-            </div>
-          </div>
-          {siteConfig.footerColumns.map((col) => (
-            <div key={col.title.en}>
-              <h4 className="text-[11px] font-semibold text-white/30 uppercase tracking-wider mb-4">{col.title[lang]}</h4>
-              <div className="flex flex-col gap-2">
-                {col.links.map((link) => (
-                  <Link key={link.href} href={link.href} className="text-[13px] text-white/55 hover:text-white/80 transition-colors">{link.label[lang]}</Link>
+    <footer className="border-t border-[var(--border)] bg-[var(--surface)]">
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+        {/* Columns */}
+        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+          {columns.map((col) => (
+            <div key={col.title}>
+              <h3 className="text-sm font-bold text-[var(--navy)] mb-3">{col.title}</h3>
+              <ul className="space-y-2">
+                {col.items.map((item) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className="text-sm text-[var(--muted)] hover:text-[var(--text)] transition-colors"
+                    >
+                      {isNl ? item.labelNl : item.labelEn}
+                    </Link>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
           ))}
         </div>
-        <div className="border-t border-white/[0.08] pt-5 flex justify-between items-center">
-          <span className="text-[11px] text-white/25">© 2026 {siteConfig.name} B.V. — KVK {siteConfig.kvk} — {siteConfig.city}</span>
-          <span className="text-[11px] text-white/25">Built with ♥ from the EU 🇪🇺</span>
+
+        {/* Bottom bar */}
+        <div className="mt-10 pt-6 border-t border-[var(--border)] flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-center gap-2 text-sm text-[var(--muted)]">
+            <span className="font-bold text-[var(--navy)]">{siteConfig.name}</span>
+            <span className="hidden sm:inline">·</span>
+            <span>{t.footer.copyright}</span>
+          </div>
+          <p className="text-sm text-[var(--muted)]">{t.footer.madeWith}</p>
         </div>
       </div>
     </footer>
