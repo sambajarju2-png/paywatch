@@ -38,7 +38,7 @@ export const footerColumns = {
   company: [
     { labelNl: "Over ons", labelEn: "About", href: "/about" },
     { labelNl: "Vacatures", labelEn: "Jobs", href: "/jobs" },
-    { labelNl: "Blog", labelEn: "Blog", href: "/resources#blog" },
+    { labelNl: "Blog", labelEn: "Blog", href: "/blog" },
     { labelNl: "Contact", labelEn: "Contact", href: "/contact" },
   ],
   legal: [
