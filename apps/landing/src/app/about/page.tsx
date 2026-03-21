@@ -1,6 +1,10 @@
 import { siteConfig } from "@/lib/config";
 
 export default function AboutPage() {
+  // To handle multi-language properly, we pick the 'nl' key by default.
+  // In a more advanced version, you would detect the user's cookie here.
+  const lang = "nl"; 
+
   return (
     <section className="py-16 px-6 bg-pw-bg min-h-screen">
       <div className="max-w-[800px] mx-auto">
@@ -20,8 +24,9 @@ export default function AboutPage() {
                 <span className="text-[24px] font-extrabold text-pw-navy">{p.name[0]}</span>
               </div>
               <h3 className="text-[18px] font-bold text-pw-navy">{p.name}</h3>
-              <p className="text-[12px] font-semibold text-pw-blue mb-3">{p.role}</p>
-              <p className="text-[14px] text-pw-muted leading-relaxed">{p.desc}</p>
+              {/* FIX: Access the specific language key (e.g., .nl) */}
+              <p className="text-[12px] font-semibold text-pw-blue mb-3">{p.role[lang as keyof typeof p.role]}</p>
+              <p className="text-[14px] text-pw-muted leading-relaxed">{p.desc[lang as keyof typeof p.desc]}</p>
             </div>
           ))}
         </div>
@@ -34,13 +39,13 @@ export default function AboutPage() {
         {/* Story */}
         <div className="mt-12 space-y-4 text-[15px] text-pw-muted leading-[1.7]">
           <p>
-            PayWatch begon als een frustratie-project. Samba kreeg zelf te maken met een rekening die was geëscaleerd naar een incassobureau — terwijl hij dacht dat alles betaald was. De kosten? Verdrievoudigd. De communicatie? Onbegrijpelijk.
+            PayWatch begon als een frustratie-project. Samba kreeg zelf te maken met een rekening die was geëscaleerd naar een incassobureau — terwijl hij dacht dat alles betaald was[cite: 5, 149]. De kosten? Verdrievoudigd. De communicatie? Onbegrijpelijk.
           </p>
           <p>
-            Samen met Mariama besloot hij dat er een betere manier moest zijn. Niet nóg een app die je schulden laat zien. Maar eentje die je helpt om te voorkomen dat het escalert. Die je waarschuwt. Die je uitleg geeft over je rechten. En die je verbindt met hulp als het nodig is.
+            Samen met Mariama besloot hij dat er een betere manier moest zijn[cite: 5, 149]. Niet nóg een app die je schulden laat zien. Maar eentje die je helpt om te voorkomen dat het escaleert. Die je waarschuwt. Die je uitleg geeft over je rechten. En die je verbindt met hulp als het nodig is[cite: 35, 109].
           </p>
           <p>
-            Vandaag helpt PayWatch mensen in 43+ gemeenten om grip te houden op hun rekeningen. Niet met angst, maar met overzicht. Niet met dreiging, maar met rust.
+            Vandaag helpt PayWatch mensen in 43+ gemeenten om grip te houden op hun rekeningen[cite: 66, 179]. Niet met angst, maar met overzicht. Niet met dreiging, maar met rust[cite: 7].
           </p>
         </div>
       </div>
