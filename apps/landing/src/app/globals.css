@@ -11,10 +11,26 @@
   --text: #0F172A;
   --muted: #64748B;
   --border: #E2E8F0;
+  --green: #059669;
+  --green-light: #F0FDF4;
+  --amber: #D97706;
+  --amber-light: #FEF3C7;
+  --red: #DC2626;
+  --red-light: #FEF2F2;
+  --purple: #7C3AED;
+  --purple-light: #F5F3FF;
 }
 
 body {
   background: var(--surface);
   color: var(--text);
-  font-family: var(--font-jakarta), "Plus Jakarta Sans", system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background: #2563EB20;
+  color: #0A2540;
 }

@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
+import { CookieBanner } from "@/components/CookieBanner";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -10,7 +13,8 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: "PayWatch — Grip op je rekeningen",
-  description: "Track en beheer je huishoudelijke rekeningen met AI. Voorkom extra incassokosten en houd overzicht.",
+  description:
+    "PayWatch scant je inbox, houdt je rekeningen bij en waarschuwt je voor escalaties. Voorkom extra incassokosten.",
   openGraph: {
     title: "PayWatch — Grip op je rekeningen",
     description: "Track en beheer je huishoudelijke rekeningen met AI.",
@@ -29,7 +33,10 @@ export default function RootLayout({
   return (
     <html lang="nl">
       <body className={`${jakarta.variable} font-sans antialiased`}>
-        {children}
+        <Header />
+        <main>{children}</main>
+        <Footer />
+        <CookieBanner />
       </body>
     </html>
   );
