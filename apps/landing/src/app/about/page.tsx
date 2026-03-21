@@ -11,8 +11,6 @@ export default function AboutPage() {
         <p className="text-[16px] text-pw-muted leading-[1.7] mb-10 max-w-[600px]">
           We zagen het om ons heen: mensen die niet snapten waarom een rekening van €50 opeens €200 was geworden. Het incassosysteem in Nederland is ingewikkeld, onpersoonlijk en duur. Dat moest anders.
         </p>
-
-        {/* Founders */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
           {Object.values(siteConfig.founders).map((p) => (
             <div key={p.name} className="bg-white rounded-card p-7 border border-pw-border">
@@ -27,30 +25,15 @@ export default function AboutPage() {
             </div>
           ))}
         </div>
-
-        {/* Mission */}
         <div className="bg-pw-blue-light rounded-card p-7 text-center border border-pw-blue/10">
           <p className="text-[20px] font-bold text-pw-navy italic">&ldquo;Gebouwd in Nederland, voor Nederland.&rdquo;</p>
         </div>
-
-        {/* Story */}
         <div className="mt-12 space-y-4 text-[15px] text-pw-muted leading-[1.7]">
-          <p>
-            PayWatch begon als een frustratie-project. Samba kreeg zelf te maken met een rekening die was geëscaleerd naar een incassobureau — terwijl hij dacht dat alles betaald was. De kosten? Verdrievoudigd. De communicatie? Onbegrijpelijk.
-          </p>
-          <p>
-            Samen met Mariama besloot hij dat er een betere manier moest zijn. Niet nóg een app die je schulden laat zien. Maar eentje die je helpt om te voorkomen dat het escalert. Die je waarschuwt. Die je uitleg geeft over je rechten. En die je verbindt met hulp als het nodig is.
-          </p>
-          <p>
-            Vandaag helpt PayWatch mensen in 43+ gemeenten om grip te houden op hun rekeningen. Niet met angst, maar met overzicht. Niet met dreiging, maar met rust.
-          </p>
+          <p>PayWatch begon als een frustratie-project. Samba kreeg zelf te maken met een rekening die was geëscaleerd naar een incassobureau — terwijl hij dacht dat alles betaald was. De kosten? Verdrievoudigd. De communicatie? Onbegrijpelijk.</p>
+          <p>Samen met Mariama besloot hij dat er een betere manier moest zijn. Niet nóg een app die je schulden laat zien. Maar eentje die je helpt om te voorkomen dat het escalert. Die je waarschuwt. Die je uitleg geeft over je rechten. En die je verbindt met hulp als het nodig is.</p>
+          <p>Vandaag helpt PayWatch mensen in 43+ gemeenten om grip te houden op hun rekeningen. Niet met angst, maar met overzicht. Niet met dreiging, maar met rust.</p>
         </div>
       </div>
     </section>
   );
 }
-```
-
-The only change is line 18 — where it renders the description. Instead of `{p.desc}` (which crashes because it's an object), it now does:
-```
-{typeof p.desc === "string" ? p.desc : p.desc.nl}
