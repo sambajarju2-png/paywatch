@@ -21,16 +21,25 @@
   --purple-light: #F5F3FF;
 }
 
-body {
-  background: var(--surface);
-  color: var(--text);
+.dark {
+  --bg: #0B1120;
+  --surface: #1E293B;
+  --navy: #E2E8F0;
+  --blue: #3B82F6;
+  --blue-light: #1E293B;
+  --text: #F1F5F9;
+  --muted: #94A3B8;
+  --border: #334155;
+  --green: #10B981;
+  --green-light: #064E3B;
+  --amber: #F59E0B;
+  --amber-light: #78350F;
+  --red: #EF4444;
+  --red-light: #7F1D1D;
+  --purple: #8B5CF6;
+  --purple-light: #4C1D95;
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
-::selection {
-  background: #2563EB20;
-  color: #0A2540;
-}
+html { scroll-behavior: smooth; }
+::selection { background: #2563EB20; color: #0A2540; }
+.dark ::selection { background: #3B82F640; color: #F1F5F9; }

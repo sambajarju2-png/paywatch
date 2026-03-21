@@ -1,36 +1,19 @@
-// PayWatch Landing — Color & Config
-// Edit these values to change the entire site's look
-// Based on the PayWatch Design System v1.0
+// PayWatch Landing — Config
+// Edit this file to change colors, nav items, text, and settings
 
 export const colors = {
-  // Page & surfaces
-  bg: "#F4F7FB",
-  surface: "#FFFFFF",
-
-  // Brand
-  navy: "#0A2540",
-  blue: "#2563EB",
-  blueLight: "#EFF6FF",
-
-  // Text
-  text: "#0F172A",
-  muted: "#64748B",
-
-  // Borders
-  border: "#E2E8F0",
-
-  // Status / Escalation
-  green: "#059669",
-  greenLight: "#F0FDF4",
-  amber: "#D97706",
-  amberLight: "#FEF3C7",
-  orange: "#EA580C",
-  orangeLight: "#FFF7ED",
-  red: "#DC2626",
-  redLight: "#FEF2F2",
-  darkRed: "#991B1B",
-  purple: "#7C3AED",
-  purpleLight: "#F5F3FF",
+  light: {
+    bg: "#F4F7FB", surface: "#FFFFFF", navy: "#0A2540", blue: "#2563EB",
+    blueLight: "#EFF6FF", text: "#0F172A", muted: "#64748B", border: "#E2E8F0",
+    green: "#059669", greenLight: "#F0FDF4", amber: "#D97706", amberLight: "#FEF3C7",
+    red: "#DC2626", redLight: "#FEF2F2", purple: "#7C3AED", purpleLight: "#F5F3FF",
+  },
+  dark: {
+    bg: "#0B1120", surface: "#1E293B", navy: "#E2E8F0", blue: "#3B82F6",
+    blueLight: "#1E293B", text: "#F1F5F9", muted: "#94A3B8", border: "#334155",
+    green: "#10B981", greenLight: "#064E3B", amber: "#F59E0B", amberLight: "#78350F",
+    red: "#EF4444", redLight: "#7F1D1D", purple: "#8B5CF6", purpleLight: "#4C1D95",
+  },
 };
 
 export const siteConfig = {
@@ -46,43 +29,52 @@ export const siteConfig = {
     privacy: "privacy@paywatch.app",
   },
   founders: {
-    samba: { name: "Samba", role: "Co-founder & CTO", desc: "Bouwt de technische kant: Next.js, Supabase, AI-integratie. Gelooft dat technologie er is om mensen te helpen, niet om het ingewikkelder te maken." },
-    mariama: { name: "Mariama", role: "Co-founder & CMO", desc: "Bepaalt de toon, het gevoel en de groei. Zorgt dat PayWatch menselijk blijft — omdat schulden al onpersoonlijk genoeg zijn." },
+    samba: {
+      name: "Samba",
+      role: "Co-founder & CTO",
+      desc: { nl: "Bouwt de technische kant: Next.js, Supabase, AI-integratie. Gelooft dat technologie er is om mensen te helpen.", en: "Builds the tech side: Next.js, Supabase, AI integration. Believes technology exists to help people." },
+      linkedin: "https://linkedin.com/in/samba",
+      email: "samba@paywatch.nl",
+    },
+    mariama: {
+      name: "Mariama",
+      role: "Co-founder & CMO",
+      desc: { nl: "Bepaalt de toon, het gevoel en de groei. Zorgt dat PayWatch menselijk blijft.", en: "Sets the tone, feel and growth. Keeps PayWatch human." },
+      linkedin: "https://linkedin.com/in/mariama",
+      email: "mariama@paywatch.nl",
+    },
   },
-  // Primary navigation — easy to add/remove items
   nav: [
-    { label: "Features", href: "/features" },
-    { label: "Over ons", href: "/about" },
-    { label: "Resources", href: "/resources" },
-    { label: "Contact", href: "/contact" },
+    { label: { nl: "Features", en: "Features" }, href: "/features" },
+    { label: { nl: "Over ons", en: "About us" }, href: "/about" },
+    { label: { nl: "Resources", en: "Resources" }, href: "/resources" },
+    { label: { nl: "Contact", en: "Contact" }, href: "/contact" },
   ],
-  // Footer columns — easy to edit
   footerColumns: [
     {
-      title: "Product",
+      title: { nl: "Product", en: "Product" },
       links: [
-        { label: "Features", href: "/features" },
-        { label: "Resources", href: "/resources" },
+        { label: { nl: "Features", en: "Features" }, href: "/features" },
+        { label: { nl: "Resources", en: "Resources" }, href: "/resources" },
       ],
     },
     {
-      title: "Bedrijf",
+      title: { nl: "Bedrijf", en: "Company" },
       links: [
-        { label: "Over ons", href: "/about" },
-        { label: "Contact", href: "/contact" },
-        { label: "Vacatures", href: "/jobs" },
+        { label: { nl: "Over ons", en: "About us" }, href: "/about" },
+        { label: { nl: "Contact", en: "Contact" }, href: "/contact" },
+        { label: { nl: "Vacatures", en: "Jobs" }, href: "/jobs" },
       ],
     },
     {
-      title: "Legal",
+      title: { nl: "Legal", en: "Legal" },
       links: [
-        { label: "Privacy", href: "/privacy" },
-        { label: "Voorwaarden", href: "/terms" },
-        { label: "Data verwerking", href: "/data-processing" },
+        { label: { nl: "Privacy", en: "Privacy" }, href: "/privacy" },
+        { label: { nl: "Voorwaarden", en: "Terms" }, href: "/terms" },
+        { label: { nl: "Data verwerking", en: "Data processing" }, href: "/data-processing" },
       ],
     },
   ],
-  // Municipality data for search
   gemeenten: [
     "Amsterdam","Rotterdam","Den Haag","Utrecht","Eindhoven","Groningen","Tilburg",
     "Almere","Breda","Nijmegen","Apeldoorn","Haarlem","Arnhem","Enschede",
@@ -92,4 +84,86 @@ export const siteConfig = {
     "Heerlen","Oss","Sittard-Geleen","Roosendaal","Purmerend","Vlaardingen",
     "Schiedam","Gouda","Leidschendam-Voorburg","Hoorn",
   ],
+};
+
+// Translations
+export const t = {
+  nl: {
+    heroTag: "Beschikbaar in 43+ gemeenten",
+    heroTitle1: "Jouw rekeningen.",
+    heroTitle2: "Gescand. Gesorteerd.",
+    heroSub: "PayWatch scant je inbox, houdt elke rekening bij, en waarschuwt je voordat kosten oplopen. Zodat jij je hoofd vrij hebt voor de dingen die ertoe doen.",
+    ctaPrimary: "Gratis beginnen",
+    ctaSecondary: "Bekijk hoe het werkt",
+    login: "Inloggen",
+    howTitle: "Drie stappen naar rust",
+    howLabel: "Hoe het werkt",
+    step1: "Scan", step1d: "Verbind je Gmail of maak een foto van je brief. Onze AI herkent je rekeningen automatisch — bedrag, IBAN, vervaldatum, alles.",
+    step2: "Volg", step2d: "Zie precies in welke fase elke rekening zit. Van eerste factuur tot deurwaarder — inclusief wat het je kost als je te laat bent.",
+    step3: "Los op", step3d: "Genereer een nette reactiebrief met AI, of vind direct een hulporganisatie of jurist in jouw gemeente.",
+    featLabel: "Features",
+    featTitle: "Alles wat je nodig hebt. Niets meer.",
+    featSub: "Gebouwd voor mensen die grip willen — zonder gedoe.",
+    featAll: "Alle features bekijken →",
+    motLabel: "Motivatie",
+    motTitle: "Schulden beheren hoeft niet zwaar te voelen",
+    motSub: "Met streaks, badges en een stemmingstracker houd je jezelf gemotiveerd. Elke betaalde rekening is een overwinning.",
+    streaks: "Dagelijkse streaks", badges: "11 badges", savings: "Besparingen tracker",
+    days: "dagen", activeStreak: "actieve streak",
+    mapLabel: "Hulp bij jou in de buurt",
+    mapTitle: "43+ gemeenten — en groeiend",
+    mapSub: "Hulporganisaties, juristen en schuldhulpverlening in jouw buurt. Check of jouw gemeente erbij zit.",
+    mapPlaceholder: "Vul je gemeente in...",
+    mapSearch: "Zoek",
+    mapFound: "zit in ons netwerk. Meld je aan om hulporganisaties te zien.",
+    mapNotFound: "We zijn er nog niet in",
+    mapGrow: "— maar we groeien snel.",
+    gemeenten: "Gemeenten", freeAccess: "Gratis toegang", available: "Beschikbaar",
+    ctaTitle: "Klaar voor rust?",
+    ctaSub: "Gratis beginnen. Geen creditcard nodig. Binnen 2 minuten je eerste rekening gescand.",
+    ctaBtn: "Begin nu — het is gratis",
+    footerBuilt: "Built with love from the EU",
+    cookieTitle: "Geen trackers. Geen advertenties.",
+    cookieSub: "We gebruiken alleen functionele cookies om je ingelogd te houden. Dat is alles. Jouw rust, niet jouw data.",
+    cookieBtn: "Begrepen",
+  },
+  en: {
+    heroTag: "Available in 43+ municipalities",
+    heroTitle1: "Your bills.",
+    heroTitle2: "Scanned. Sorted.",
+    heroSub: "PayWatch scans your inbox, tracks every bill, and warns you before costs escalate. So you can focus on what matters.",
+    ctaPrimary: "Start for free",
+    ctaSecondary: "See how it works",
+    login: "Log in",
+    howTitle: "Three steps to peace",
+    howLabel: "How it works",
+    step1: "Scan", step1d: "Connect Gmail or snap a photo of your letter. Our AI detects your bills automatically — amount, IBAN, due date, everything.",
+    step2: "Track", step2d: "See exactly what stage each bill is in. From first invoice to bailiff — including what it costs if you're late.",
+    step3: "Resolve", step3d: "Generate a formal response letter with AI, or find a local aid organization or lawyer in your municipality.",
+    featLabel: "Features",
+    featTitle: "Everything you need. Nothing more.",
+    featSub: "Built for people who want control — without the hassle.",
+    featAll: "View all features →",
+    motLabel: "Motivation",
+    motTitle: "Managing debt doesn't have to feel heavy",
+    motSub: "With streaks, badges and a mood tracker, you stay motivated. Every paid bill is a win.",
+    streaks: "Daily streaks", badges: "11 badges", savings: "Savings tracker",
+    days: "days", activeStreak: "active streak",
+    mapLabel: "Help near you",
+    mapTitle: "43+ municipalities — and growing",
+    mapSub: "Aid organizations, lawyers and debt assistance near you. Check if your municipality is covered.",
+    mapPlaceholder: "Enter your municipality...",
+    mapSearch: "Search",
+    mapFound: "is in our network. Sign up to see aid organizations.",
+    mapNotFound: "We're not in",
+    mapGrow: "yet — but we're growing fast.",
+    gemeenten: "Municipalities", freeAccess: "Free access", available: "Available",
+    ctaTitle: "Ready for peace of mind?",
+    ctaSub: "Start for free. No credit card needed. Scan your first bill in 2 minutes.",
+    ctaBtn: "Start now — it's free",
+    footerBuilt: "Built with love from the EU",
+    cookieTitle: "No trackers. No ads.",
+    cookieSub: "We only use functional cookies to keep you logged in. That's it. Your peace, not your data.",
+    cookieBtn: "Got it",
+  },
 };

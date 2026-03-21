@@ -3,6 +3,7 @@ import sharedConfig from "@paywatch/config/tailwind";
 
 const config: Config = {
   ...sharedConfig,
+  darkMode: "class",
   content: [
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
