@@ -1,28 +1,21 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-jakarta",
-  weight: ["400", "500", "600", "700", "800"],
-});
+import AdminSidebar from "@/components/AdminSidebar";
 
 export const metadata: Metadata = {
-  title: "PayWatch Admin",
-  description: "PayWatch administration dashboard",
+  title: { default: "PayWatch Admin", template: "%s | PayWatch Admin" },
+  description: "PayWatch admin dashboard",
   robots: { index: false, follow: false },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${jakarta.variable} font-sans antialiased`}>
-        {children}
+      <body className="flex min-h-screen">
+        <AdminSidebar />
+        <main className="flex-1 ml-0 md:ml-64 p-4 sm:p-8">
+          {children}
+        </main>
       </body>
     </html>
   );

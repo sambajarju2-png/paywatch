@@ -1,150 +1,149 @@
-import { createAdminClient } from "@paywatch/database";
-import { Card, Title, Text, Metric, Flex, Grid, BarList, DonutChart, AreaChart } from "@tremor/react";
+"use client";
 
-// This line tells Next.js to fetch fresh data on every page load
-export const dynamic = "force-dynamic";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 
-async function getStats() {
-  const supabase = createAdminClient();
-
-  const [
-    { count: totalUsers },
-    { count: activeUsers },
-    { data: usersByCity },
-    { data: billsByStage },
-    { data: recentSignups },
-  ] = await Promise.all([
-    supabase.from("user_settings").select("*", { count: "exact", head: true }).eq("onboarding_complete", true),
-    supabase.from("mood_log").select("user_id", { count: "exact", head: true }).gte("logged_at", new Date(Date.now() - 7 * 86400000).toISOString()),
-    supabase.from("user_settings").select("gemeente").eq("onboarding_complete", true).not("gemeente", "is", null),
-    supabase.from("bills").select("escalation_stage").neq("status", "settled"),
-    supabase.from("user_settings").select("created_at").eq("onboarding_complete", true).order("created_at", { ascending: false }).limit(30),
-  ]);
-
-  // Aggregate users by city
-  const cityMap: Record<string, number> = {};
-  usersByCity?.forEach((u: any) => {
-    if (u.gemeente) cityMap[u.gemeente] = (cityMap[u.gemeente] || 0) + 1;
-  });
-  const topCities = Object.entries(cityMap)
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 10);
-
-  // Aggregate bills by stage
-  const stageMap: Record<string, number> = {};
-  billsByStage?.forEach((b: any) => {
-    if (b.escalation_stage) stageMap[b.escalation_stage] = (stageMap[b.escalation_stage] || 0) + 1;
-  });
-  const stageData = Object.entries(stageMap).map(([name, value]) => ({ name, value }));
-
-  // Signups over time (last 30 days grouped by date)
-  const signupMap: Record<string, number> = {};
-  recentSignups?.forEach((u: any) => {
-    const date = new Date(u.created_at).toLocaleDateString("nl-NL", { day: "2-digit", month: "short" });
-    signupMap[date] = (signupMap[date] || 0) + 1;
-  });
-  const signupData = Object.entries(signupMap)
-    .map(([date, count]) => ({ date, "New users": count }))
-    .reverse();
-
-  return {
-    totalUsers: totalUsers || 0,
-    activeUsers: activeUsers || 0,
-    topCities,
-    stageData,
-    signupData,
-  };
+interface Stats {
+  users: { total: number; completed: number; recentWeek: number };
+  bills: { total: number; paid: number; overdue: number; totalOutstandingEur: string; stages: Record<string, number> };
+  contacts: number;
+  error?: string;
 }
 
-export default async function AdminDashboard() {
-  const { totalUsers, activeUsers, topCities, stageData, signupData } = await getStats();
+export default function AdminDashboard() {
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/admin/stats")
+      .then((r) => r.json())
+      .then(setStats)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <LoadingSkeleton />;
+
+  const s = stats!;
+  const stageColors: Record<string, string> = {
+    factuur: "#2563EB", herinnering: "#D97706", aanmaning: "#EA580C", incasso: "#DC2626", deurwaarder: "#991B1B",
+  };
+  const stageLabels: Record<string, string> = {
+    factuur: "Factuur", herinnering: "Herinnering", aanmaning: "Aanmaning", incasso: "Incasso", deurwaarder: "Deurwaarder",
+  };
+  const maxStage = Math.max(...Object.values(s.bills.stages), 1);
 
   return (
-    <main className="min-h-screen bg-pw-bg">
-      {/* Admin header */}
-      <header className="sticky top-0 z-40 bg-pw-navy text-white">
-        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="font-bold text-lg">PayWatch</span>
-            <span className="text-xs font-medium bg-white/20 px-2 py-0.5 rounded">Admin</span>
-          </div>
-          <nav className="flex items-center gap-6 text-sm font-medium text-white/70">
-            <a href="/" className="text-white">Dashboard</a>
-            <a href="/users" className="hover:text-white transition-colors">Users</a>
-            <a href="/studio" className="hover:text-white transition-colors">CMS Studio</a>
-          </nav>
+    <div>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-sm text-gray-500 mt-1">PayWatch admin overview</p>
         </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <h1 className="text-page-heading text-pw-navy mb-6">Dashboard</h1>
-
-        {/* Metric cards */}
-        <Grid numItems={1} numItemsSm={2} numItemsLg={4} className="gap-4 mb-8">
-          <Card decoration="top" decorationColor="blue">
-            <Text>Total users</Text>
-            <Metric>{totalUsers}</Metric>
-          </Card>
-          <Card decoration="top" decorationColor="green">
-            <Text>Active this week</Text>
-            <Metric>{activeUsers}</Metric>
-          </Card>
-          <Card decoration="top" decorationColor="amber">
-            <Text>Outstanding bills</Text>
-            <Metric>{stageData.reduce((sum, s) => sum + s.value, 0)}</Metric>
-          </Card>
-          <Card decoration="top" decorationColor="purple">
-            <Text>Cities covered</Text>
-            <Metric>{topCities.length}</Metric>
-          </Card>
-        </Grid>
-
-        <Grid numItems={1} numItemsLg={2} className="gap-6">
-          {/* Signups chart */}
-          <Card>
-            <Title>New signups (last 30 days)</Title>
-            {signupData.length > 0 ? (
-              <AreaChart
-                className="h-48 mt-4"
-                data={signupData}
-                index="date"
-                categories={["New users"]}
-                colors={["blue"]}
-                showAnimation
-              />
-            ) : (
-              <Text className="mt-4 text-pw-muted">No signup data yet</Text>
-            )}
-          </Card>
-
-          {/* Users by city */}
-          <Card>
-            <Title>Users by gemeente</Title>
-            {topCities.length > 0 ? (
-              <BarList data={topCities} className="mt-4" color="blue" />
-            ) : (
-              <Text className="mt-4 text-pw-muted">No city data yet</Text>
-            )}
-          </Card>
-
-          {/* Bills by escalation stage */}
-          <Card>
-            <Title>Bills by escalation stage</Title>
-            {stageData.length > 0 ? (
-              <DonutChart
-                className="h-48 mt-4"
-                data={stageData}
-                category="value"
-                index="name"
-                colors={["green", "amber", "orange", "red", "rose"]}
-              />
-            ) : (
-              <Text className="mt-4 text-pw-muted">No bill data yet</Text>
-            )}
-          </Card>
-        </Grid>
+        <span className="text-xs text-gray-400">Last updated: {new Date().toLocaleString("nl-NL")}</span>
       </div>
-    </main>
+
+      {s.error && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 mb-6 text-sm text-amber-800">
+          {s.error}
+        </div>
+      )}
+
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatCard label="Total Users" value={s.users.total} sub={`${s.users.completed} completed onboarding`} color="#2563EB" />
+        <StatCard label="New This Week" value={s.users.recentWeek} sub="signups in last 7 days" color="#059669" />
+        <StatCard label="Total Bills" value={s.bills.total} sub={`${s.bills.paid} paid · ${s.bills.overdue} overdue`} color="#D97706" />
+        <StatCard label="Outstanding" value={`€ ${s.bills.totalOutstandingEur}`} sub="total across all users" color="#DC2626" />
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-6 mb-8">
+        {/* Escalation stages chart */}
+        <div className="rounded-xl border border-gray-200 bg-white p-6">
+          <h3 className="text-sm font-semibold text-gray-900 mb-4">Escalation Stage Distribution</h3>
+          {Object.keys(s.bills.stages).length === 0 ? (
+            <p className="text-sm text-gray-400 py-8 text-center">No bill data yet</p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {Object.entries(s.bills.stages).map(([stage, count]) => (
+                <div key={stage} className="flex items-center gap-3">
+                  <span className="text-xs text-gray-500 w-24 text-right">{stageLabels[stage] || stage}</span>
+                  <div className="flex-1 h-7 bg-gray-100 rounded overflow-hidden">
+                    <div
+                      className="h-full rounded flex items-center px-2"
+                      style={{ width: `${Math.max(8, (count / maxStage) * 100)}%`, background: stageColors[stage] || "#64748B" }}
+                    >
+                      <span className="text-xs font-semibold text-white">{count}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Quick stats */}
+        <div className="rounded-xl border border-gray-200 bg-white p-6">
+          <h3 className="text-sm font-semibold text-gray-900 mb-4">Quick Stats</h3>
+          <div className="flex flex-col gap-4">
+            <QuickStat label="Onboarding completion" value={s.users.total > 0 ? `${Math.round((s.users.completed / s.users.total) * 100)}%` : "0%"} />
+            <QuickStat label="Bill payment rate" value={s.bills.total > 0 ? `${Math.round((s.bills.paid / s.bills.total) * 100)}%` : "0%"} />
+            <QuickStat label="Contact submissions" value={String(s.contacts)} />
+            <QuickStat label="Avg outstanding per user" value={s.users.total > 0 ? `€ ${(parseFloat(s.bills.totalOutstandingEur) / s.users.total).toFixed(2)}` : "€ 0.00"} />
+          </div>
+        </div>
+      </div>
+
+      {/* Quick links */}
+      <div className="grid sm:grid-cols-3 gap-4">
+        {[
+          { href: "/users", label: "Manage Users", desc: `${s.users.total} total users`, color: "#2563EB" },
+          { href: "/bills", label: "Bill Analytics", desc: `${s.bills.total} total bills`, color: "#D97706" },
+          { href: "/contacts", label: "Contact Inbox", desc: `${s.contacts} submissions`, color: "#059669" },
+        ].map((link) => (
+          <Link key={link.href} href={link.href} className="rounded-xl border border-gray-200 bg-white p-5 hover:border-blue-300 transition-colors">
+            <div className="w-8 h-8 rounded-lg mb-3 flex items-center justify-center" style={{ background: `${link.color}15` }}>
+              <div className="w-3 h-3 rounded-full" style={{ background: link.color }} />
+            </div>
+            <p className="text-sm font-semibold text-gray-900">{link.label}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{link.desc}</p>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ label, value, sub, color }: { label: string; value: string | number; sub: string; color: string }) {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="w-2 h-8 rounded-full mb-3" style={{ background: color }} />
+      <p className="text-xs text-gray-500">{label}</p>
+      <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+      <p className="text-xs text-gray-400 mt-1">{sub}</p>
+    </div>
+  );
+}
+
+function QuickStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+      <span className="text-sm text-gray-600">{label}</span>
+      <span className="text-sm font-semibold text-gray-900">{value}</span>
+    </div>
+  );
+}
+
+function LoadingSkeleton() {
+  return (
+    <div>
+      <div className="h-8 w-48 bg-gray-200 rounded mb-2 animate-pulse" />
+      <div className="h-4 w-32 bg-gray-100 rounded mb-8 animate-pulse" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {[1,2,3,4].map(i => <div key={i} className="h-32 bg-gray-100 rounded-xl animate-pulse" />)}
+      </div>
+      <div className="grid lg:grid-cols-2 gap-6">
+        {[1,2].map(i => <div key={i} className="h-64 bg-gray-100 rounded-xl animate-pulse" />)}
+      </div>
+    </div>
   );
 }

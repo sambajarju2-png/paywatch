@@ -1,141 +1,134 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { createBrowserClient } from "@supabase/ssr";
-import { Card, Title, TextInput, Table, TableHead, TableRow, TableHeaderCell, TableBody, TableCell, Badge, Button } from "@tremor/react";
+import { useState, useEffect, useCallback } from "react";
 
-export const dynamic = "force-dynamic";
-
-interface UserRow {
-  user_id: string;
-  display_name: string;
+interface User {
+  id: string;
+  display_name: string | null;
   language: string;
-  gemeente: string | null;
   onboarding_complete: boolean;
   created_at: string;
+  updated_at: string;
 }
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<UserRow[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  async function fetchUsers() {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("user_settings")
-      .select("user_id, display_name, language, gemeente, onboarding_complete, created_at")
-      .order("created_at", { ascending: false })
-      .limit(200);
-    setUsers(data || []);
+    const params = new URLSearchParams();
+    if (search) params.set("search", search);
+    const res = await fetch(`/api/admin/users?${params}`);
+    const data = await res.json();
+    setUsers(data.users || []);
     setLoading(false);
-  }
+  }, [search]);
 
-  async function deleteUser(userId: string) {
-    if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
+  useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
-    const res = await fetch("/api/admin/delete-user", {
-      method: "POST",
+  async function handleDelete(userId: string) {
+    setDeleting(userId);
+    await fetch("/api/admin/users", {
+      method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId }),
     });
-
-    if (res.ok) {
-      setUsers(users.filter((u) => u.user_id !== userId));
-    } else {
-      alert("Failed to delete user. Check console.");
-    }
+    setConfirmDelete(null);
+    setDeleting(null);
+    fetchUsers();
   }
 
-  const filtered = users.filter(
-    (u) =>
-      u.display_name?.toLowerCase().includes(search.toLowerCase()) ||
-      u.gemeente?.toLowerCase().includes(search.toLowerCase()) ||
-      u.user_id.includes(search)
-  );
-
   return (
-    <main className="min-h-screen bg-pw-bg">
-      <header className="sticky top-0 z-40 bg-pw-navy text-white">
-        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="font-bold text-lg">PayWatch</span>
-            <span className="text-xs font-medium bg-white/20 px-2 py-0.5 rounded">Admin</span>
-          </div>
-          <nav className="flex items-center gap-6 text-sm font-medium text-white/70">
-            <a href="/" className="hover:text-white transition-colors">Dashboard</a>
-            <a href="/users" className="text-white">Users</a>
-            <a href="/studio" className="hover:text-white transition-colors">CMS Studio</a>
-          </nav>
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Users</h1>
+          <p className="text-sm text-gray-500 mt-1">{users.length} users loaded</p>
         </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <h1 className="text-page-heading text-pw-navy mb-6">Users ({filtered.length})</h1>
-
-        <Card>
-          <div className="mb-4">
-            <TextInput
-              placeholder="Search by name, gemeente, or user ID..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
-          {loading ? (
-            <p className="text-pw-muted text-sm py-8 text-center">Loading users...</p>
-          ) : (
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableHeaderCell>Name</TableHeaderCell>
-                  <TableHeaderCell>Gemeente</TableHeaderCell>
-                  <TableHeaderCell>Language</TableHeaderCell>
-                  <TableHeaderCell>Status</TableHeaderCell>
-                  <TableHeaderCell>Joined</TableHeaderCell>
-                  <TableHeaderCell>Actions</TableHeaderCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filtered.map((user) => (
-                  <TableRow key={user.user_id}>
-                    <TableCell>{user.display_name || "—"}</TableCell>
-                    <TableCell>{user.gemeente || "—"}</TableCell>
-                    <TableCell>{user.language?.toUpperCase() || "NL"}</TableCell>
-                    <TableCell>
-                      <Badge color={user.onboarding_complete ? "green" : "gray"}>
-                        {user.onboarding_complete ? "Active" : "Onboarding"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(user.created_at).toLocaleDateString("nl-NL")}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        size="xs"
-                        color="red"
-                        variant="secondary"
-                        onClick={() => deleteUser(user.user_id)}
-                      >
-                        Delete
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </Card>
       </div>
-    </main>
+
+      {/* Search */}
+      <div className="mb-6">
+        <input
+          type="text"
+          placeholder="Search by name..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full max-w-sm rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      {/* Table */}
+      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-100 bg-gray-50">
+                <th className="text-left text-xs font-semibold text-gray-500 uppercase px-4 py-3">Name</th>
+                <th className="text-left text-xs font-semibold text-gray-500 uppercase px-4 py-3">Language</th>
+                <th className="text-left text-xs font-semibold text-gray-500 uppercase px-4 py-3">Onboarded</th>
+                <th className="text-left text-xs font-semibold text-gray-500 uppercase px-4 py-3">Joined</th>
+                <th className="text-right text-xs font-semibold text-gray-500 uppercase px-4 py-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={5} className="text-center py-12 text-sm text-gray-400">Loading...</td></tr>
+              ) : users.length === 0 ? (
+                <tr><td colSpan={5} className="text-center py-12 text-sm text-gray-400">No users found</td></tr>
+              ) : (
+                users.map((user) => (
+                  <tr key={user.id} className="border-b border-gray-50 hover:bg-gray-50/50">
+                    <td className="px-4 py-3">
+                      <p className="text-sm font-medium text-gray-900">{user.display_name || "—"}</p>
+                      <p className="text-xs text-gray-400 font-mono">{user.id.slice(0, 8)}...</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-xs font-semibold uppercase text-gray-500">{user.language || "nl"}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {user.onboarding_complete ? (
+                        <span className="inline-flex items-center rounded bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700">Yes</span>
+                      ) : (
+                        <span className="inline-flex items-center rounded bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500">No</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-500">{new Date(user.created_at).toLocaleDateString("nl-NL")}</td>
+                    <td className="px-4 py-3 text-right">
+                      {confirmDelete === user.id ? (
+                        <div className="flex items-center justify-end gap-2">
+                          <span className="text-xs text-red-600 font-medium">Delete forever?</span>
+                          <button
+                            onClick={() => handleDelete(user.id)}
+                            disabled={deleting === user.id}
+                            className="rounded bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                          >
+                            {deleting === user.id ? "..." : "Confirm"}
+                          </button>
+                          <button onClick={() => setConfirmDelete(null)} className="rounded border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50">
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmDelete(user.id)}
+                          className="rounded border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   );
 }
