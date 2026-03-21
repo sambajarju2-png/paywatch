@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { Card, Title, TextInput, Table, TableHead, TableRow, TableHeaderCell, TableBody, TableCell, Badge, Button } from "@tremor/react";
 
+export const dynamic = "force-dynamic";
+
 interface UserRow {
   user_id: string;
   display_name: string;
