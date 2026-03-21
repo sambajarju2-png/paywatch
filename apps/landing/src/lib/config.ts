@@ -63,7 +63,9 @@ export const gemeenten = [
   "Gouda","Alkmaar","Lelystad","Alphen aan den Rijn","Hoorn","Purmerend",
 ];
 
-/* ─── Founders ─── */
+/* ─── Team Members ─── */
+/* To add a new person: copy a block, fill in the fields, done. */
+/* To add a photo: put image in /public/team/ and set photo to "/team/filename.jpg" */
 export const founders = [
   {
     name: "Samba",
@@ -72,6 +74,7 @@ export const founders = [
       nl: "Techneut met een missie. Bouwt PayWatch van de grond af op met AI en een obsessie voor gebruiksvriendelijkheid.",
       en: "Tech builder on a mission. Building PayWatch from the ground up with AI and an obsession for user experience.",
     },
+    photo: "", // Add: "/team/samba.jpg"
     linkedin: "https://www.linkedin.com/in/sambajarju/",
     email: "samba@paywatch.nl",
   },
@@ -82,9 +85,19 @@ export const founders = [
       nl: "De stem van PayWatch. Zorgt dat onze boodschap warm, helder en menselijk is — nooit corporate.",
       en: "The voice of PayWatch. Ensures our message stays warm, clear and human — never corporate.",
     },
+    photo: "", // Add: "/team/mariama.jpg"
     linkedin: "https://www.linkedin.com/in/hadja-mariama-sesay-3a5392228/",
     email: "mariama@paywatch.com",
   },
+  // To add more team members, copy this template:
+  // {
+  //   name: "Name",
+  //   role: { nl: "Rol", en: "Role" },
+  //   bio: { nl: "Bio in het Nederlands.", en: "Bio in English." },
+  //   photo: "", // "/team/name.jpg"
+  //   linkedin: "https://linkedin.com/in/...",
+  //   email: "name@paywatch.nl",
+  // },
 ];
 
 /* ─── Pricing ─── */

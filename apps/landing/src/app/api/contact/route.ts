@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, type, subject, message, lang } = body;
+    const { name, email, type, companyName, subject, message, lang } = body;
 
     if (!name || !email || !message) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -21,6 +21,7 @@ export async function POST(request: Request) {
         name,
         email,
         type: type || "consumer",
+        company_name: companyName || null,
         subject: subject || "",
         message,
         lang: lang || "nl",
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
       }
     } else {
       // Log to console in development
-      console.log("Contact form submission (no Supabase configured):", { name, email, type, subject, message, lang });
+      console.log("Contact form submission (no Supabase configured):", { name, email, type, companyName, subject, message, lang });
     }
 
     return NextResponse.json({ success: true });
