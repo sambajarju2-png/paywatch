@@ -5,12 +5,14 @@ import "./globals.css";
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-jakarta",
+  display: "swap",
   weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
-  title: "PayWatch — Jouw rekeningen onder controle",
-  description: "Track en beheer je huishoudelijke rekeningen met AI-ondersteuning",
+  title: { default: "PayWatch", template: "%s | PayWatch" },
+  description: "Grip op je rekeningen",
+  robots: { index: false, follow: false },
 };
 
 export const viewport: Viewport = {
@@ -20,14 +22,10 @@ export const viewport: Viewport = {
   themeColor: "#0A2540",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="nl" suppressHydrationWarning>
-      <body className={`${jakarta.variable} font-sans antialiased`}>
+      <body className={`${jakarta.variable} font-sans`}>
         {children}
       </body>
     </html>
