@@ -18,6 +18,7 @@ const translations = {
   nl: {
     nav: {
       features: "Functies",
+      pricing: "Prijzen",
       about: "Over ons",
       resources: "Hulpmiddelen",
       jobs: "Vacatures",
@@ -94,6 +95,21 @@ const translations = {
       message: "PayWatch gebruikt geen trackers of advertentie-cookies. We slaan alleen je taalvoorkeur en thema-instelling op.",
       accept: "Begrepen",
     },
+    pricing: {
+      title: "Gratis in beta",
+      subtitle: "PayWatch is gratis te gebruiken. Nodig een vriend uit om alle functies te ontgrendelen.",
+      free: "Gratis",
+      freeDesc: "Voor iedereen",
+      full: "Volledig",
+      fullDesc: "Nodig 1 vriend uit",
+      included: "Inbegrepen",
+      limited: "Beperkt",
+      locked: "Ontgrendel met invite",
+      unlimited: "Onbeperkt",
+      inviteCta: "Nodig een vriend uit",
+      inviteExplain: "Nodig 1 vriend uit die een account aanmaakt en krijg direct toegang tot alle functies. Geen betaling, geen verplichtingen.",
+      startFree: "Start gratis",
+    },
     contact: {
       title: "Contact",
       subtitle: "Neem contact met ons op",
@@ -102,6 +118,7 @@ const translations = {
       typeLabel: "Ik ben een...",
       typeConsumer: "Particulier",
       typeBusiness: "Bedrijf / Gemeente",
+      subjectLabel: "Onderwerp",
       messageLabel: "Bericht",
       send: "Verstuur bericht",
       success: "Bedankt! We nemen zo snel mogelijk contact op.",
@@ -118,14 +135,20 @@ const translations = {
       title: "Werken bij PayWatch",
       subtitle: "Help mee om financiële stress in Nederland te verminderen",
       apply: "Solliciteer",
+      readMore: "Lees meer",
+      backToJobs: "Terug naar vacatures",
       remote: "Remote",
       hybrid: "Hybride",
       office: "Kantoor",
       noJobs: "Momenteel geen openstaande vacatures.",
+      requirements: "Wat we zoeken",
+      niceToHave: "Fijn als je dit ook hebt",
+      perks: "Wat wij bieden",
     },
     resources: {
       title: "Hulpmiddelen",
       subtitle: "Hulporganisaties, juristen en gemeentelijke ondersteuning",
+      tabs: { directory: "Hulpverleners", blog: "Blog" },
       aidOrgs: "Hulporganisaties",
       lawyers: "Juridisch advies",
       filterLabel: "Filter op categorie",
@@ -135,6 +158,8 @@ const translations = {
       financial: "Financieel",
       visit: "Bezoek website",
       call: "Bel",
+      readMore: "Lees meer",
+      blogEmpty: "Binnenkort verschijnen hier onze blogartikelen.",
     },
     dataProcessing: {
       title: "Gegevensverwerking",
@@ -164,6 +189,7 @@ const translations = {
   en: {
     nav: {
       features: "Features",
+      pricing: "Pricing",
       about: "About",
       resources: "Resources",
       jobs: "Jobs",
@@ -240,6 +266,21 @@ const translations = {
       message: "PayWatch doesn't use trackers or advertising cookies. We only store your language preference and theme setting.",
       accept: "Got it",
     },
+    pricing: {
+      title: "Free in beta",
+      subtitle: "PayWatch is free to use. Invite a friend to unlock all features.",
+      free: "Free",
+      freeDesc: "For everyone",
+      full: "Full",
+      fullDesc: "Invite 1 friend",
+      included: "Included",
+      limited: "Limited",
+      locked: "Unlock with invite",
+      unlimited: "Unlimited",
+      inviteCta: "Invite a friend",
+      inviteExplain: "Invite 1 friend who creates an account and get instant access to all features. No payment, no strings attached.",
+      startFree: "Start free",
+    },
     contact: {
       title: "Contact",
       subtitle: "Get in touch with us",
@@ -248,6 +289,7 @@ const translations = {
       typeLabel: "I am a...",
       typeConsumer: "Consumer",
       typeBusiness: "Business / Municipality",
+      subjectLabel: "Subject",
       messageLabel: "Message",
       send: "Send message",
       success: "Thanks! We'll get back to you as soon as possible.",
@@ -264,14 +306,20 @@ const translations = {
       title: "Work at PayWatch",
       subtitle: "Help us reduce financial stress in the Netherlands",
       apply: "Apply",
+      readMore: "Read more",
+      backToJobs: "Back to jobs",
       remote: "Remote",
       hybrid: "Hybrid",
       office: "Office",
       noJobs: "No open positions at the moment.",
+      requirements: "What we're looking for",
+      niceToHave: "Nice to have",
+      perks: "What we offer",
     },
     resources: {
       title: "Resources",
       subtitle: "Support organizations, lawyers and municipal assistance",
+      tabs: { directory: "Directory", blog: "Blog" },
       aidOrgs: "Support organizations",
       lawyers: "Legal advice",
       filterLabel: "Filter by category",
@@ -281,6 +329,8 @@ const translations = {
       financial: "Financial",
       visit: "Visit website",
       call: "Call",
+      readMore: "Read more",
+      blogEmpty: "Blog articles coming soon.",
     },
     dataProcessing: {
       title: "Data Processing",
@@ -321,7 +371,6 @@ export default function AppProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("nl");
   const [theme, setThemeState] = useState<Theme>("light");
 
-  /* Hydrate from localStorage */
   useEffect(() => {
     const savedLang = localStorage.getItem("pw-lang") as Lang | null;
     const savedTheme = localStorage.getItem("pw-theme") as Theme | null;
@@ -330,7 +379,6 @@ export default function AppProvider({ children }: { children: ReactNode }) {
     else if (window.matchMedia("(prefers-color-scheme: dark)").matches) setThemeState("dark");
   }, []);
 
-  /* Sync theme class + lang attribute on <html> */
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
     document.documentElement.setAttribute("lang", lang);

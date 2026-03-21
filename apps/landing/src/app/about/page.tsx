@@ -5,17 +5,15 @@ import { founders } from "@/lib/config";
 
 export default function AboutPage() {
   const { lang, t } = useApp();
-  const isNl = lang === "nl";
 
   return (
     <div className="bg-[var(--bg)]">
-      {/* Header */}
       <div className="mx-auto max-w-6xl px-4 pt-12 pb-4 sm:px-6 sm:pt-20 sm:pb-8 text-center">
         <h1 className="text-3xl sm:text-4xl font-extrabold text-[var(--navy)] tracking-tight">{t.about.title}</h1>
         <p className="text-base text-[var(--muted)] mt-3 max-w-xl mx-auto">{t.about.subtitle}</p>
       </div>
 
-      {/* Story section */}
+      {/* Story */}
       <div className="mx-auto max-w-3xl px-4 sm:px-6 pb-12">
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-10">
           <p className="text-base text-[var(--text)] leading-relaxed">{t.about.story}</p>
@@ -26,7 +24,7 @@ export default function AboutPage() {
         </div>
       </div>
 
-      {/* Founder cards */}
+      {/* Founders */}
       <div className="mx-auto max-w-6xl px-4 sm:px-6 pb-16 sm:pb-24">
         <div className="grid gap-6 sm:grid-cols-2 max-w-3xl mx-auto">
           {founders.map((founder) => (
@@ -41,7 +39,6 @@ export default function AboutPage() {
                 <p className="text-sm font-medium text-[var(--blue)] mb-3">{founder.role[lang]}</p>
                 <p className="text-sm text-[var(--muted)] leading-relaxed mb-4">{founder.bio[lang]}</p>
 
-                {/* Social links */}
                 <div className="flex items-center justify-center gap-3">
                   <a
                     href={founder.linkedin}
@@ -71,14 +68,23 @@ export default function AboutPage() {
         </div>
       </div>
 
-      {/* Company info */}
+      {/* Company info — no emojis, clean icons */}
       <div className="bg-[var(--surface)] border-t border-[var(--border)]">
         <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 text-center">
           <h3 className="text-lg font-bold text-[var(--navy)] mb-4">PayWatch B.V.</h3>
           <div className="flex flex-wrap justify-center gap-6 text-sm text-[var(--muted)]">
-            <span>📍 Rotterdam, Netherlands</span>
-            <span>🏢 KVK: 83474889</span>
-            <span>📧 info@paywatch.nl</span>
+            <div className="flex items-center gap-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>Rotterdam, Netherlands</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              <span>KVK: 83474889</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 5L2 7"/></svg>
+              <a href="mailto:info@paywatch.nl" className="hover:text-[var(--blue)] transition-colors">info@paywatch.nl</a>
+            </div>
           </div>
         </div>
       </div>
