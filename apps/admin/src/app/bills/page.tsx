@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import AuthGate from "@/components/AuthGate";
 import AdminSidebar from "@/components/AdminSidebar";
-import { Card, BarChart, DonutChart, BarList, CategoryBar } from "@tremor/react";
+import { Card, BarChart, DonutChart, BarList, CategoryBar, Badge } from "@tremor/react";
 
 interface Stats {
   totalBills: number;
@@ -18,7 +18,9 @@ interface Stats {
 }
 
 const STAGE_LABELS: Record<string, string> = { factuur: "Factuur", herinnering: "Herinnering", aanmaning: "Aanmaning", incasso: "Incasso", deurwaarder: "Deurwaarder" };
-const fmt = (c: number) => new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(c / 100);
+
+const currencyFmt = (c: number) => new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(c / 100);
+const numberFmt = (n: number) => Intl.NumberFormat("nl-NL").format(n);
 
 export default function BillsPage() {
   const [stats, setStats] = useState<Stats | null>(null);
@@ -32,9 +34,9 @@ export default function BillsPage() {
 
   const donutData = stats
     ? [
-        { name: "Betaald", amount: stats.paidBills },
-        { name: "Openstaand", amount: stats.outstandingBills },
-        { name: "Achterstallig", amount: stats.overdueCount },
+        { name: "Betaald", value: stats.paidBills },
+        { name: "Openstaand", value: stats.outstandingBills },
+        { name: "Achterstallig", value: stats.overdueCount },
       ]
     : [];
 
@@ -60,48 +62,49 @@ export default function BillsPage() {
         <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content mb-6">Analyse van alle rekeningen</p>
 
         {loading ? <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-tremor-brand border-t-transparent rounded-full animate-spin" /></div> : stats && (
-          <>
-            {/* Top stat cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="space-y-6">
+            {/* KPI row */}
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                { label: "Totaal", value: stats.totalBills, css: "text-tremor-content-strong dark:text-dark-tremor-content-strong" },
-                { label: "Betaald", value: stats.paidBills, css: "text-emerald-600 dark:text-emerald-400" },
-                { label: "Openstaand", value: stats.outstandingBills, css: "text-blue-600 dark:text-blue-400" },
-                { label: "Achterstallig", value: stats.overdueCount, css: "text-red-600 dark:text-red-400" },
+                { title: "Totaal", metric: stats.totalBills, badge: null },
+                { title: "Betaald", metric: stats.paidBills, badge: { text: `${paidPct}%`, color: "emerald" as const } },
+                { title: "Openstaand", metric: stats.outstandingBills, badge: { text: `${openPct}%`, color: "blue" as const } },
+                { title: "Achterstallig", metric: stats.overdueCount, badge: stats.overdueCount > 0 ? { text: "actie", color: "red" as const } : null },
               ].map((c) => (
-                <Card key={c.label} className="!p-4">
-                  <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">{c.label}</p>
-                  <p className={`text-tremor-metric font-semibold mt-1 ${c.css}`}>{c.value}</p>
+                <Card key={c.title}>
+                  <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">{c.title}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-tremor-metric font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">{c.metric}</p>
+                    {c.badge && <Badge color={c.badge.color}>{c.badge.text}</Badge>}
+                  </div>
                 </Card>
               ))}
             </div>
 
-            {/* Amount cards + progress */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
+            {/* Amount cards + CategoryBar */}
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <Card>
                 <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">Totaal bedrag</p>
-                <p className="text-2xl font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong mt-1">{fmt(stats.totalAmountCents)}</p>
+                <p className="mt-1 text-2xl font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">{currencyFmt(stats.totalAmountCents)}</p>
               </Card>
               <Card>
                 <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">Betaald bedrag</p>
-                <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1">{fmt(stats.paidAmountCents)}</p>
+                <p className="mt-1 text-2xl font-semibold text-emerald-600 dark:text-emerald-400">{currencyFmt(stats.paidAmountCents)}</p>
                 <CategoryBar
                   values={[paidPct, openPct, overduePct, Math.max(0, 100 - paidPct - openPct - overduePct)]}
                   colors={["emerald", "blue", "red", "gray"]}
                   className="mt-3"
                 />
                 <div className="flex gap-4 mt-2 text-tremor-label text-tremor-content dark:text-dark-tremor-content">
-                  <span>Betaald {paidPct}%</span>
-                  <span>Open {openPct}%</span>
-                  <span>Achterstallig {overduePct}%</span>
+                  <span>Betaald {paidPct}%</span><span>Open {openPct}%</span><span>Achterstallig {overduePct}%</span>
                 </div>
               </Card>
             </div>
 
-            {/* Escalation chart + Donut */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {/* Charts */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <Card>
-                <h3 className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">Escalatie verdeling</h3>
+                <h3 className="text-lg font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">Escalatie verdeling</h3>
                 <BarChart
                   className="mt-4 h-64"
                   data={escalationData}
@@ -110,34 +113,35 @@ export default function BillsPage() {
                   colors={["blue"]}
                   showLegend={false}
                   yAxisWidth={32}
+                  valueFormatter={(n) => `${numberFmt(n)}`}
                 />
               </Card>
               <Card>
-                <h3 className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">Status verdeling</h3>
+                <h3 className="text-lg font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">Status verdeling</h3>
                 <DonutChart
                   className="mt-4 h-56"
                   data={donutData}
-                  category="amount"
+                  category="value"
                   index="name"
                   colors={["emerald", "blue", "red"]}
                   showLabel={true}
-                  valueFormatter={(v) => `${v} rekeningen`}
+                  valueFormatter={(n) => `${n} rekeningen`}
                 />
               </Card>
             </div>
 
             {/* BarLists */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <Card>
-                <h3 className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">Bron</h3>
-                <BarList data={sourceBarList} className="mt-4" color="blue" />
+                <h3 className="text-lg font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">Bron</h3>
+                <BarList data={sourceBarList} className="mt-4" color="blue" valueFormatter={(n) => `${numberFmt(n)}`} />
               </Card>
               <Card>
-                <h3 className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">Categorie</h3>
-                <BarList data={categoryBarList} className="mt-4" color="emerald" />
+                <h3 className="text-lg font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">Categorie</h3>
+                <BarList data={categoryBarList} className="mt-4" color="emerald" valueFormatter={(n) => `${numberFmt(n)}`} />
               </Card>
             </div>
-          </>
+          </div>
         )}
       </main>
     </AuthGate>

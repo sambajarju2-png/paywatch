@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import AuthGate from "@/components/AuthGate";
 import AdminSidebar from "@/components/AdminSidebar";
-import { Card, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "@tremor/react";
+import { Card, Badge, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "@tremor/react";
 
 interface User {
   user_id: string;
@@ -55,7 +55,7 @@ export default function UsersPage() {
             <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content mt-1">{users.length} geregistreerd</p>
           </div>
           <div className="relative">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-tremor-content" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Zoek gebruiker..."
               className="pl-9 pr-4 py-2 rounded-tremor-default border border-tremor-border dark:border-dark-tremor-border text-tremor-default bg-tremor-background dark:bg-dark-tremor-background text-tremor-content-strong dark:text-dark-tremor-content-strong w-72 outline-none focus:ring-2 focus:ring-tremor-brand" />
           </div>
@@ -89,19 +89,13 @@ export default function UsersPage() {
                     </TableCell>
                     <TableCell>{u.gemeente || "—"}</TableCell>
                     <TableCell>
-                      <span className="inline-flex rounded-tremor-small bg-tremor-background-muted dark:bg-dark-tremor-background-muted px-2 py-0.5 text-tremor-label font-medium">
-                        {u.language === "nl" ? "NL" : "EN"}
-                      </span>
+                      <Badge color="gray" size="xs">{u.language === "nl" ? "NL" : "EN"}</Badge>
                     </TableCell>
                     <TableCell>
-                      {u.onboarding_complete ? (
-                        <span className="inline-flex items-center gap-1 text-tremor-label font-semibold text-emerald-700 dark:text-emerald-500">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                          Voltooid
-                        </span>
-                      ) : (
-                        <span className="text-tremor-label font-semibold text-amber-700 dark:text-amber-500">Bezig</span>
-                      )}
+                      {u.onboarding_complete
+                        ? <Badge color="emerald">Voltooid</Badge>
+                        : <Badge color="amber">Bezig</Badge>
+                      }
                     </TableCell>
                     <TableCell className="text-tremor-label">{u.created_at ? new Date(u.created_at).toLocaleDateString("nl-NL") : "—"}</TableCell>
                     <TableCell className="text-right">
