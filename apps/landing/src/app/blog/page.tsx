@@ -4,7 +4,6 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useApp } from "@/components/AppProvider";
-import { blogCategories } from "@/lib/blog-content";
 
 interface BlogPost {
   slug: string;
@@ -18,6 +17,11 @@ interface BlogPost {
   mainImageUrl?: string | null;
 }
 
+interface CategoryItem {
+  slug: string;
+  label: { nl: string; en: string };
+}
+
 function BlogContent() {
   const { lang } = useApp();
   const isNl = lang === "nl";
@@ -26,27 +30,27 @@ function BlogContent() {
 
   const [activeCategory, setActiveCategory] = useState("all");
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  /* Fetch from Sanity API */
   useEffect(() => {
     fetch("/api/blog-posts")
       .then((r) => r.json())
       .then((d) => {
-        if (d.posts && d.posts.length > 0) {
-          setPosts(d.posts);
-        }
+        if (d.posts?.length > 0) setPosts(d.posts);
+        if (d.categories?.length > 0) setCategories(d.categories);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  /* Sync from URL param */
   useEffect(() => {
-    if (categoryFromUrl && blogCategories.some((c) => c.slug === categoryFromUrl)) {
-      setActiveCategory(categoryFromUrl);
-    }
+    if (categoryFromUrl) setActiveCategory(categoryFromUrl);
   }, [categoryFromUrl]);
+
+  /* Build filter tabs: "All" + dynamic categories from Sanity */
+  const allTab: CategoryItem = { slug: "all", label: { nl: "Alles", en: "All" } };
+  const filterTabs = [allTab, ...categories];
 
   const filtered = activeCategory === "all"
     ? posts
@@ -61,24 +65,25 @@ function BlogContent() {
         </p>
       </div>
 
-      {/* Category filter */}
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 mb-8">
-        <div className="flex flex-wrap gap-2 justify-center">
-          {blogCategories.map((cat) => (
-            <button key={cat.slug}
-              onClick={() => setActiveCategory(cat.slug)}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors border ${
-                activeCategory === cat.slug
-                  ? "bg-[var(--blue)] text-white border-[var(--blue)]"
-                  : "bg-[var(--surface)] text-[var(--muted)] border-[var(--border)] hover:border-[var(--blue)]"
-              }`}>
-              {cat.label[lang]}
-            </button>
-          ))}
+      {/* Category filter — dynamic from Sanity */}
+      {filterTabs.length > 1 && (
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 mb-8">
+          <div className="flex flex-wrap gap-2 justify-center">
+            {filterTabs.map((cat) => (
+              <button key={cat.slug}
+                onClick={() => setActiveCategory(cat.slug)}
+                className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors border ${
+                  activeCategory === cat.slug
+                    ? "bg-[var(--blue)] text-white border-[var(--blue)]"
+                    : "bg-[var(--surface)] text-[var(--muted)] border-[var(--border)] hover:border-[var(--blue)]"
+                }`}>
+                {cat.label[lang]}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Posts grid */}
       <div className="mx-auto max-w-6xl px-4 sm:px-6 pb-16 sm:pb-24">
         {loading ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -98,7 +103,6 @@ function BlogContent() {
             {filtered.map((post) => (
               <Link key={post.slug} href={`/blog/${post.slug}`}
                 className="group rounded-2xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden hover:border-[var(--blue)] transition-colors">
-                {/* Image: show Sanity mainImage or placeholder */}
                 {post.mainImageUrl ? (
                   <div className="h-44 bg-[var(--bg)] border-b border-[var(--border)] overflow-hidden">
                     <img src={post.mainImageUrl} alt={post.title[lang]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />

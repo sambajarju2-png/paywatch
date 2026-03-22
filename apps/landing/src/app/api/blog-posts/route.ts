@@ -42,7 +42,7 @@ export async function GET() {
           excerpt: { nl: excerpt.nl || "", en: excerpt.en || "" },
           metaDescription: { nl: meta.nl || excerpt.nl || "", en: meta.en || excerpt.en || "" },
           category: { nl: cat.title || "", en: cat.title || "" },
-          categorySlug: cat.slug || "educatie",
+          categorySlug: cat.slug || "",
           date: ((post.publishedAt as string) || "").slice(0, 10),
           readTime: (post.readTime as string) || "5 min",
           author: author.name || "PayWatch",
@@ -51,12 +51,24 @@ export async function GET() {
           sections: [],
         };
       });
-      return NextResponse.json({ posts });
+
+      /* Build unique categories from actual posts */
+      const catMap = new Map<string, { nl: string; en: string }>();
+      for (const p of posts) {
+        if (p.categorySlug && p.category.nl) {
+          catMap.set(p.categorySlug, p.category);
+        }
+      }
+      const categories = Array.from(catMap.entries()).map(([slug, label]) => ({
+        slug,
+        label,
+      }));
+
+      return NextResponse.json({ posts, categories });
     }
   } catch (e) {
     console.error("[Sanity] Blog posts API error:", e);
   }
 
-  // Fallback to hardcoded
-  return NextResponse.json({ posts: blogPostsFull });
+  return NextResponse.json({ posts: blogPostsFull, categories: [] });
 }
