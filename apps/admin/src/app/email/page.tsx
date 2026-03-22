@@ -1269,24 +1269,27 @@ export default function EmailPage() {
                 padding: "12px 16px",
               }}
             >
-              <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
                 <Icon d={ICONS.clipboard} size={14} color={C.blue} />
-                Available Variables
+                Personalization Variables
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 24px" }}>
+              <div style={{ fontSize: 11, color: C.muted, marginBottom: 10, lineHeight: 1.5 }}>
+                These work per contact — Resend replaces them with each recipient's data. If a contact is missing a value, it renders as empty.
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 24px", marginBottom: 12 }}>
                 {[
                   { var: "{{first_name}}", desc: "Contact's first name" },
                   { var: "{{last_name}}", desc: "Contact's last name" },
-                  { var: "{{email}}", desc: "Contact's email address" },
+                  { var: "{{email}}", desc: "Contact's email" },
                 ].map((v) => (
-                  <div key={v.var} style={{ display: "flex", alignItems: "baseline", gap: 8, fontSize: 11, padding: "2px 0" }}>
+                  <div key={v.var} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, padding: "3px 0" }}>
                     <code
                       style={{
                         background: C.surface,
                         border: `1px solid ${C.border}`,
                         borderRadius: 4,
-                        padding: "1px 6px",
-                        fontSize: 11,
+                        padding: "2px 8px",
+                        fontSize: 12,
                         fontFamily: "monospace",
                         color: C.blue,
                         cursor: "pointer",
@@ -1301,40 +1304,49 @@ export default function EmailPage() {
                   </div>
                 ))}
               </div>
+
+              {/* Unsubscribe — required */}
               <div
                 style={{
-                  marginTop: 10,
-                  paddingTop: 8,
                   borderTop: `1px solid ${C.border}`,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 4,
+                  paddingTop: 10,
                 }}
               >
-                <div style={{ fontSize: 11, fontWeight: 600, color: C.text }}>Required links:</div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 8, fontSize: 11 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
                   <code
                     style={{
                       background: C.redLight,
                       border: `1px solid ${C.border}`,
                       borderRadius: 4,
-                      padding: "1px 6px",
-                      fontSize: 11,
+                      padding: "2px 8px",
+                      fontSize: 12,
                       fontFamily: "monospace",
                       color: C.red,
                       cursor: "pointer",
                       whiteSpace: "nowrap",
                     }}
                     title="Click to copy"
-                    onClick={() => navigator.clipboard.writeText("{{{RESEND_UNSUBSCRIBE_URL}}}")}
+                    onClick={() => navigator.clipboard.writeText("{{{resend_unsubscribe_url}}}")}
                   >
-                    {`{{{RESEND_UNSUBSCRIBE_URL}}}`}
+                    {`{{{resend_unsubscribe_url}}}`}
                   </code>
-                  <span style={{ color: C.muted }}>Unsubscribe link (triple braces — <strong>required</strong>)</span>
+                  <span style={{ color: C.text, fontWeight: 600 }}>Unsubscribe link</span>
+                  <span
+                    style={{
+                      background: C.red,
+                      color: "#fff",
+                      padding: "1px 6px",
+                      borderRadius: 3,
+                      fontSize: 10,
+                      fontWeight: 700,
+                    }}
+                  >
+                    REQUIRED
+                  </span>
                 </div>
-              </div>
-              <div style={{ fontSize: 10, color: C.muted, marginTop: 8 }}>
-                Click any variable to copy. Paste a template from the email templates folder, then replace placeholders.
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>
+                  Triple braces — prevents URL encoding. Click any variable to copy.
+                </div>
               </div>
             </div>
           </div>
