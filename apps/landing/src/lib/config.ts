@@ -40,6 +40,8 @@ export const footerColumns = {
     { labelNl: "Vacatures", labelEn: "Jobs", href: "/jobs" },
     { labelNl: "Blog", labelEn: "Blog", href: "/blog" },
     { labelNl: "Contact", labelEn: "Contact", href: "/contact" },
+    { label: { nl: "Roadmap", en: "Roadmap" }, href: "/roadmap" },
+
   ],
   legal: [
     { labelNl: "Privacybeleid", labelEn: "Privacy Policy", href: "/privacy" },
