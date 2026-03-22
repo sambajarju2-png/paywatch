@@ -6,7 +6,9 @@ import Link from "next/link";
 interface Stats {
   users: { total: number; completed: number; recentWeek: number };
   bills: { total: number; paid: number; overdue: number; totalOutstandingEur: string; stages: Record<string, number> };
+  moods: Record<string, number>;
   contacts: number;
+  applications: number;
   error?: string;
 }
 
@@ -88,17 +90,19 @@ export default function AdminDashboard() {
             <QuickStat label="Onboarding completion" value={s.users.total > 0 ? `${Math.round((s.users.completed / s.users.total) * 100)}%` : "0%"} />
             <QuickStat label="Bill payment rate" value={s.bills.total > 0 ? `${Math.round((s.bills.paid / s.bills.total) * 100)}%` : "0%"} />
             <QuickStat label="Contact submissions" value={String(s.contacts)} />
+            <QuickStat label="Job applications" value={String(s.applications)} />
             <QuickStat label="Avg outstanding per user" value={s.users.total > 0 ? `€ ${(parseFloat(s.bills.totalOutstandingEur) / s.users.total).toFixed(2)}` : "€ 0.00"} />
           </div>
         </div>
       </div>
 
       {/* Quick links */}
-      <div className="grid sm:grid-cols-3 gap-4">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { href: "/users", label: "Manage Users", desc: `${s.users.total} total users`, color: "#2563EB" },
           { href: "/bills", label: "Bill Analytics", desc: `${s.bills.total} total bills`, color: "#D97706" },
           { href: "/contacts", label: "Contact Inbox", desc: `${s.contacts} submissions`, color: "#059669" },
+          { href: "/applications", label: "Job Applications", desc: `${s.applications} applications`, color: "#7C3AED" },
         ].map((link) => (
           <Link key={link.href} href={link.href} className="rounded-xl border border-gray-200 bg-white p-5 hover:border-blue-300 transition-colors">
             <div className="w-8 h-8 rounded-lg mb-3 flex items-center justify-center" style={{ background: `${link.color}15` }}>
