@@ -1206,9 +1206,87 @@ export default function EmailPage() {
                 boxSizing: "border-box",
               }}
             />
-            <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
-              Tip: Use <code>{`{{{RESEND_UNSUBSCRIBE_URL}}}`}</code> for the unsubscribe link.
-              Paste a template from the email templates folder.
+            {/* Variable reference */}
+            <div
+              style={{
+                marginTop: 10,
+                background: C.bg,
+                border: `1px solid ${C.border}`,
+                borderRadius: 8,
+                padding: "12px 16px",
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 8 }}>
+                📋 Available Variables
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 24px" }}>
+                {[
+                  { var: "{{first_name}}", desc: "First name" },
+                  { var: "{{last_name}}", desc: "Last name" },
+                  { var: "{{name}}", desc: "Full name" },
+                  { var: "{{email}}", desc: "Email address" },
+                  { var: "{{company_name}}", desc: "Company / organisation" },
+                  { var: "{{audience_type}}", desc: "consumer / gemeente / aid_org / company" },
+                  { var: "{{language}}", desc: "nl or en" },
+                  { var: "{{subscribed_at}}", desc: "Subscription date" },
+                ].map((v) => (
+                  <div key={v.var} style={{ display: "flex", alignItems: "baseline", gap: 8, fontSize: 11, padding: "2px 0" }}>
+                    <code
+                      style={{
+                        background: C.surface,
+                        border: `1px solid ${C.border}`,
+                        borderRadius: 4,
+                        padding: "1px 6px",
+                        fontSize: 11,
+                        fontFamily: "monospace",
+                        color: C.blue,
+                        cursor: "pointer",
+                        whiteSpace: "nowrap",
+                      }}
+                      title="Click to copy"
+                      onClick={() => navigator.clipboard.writeText(v.var)}
+                    >
+                      {v.var}
+                    </code>
+                    <span style={{ color: C.muted }}>{v.desc}</span>
+                  </div>
+                ))}
+              </div>
+              <div
+                style={{
+                  marginTop: 10,
+                  paddingTop: 8,
+                  borderTop: `1px solid ${C.border}`,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 4,
+                }}
+              >
+                <div style={{ fontSize: 11, fontWeight: 600, color: C.text }}>Required links:</div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 8, fontSize: 11 }}>
+                  <code
+                    style={{
+                      background: C.redLight,
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 4,
+                      padding: "1px 6px",
+                      fontSize: 11,
+                      fontFamily: "monospace",
+                      color: C.red,
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                    }}
+                    title="Click to copy"
+                    onClick={() => navigator.clipboard.writeText("{{{RESEND_UNSUBSCRIBE_URL}}}")}
+                  >
+                    {`{{{RESEND_UNSUBSCRIBE_URL}}}`}
+                  </code>
+                  <span style={{ color: C.muted }}>Unsubscribe link (triple braces — <strong>required</strong>)</span>
+                </div>
+              </div>
+              <div style={{ fontSize: 10, color: C.muted, marginTop: 8 }}>
+                Click any variable to copy. Paste a template from the email templates folder, then replace placeholders.
+              </div>
             </div>
           </div>
 
