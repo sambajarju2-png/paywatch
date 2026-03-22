@@ -41,17 +41,6 @@ export const footerColumns = {
     { labelNl: "Blog", labelEn: "Blog", href: "/blog" },
     { labelNl: "Contact", labelEn: "Contact", href: "/contact" },
     { labelNl: "Roadmap", labelEn: "Roadmap", href: "/roadmap" },
-```
-
-Then push both fixes together:
-```
-git add .
-```
-```
-git commit -m "Fix: reply_to snake_case + footer link format"
-```
-```
-git push origin main
 
   ],
   legal: [
