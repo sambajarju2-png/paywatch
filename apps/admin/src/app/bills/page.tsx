@@ -25,40 +25,8 @@ function formatEuro(cents: number): string {
   return `€ ${(cents / 100).toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-interface Bill {
-  id: string;
-  vendor: string;
-  amount: number;
-  status: string;
-  escalation_stage: string;
-  source: string;
-  category: string;
-  due_date: string;
-  paid_at: string | null;
-}
-
 export default function BillsPage() {
-  const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch("/api/admin/stats");
-        if (!res.ok) throw new Error("Failed");
-        // We re-fetch the bills directly for the detail table
-        const statsRes = await fetch("/api/admin/users?bills=true");
-        // Fallback: use stats for aggregate data
-        const stats = await res.json();
-        setBills([]); // Bills will be shown via stats aggregates
-        setLoading(false);
-      } catch {
-        setLoading(false);
-      }
-    }
-    load();
-  }, []);
-
   const [stats, setStats] = useState<{
     bills: { total: number; totalPaidCents: number; totalOutstandingCents: number; paid: number; outstanding: number; overdue: number };
     escalation: { stage: string; count: number }[];

@@ -67,6 +67,12 @@ interface DashboardData {
   categories: { category: string; count: number }[];
   contacts: { total: number; new: number };
   applications: { total: number; new: number };
+  digest?: {
+    subscribed: number;
+    unsubscribed: number;
+    unsubscribedUsers: { user_id: string; name: string }[];
+    feedback: { user_id: string; message: string; date: string }[];
+  };
 }
 
 interface UserRow {
@@ -951,6 +957,100 @@ export default function DashboardPage() {
           </a>
         ))}
       </div>
+
+      {/* ── Row 7: Email Digest Subscriptions ─────────────── */}
+      {data.digest && (
+        <div
+          style={{
+            background: COLORS.surface,
+            borderRadius: 12,
+            border: `1px solid ${COLORS.border}`,
+            padding: 20,
+            marginTop: 24,
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <SectionHeader title="E-mail digest abonnementen" />
+            <div style={{ display: "flex", gap: 12 }}>
+              <span style={{ fontSize: 13, color: COLORS.green, fontWeight: 600 }}>
+                ✓ {data.digest.subscribed} actief
+              </span>
+              <span style={{ fontSize: 13, color: COLORS.red, fontWeight: 600 }}>
+                ✕ {data.digest.unsubscribed} uitgeschreven
+              </span>
+            </div>
+          </div>
+
+          {data.digest.unsubscribed > 0 ? (
+            <>
+              {/* Unsubscribed users */}
+              <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 600, color: COLORS.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                Uitgeschreven gebruikers
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
+                {data.digest.unsubscribedUsers.map((u) => (
+                  <div
+                    key={u.user_id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "10px 14px",
+                      background: "#FEF2F2",
+                      borderRadius: 8,
+                      border: `1px solid ${COLORS.red}15`,
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{
+                        width: 28, height: 28, borderRadius: "50%", background: "#FEE2E2",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 11, fontWeight: 700, color: COLORS.red,
+                      }}>
+                        {u.name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)}
+                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 500, color: COLORS.navy }}>{u.name}</span>
+                    </div>
+                    <span style={{ fontSize: 11, color: COLORS.red, fontWeight: 500 }}>Uitgeschreven</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Feedback */}
+              {data.digest.feedback.length > 0 && (
+                <>
+                  <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 600, color: COLORS.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Feedback
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {data.digest.feedback.map((f, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          padding: "10px 14px",
+                          background: COLORS.borderLight,
+                          borderRadius: 8,
+                        }}
+                      >
+                        <p style={{ margin: 0, fontSize: 13, color: COLORS.navy, lineHeight: 1.5 }}>
+                          "{f.message}"
+                        </p>
+                        <p style={{ margin: "4px 0 0", fontSize: 11, color: COLORS.muted }}>
+                          {new Date(f.date).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            <p style={{ margin: 0, fontSize: 13, color: COLORS.green }}>
+              Alle gebruikers zijn geabonneerd op de wekelijkse digest
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

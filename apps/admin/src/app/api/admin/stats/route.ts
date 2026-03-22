@@ -115,6 +115,24 @@ export async function GET() {
       .select("*", { count: "exact", head: true })
       .eq("status", "new");
 
+    // ── Digest subscriptions ─────────────────────────────
+    const { data: digestUsers } = await supabase
+      .from("user_settings")
+      .select("user_id, display_name, first_name, last_name, notify_email_digest, created_at")
+      .order("created_at", { ascending: false });
+
+    const allDigest = digestUsers || [];
+    const unsubscribed = allDigest.filter((u) => u.notify_email_digest === false);
+    const subscribed = allDigest.filter((u) => u.notify_email_digest !== false);
+
+    // ── Unsubscribe feedback ─────────────────────────────
+    const { data: unsubFeedback } = await supabase
+      .from("user_feedback")
+      .select("user_id, message, created_at")
+      .eq("type", "unsubscribe")
+      .order("created_at", { ascending: false })
+      .limit(20);
+
     return NextResponse.json({
       users: {
         total: userCount || 0,
@@ -133,6 +151,19 @@ export async function GET() {
       categories,
       contacts: { total: contactsTotal || 0, new: contactsNew || 0 },
       applications: { total: appsTotal || 0, new: appsNew || 0 },
+      digest: {
+        subscribed: subscribed.length,
+        unsubscribed: unsubscribed.length,
+        unsubscribedUsers: unsubscribed.map((u) => ({
+          user_id: u.user_id,
+          name: u.display_name || [u.first_name, u.last_name].filter(Boolean).join(" ") || "Onbekend",
+        })),
+        feedback: (unsubFeedback || []).map((f) => ({
+          user_id: f.user_id,
+          message: f.message,
+          date: f.created_at,
+        })),
+      },
     });
   } catch (err) {
     console.error("Admin stats error:", err);
