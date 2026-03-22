@@ -2,20 +2,100 @@
 
 import { useState } from "react";
 import { useApp } from "@/components/AppProvider";
-import { siteConfig, contactSubjects } from "@/lib/config";
+import NewsletterSubscribe from "@/components/NewsletterSubscribe";
+
+const TYPES = [
+  { key: "consumer", nl: "Consument", en: "Consumer" },
+  { key: "gemeente", nl: "Gemeente", en: "Municipality" },
+  { key: "aid_org", nl: "Hulporganisatie", en: "Aid Organization" },
+  { key: "company", nl: "Bedrijf", en: "Business" },
+] as const;
+
+type ContactType = (typeof TYPES)[number]["key"];
+
+const SUBJECTS: Record<ContactType, { nl: string; en: string }[]> = {
+  consumer: [
+    { nl: "Vragen over de app", en: "Questions about the app" },
+    { nl: "Privacy & AVG", en: "Privacy & GDPR" },
+    { nl: "Foutmelding / bug", en: "Bug report" },
+    { nl: "Overig", en: "Other" },
+  ],
+  gemeente: [
+    { nl: "Samenwerking / pilot", en: "Partnership / pilot" },
+    { nl: "Vroegsignalering", en: "Early detection" },
+    { nl: "Vermelding schuldhulp resources", en: "Debt aid resource listing" },
+    { nl: "Technische vragen", en: "Technical questions" },
+    { nl: "Overig", en: "Other" },
+  ],
+  aid_org: [
+    { nl: "Samenwerking", en: "Partnership" },
+    { nl: "Vermelding als hulporganisatie", en: "Listing as aid organization" },
+    { nl: "Doorverwijzing van cliënten", en: "Client referrals" },
+    { nl: "Technische vragen", en: "Technical questions" },
+    { nl: "Overig", en: "Other" },
+  ],
+  company: [
+    { nl: "Samenwerking / sponsoring", en: "Partnership / sponsorship" },
+    { nl: "API / integratie", en: "API / integration" },
+    { nl: "Commercieel voorstel", en: "Commercial proposal" },
+    { nl: "Overig", en: "Other" },
+  ],
+};
+
+const T = {
+  nl: {
+    title: "Contact",
+    subtitle: "Vraag, opmerking of wil je samenwerken? We horen graag van je.",
+    name: "Naam",
+    email: "E-mailadres",
+    company: "Organisatie / Gemeente naam",
+    subject: "Onderwerp",
+    message: "Bericht",
+    messagePlaceholder: "Waar kunnen we je mee helpen?",
+    newsletter: "Houd mij op de hoogte via de nieuwsbrief",
+    send: "Verstuur bericht",
+    sending: "Verzenden...",
+    success: "Bedankt!",
+    successMsg: "We nemen zo snel mogelijk contact met je op. Meestal reageren we binnen 24 uur.",
+    error: "Er ging iets mis. Probeer het opnieuw.",
+    info: "Hoe kun je ons bereiken",
+    newsletterTitle: "Nieuwsbrief",
+  },
+  en: {
+    title: "Contact",
+    subtitle: "Question, feedback, or want to partner up? We'd love to hear from you.",
+    name: "Name",
+    email: "Email address",
+    company: "Organization / Municipality name",
+    subject: "Subject",
+    message: "Message",
+    messagePlaceholder: "How can we help you?",
+    newsletter: "Keep me updated via the newsletter",
+    send: "Send message",
+    sending: "Sending...",
+    success: "Thank you!",
+    successMsg: "We'll get back to you as soon as possible. Usually within 24 hours.",
+    error: "Something went wrong. Please try again.",
+    info: "How to reach us",
+    newsletterTitle: "Newsletter",
+  },
+};
 
 export default function ContactPage() {
-  const { lang, t } = useApp();
+  const { lang } = useApp();
   const isNl = lang === "nl";
+  const t = T[lang];
 
-  const [form, setForm] = useState({ name: "", email: "", type: "consumer" as "consumer" | "business", companyName: "", subject: "", message: "" });
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [type, setType] = useState<ContactType>("consumer");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [company, setCompany] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [subscribe, setSubscribe] = useState(false);
+  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
 
-  const subjects = contactSubjects[form.type][lang];
-
-  function handleTypeChange(type: "consumer" | "business") {
-    setForm({ ...form, type, subject: "", companyName: "" });
-  }
+  const isB2B = type !== "consumer";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,144 +104,203 @@ export default function ContactPage() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, lang }),
+        body: JSON.stringify({
+          name,
+          email,
+          type,
+          companyName: isB2B ? company : undefined,
+          subject: subject || SUBJECTS[type][0][lang],
+          message,
+          lang,
+          subscribeNewsletter: subscribe,
+        }),
       });
-      if (res.ok) {
-        setStatus("sent");
-        setForm({ name: "", email: "", type: "consumer", companyName: "", subject: "", message: "" });
-      } else {
-        setStatus("error");
-      }
+      setStatus(res.ok ? "success" : "error");
     } catch {
       setStatus("error");
     }
   }
 
   return (
-    <div className="bg-[var(--bg)]">
-      <div className="mx-auto max-w-6xl px-4 pt-12 pb-4 sm:px-6 sm:pt-20 sm:pb-8 text-center">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-[var(--navy)] tracking-tight">{t.contact.title}</h1>
-        <p className="text-base text-[var(--muted)] mt-3">{t.contact.subtitle}</p>
-      </div>
+    <section className="py-16 px-6 min-h-screen" style={{ background: "var(--bg)" }}>
+      <div className="mx-auto max-w-[960px]">
+        <h1
+          className="mb-2 text-[32px] font-bold leading-tight"
+          style={{ color: "var(--navy)", letterSpacing: "-0.03em" }}
+        >
+          {t.title}
+        </h1>
+        <p className="mb-8 text-[15px]" style={{ color: "var(--muted)" }}>
+          {t.subtitle}
+        </p>
 
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 pb-16 sm:pb-24">
-        <div className="grid gap-8 sm:grid-cols-5">
-          <div className="sm:col-span-3">
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8">
-              {status === "sent" ? (
-                <div className="text-center py-12">
-                  <div className="w-14 h-14 rounded-full bg-[var(--green-light)] flex items-center justify-center mx-auto mb-4">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-                  </div>
-                  <p className="text-base font-semibold text-[var(--navy)]">{t.contact.success}</p>
+        {/* Type tabs */}
+        <div className="mb-6 flex flex-wrap gap-1.5 rounded-[10px] p-1" style={{ background: "var(--border)" }}>
+          {TYPES.map((item) => (
+            <button
+              key={item.key}
+              onClick={() => {
+                setType(item.key);
+                setSubject("");
+                setStatus("idle");
+              }}
+              className="flex-1 min-w-[90px] rounded-[8px] px-3 py-2 text-[12px] font-semibold transition-all"
+              style={{
+                background: type === item.key ? "var(--surface)" : "transparent",
+                color: type === item.key ? "var(--navy)" : "var(--muted)",
+                boxShadow: type === item.key ? "0 1px 3px rgba(0,0,0,0.06)" : "none",
+              }}
+            >
+              {item[lang]}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-[1fr_340px]">
+          {/* ── Form Card ───────────────────────── */}
+          <div
+            className="rounded-[16px] border p-8"
+            style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+          >
+            {status === "success" ? (
+              <div className="py-8 text-center">
+                <div
+                  className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full"
+                  style={{ background: "#ECFDF5" }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
                 </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                  {/* Type toggle */}
+                <h3 className="text-[18px] font-bold" style={{ color: "var(--navy)" }}>{t.success}</h3>
+                <p className="mt-2 text-[14px]" style={{ color: "var(--muted)" }}>{t.successMsg}</p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Name */}
+                <div>
+                  <label className="mb-1.5 block text-[12px] font-semibold" style={{ color: "var(--muted)" }}>{t.name} *</label>
+                  <input
+                    required value={name} onChange={(e) => setName(e.target.value)}
+                    className="w-full rounded-[8px] border px-3.5 py-2.5 text-[13px] outline-none"
+                    style={{ borderColor: "var(--border)", background: "var(--bg)", color: "var(--text)" }}
+                    placeholder={isNl ? "Je naam" : "Your name"}
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="mb-1.5 block text-[12px] font-semibold" style={{ color: "var(--muted)" }}>{t.email} *</label>
+                  <input
+                    required type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                    className="w-full rounded-[8px] border px-3.5 py-2.5 text-[13px] outline-none"
+                    style={{ borderColor: "var(--border)", background: "var(--bg)", color: "var(--text)" }}
+                    placeholder={isNl ? "je@email.nl" : "you@email.com"}
+                  />
+                </div>
+
+                {/* Company (B2B only) */}
+                {isB2B && (
                   <div>
-                    <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">{t.contact.typeLabel}</label>
-                    <div className="flex gap-2 bg-[var(--bg)] rounded-lg border border-[var(--border)] p-1">
-                      {(["consumer", "business"] as const).map((type) => (
-                        <button key={type} type="button" onClick={() => handleTypeChange(type)}
-                          className={`flex-1 rounded-md py-2.5 text-sm font-semibold transition-colors ${form.type === type ? "bg-[var(--surface)] text-[var(--text)] shadow-sm" : "text-[var(--muted)]"}`}>
-                          {type === "consumer" ? t.contact.typeConsumer : t.contact.typeBusiness}
-                        </button>
-                      ))}
-                    </div>
+                    <label className="mb-1.5 block text-[12px] font-semibold" style={{ color: "var(--muted)" }}>{t.company}</label>
+                    <input
+                      value={company} onChange={(e) => setCompany(e.target.value)}
+                      className="w-full rounded-[8px] border px-3.5 py-2.5 text-[13px] outline-none"
+                      style={{ borderColor: "var(--border)", background: "var(--bg)", color: "var(--text)" }}
+                      placeholder={isNl ? "Naam van je organisatie" : "Organization name"}
+                    />
                   </div>
+                )}
 
-                  {/* Company name — only visible for business */}
-                  {form.type === "business" && (
-                    <div>
-                      <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">
-                        {isNl ? "Bedrijfsnaam / Gemeente" : "Company name / Municipality"}
-                      </label>
-                      <input type="text" required value={form.companyName}
-                        onChange={(e) => setForm({ ...form, companyName: e.target.value })}
-                        placeholder={isNl ? "Bijv. Gemeente Rotterdam" : "E.g. Municipality of Rotterdam"}
-                        className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-4 py-2.5 text-sm text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)]" />
-                    </div>
-                  )}
+                {/* Subject */}
+                <div>
+                  <label className="mb-1.5 block text-[12px] font-semibold" style={{ color: "var(--muted)" }}>{t.subject}</label>
+                  <select
+                    value={subject} onChange={(e) => setSubject(e.target.value)}
+                    className="w-full rounded-[8px] border px-3.5 py-2.5 text-[13px] outline-none"
+                    style={{ borderColor: "var(--border)", background: "var(--bg)", color: "var(--text)" }}
+                  >
+                    {SUBJECTS[type].map((s) => (
+                      <option key={s[lang]} value={s[lang]}>{s[lang]}</option>
+                    ))}
+                  </select>
+                </div>
 
-                  {/* Name */}
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">{t.contact.nameLabel}</label>
-                    <input type="text" required value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-4 py-2.5 text-sm text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)]" />
-                  </div>
+                {/* Message */}
+                <div>
+                  <label className="mb-1.5 block text-[12px] font-semibold" style={{ color: "var(--muted)" }}>{t.message} *</label>
+                  <textarea
+                    required rows={5} value={message} onChange={(e) => setMessage(e.target.value)}
+                    className="w-full resize-y rounded-[8px] border px-3.5 py-2.5 text-[13px] outline-none"
+                    style={{ borderColor: "var(--border)", background: "var(--bg)", color: "var(--text)", fontFamily: "inherit" }}
+                    placeholder={t.messagePlaceholder}
+                  />
+                </div>
 
-                  {/* Email */}
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">{t.contact.emailLabel}</label>
-                    <input type="email" required value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-4 py-2.5 text-sm text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)]" />
-                  </div>
+                {/* Newsletter opt-in */}
+                <label className="flex items-center gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox" checked={subscribe} onChange={(e) => setSubscribe(e.target.checked)}
+                    className="h-4 w-4 rounded accent-[var(--blue)]"
+                  />
+                  <span className="text-[12px]" style={{ color: "var(--muted)" }}>{t.newsletter}</span>
+                </label>
 
-                  {/* Subject */}
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">{t.contact.subjectLabel}</label>
-                    <select required value={form.subject}
-                      onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                      className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-4 py-2.5 text-sm text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] appearance-none"
-                      style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}>
-                      <option value="" disabled>{isNl ? "Kies een onderwerp..." : "Choose a subject..."}</option>
-                      {subjects.map((s) => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </div>
+                {status === "error" && (
+                  <p className="text-[12px] font-medium" style={{ color: "var(--red)" }}>{t.error}</p>
+                )}
 
-                  {/* Message */}
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">{t.contact.messageLabel}</label>
-                    <textarea required rows={5} value={form.message}
-                      onChange={(e) => setForm({ ...form, message: e.target.value })}
-                      className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-4 py-2.5 text-sm text-[var(--text)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] resize-none" />
-                  </div>
-
-                  <button type="submit" disabled={status === "sending"}
-                    className="rounded bg-[var(--blue)] px-6 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity disabled:opacity-50">
-                    {status === "sending" ? "..." : t.contact.send}
-                  </button>
-
-                  {status === "error" && (
-                    <p className="text-sm text-[var(--red)]">{isNl ? "Er ging iets mis. Probeer het opnieuw." : "Something went wrong. Please try again."}</p>
-                  )}
-                </form>
-              )}
-            </div>
+                <button
+                  type="submit" disabled={status === "sending"}
+                  className="w-full rounded-[8px] py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                  style={{ background: "var(--blue)" }}
+                >
+                  {status === "sending" ? t.sending : t.send}
+                </button>
+              </form>
+            )}
           </div>
 
-          {/* Sidebar */}
-          <div className="sm:col-span-2">
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
-              <h3 className="text-base font-bold text-[var(--navy)] mb-4">{t.contact.info}</h3>
-              <div className="flex flex-col gap-4">
-                <div>
-                  <p className="text-xs font-medium text-[var(--muted)] mb-0.5">{isNl ? "Bedrijf" : "Company"}</p>
-                  <p className="text-sm font-semibold text-[var(--text)]">{siteConfig.company.name}</p>
+          {/* ── Sidebar ─────────────────────────── */}
+          <div className="space-y-6">
+            {/* Company info */}
+            <div
+              className="rounded-[16px] border p-6"
+              style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+            >
+              <h3 className="mb-4 text-[15px] font-bold" style={{ color: "var(--navy)" }}>{t.info}</h3>
+              <div className="space-y-3 text-[13px]" style={{ color: "var(--muted)" }}>
+                <div className="flex items-start gap-3">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mt-0.5 flex-shrink-0"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                  <div>
+                    <p className="font-semibold" style={{ color: "var(--navy)" }}>info@paywatch.nl</p>
+                    <p>{isNl ? "Algemene vragen" : "General inquiries"}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-medium text-[var(--muted)] mb-0.5">KVK</p>
-                  <p className="text-sm font-semibold text-[var(--text)]">{siteConfig.company.kvk}</p>
+                <div className="flex items-start gap-3">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mt-0.5 flex-shrink-0"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" /></svg>
+                  <div>
+                    <p className="font-semibold" style={{ color: "var(--navy)" }}>samba@paywatch.nl</p>
+                    <p>{isNl ? "Partnerships & samenwerkingen" : "Partnerships & collaborations"}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-medium text-[var(--muted)] mb-0.5">{isNl ? "Locatie" : "Location"}</p>
-                  <p className="text-sm font-semibold text-[var(--text)]">{siteConfig.company.location}</p>
-                </div>
-                <div className="border-t border-[var(--border)] pt-4">
-                  <p className="text-xs font-medium text-[var(--muted)] mb-2">E-mail</p>
-                  <div className="flex flex-col gap-2">
-                    <a href={`mailto:${siteConfig.company.emails.info}`} className="text-sm text-[var(--blue)] hover:underline">{siteConfig.company.emails.info}</a>
-                    <a href={`mailto:${siteConfig.company.emails.business}`} className="text-sm text-[var(--blue)] hover:underline">{siteConfig.company.emails.business}</a>
-                    <a href={`mailto:${siteConfig.company.emails.press}`} className="text-sm text-[var(--blue)] hover:underline">{siteConfig.company.emails.press}</a>
+                <div className="flex items-start gap-3">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mt-0.5 flex-shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" /></svg>
+                  <div>
+                    <p className="font-semibold" style={{ color: "var(--navy)" }}>Rotterdam, Nederland</p>
                   </div>
                 </div>
               </div>
             </div>
+
+            {/* Newsletter */}
+            <div>
+              <h3 className="mb-3 text-[15px] font-bold" style={{ color: "var(--navy)" }}>{t.newsletterTitle}</h3>
+              <NewsletterSubscribe lang={lang} variant="compact" />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
