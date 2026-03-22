@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
   try {
     await resend.emails.send({
       from: "PayWatch <noreply@paywatch.app>",
+      replyTo: "info@paywatch.nl",
       to,
       subject: subject ? `Re: ${subject}` : (isNl ? "Reactie van PayWatch" : "Reply from PayWatch"),
       html: `
