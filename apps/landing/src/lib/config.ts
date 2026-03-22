@@ -40,7 +40,18 @@ export const footerColumns = {
     { labelNl: "Vacatures", labelEn: "Jobs", href: "/jobs" },
     { labelNl: "Blog", labelEn: "Blog", href: "/blog" },
     { labelNl: "Contact", labelEn: "Contact", href: "/contact" },
-    { label: { nl: "Roadmap", en: "Roadmap" }, href: "/roadmap" },
+    { labelNl: "Roadmap", labelEn: "Roadmap", href: "/roadmap" },
+```
+
+Then push both fixes together:
+```
+git add .
+```
+```
+git commit -m "Fix: reply_to snake_case + footer link format"
+```
+```
+git push origin main
 
   ],
   legal: [
