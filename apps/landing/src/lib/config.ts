@@ -41,6 +41,7 @@ export const footerColumns = {
     { labelNl: "Blog", labelEn: "Blog", href: "/blog" },
     { labelNl: "Contact", labelEn: "Contact", href: "/contact" },
     { labelNl: "Roadmap", labelEn: "Roadmap", href: "/roadmap" },
+    { labelNl: "Tech Stack", labelEn: "Tech Stack", href: "/tech-stack" },
 
   ],
   legal: [
