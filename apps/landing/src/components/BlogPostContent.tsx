@@ -5,6 +5,7 @@ import Link from "next/link";
 import { PortableText } from "@portabletext/react";
 import { useApp } from "./AppProvider";
 import { blogPostsFull } from "@/lib/blog-content";
+import NewsletterSubscribe from "./NewsletterSubscribe";
 
 interface SanityPost {
   slug: string;
@@ -207,6 +208,11 @@ export default function BlogPostContent({ slug }: { slug: string }) {
               {isNl ? "Start gratis" : "Start free"}
             </Link>
           </div>
+
+          {/* Newsletter */}
+          <div className="mt-10">
+            <NewsletterSubscribe lang={lang} variant="full" />
+          </div>
         </article>
       </div>
     );
@@ -278,10 +284,16 @@ export default function BlogPostContent({ slug }: { slug: string }) {
             </div>
           </div>
 
+          {/* CTA */}
           <div className="mt-8 rounded-2xl border-2 border-[var(--blue)] bg-[var(--surface)] p-6 sm:p-8 text-center">
             <h3 className="text-lg font-bold text-[var(--navy)] mb-2">{isNl ? "Grip op je rekeningen?" : "Take control of your bills?"}</h3>
             <p className="text-sm text-[var(--muted)] mb-4 max-w-md mx-auto">{isNl ? "PayWatch scant je inbox en toont precies waar elke rekening staat. Gratis in beta." : "PayWatch scans your inbox and shows exactly where each bill stands. Free in beta."}</p>
             <Link href="https://app.paywatch.app" className="inline-flex rounded bg-[var(--blue)] px-6 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity">{isNl ? "Start gratis" : "Start free"}</Link>
+          </div>
+
+          {/* Newsletter */}
+          <div className="mt-10">
+            <NewsletterSubscribe lang={lang} variant="full" />
           </div>
 
           {related.length > 0 && (
