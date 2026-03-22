@@ -37,7 +37,7 @@ export default function FeatureRoadmap({ compact }: { compact?: boolean }) {
   const { lang } = useApp();
   const isNl = lang === "nl";
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [items, setItems] = useState<RoadmapItem[]>(FALLBACK);
+  const [items, setItems] = useState<RoadmapItem[]>([]);
   const [canScrollL, setCanScrollL] = useState(false);
   const [canScrollR, setCanScrollR] = useState(true);
 
