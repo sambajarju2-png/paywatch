@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     if (resend) {
       await resend.emails.send({
         from: "PayWatch <noreply@paywatch.app>",
-        replyTo: "info@paywatch.nl",
+        reply_to: "info@paywatch.nl",
         to: "info@paywatch.nl",
         subject: `Nieuw bericht: ${subject || "Contact"} — ${name}`,
         html: `
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
       /* Confirmation to sender */
       await resend.emails.send({
         from: "PayWatch <noreply@paywatch.app>",
-        replyTo: "info@paywatch.nl",
+        reply_to: "info@paywatch.nl",
         to: email,
         subject: isNl ? "We hebben je bericht ontvangen" : "We received your message",
         html: isNl ? `
