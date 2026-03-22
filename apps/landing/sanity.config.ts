@@ -1,5 +1,6 @@
 import { defineConfig } from "sanity";
 import { structureTool } from "sanity/structure";
+import { visionTool } from "@sanity/vision";
 import { schemaTypes } from "./src/sanity/schemas";
 
 export default defineConfig({
@@ -7,6 +8,6 @@ export default defineConfig({
   title: "PayWatch CMS",
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "pwf6qbjc",
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
-  plugins: [structureTool()],
+  plugins: [structureTool(), visionTool()],
   schema: { types: schemaTypes },
 });

@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useApp } from "@/components/AppProvider";
-import { blogPostsFull, blogCategories } from "@/lib/blog-content";
+import { blogPostsFull, blogCategories, type BlogPostFull } from "@/lib/blog-content";
 
 function BlogContent() {
   const { lang } = useApp();
@@ -13,6 +13,21 @@ function BlogContent() {
   const categoryFromUrl = searchParams.get("category");
 
   const [activeCategory, setActiveCategory] = useState("all");
+  const [posts, setPosts] = useState<BlogPostFull[]>(blogPostsFull);
+
+  /* Fetch from Sanity via API (with hardcoded fallback) */
+  useEffect(() => {
+    fetch("/api/blog-posts")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.posts && d.posts.length > 0) {
+          setPosts(d.posts);
+        }
+      })
+      .catch(() => {
+        /* keep hardcoded fallback */
+      });
+  }, []);
 
   /* Sync from URL param */
   useEffect(() => {
@@ -22,8 +37,8 @@ function BlogContent() {
   }, [categoryFromUrl]);
 
   const filtered = activeCategory === "all"
-    ? blogPostsFull
-    : blogPostsFull.filter((p) => p.categorySlug === activeCategory);
+    ? posts
+    : posts.filter((p) => p.categorySlug === activeCategory);
 
   return (
     <div className="bg-[var(--bg)]">

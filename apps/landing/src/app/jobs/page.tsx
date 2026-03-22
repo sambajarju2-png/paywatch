@@ -1,11 +1,23 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useApp } from "@/components/AppProvider";
-import { jobListings } from "@/lib/config";
+import { jobListings, type JobListing } from "@/lib/config";
 
 export default function JobsPage() {
   const { lang, t } = useApp();
+  const [jobs, setJobs] = useState<JobListing[]>(jobListings);
+
+  /* Try fetching from Sanity (via API), fall back to hardcoded */
+  useEffect(() => {
+    fetch("/api/job-listings")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.jobs && d.jobs.length > 0) setJobs(d.jobs);
+      })
+      .catch(() => { /* keep hardcoded */ });
+  }, []);
 
   const locationLabels: Record<string, string> = {
     remote: t.jobs.remote,
@@ -27,13 +39,13 @@ export default function JobsPage() {
       </div>
 
       <div className="mx-auto max-w-3xl px-4 sm:px-6 pb-16 sm:pb-24">
-        {jobListings.length === 0 ? (
+        {jobs.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-base text-[var(--muted)]">{t.jobs.noJobs}</p>
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            {jobListings.map((job) => (
+            {jobs.map((job) => (
               <div key={job.id} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 hover:border-[var(--blue)] transition-colors">
                 <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
                   <div>

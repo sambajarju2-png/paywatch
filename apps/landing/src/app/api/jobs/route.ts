@@ -2,7 +2,13 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let _resend: Resend | null = null;
+function getResend() {
+  if (!_resend && process.env.RESEND_API_KEY) {
+    _resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return _resend;
+}
 
 export async function POST(request: Request) {
   try {
@@ -15,7 +21,7 @@ export async function POST(request: Request) {
 
     const isNl = lang === "nl";
 
-    /* Save to Supabase — use anon key as fallback (RLS allows public inserts) */
+    /* Save to Supabase */
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -33,12 +39,11 @@ export async function POST(request: Request) {
       if (dbError) {
         console.error("Supabase job application insert error:", JSON.stringify(dbError));
       }
-    } else {
-      console.error("Missing Supabase env vars for job application insert");
     }
 
-    /* Email to PayWatch team */
-    if (process.env.RESEND_API_KEY) {
+    /* Emails via Resend */
+    const resend = getResend();
+    if (resend) {
       await resend.emails.send({
         from: "PayWatch <noreply@paywatch.app>",
         to: "info@paywatch.nl",
@@ -57,7 +62,6 @@ export async function POST(request: Request) {
         `,
       });
 
-      /* Thank-you email to applicant */
       await resend.emails.send({
         from: "PayWatch <noreply@paywatch.app>",
         to: email,

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { getBlogPostBySlug } from "@/lib/sanity-queries";
 import { blogPostsFull } from "@/lib/blog-content";
 import BlogPostContent from "@/components/BlogPostContent";
 
@@ -9,7 +10,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const post = blogPostsFull.find((p) => p.slug === slug);
+  const post = await getBlogPostBySlug(slug);
   if (!post) return { title: "Post niet gevonden" };
 
   return {
@@ -24,9 +25,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "article",
       publishedTime: post.date,
       authors: [post.author],
-      /* IMAGE PLACEHOLDER: Add OG image per post then uncomment:
-      images: [{ url: `/blog/${post.slug}/og.png`, width: 1200, height: 630 }],
-      */
     },
     twitter: {
       card: "summary_large_image",
@@ -42,7 +40,7 @@ export function generateStaticParams() {
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
-  const post = blogPostsFull.find((p) => p.slug === slug);
+  const post = await getBlogPostBySlug(slug);
   if (!post) notFound();
 
   /* JSON-LD Article structured data */
@@ -55,7 +53,7 @@ export default async function BlogPostPage({ params }: Props) {
     author: {
       "@type": "Person",
       name: post.author,
-      url: `https://paywatch.app/about`,
+      url: "https://paywatch.app/about",
     },
     publisher: {
       "@type": "Organization",

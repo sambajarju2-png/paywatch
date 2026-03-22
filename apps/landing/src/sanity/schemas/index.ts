@@ -6,6 +6,7 @@ import legalPage from "./legalPage";
 import navigation from "./navigation";
 import appStrings from "./appStrings";
 import siteImage from "./siteImage";
+import jobListing from "./jobListing";
 
 export const schemaTypes = [
   blogPost,
@@ -16,4 +17,5 @@ export const schemaTypes = [
   navigation,
   appStrings,
   siteImage,
+  jobListing,
 ];

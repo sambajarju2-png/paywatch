@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
+let _resend: Resend | null = null;
+function getResend() {
+  if (!_resend && process.env.RESEND_API_KEY) {
+    _resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return _resend;
+}
+
 export async function POST(request: NextRequest) {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
+  const resend = getResend();
+  if (!resend) {
     return NextResponse.json({ error: "RESEND_API_KEY not configured. Add it to admin Vercel env vars." }, { status: 500 });
   }
 
-  const resend = new Resend(apiKey);
   const { to, name, subject, message, lang } = await request.json();
 
   if (!to || !message) {

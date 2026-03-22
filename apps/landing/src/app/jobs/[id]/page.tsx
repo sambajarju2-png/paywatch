@@ -1,16 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useApp } from "@/components/AppProvider";
-import { jobListings } from "@/lib/config";
+import { jobListings, type JobListing } from "@/lib/config";
 
 export default function JobDetailPage() {
   const { lang, t } = useApp();
   const params = useParams();
   const jobId = params.id as string;
-  const job = jobListings.find((j) => j.id === jobId);
+
+  const [job, setJob] = useState<JobListing | null | undefined>(undefined);
+
+  useEffect(() => {
+    // Try Sanity first, then fall back to hardcoded
+    fetch(`/api/job-listings?id=${encodeURIComponent(jobId)}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.job) {
+          setJob(d.job);
+        } else {
+          setJob(jobListings.find((j) => j.id === jobId) || null);
+        }
+      })
+      .catch(() => {
+        setJob(jobListings.find((j) => j.id === jobId) || null);
+      });
+  }, [jobId]);
+
+  if (job === undefined) {
+    return <div className="bg-[var(--bg)] min-h-[60vh] flex items-center justify-center"><div className="w-6 h-6 border-2 border-[var(--blue)] border-t-transparent rounded-full animate-spin" /></div>;
+  }
 
   if (!job) {
     return (
@@ -155,41 +176,28 @@ function ApplyForm({ jobId, jobTitle, lang }: { jobId: string; jobTitle: string;
         {isNl ? `Solliciteer als ${jobTitle}` : `Apply as ${jobTitle}`}
       </h2>
       <p className="text-sm text-[var(--muted)] mb-6">
-        {isNl
-          ? "Vul het formulier in en we nemen zo snel mogelijk contact op."
-          : "Fill in the form and we'll get back to you as soon as possible."}
+        {isNl ? "Vul het formulier in en we nemen zo snel mogelijk contact op." : "Fill in the form and we'll get back to you as soon as possible."}
       </p>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
-          <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">
-            {isNl ? "Naam" : "Name"} *
-          </label>
+          <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">{isNl ? "Naam" : "Name"} *</label>
           <input type="text" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
             className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-4 py-2.5 text-sm text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)]" />
         </div>
-
         <div>
-          <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">
-            {isNl ? "E-mailadres" : "Email"} *
-          </label>
+          <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">{isNl ? "E-mailadres" : "Email"} *</label>
           <input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
             className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-4 py-2.5 text-sm text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)]" />
         </div>
-
         <div>
-          <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">
-            {isNl ? "Telefoonnummer" : "Phone number"}
-          </label>
+          <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">{isNl ? "Telefoonnummer" : "Phone number"}</label>
           <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
             placeholder={isNl ? "Optioneel" : "Optional"}
             className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-4 py-2.5 text-sm text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)]" />
         </div>
-
         <div>
-          <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">
-            {isNl ? "Bericht / motivatie" : "Message / motivation"}
-          </label>
+          <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">{isNl ? "Bericht / motivatie" : "Message / motivation"}</label>
           <textarea rows={4} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })}
             placeholder={isNl ? "Vertel ons over jezelf en waarom je bij PayWatch wilt werken..." : "Tell us about yourself and why you want to work at PayWatch..."}
             className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-4 py-2.5 text-sm text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)] resize-none" />

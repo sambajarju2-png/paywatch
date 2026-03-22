@@ -2,7 +2,14 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+/* Lazy init — prevents build-time crash when env vars missing */
+let _resend: Resend | null = null;
+function getResend() {
+  if (!_resend && process.env.RESEND_API_KEY) {
+    _resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return _resend;
+}
 
 export async function POST(request: Request) {
   try {
@@ -38,7 +45,8 @@ export async function POST(request: Request) {
     }
 
     /* Email to PayWatch team */
-    if (process.env.RESEND_API_KEY) {
+    const resend = getResend();
+    if (resend) {
       await resend.emails.send({
         from: "PayWatch <noreply@paywatch.app>",
         to: "info@paywatch.nl",

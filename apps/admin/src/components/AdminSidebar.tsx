@@ -71,7 +71,7 @@ export default function AdminSidebar() {
             Logout
           </button>
           <div className="text-xs text-gray-400 mt-3 px-3">
-            <p className="font-medium text-gray-500">PayWatch B.V.</p>
+            <p className="font-medium text-gray-500">PayWatch</p>
             <p>admin.paywatch.app</p>
           </div>
         </div>

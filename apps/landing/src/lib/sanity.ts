@@ -11,7 +11,15 @@ export const sanityConfig = {
   useCdn: process.env.NODE_ENV === "production",
 };
 
+/* Public client — for client-side/CDN queries */
 export const sanityClient = createClient(sanityConfig);
+
+/* Server client — uses token for authenticated fetches (published + draft) */
+export const serverSanityClient = createClient({
+  ...sanityConfig,
+  useCdn: false,
+  token: process.env.SANITY_API_TOKEN,
+});
 
 /* Image URL builder */
 const builder = imageUrlBuilder(sanityClient);
@@ -20,14 +28,10 @@ export function urlFor(source: SanityImageSource) {
   return builder.image(source);
 }
 
-/* Preview client (for draft content) */
-export const previewClient = createClient({
-  ...sanityConfig,
-  useCdn: false,
-  token: process.env.SANITY_API_TOKEN,
-});
+/* Preview client (alias for backward compat) */
+export const previewClient = serverSanityClient;
 
 /* Helper: get client based on preview mode */
 export function getClient(preview = false) {
-  return preview ? previewClient : sanityClient;
+  return preview ? serverSanityClient : sanityClient;
 }
