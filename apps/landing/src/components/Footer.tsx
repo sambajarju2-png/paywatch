@@ -1,16 +1,15 @@
 "use client";
-
 import Link from "next/link";
 import { useApp } from "./AppProvider";
 import { useSanityContent } from "./SanityContentProvider";
 import { footerColumns, siteConfig } from "@/lib/config";
+import NewsletterSubscribe from "./NewsletterSubscribe";
 
 export default function Footer() {
   const { lang, t } = useApp();
   const { getNav } = useSanityContent();
   const isNl = lang === "nl";
 
-  /* Build columns: check Sanity first, fall back to hardcoded */
   function getColumn(placement: string, hardcoded: typeof footerColumns.product) {
     const sanityItems = getNav(placement);
     if (sanityItems && sanityItems.length > 0) {
@@ -37,6 +36,12 @@ export default function Footer() {
   return (
     <footer className="border-t border-[var(--border)] bg-[var(--surface)]">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+
+        {/* Newsletter Section */}
+        <div className="mb-10 pb-10 border-b border-[var(--border)]">
+          <NewsletterSubscribe lang={lang} variant="full" />
+        </div>
+
         {/* Columns */}
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
           {columns.map((col) => (
