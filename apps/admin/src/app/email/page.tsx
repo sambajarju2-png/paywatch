@@ -157,7 +157,7 @@ export default function EmailPage() {
 
   // Compose state
   const [composeAudience, setComposeAudience] = useState("consumers");
-  const [composeFrom, setComposeFrom] = useState("PayWatch <info@paywatch.nl>");
+  const [composeFrom, setComposeFrom] = useState("PayWatch <info@paywatch.app>");
   const [composeSubject, setComposeSubject] = useState("");
   const [composeHtml, setComposeHtml] = useState("");
   const [composeSending, setComposeSending] = useState(false);
@@ -1136,8 +1136,8 @@ export default function EmailPage() {
                   background: C.surface,
                 }}
               >
-                <option value="PayWatch <info@paywatch.nl>">PayWatch &lt;info@paywatch.nl&gt;</option>
-                <option value="Samba van PayWatch <samba@paywatch.nl>">Samba van PayWatch &lt;samba@paywatch.nl&gt;</option>
+                <option value="PayWatch <info@paywatch.app>">PayWatch &lt;info@paywatch.app&gt;</option>
+                <option value="Samba van PayWatch <samba@paywatch.app>">Samba van PayWatch &lt;samba@paywatch.app&gt;</option>
               </select>
             </div>
           </div>
