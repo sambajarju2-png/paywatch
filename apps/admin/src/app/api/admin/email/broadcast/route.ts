@@ -54,7 +54,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { audience, from, subject, html, sendNow } = body;
+    const { audience, from, subject, html, sendNow, scheduledAt } = body;
 
     if (!audience || !from || !subject || !html) {
       return NextResponse.json(
@@ -99,8 +99,13 @@ export async function POST(req: NextRequest) {
     const created = await createRes.json();
     const broadcastId = created.id;
 
-    // Step 2: Send immediately if requested
+    // Step 2: Send immediately (or schedule) if requested
     if (sendNow && broadcastId) {
+      const sendBody: Record<string, string> = {};
+      if (scheduledAt) {
+        sendBody.scheduled_at = scheduledAt;
+      }
+
       const sendRes = await fetch(
         `https://api.resend.com/broadcasts/${broadcastId}/send`,
         {
@@ -109,6 +114,7 @@ export async function POST(req: NextRequest) {
             Authorization: `Bearer ${RESEND_API_KEY}`,
             "Content-Type": "application/json",
           },
+          body: JSON.stringify(sendBody),
         }
       );
 
@@ -124,8 +130,10 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({
         id: broadcastId,
-        status: "sent",
-        message: "Broadcast created and sent successfully",
+        status: scheduledAt ? "scheduled" : "sent",
+        message: scheduledAt
+          ? `Broadcast scheduled for ${scheduledAt}`
+          : "Broadcast created and sent successfully",
       });
     }
 

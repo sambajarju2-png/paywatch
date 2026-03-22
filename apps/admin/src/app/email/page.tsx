@@ -56,6 +56,7 @@ const STATUS_COLORS: Record<string, string> = {
   sent: C.green,
   sending: C.blue,
   queued: C.amber,
+  scheduled: C.navy,
   draft: C.muted,
 };
 
@@ -83,6 +84,7 @@ const ICONS = {
   filePlus: "M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M12 18v-6M9 15h6",
   checkCircle: "M22 11.08V12a10 10 0 11-5.93-9.14M22 4L12 14.01l-3-3",
   mailOpen: "M21.2 8.4c.5.38.8.97.8 1.6v10a2 2 0 01-2 2H4a2 2 0 01-2-2V10a2 2 0 01.8-1.6L12 2l9.2 6.4zM22 10l-10 7-10-7",
+  clock: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM12 6v6l4 2",
 };
 
 /* ─── Types ─── */
@@ -188,6 +190,7 @@ export default function EmailPage() {
   const [composeHtml, setComposeHtml] = useState("");
   const [composeSending, setComposeSending] = useState(false);
   const [composeResult, setComposeResult] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [composeScheduleAt, setComposeScheduleAt] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -227,13 +230,16 @@ export default function EmailPage() {
           subject: composeSubject,
           html: composeHtml,
           sendNow,
+          scheduledAt: sendNow && composeScheduleAt ? new Date(composeScheduleAt).toISOString() : undefined,
         }),
       });
       const json = await res.json();
       if (res.ok) {
         setComposeResult({
           ok: true,
-          msg: sendNow
+          msg: json.status === "scheduled"
+            ? `Broadcast scheduled! ID: ${json.id}`
+            : sendNow
             ? `Broadcast sent! ID: ${json.id}`
             : `Draft saved. ID: ${json.id}`,
         });
@@ -945,6 +951,7 @@ export default function EmailPage() {
             >
               <option value="all">All Statuses</option>
               <option value="sent">Sent</option>
+              <option value="scheduled">Scheduled</option>
               <option value="sending">Sending</option>
               <option value="queued">Queued</option>
               <option value="draft">Draft</option>
@@ -1030,6 +1037,8 @@ export default function EmailPage() {
                       background:
                         b.status === "sent"
                           ? C.greenLight
+                          : b.status === "scheduled"
+                          ? C.blueLight
                           : b.status === "draft"
                           ? "#F1F5F9"
                           : C.amberLight,
@@ -1266,14 +1275,9 @@ export default function EmailPage() {
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 24px" }}>
                 {[
-                  { var: "{{first_name}}", desc: "First name" },
-                  { var: "{{last_name}}", desc: "Last name" },
-                  { var: "{{name}}", desc: "Full name" },
-                  { var: "{{email}}", desc: "Email address" },
-                  { var: "{{company_name}}", desc: "Company / organisation" },
-                  { var: "{{audience_type}}", desc: "consumer / gemeente / aid_org / company" },
-                  { var: "{{language}}", desc: "nl or en" },
-                  { var: "{{subscribed_at}}", desc: "Subscription date" },
+                  { var: "{{first_name}}", desc: "Contact's first name" },
+                  { var: "{{last_name}}", desc: "Contact's last name" },
+                  { var: "{{email}}", desc: "Contact's email address" },
                 ].map((v) => (
                   <div key={v.var} style={{ display: "flex", alignItems: "baseline", gap: 8, fontSize: 11, padding: "2px 0" }}>
                     <code
@@ -1381,6 +1385,63 @@ export default function EmailPage() {
             </div>
           )}
 
+          {/* Schedule */}
+          <div style={{ marginBottom: 16 }}>
+            <label
+              style={{
+                display: "block",
+                fontSize: 12,
+                fontWeight: 600,
+                color: C.muted,
+                marginBottom: 6,
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+              }}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <Icon d={ICONS.clock} size={13} color={C.muted} />
+                Schedule (optional)
+              </span>
+            </label>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <input
+                type="datetime-local"
+                value={composeScheduleAt}
+                onChange={(e) => setComposeScheduleAt(e.target.value)}
+                min={new Date(Date.now() + 300000).toISOString().slice(0, 16)}
+                style={{
+                  padding: "10px 12px",
+                  border: `1.5px solid ${C.border}`,
+                  borderRadius: 8,
+                  fontSize: 14,
+                  outline: "none",
+                  fontFamily: "'Plus Jakarta Sans', system-ui",
+                }}
+              />
+              {composeScheduleAt && (
+                <button
+                  onClick={() => setComposeScheduleAt("")}
+                  style={{
+                    padding: "6px 10px",
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 6,
+                    background: C.surface,
+                    fontSize: 12,
+                    color: C.muted,
+                    cursor: "pointer",
+                  }}
+                >
+                  Clear
+                </button>
+              )}
+              <span style={{ fontSize: 12, color: C.muted }}>
+                {composeScheduleAt
+                  ? `Will send ${new Date(composeScheduleAt).toLocaleString("nl-NL", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`
+                  : "Leave empty to send immediately"}
+              </span>
+            </div>
+          </div>
+
           {/* Buttons */}
           <div style={{ display: "flex", gap: 10 }}>
             <button
@@ -1405,14 +1466,17 @@ export default function EmailPage() {
             </button>
             <button
               onClick={() => {
-                if (window.confirm("Send this broadcast NOW to all contacts in the selected audience?")) {
+                const msg = composeScheduleAt
+                  ? `Schedule this broadcast for ${new Date(composeScheduleAt).toLocaleString("nl-NL")}?`
+                  : "Send this broadcast NOW to all contacts in the selected audience?";
+                if (window.confirm(msg)) {
                   handleSendBroadcast(true);
                 }
               }}
               disabled={composeSending || !composeSubject || !composeHtml}
               style={{
                 padding: "10px 20px",
-                background: C.blue,
+                background: composeScheduleAt ? C.navy : C.blue,
                 color: "#fff",
                 border: "none",
                 borderRadius: 4,
@@ -1423,7 +1487,12 @@ export default function EmailPage() {
               }}
             >
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                {composeSending ? "Sending..." : <><Icon d={ICONS.send} size={15} color="#fff" /> Send Now</>}
+                {composeSending
+                  ? "Sending..."
+                  : composeScheduleAt
+                  ? <><Icon d={ICONS.clock} size={15} color="#fff" /> Schedule Send</>
+                  : <><Icon d={ICONS.send} size={15} color="#fff" /> Send Now</>
+                }
               </span>
             </button>
           </div>
