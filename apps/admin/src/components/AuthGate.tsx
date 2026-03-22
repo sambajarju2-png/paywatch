@@ -23,16 +23,24 @@ export default function AuthGate({ children }: { children: ReactNode }) {
     setSubmitting(true);
     setError("");
 
-    const res = await fetch("/api/auth", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      const res = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (res.ok) {
-      setStatus("authenticated");
-    } else {
-      setError("Invalid email or password");
+      const data = await res.json();
+
+      if (res.ok) {
+        setStatus("authenticated");
+      } else if (res.status === 403) {
+        setError("This email is not authorized as admin.");
+      } else {
+        setError(data.error || "Invalid email or password");
+      }
+    } catch {
+      setError("Connection failed. Please try again.");
     }
     setSubmitting(false);
   }
@@ -51,7 +59,7 @@ export default function AuthGate({ children }: { children: ReactNode }) {
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-gray-900">PayWatch Admin</h1>
-            <p className="text-sm text-gray-500 mt-1">Sign in to access the dashboard</p>
+            <p className="text-sm text-gray-500 mt-1">Sign in with your PayWatch account</p>
           </div>
 
           <form onSubmit={handleLogin} className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
@@ -63,7 +71,7 @@ export default function AuthGate({ children }: { children: ReactNode }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="admin@paywatch.nl"
+                placeholder="samba@paywatch.nl"
               />
             </div>
 
@@ -90,9 +98,13 @@ export default function AuthGate({ children }: { children: ReactNode }) {
             >
               {submitting ? "Signing in..." : "Sign in"}
             </button>
+
+            <p className="text-xs text-gray-400 text-center mt-4">
+              Uses your PayWatch Supabase account
+            </p>
           </form>
 
-          <p className="text-center text-xs text-gray-400 mt-6">PayWatch B.V. — admin.paywatch.app</p>
+          <p className="text-center text-xs text-gray-400 mt-6">PayWatch — admin.paywatch.app</p>
         </div>
       </div>
     );
