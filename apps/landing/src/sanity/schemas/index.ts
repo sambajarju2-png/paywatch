@@ -7,6 +7,8 @@ import navigation from "./navigation";
 import appStrings from "./appStrings";
 import siteImage from "./siteImage";
 import jobListing from "./jobListing";
+import roadmapItem from "./roadmapItem";
+
 
 export const schemaTypes = [
   blogPost,
@@ -18,4 +20,5 @@ export const schemaTypes = [
   appStrings,
   siteImage,
   jobListing,
+  roadmapItem,
 ];
