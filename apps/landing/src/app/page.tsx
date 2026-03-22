@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useApp } from "@/components/AppProvider";
 import TrustBar from "@/components/TrustBar";
-import GemeenteSearch from "@/components/GemeenteSearch";
+import NetherlandsMap from "@/components/NetherlandsMap";
 import HeroBanner from "@/components/HeroBanner";
 import ScrollReveal from "@/components/ScrollReveal";
 import SanityImage from "@/components/SanityImage";
@@ -118,7 +118,7 @@ export default function HomePage() {
       {/* ─── Gemeente Search ─── */}
       <section className="bg-[var(--surface)]">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 text-center">
-          <ScrollReveal><GemeenteSearch /></ScrollReveal>
+          <ScrollReveal><NetherlandsMap /></ScrollReveal>
         </div>
       </section>
 
