@@ -125,7 +125,7 @@ export default function BillsPage() {
                   index="name"
                   colors={["emerald", "blue", "red"]}
                   showLabel={true}
-                  valueFormatter={(n) => `${n} rekeningen`}
+                  valueFormatter={(n: number) => `${n} rekeningen`}
                 />
               </Card>
             </div>
@@ -134,11 +134,11 @@ export default function BillsPage() {
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <Card>
                 <h3 className="text-lg font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">Bron</h3>
-                <BarList data={sourceBarList} className="mt-4" color="blue" valueFormatter={(n) => `${numberFmt(n)}`} />
+                <BarList data={sourceBarList} className="mt-4" color="blue" valueFormatter={(n: number) => `${numberFmt(n)}`} />
               </Card>
               <Card>
                 <h3 className="text-lg font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">Categorie</h3>
-                <BarList data={categoryBarList} className="mt-4" color="emerald" valueFormatter={(n) => `${numberFmt(n)}`} />
+                <BarList data={categoryBarList} className="mt-4" color="emerald" valueFormatter={(n: number) => `${numberFmt(n)}`} />
               </Card>
             </div>
           </div>
