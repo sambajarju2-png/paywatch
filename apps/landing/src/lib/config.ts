@@ -89,6 +89,18 @@ export const founders = [
     linkedin: "https://www.linkedin.com/in/hadja-mariama-sesay-3a5392228/",
     email: "mariama@paywatch.com",
   },
+  {
+    name: "Peter",
+    role: { nl: "Co-founder & CCO", en: "Co-founder & CMO" },
+    bio: {
+      nl: "De stem van PayWatch. Zorgt dat onze boodschap warm, helder en menselijk is — nooit corporate.",
+      en: "The voice of PayWatch. Ensures our message stays warm, clear and human — never corporate.",
+    },
+    photo: "", // Add: "/team/Jamal.jpg"
+    linkedin: "https://www.linkedin.com/in/hadja-mariama-sesay-3a5392228/",
+    email: "mariama@paywatch.com",
+  },
+  
   // To add more team members, copy this template:
   // {
   //   name: "Name",
