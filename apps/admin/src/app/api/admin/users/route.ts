@@ -1,41 +1,38 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-
 function getAdmin() {
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 }
 
 export async function GET() {
   try {
     const supabase = getAdmin();
-    const { data, error } = await supabase
+    const { data: users } = await supabase
       .from("user_settings")
-      .select("user_id, display_name, first_name, last_name, language, gemeente, onboarding_complete, created_at")
+      .select("user_id, display_name, first_name, last_name, language, onboarding_complete, gemeente, dark_mode, created_at")
       .order("created_at", { ascending: false });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ users: data || [] });
+    return NextResponse.json({ users: users || [] });
   } catch (err) {
-    return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
+    console.error(err);
+    return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }
 
-export async function DELETE(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
-    if (!userId) return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+export async function DELETE(request: NextRequest) {
+  const userId = request.nextUrl.searchParams.get("userId");
+  if (!userId) return NextResponse.json({ error: "Missing userId" }, { status: 400 });
 
+  try {
     const supabase = getAdmin();
 
-    /* Cascade delete from all 17 tables */
+    // Cascade delete in order (17 tables)
     const tables = [
       "ai_usage_log", "user_achievements", "user_feedback", "mood_log",
       "mood_analytics", "notification_log", "push_subscriptions", "scan_processed",
@@ -43,23 +40,16 @@ export async function DELETE(request: Request) {
       "rate_limits", "consent_log", "custom_categories", "referrals", "user_settings",
     ];
 
-    const errors: string[] = [];
     for (const table of tables) {
-      const { error } = await supabase.from(table).delete().eq("user_id", userId);
-      if (error && !error.message.includes("does not exist")) {
-        errors.push(`${table}: ${error.message}`);
-      }
+      await supabase.from(table).delete().eq("user_id", userId);
     }
 
-    /* Delete auth user */
-    const { error: authErr } = await supabase.auth.admin.deleteUser(userId);
-    if (authErr) errors.push(`auth: ${authErr.message}`);
+    // Delete auth user
+    await supabase.auth.admin.deleteUser(userId);
 
-    if (errors.length > 0) {
-      return NextResponse.json({ success: true, warnings: errors });
-    }
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ ok: true });
   } catch (err) {
+    console.error("Delete error:", err);
     return NextResponse.json({ error: "Delete failed" }, { status: 500 });
   }
 }

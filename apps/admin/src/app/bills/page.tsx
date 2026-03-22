@@ -1,149 +1,235 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import AuthGate from "@/components/AuthGate";
-import AdminSidebar from "@/components/AdminSidebar";
-import { Card, BarChart, DonutChart, BarList, CategoryBar, Badge } from "@tremor/react";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, PieChart, Pie, Cell,
+} from "recharts";
 
-interface Stats {
-  totalBills: number;
-  paidBills: number;
-  outstandingBills: number;
-  overdueCount: number;
-  totalAmountCents: number;
-  paidAmountCents: number;
-  escalation: Record<string, number>;
-  sources: Record<string, number>;
-  categories: Record<string, number>;
+const C = {
+  blue: "#2563EB", green: "#059669", amber: "#D97706", orange: "#EA580C",
+  red: "#DC2626", darkRed: "#991B1B", navy: "#0A2540", muted: "#64748B",
+  border: "#E2E8F0", borderLight: "#F1F5F9", surface: "#FFFFFF",
+};
+
+const STAGE_COLORS: Record<string, string> = {
+  factuur: C.blue, herinnering: C.amber, aanmaning: C.orange,
+  incasso: C.red, deurwaarder: C.darkRed,
+};
+const STAGE_LABELS: Record<string, string> = {
+  factuur: "Factuur", herinnering: "Herinnering", aanmaning: "Aanmaning",
+  incasso: "Incasso", deurwaarder: "Deurwaarder",
+};
+
+function formatEuro(cents: number): string {
+  return `€ ${(cents / 100).toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-const STAGE_LABELS: Record<string, string> = { factuur: "Factuur", herinnering: "Herinnering", aanmaning: "Aanmaning", incasso: "Incasso", deurwaarder: "Deurwaarder" };
-
-const currencyFmt = (c: number) => new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(c / 100);
-const numberFmt = (n: number) => Intl.NumberFormat("nl-NL").format(n);
+interface Bill {
+  id: string;
+  vendor: string;
+  amount: number;
+  status: string;
+  escalation_stage: string;
+  source: string;
+  category: string;
+  due_date: string;
+  paid_at: string | null;
+}
 
 export default function BillsPage() {
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { fetch("/api/admin/stats").then(r => r.json()).then(d => setStats(d)).catch(() => {}).finally(() => setLoading(false)); }, []);
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch("/api/admin/stats");
+        if (!res.ok) throw new Error("Failed");
+        // We re-fetch the bills directly for the detail table
+        const statsRes = await fetch("/api/admin/users?bills=true");
+        // Fallback: use stats for aggregate data
+        const stats = await res.json();
+        setBills([]); // Bills will be shown via stats aggregates
+        setLoading(false);
+      } catch {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
 
-  const escalationData = stats
-    ? Object.entries(stats.escalation).map(([s, c]) => ({ name: STAGE_LABELS[s] || s, Rekeningen: c }))
-    : [];
+  const [stats, setStats] = useState<{
+    bills: { total: number; totalPaidCents: number; totalOutstandingCents: number; paid: number; outstanding: number; overdue: number };
+    escalation: { stage: string; count: number }[];
+    sources: { source: string; count: number }[];
+    categories: { category: string; count: number }[];
+  } | null>(null);
 
-  const donutData = stats
-    ? [
-        { name: "Betaald", value: stats.paidBills },
-        { name: "Openstaand", value: stats.outstandingBills },
-        { name: "Achterstallig", value: stats.overdueCount },
-      ]
-    : [];
+  useEffect(() => {
+    fetch("/api/admin/stats")
+      .then((r) => r.json())
+      .then(setStats)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
-  const sourceBarList = stats
-    ? Object.entries(stats.sources || {}).map(([src, count]) => ({
-        name: src === "gmail_scan" ? "Gmail scan" : src === "manual" ? "Handmatig" : src === "camera_scan" ? "Camera scan" : src,
-        value: count as number,
-      }))
-    : [];
+  if (loading) {
+    return (
+      <div style={{ padding: 40, color: C.muted, fontSize: 14 }}>
+        Rekeningen laden...
+      </div>
+    );
+  }
 
-  const categoryBarList = stats
-    ? Object.entries(stats.categories || {}).sort((a, b) => (b[1] as number) - (a[1] as number)).slice(0, 8).map(([cat, count]) => ({ name: cat || "Overig", value: count as number }))
-    : [];
+  if (!stats) return <div style={{ padding: 40, color: C.red }}>Kon data niet laden</div>;
 
-  const paidPct = stats && stats.totalBills > 0 ? Math.round((stats.paidBills / stats.totalBills) * 100) : 0;
-  const openPct = stats && stats.totalBills > 0 ? Math.round((stats.outstandingBills / stats.totalBills) * 100) : 0;
-  const overduePct = stats && stats.totalBills > 0 ? Math.round((stats.overdueCount / stats.totalBills) * 100) : 0;
+  const b = stats.bills;
+  const paidRatio = b.total > 0 ? Math.round((b.paid / b.total) * 100) : 0;
+
+  const escalationData = (stats.escalation || []).map((e) => ({
+    name: STAGE_LABELS[e.stage] || e.stage,
+    value: e.count,
+    fill: STAGE_COLORS[e.stage] || C.blue,
+  }));
+
+  const statusData = [
+    { name: "Betaald", value: b.paid, color: C.green },
+    { name: "Openstaand", value: b.outstanding, color: C.blue },
+    { name: "Achterstallig", value: b.overdue, color: C.red },
+  ].filter((d) => d.value > 0);
+
+  const sourceData = (stats.sources || []).map((s) => ({
+    name: s.source === "gmail_scan" ? "Gmail scan" : s.source === "camera_scan" ? "Camera scan" : "Handmatig",
+    value: s.count,
+  }));
+
+  const catData = (stats.categories || []).slice(0, 8).map((c) => ({
+    name: c.category.charAt(0).toUpperCase() + c.category.slice(1),
+    value: c.count,
+  }));
+
+  const catMax = Math.max(...catData.map((d) => d.value), 1);
 
   return (
-    <AuthGate><AdminSidebar />
-      <main className="ml-[220px] min-h-screen p-6 bg-tremor-background dark:bg-dark-tremor-background">
-        <h1 className="text-tremor-title font-bold text-tremor-content-strong dark:text-dark-tremor-content-strong mb-1">Rekeningen</h1>
-        <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content mb-6">Analyse van alle rekeningen</p>
+    <div>
+      <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: C.navy, letterSpacing: "-0.03em" }}>Rekeningen</h1>
+      <p style={{ margin: "4px 0 24px", fontSize: 14, color: C.muted }}>Analyse van alle rekeningen</p>
 
-        {loading ? <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-tremor-brand border-t-transparent rounded-full animate-spin" /></div> : stats && (
-          <div className="space-y-6">
-            {/* KPI row */}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                { title: "Totaal", metric: stats.totalBills, badge: null },
-                { title: "Betaald", metric: stats.paidBills, badge: { text: `${paidPct}%`, color: "emerald" as const } },
-                { title: "Openstaand", metric: stats.outstandingBills, badge: { text: `${openPct}%`, color: "blue" as const } },
-                { title: "Achterstallig", metric: stats.overdueCount, badge: stats.overdueCount > 0 ? { text: "actie", color: "red" as const } : null },
-              ].map((c) => (
-                <Card key={c.title}>
-                  <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">{c.title}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <p className="text-tremor-metric font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">{c.metric}</p>
-                    {c.badge && <Badge color={c.badge.color}>{c.badge.text}</Badge>}
-                  </div>
-                </Card>
+      {/* Top stats */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+        {[
+          { label: "Totaal", value: String(b.total), color: C.navy },
+          { label: "Betaald", value: String(b.paid), color: C.green },
+          { label: "Openstaand", value: String(b.outstanding), color: C.blue },
+          { label: "Achterstallig", value: String(b.overdue), color: C.red },
+        ].map((s) => (
+          <div key={s.label} style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 20 }}>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: C.muted }}>{s.label}</p>
+            <p style={{ margin: "6px 0 0", fontSize: 28, fontWeight: 700, color: s.color, letterSpacing: "-0.03em", lineHeight: 1 }}>{s.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Betaalratio bar */}
+      <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 20, marginBottom: 24 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <span style={{ fontSize: 15, fontWeight: 600, color: C.navy }}>Betaalratio</span>
+          <span style={{ fontSize: 15, fontWeight: 700, color: C.navy }}>{paidRatio}%</span>
+        </div>
+        <div style={{ height: 10, background: C.borderLight, borderRadius: 5, overflow: "hidden", display: "flex" }}>
+          <div style={{ width: `${(b.paid / Math.max(b.total, 1)) * 100}%`, background: C.green, borderRadius: 5, transition: "width 0.6s ease" }} />
+          <div style={{ width: `${(b.outstanding / Math.max(b.total, 1)) * 100}%`, background: C.blue }} />
+          <div style={{ width: `${(b.overdue / Math.max(b.total, 1)) * 100}%`, background: C.red }} />
+        </div>
+        <div style={{ display: "flex", gap: 16, marginTop: 10 }}>
+          {statusData.map((s) => (
+            <div key={s.name} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: C.muted }}>
+              <div style={{ width: 8, height: 8, borderRadius: 2, background: s.color }} />
+              {s.name} ({s.value})
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Charts row */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+        {/* Escalation */}
+        <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: "20px 20px 12px" }}>
+          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.navy }}>Escalatie verdeling</h2>
+          <div style={{ height: 240, marginTop: 16 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={escalationData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }} barCategoryGap="24%">
+                <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: C.muted }} dy={8} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: C.muted }} allowDecimals={false} />
+                <Tooltip contentStyle={{ borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13 }} />
+                <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={44}>
+                  {escalationData.map((e, i) => <Cell key={i} fill={e.fill} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Donut */}
+        <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 20 }}>
+          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.navy }}>Status verdeling</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: 24, height: 240 }}>
+            <div style={{ width: 160, height: 160, flexShrink: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={statusData} cx="50%" cy="50%" innerRadius={50} outerRadius={72} dataKey="value" stroke="none" paddingAngle={3}>
+                    {statusData.map((e, i) => <Cell key={i} fill={e.color} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {statusData.map((s) => (
+                <div key={s.name} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: 3, background: s.color }} />
+                  <span style={{ fontSize: 13, color: C.muted, flex: 1 }}>{s.name}</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: C.navy }}>{s.value}</span>
+                </div>
               ))}
             </div>
-
-            {/* Amount cards + CategoryBar */}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <Card>
-                <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">Totaal bedrag</p>
-                <p className="mt-1 text-2xl font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">{currencyFmt(stats.totalAmountCents)}</p>
-              </Card>
-              <Card>
-                <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">Betaald bedrag</p>
-                <p className="mt-1 text-2xl font-semibold text-emerald-600 dark:text-emerald-400">{currencyFmt(stats.paidAmountCents)}</p>
-                <CategoryBar
-                  values={[paidPct, openPct, overduePct, Math.max(0, 100 - paidPct - openPct - overduePct)]}
-                  colors={["emerald", "blue", "red", "gray"]}
-                  className="mt-3"
-                />
-                <div className="flex gap-4 mt-2 text-tremor-label text-tremor-content dark:text-dark-tremor-content">
-                  <span>Betaald {paidPct}%</span><span>Open {openPct}%</span><span>Achterstallig {overduePct}%</span>
-                </div>
-              </Card>
-            </div>
-
-            {/* Charts */}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <Card>
-                <h3 className="text-lg font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">Escalatie verdeling</h3>
-                <BarChart
-                  className="mt-4 h-64"
-                  data={escalationData}
-                  index="name"
-                  categories={["Rekeningen"]}
-                  colors={["blue"]}
-                  showLegend={false}
-                  yAxisWidth={32}
-                  valueFormatter={(n: number) => `${numberFmt(n)}`}
-                />
-              </Card>
-              <Card>
-                <h3 className="text-lg font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">Status verdeling</h3>
-                <DonutChart
-                  className="mt-4 h-56"
-                  data={donutData}
-                  category="value"
-                  index="name"
-                  colors={["emerald", "blue", "red"]}
-                  showLabel={true}
-                  valueFormatter={(n: number) => `${n} rekeningen`}
-                />
-              </Card>
-            </div>
-
-            {/* BarLists */}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <Card>
-                <h3 className="text-lg font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">Bron</h3>
-                <BarList data={sourceBarList} className="mt-4" color="blue" valueFormatter={(n: number) => `${numberFmt(n)}`} />
-              </Card>
-              <Card>
-                <h3 className="text-lg font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">Categorie</h3>
-                <BarList data={categoryBarList} className="mt-4" color="emerald" valueFormatter={(n: number) => `${numberFmt(n)}`} />
-              </Card>
-            </div>
           </div>
-        )}
-      </main>
-    </AuthGate>
+        </div>
+      </div>
+
+      {/* Source + Category */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 20 }}>
+          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.navy, marginBottom: 16 }}>Bron</h2>
+          {sourceData.map((s) => (
+            <div key={s.name} style={{ marginBottom: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                <span style={{ fontSize: 13, color: C.navy }}>{s.name}</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: C.navy }}>{s.value}</span>
+              </div>
+              <div style={{ height: 6, background: C.borderLight, borderRadius: 3 }}>
+                <div style={{ height: "100%", width: `${(s.value / Math.max(...sourceData.map((d) => d.value), 1)) * 100}%`, background: C.blue, borderRadius: 3 }} />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 20 }}>
+          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.navy, marginBottom: 16 }}>Categorieën</h2>
+          {catData.map((s) => (
+            <div key={s.name} style={{ marginBottom: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                <span style={{ fontSize: 13, color: C.navy }}>{s.name}</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: C.navy }}>{s.value}</span>
+              </div>
+              <div style={{ height: 6, background: C.borderLight, borderRadius: 3 }}>
+                <div style={{ height: "100%", width: `${(s.value / catMax) * 100}%`, background: C.green, borderRadius: 3 }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

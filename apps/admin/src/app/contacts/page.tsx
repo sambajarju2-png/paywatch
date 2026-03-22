@@ -1,117 +1,115 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import AuthGate from "@/components/AuthGate";
-import AdminSidebar from "@/components/AdminSidebar";
-import { Card } from "@tremor/react";
 
-interface Contact { id: string; name: string; email: string; type: string; company_name: string; subject: string; message: string; lang: string; status: string; created_at: string; }
+const C = { blue: "#2563EB", green: "#059669", amber: "#D97706", red: "#DC2626", navy: "#0A2540", muted: "#64748B", border: "#E2E8F0", borderLight: "#F1F5F9", surface: "#FFFFFF" };
+
+interface Contact { id: string; name: string; email: string; type: string; company_name?: string; subject: string; message: string; lang: string; status: string; created_at: string; }
 
 const TABS = ["all", "new", "read", "done"] as const;
-const TAB_LABELS: Record<string, string> = { all: "Alle", new: "Nieuw", read: "Gelezen", done: "Afgehandeld" };
+const TAB_LABELS: Record<string, string> = { all: "Alles", new: "Nieuw", read: "Gelezen", done: "Afgehandeld" };
+const STATUS_COLORS: Record<string, string> = { new: C.blue, read: C.amber, done: C.green };
 
 export default function ContactsPage() {
-  const [items, setItems] = useState<Contact[]>([]);
-  const [tab, setTab] = useState<string>("all");
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<string>("all");
   const [replyTo, setReplyTo] = useState<Contact | null>(null);
-  const [replyMsg, setReplyMsg] = useState("");
+  const [replyText, setReplyText] = useState("");
   const [sending, setSending] = useState(false);
 
-  const load = () => { setLoading(true); fetch("/api/admin/contacts").then(r => r.json()).then(d => setItems(d.contacts || [])).catch(() => {}).finally(() => setLoading(false)); };
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    fetch("/api/admin/contacts").then((r) => r.json()).then((d) => setContacts(d.contacts || [])).catch(() => {}).finally(() => setLoading(false));
+  }, []);
 
-  const filtered = tab === "all" ? items : items.filter(i => i.status === tab);
-
-  const updateStatus = async (id: string, status: string) => {
+  async function updateStatus(id: string, status: string) {
     await fetch("/api/admin/contacts", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status }) });
-    setItems(prev => prev.map(i => i.id === id ? { ...i, status } : i));
-  };
+    setContacts((prev) => prev.map((c) => (c.id === id ? { ...c, status } : c)));
+  }
 
-  const sendReply = async () => {
-    if (!replyTo || !replyMsg.trim()) return;
+  async function sendReply() {
+    if (!replyTo || !replyText.trim()) return;
     setSending(true);
     try {
-      await fetch("/api/admin/reply", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ to: replyTo.email, subject: `Re: ${replyTo.subject || "Contact"}`, message: replyMsg, name: replyTo.name }) });
+      await fetch("/api/admin/reply", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ to: replyTo.email, name: replyTo.name, subject: `Re: ${replyTo.subject}`, message: replyText }) });
       await updateStatus(replyTo.id, "done");
-      setReplyTo(null); setReplyMsg("");
+      setReplyTo(null);
+      setReplyText("");
     } catch { alert("Verzenden mislukt"); }
-    setSending(false);
-  };
+    finally { setSending(false); }
+  }
+
+  const filtered = tab === "all" ? contacts : contacts.filter((c) => c.status === tab);
 
   return (
-    <AuthGate><AdminSidebar />
-      <main className="ml-[220px] min-h-screen p-6 bg-tremor-background dark:bg-dark-tremor-background">
-        <h1 className="text-tremor-title font-bold text-tremor-content-strong dark:text-dark-tremor-content-strong mb-1">Berichten</h1>
-        <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content mb-6">{items.length} contactberichten</p>
+    <div>
+      <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: C.navy }}>Berichten</h1>
+      <p style={{ margin: "4px 0 24px", fontSize: 14, color: C.muted }}>{contacts.length} berichten ontvangen</p>
 
-        {/* Tabs */}
-        <div className="flex gap-1 mb-6 p-1 rounded-tremor-default border border-tremor-border dark:border-dark-tremor-border bg-tremor-background dark:bg-dark-tremor-background w-fit">
-          {TABS.map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`px-4 py-2 rounded-tremor-small text-tremor-label font-medium transition-all ${
-                tab === t ? "bg-tremor-brand text-white shadow-tremor-input" : "text-tremor-content dark:text-dark-tremor-content hover:text-tremor-content-strong"
-              }`}>
-              {TAB_LABELS[t]}
-              {t !== "all" && <span className="ml-1.5 opacity-70">({items.filter(i => i.status === t).length})</span>}
-            </button>
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: 4, marginBottom: 16, background: C.borderLight, borderRadius: 8, padding: 4, width: "fit-content" }}>
+        {TABS.map((t) => (
+          <button key={t} onClick={() => setTab(t)} style={{
+            padding: "6px 16px", borderRadius: 6, border: "none", fontSize: 12, fontWeight: 600, cursor: "pointer",
+            background: tab === t ? C.surface : "transparent", color: tab === t ? C.navy : C.muted,
+            boxShadow: tab === t ? "0 1px 2px rgba(0,0,0,0.06)" : "none", fontFamily: "'Plus Jakarta Sans', system-ui",
+          }}>{TAB_LABELS[t]} {t !== "all" && `(${contacts.filter((c) => c.status === t).length})`}</button>
+        ))}
+      </div>
+
+      {loading ? <div style={{ padding: 40, color: C.muted }}>Laden...</div> : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {filtered.map((c) => (
+            <div key={c.id} style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 20 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                <div>
+                  <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.navy }}>{c.name}</p>
+                  <p style={{ margin: "2px 0 0", fontSize: 12, color: C.muted }}>{c.email} · {c.type}{c.company_name ? ` · ${c.company_name}` : ""}</p>
+                </div>
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <select value={c.status} onChange={(e) => updateStatus(c.id, e.target.value)} style={{
+                    padding: "4px 8px", borderRadius: 6, border: `1px solid ${C.border}`, fontSize: 12,
+                    color: STATUS_COLORS[c.status] || C.muted, fontFamily: "'Plus Jakarta Sans', system-ui",
+                  }}>
+                    <option value="new">Nieuw</option>
+                    <option value="read">Gelezen</option>
+                    <option value="done">Afgehandeld</option>
+                  </select>
+                  <button onClick={() => { setReplyTo(c); setReplyText(""); }} style={{
+                    padding: "5px 12px", borderRadius: 6, border: "none", background: C.blue,
+                    color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Plus Jakarta Sans', system-ui",
+                  }}>Reageer</button>
+                </div>
+              </div>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: C.navy }}>{c.subject}</p>
+              <p style={{ margin: "6px 0 0", fontSize: 13, color: C.muted, lineHeight: 1.5 }}>{c.message}</p>
+              <p style={{ margin: "8px 0 0", fontSize: 11, color: C.borderLight }}>{new Date(c.created_at).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+            </div>
           ))}
+          {filtered.length === 0 && <div style={{ padding: 40, textAlign: "center", color: C.muted, background: C.surface, borderRadius: 12, border: `1px solid ${C.border}` }}>Geen berichten{tab !== "all" ? " in deze categorie" : ""}</div>}
         </div>
+      )}
 
-        {loading ? <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-tremor-brand border-t-transparent rounded-full animate-spin" /></div> : (
-          <div className="space-y-3">
-            {filtered.map(item => (
-              <Card key={item.id}>
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-xs font-bold text-blue-600 dark:text-blue-400">{item.name[0]?.toUpperCase()}</div>
-                    <div>
-                      <p className="text-tremor-default font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">{item.name} {item.company_name && <span className="text-tremor-content font-normal">({item.company_name})</span>}</p>
-                      <p className="text-tremor-label text-tremor-content dark:text-dark-tremor-content">{item.email} · {item.type === "business" ? "Zakelijk" : "Particulier"} · {new Date(item.created_at).toLocaleDateString("nl-NL")}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <select value={item.status} onChange={(e) => updateStatus(item.id, e.target.value)}
-                      className="text-tremor-label font-medium rounded-tremor-small border border-tremor-border dark:border-dark-tremor-border px-2 py-1 bg-tremor-background dark:bg-dark-tremor-background text-tremor-content-strong dark:text-dark-tremor-content-strong outline-none">
-                      <option value="new">Nieuw</option><option value="read">Gelezen</option><option value="done">Afgehandeld</option>
-                    </select>
-                    <span className={`h-2.5 w-2.5 rounded-full ${item.status === "new" ? "bg-blue-500" : item.status === "read" ? "bg-amber-500" : "bg-emerald-500"}`} />
-                  </div>
-                </div>
-                {item.subject && <p className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong mb-1">{item.subject}</p>}
-                <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content leading-relaxed whitespace-pre-wrap">{item.message}</p>
-                <div className="mt-3 pt-3 border-t border-tremor-border dark:border-dark-tremor-border flex gap-3">
-                  <button onClick={() => { setReplyTo(item); setReplyMsg(""); }} className="text-tremor-label font-semibold text-tremor-brand hover:underline">Beantwoorden</button>
-                  <a href={`mailto:${item.email}`} className="text-tremor-label font-semibold text-tremor-content dark:text-dark-tremor-content hover:underline">Mail openen</a>
-                </div>
-              </Card>
-            ))}
-            {filtered.length === 0 && <p className="text-tremor-default text-tremor-content py-12 text-center">Geen berichten</p>}
+      {/* Reply Modal */}
+      {replyTo && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }} onClick={() => setReplyTo(null)}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: C.surface, borderRadius: 16, padding: 24, width: "100%", maxWidth: 500, boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}>
+            <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700, color: C.navy }}>Reageer op {replyTo.name}</h3>
+            <p style={{ margin: "0 0 16px", fontSize: 12, color: C.muted }}>{replyTo.email}</p>
+            <textarea value={replyText} onChange={(e) => setReplyText(e.target.value)} rows={6} placeholder="Typ je reactie..." style={{
+              width: "100%", padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13,
+              resize: "vertical", outline: "none", fontFamily: "'Plus Jakarta Sans', system-ui", boxSizing: "border-box",
+            }} />
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 12 }}>
+              <button onClick={() => setReplyTo(null)} style={{ padding: "8px 16px", borderRadius: 6, border: `1px solid ${C.border}`, background: "transparent", fontSize: 13, cursor: "pointer", fontFamily: "'Plus Jakarta Sans', system-ui", color: C.muted }}>Annuleer</button>
+              <button onClick={sendReply} disabled={sending || !replyText.trim()} style={{
+                padding: "8px 16px", borderRadius: 6, border: "none", background: C.blue, color: "#fff",
+                fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: sending ? 0.5 : 1, fontFamily: "'Plus Jakarta Sans', system-ui",
+              }}>{sending ? "Verzenden..." : "Verzend"}</button>
+            </div>
           </div>
-        )}
-
-        {/* Reply modal */}
-        {replyTo && (
-          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-            <Card className="w-full max-w-lg">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-tremor-default font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">Antwoord aan {replyTo.name}</h3>
-                <button onClick={() => setReplyTo(null)} className="text-tremor-content hover:text-tremor-content-strong">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
-              </div>
-              <p className="text-tremor-label text-tremor-content mb-3">Naar: {replyTo.email}</p>
-              <textarea value={replyMsg} onChange={(e) => setReplyMsg(e.target.value)} rows={5} placeholder="Typ je antwoord..."
-                className="w-full rounded-tremor-default border border-tremor-border dark:border-dark-tremor-border p-3 text-tremor-default bg-tremor-background dark:bg-dark-tremor-background text-tremor-content-strong dark:text-dark-tremor-content-strong outline-none focus:ring-2 focus:ring-tremor-brand resize-none" />
-              <div className="flex justify-end gap-2 mt-3">
-                <button onClick={() => setReplyTo(null)} className="px-4 py-2 text-tremor-default font-medium text-tremor-content">Annuleer</button>
-                <button onClick={sendReply} disabled={sending || !replyMsg.trim()}
-                  className="px-4 py-2 rounded-tremor-small text-tremor-default font-semibold text-white bg-tremor-brand hover:bg-tremor-brand-emphasis disabled:opacity-50 transition-colors">{sending ? "Verzenden..." : "Verstuur"}</button>
-              </div>
-            </Card>
-          </div>
-        )}
-      </main>
-    </AuthGate>
+        </div>
+      )}
+    </div>
   );
 }

@@ -1,280 +1,956 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import AuthGate from "@/components/AuthGate";
-import AdminSidebar from "@/components/AdminSidebar";
 import {
-  Card, BarChart, DonutChart, BarList, SparkAreaChart, Badge,
-} from "@tremor/react";
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area,
+} from "recharts";
 
-interface Stats {
-  totalUsers: number;
-  totalBills: number;
-  paidBills: number;
-  outstandingBills: number;
-  totalAmountCents: number;
-  paidAmountCents: number;
-  overdueCount: number;
-  escalation: Record<string, number>;
-  recentUsers: { display_name: string; created_at: string; gemeente: string }[];
-  newContacts: number;
-  newApplications: number;
-  sources: Record<string, number>;
-  categories: Record<string, number>;
-}
-
-const STAGE_LABELS: Record<string, string> = {
-  factuur: "Factuur", herinnering: "Herinnering", aanmaning: "Aanmaning",
-  incasso: "Incasso", deurwaarder: "Deurwaarder",
+// ── Design tokens (match PayWatch design system) ─────────────
+const COLORS = {
+  blue: "#2563EB",
+  green: "#059669",
+  amber: "#D97706",
+  orange: "#EA580C",
+  red: "#DC2626",
+  darkRed: "#991B1B",
+  navy: "#0A2540",
+  muted: "#64748B",
+  border: "#E2E8F0",
+  borderLight: "#F1F5F9",
+  surface: "#FFFFFF",
+  bg: "#F8FAFC",
+  blueLight: "#EFF6FF",
+  greenLight: "#ECFDF5",
+  amberLight: "#FFFBEB",
 };
 
-const currencyFmt = (cents: number) =>
-  new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(cents / 100);
+const ESCALATION_COLORS: Record<string, string> = {
+  factuur: COLORS.blue,
+  herinnering: COLORS.amber,
+  aanmaning: COLORS.orange,
+  incasso: COLORS.red,
+  deurwaarder: COLORS.darkRed,
+};
 
-const numberFmt = (n: number) => Intl.NumberFormat("nl-NL").format(n);
+const STAGE_LABELS: Record<string, string> = {
+  factuur: "Factuur",
+  herinnering: "Herinnering",
+  aanmaning: "Aanmaning",
+  incasso: "Incasso",
+  deurwaarder: "Deurwaarder",
+};
 
+// ── Types ────────────────────────────────────────────────────
+interface DashboardData {
+  users: { total: number; recent: UserRow[] };
+  bills: {
+    total: number;
+    totalPaidCents: number;
+    totalOutstandingCents: number;
+    paid: number;
+    outstanding: number;
+    overdue: number;
+  };
+  escalation: { stage: string; count: number }[];
+  sources: { source: string; count: number }[];
+  categories: { category: string; count: number }[];
+  contacts: { total: number; new: number };
+  applications: { total: number; new: number };
+}
+
+interface UserRow {
+  display_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  onboarding_complete: boolean;
+  created_at: string;
+  bill_count: number;
+}
+
+// ── Helpers ──────────────────────────────────────────────────
+function formatEuro(cents: number): string {
+  return `€ ${(cents / 100).toLocaleString("nl-NL", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+function getInitials(user: UserRow): string {
+  const name =
+    user.display_name ||
+    [user.first_name, user.last_name].filter(Boolean).join(" ") ||
+    "?";
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
+
+function getUserName(user: UserRow): string {
+  return (
+    user.display_name ||
+    [user.first_name, user.last_name].filter(Boolean).join(" ") ||
+    "Onbekend"
+  );
+}
+
+// ── Custom Tooltip ───────────────────────────────────────────
+function ChartTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: Array<{ value: number; color?: string; fill?: string; name?: string }>;
+  label?: string;
+}) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div
+      style={{
+        background: "#fff",
+        border: `1px solid ${COLORS.border}`,
+        borderRadius: 8,
+        padding: "8px 12px",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+        fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+      }}
+    >
+      {label && (
+        <p style={{ margin: 0, fontSize: 11, color: COLORS.muted, marginBottom: 4 }}>
+          {label}
+        </p>
+      )}
+      {payload.map((p, i) => (
+        <p
+          key={i}
+          style={{
+            margin: 0,
+            fontSize: 13,
+            fontWeight: 600,
+            color: p.color || p.fill || COLORS.navy,
+          }}
+        >
+          {p.value}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+// ── Mini Sparkline ───────────────────────────────────────────
+function Spark({ data, color }: { data: number[]; color: string }) {
+  const chartData = data.map((v, i) => ({ v, i }));
+  const gradientId = `spark-${color.replace("#", "")}`;
+  return (
+    <div style={{ width: 80, height: 32 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={chartData} margin={{ top: 2, right: 0, left: 0, bottom: 2 }}>
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={0.3} />
+              <stop offset="100%" stopColor={color} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <Area
+            type="monotone"
+            dataKey="v"
+            stroke={color}
+            strokeWidth={1.5}
+            fill={`url(#${gradientId})`}
+            dot={false}
+            isAnimationActive={false}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+// ── Stat Card ────────────────────────────────────────────────
+function StatCard({
+  label,
+  value,
+  sparkData,
+  sparkColor,
+}: {
+  label: string;
+  value: string;
+  sparkData?: number[];
+  sparkColor?: string;
+}) {
+  return (
+    <div
+      style={{
+        background: COLORS.surface,
+        borderRadius: 12,
+        border: `1px solid ${COLORS.border}`,
+        padding: "20px 20px 16px",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+      }}
+    >
+      <div>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: COLORS.muted }}>
+          {label}
+        </p>
+        <p
+          style={{
+            margin: "6px 0 0",
+            fontSize: 28,
+            fontWeight: 700,
+            color: COLORS.navy,
+            letterSpacing: "-0.03em",
+            lineHeight: 1,
+          }}
+        >
+          {value}
+        </p>
+      </div>
+      {sparkData && sparkColor && <Spark data={sparkData} color={sparkColor} />}
+    </div>
+  );
+}
+
+// ── Compact Stat ─────────────────────────────────────────────
+function CompactStat({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: string;
+}) {
+  return (
+    <div
+      style={{
+        background: COLORS.surface,
+        borderRadius: 12,
+        border: `1px solid ${COLORS.border}`,
+        padding: 20,
+      }}
+    >
+      <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: COLORS.muted }}>
+        {label}
+      </p>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginTop: 4 }}>
+        <span
+          style={{
+            fontSize: 32,
+            fontWeight: 700,
+            color: COLORS.navy,
+            letterSpacing: "-0.03em",
+            lineHeight: 1,
+          }}
+        >
+          {value}
+        </span>
+        {accent && (
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: COLORS.green,
+              background: COLORS.greenLight,
+              padding: "2px 8px",
+              borderRadius: 6,
+            }}
+          >
+            {accent}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Horizontal Bar List ──────────────────────────────────────
+function HBarList({
+  data,
+  color = COLORS.blue,
+}: {
+  data: { name: string; value: number }[];
+  color?: string;
+}) {
+  const max = Math.max(...data.map((d) => d.value), 1);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {data.map((item) => (
+        <div key={item.name}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 6,
+            }}
+          >
+            <span style={{ fontSize: 13, fontWeight: 500, color: COLORS.navy }}>
+              {item.name}
+            </span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: COLORS.navy }}>
+              {item.value}
+            </span>
+          </div>
+          <div
+            style={{
+              height: 6,
+              background: COLORS.borderLight,
+              borderRadius: 3,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                height: "100%",
+                width: `${(item.value / max) * 100}%`,
+                background: color,
+                borderRadius: 3,
+                transition: "width 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
+              }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Section Header ───────────────────────────────────────────
+function SectionHeader({ title }: { title: string }) {
+  return (
+    <h2
+      style={{
+        margin: 0,
+        fontSize: 15,
+        fontWeight: 600,
+        color: COLORS.navy,
+        letterSpacing: "-0.01em",
+      }}
+    >
+      {title}
+    </h2>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// MAIN DASHBOARD
+// ══════════════════════════════════════════════════════════════
 export default function DashboardPage() {
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("/api/admin/stats")
-      .then((r) => r.json())
-      .then((d) => { if (d.error) throw new Error(d.error); setStats(d); })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+    async function fetchStats() {
+      try {
+        const res = await fetch("/api/admin/stats");
+        if (!res.ok) throw new Error(`${res.status}`);
+        const json = await res.json();
+        setData(json);
+      } catch (err) {
+        setError("Kon data niet laden");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchStats();
   }, []);
 
-  const escalationData = stats
-    ? Object.entries(stats.escalation).map(([stage, count]) => ({
-        name: STAGE_LABELS[stage] || stage,
-        Rekeningen: count,
-      }))
-    : [];
+  if (loading) {
+    return (
+      <div style={{ padding: 40 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, color: COLORS.muted }}>
+          <div
+            style={{
+              width: 20,
+              height: 20,
+              border: `2px solid ${COLORS.border}`,
+              borderTopColor: COLORS.blue,
+              borderRadius: "50%",
+              animation: "spin 0.8s linear infinite",
+            }}
+          />
+          <span style={{ fontSize: 14 }}>Dashboard laden...</span>
+          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        </div>
+      </div>
+    );
+  }
 
-  const donutData = stats
-    ? [
-        { name: "Betaald", value: stats.paidBills },
-        { name: "Openstaand", value: stats.outstandingBills },
-        { name: "Achterstallig", value: stats.overdueCount },
-      ]
-    : [];
+  if (error || !data) {
+    return (
+      <div style={{ padding: 40, color: COLORS.red, fontSize: 14 }}>
+        {error || "Geen data beschikbaar"}
+      </div>
+    );
+  }
 
-  const sourceBarList = stats
-    ? Object.entries(stats.sources || {}).map(([src, count]) => ({
-        name: src === "gmail_scan" ? "Gmail scan" : src === "manual" ? "Handmatig" : src === "camera_scan" ? "Camera scan" : src,
-        value: count as number,
-      }))
-    : [];
+  // ── Derived values ─────────────────────────────────────────
+  const totalBills = data.bills.total;
+  const paidCount = data.bills.paid;
+  const paidRatio = totalBills > 0 ? Math.round((paidCount / totalBills) * 100) : 0;
 
-  const categoryBarList = stats
-    ? Object.entries(stats.categories || {})
-        .sort((a, b) => (b[1] as number) - (a[1] as number))
-        .slice(0, 6)
-        .map(([cat, count]) => ({ name: cat || "Overig", value: count as number }))
-    : [];
+  const escalationChartData = (data.escalation || []).map((e) => ({
+    name: STAGE_LABELS[e.stage] || e.stage,
+    value: e.count,
+    fill: ESCALATION_COLORS[e.stage] || COLORS.blue,
+  }));
 
-  const sparkData = [
-    { month: "1", v: 2 }, { month: "2", v: 4 }, { month: "3", v: 3 },
-    { month: "4", v: 6 }, { month: "5", v: 5 }, { month: "6", v: 8 }, { month: "7", v: 7 },
-  ];
+  const paymentStatusData = [
+    { name: "Betaald", value: data.bills.paid, color: COLORS.green },
+    { name: "Openstaand", value: data.bills.outstanding, color: COLORS.blue },
+    { name: "Achterstallig", value: data.bills.overdue, color: COLORS.red },
+  ].filter((d) => d.value > 0);
+
+  const sourceData = (data.sources || []).map((s) => ({
+    name: s.source === "gmail_scan" ? "Gmail scan" : s.source === "camera_scan" ? "Camera scan" : s.source === "manual" ? "Handmatig" : s.source,
+    value: s.count,
+  }));
+
+  const categoryData = (data.categories || [])
+    .slice(0, 6)
+    .map((c) => ({
+      name: c.category.charAt(0).toUpperCase() + c.category.slice(1),
+      value: c.count,
+    }));
+
+  const totalPaymentStatus = paymentStatusData.reduce((s, d) => s + d.value, 0);
 
   return (
-    <AuthGate>
-      <AdminSidebar />
-      <main className="ml-[220px] min-h-screen p-6 bg-tremor-background dark:bg-dark-tremor-background">
-        <div className="mb-6">
-          <h1 className="text-tremor-title font-bold text-tremor-content-strong dark:text-dark-tremor-content-strong">Dashboard</h1>
-          <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content mt-1">Overzicht van PayWatch data</p>
+    <div>
+      {/* Page Header */}
+      <div style={{ marginBottom: 28 }}>
+        <h1
+          style={{
+            margin: 0,
+            fontSize: 24,
+            fontWeight: 700,
+            color: COLORS.navy,
+            letterSpacing: "-0.03em",
+          }}
+        >
+          Dashboard
+        </h1>
+        <p style={{ margin: "4px 0 0", fontSize: 14, color: COLORS.muted }}>
+          Overzicht van PayWatch data
+        </p>
+      </div>
+
+      {/* ── Row 1: Top Stats ──────────────────────────────── */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          gap: 16,
+          marginBottom: 24,
+        }}
+      >
+        <StatCard label="Gebruikers" value={String(data.users.total)} sparkColor={COLORS.blue} />
+        <StatCard label="Rekeningen" value={String(totalBills)} sparkColor={COLORS.blue} />
+        <StatCard
+          label="Betaald"
+          value={formatEuro(data.bills.totalPaidCents)}
+          sparkColor={COLORS.green}
+        />
+        <StatCard
+          label="Openstaand"
+          value={formatEuro(data.bills.totalOutstandingCents)}
+          sparkColor={COLORS.amber}
+        />
+      </div>
+
+      {/* ── Row 2: Compact stats ──────────────────────────── */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: 16,
+          marginBottom: 24,
+        }}
+      >
+        <CompactStat
+          label="Betaalratio"
+          value={`${paidRatio}%`}
+          accent={`${paidCount} / ${totalBills}`}
+        />
+        <CompactStat label="Nieuwe berichten" value={String(data.contacts.new)} />
+        <CompactStat label="Sollicitaties" value={String(data.applications.new)} />
+      </div>
+
+      {/* ── Row 3: Charts ─────────────────────────────────── */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 16,
+          marginBottom: 24,
+        }}
+      >
+        {/* Escalation Pipeline */}
+        <div
+          style={{
+            background: COLORS.surface,
+            borderRadius: 12,
+            border: `1px solid ${COLORS.border}`,
+            padding: "20px 20px 12px",
+          }}
+        >
+          <SectionHeader title="Escalatie Pipeline" />
+          <p style={{ fontSize: 12, color: COLORS.muted, margin: "4px 0 20px" }}>
+            Verdeling per escalatiefase
+          </p>
+          <div style={{ height: 240 }}>
+            {escalationChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={escalationChartData}
+                  margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
+                  barCategoryGap="24%"
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke={COLORS.border}
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: COLORS.muted }}
+                    dy={8}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: COLORS.muted }}
+                    allowDecimals={false}
+                  />
+                  <Tooltip
+                    content={<ChartTooltip />}
+                    cursor={{ fill: "rgba(0,0,0,0.03)" }}
+                  />
+                  <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={44}>
+                    {escalationChartData.map((entry, i) => (
+                      <Cell key={i} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div
+                style={{
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: COLORS.muted,
+                  fontSize: 13,
+                }}
+              >
+                Geen escalatiedata
+              </div>
+            )}
+          </div>
         </div>
 
-        {loading && (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 border-2 border-tremor-brand border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
-
-        {error && (
-          <Card className="text-center">
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-            <a href="/api/admin/debug" target="_blank" className="text-tremor-label text-tremor-brand mt-2 inline-block hover:underline">Debug →</a>
-          </Card>
-        )}
-
-        {stats && (
-          <div className="space-y-6">
-            {/* KPI Row — from dashboard-patterns skill */}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                { title: "Gebruikers", metric: String(stats.totalUsers), color: "blue" as const },
-                { title: "Rekeningen", metric: String(stats.totalBills), color: "slate" as const },
-                { title: "Betaald", metric: currencyFmt(stats.paidAmountCents), color: "emerald" as const },
-                { title: "Openstaand", metric: currencyFmt(stats.totalAmountCents - stats.paidAmountCents), color: "amber" as const },
-              ].map((kpi) => (
-                <Card key={kpi.title}>
-                  <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">{kpi.title}</p>
-                  <div className="flex items-center justify-between mt-1">
-                    <p className="text-tremor-metric font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
-                      {kpi.metric}
-                    </p>
-                    <SparkAreaChart
-                      data={sparkData}
-                      index="month"
-                      categories={["v"]}
-                      colors={[kpi.color]}
-                      showGradient={false}
-                      className="h-10 w-20"
-                    />
-                  </div>
-                </Card>
-              ))}
-            </div>
-
-            {/* Secondary stats row */}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-              <Card>
-                <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">Betaalratio</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <p className="text-2xl font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
-                    {stats.totalBills > 0 ? Math.round((stats.paidBills / stats.totalBills) * 100) : 0}%
-                  </p>
-                  <Badge color="emerald">{stats.paidBills} / {stats.totalBills}</Badge>
+        {/* Payment Status Donut */}
+        <div
+          style={{
+            background: COLORS.surface,
+            borderRadius: 12,
+            border: `1px solid ${COLORS.border}`,
+            padding: 20,
+          }}
+        >
+          <SectionHeader title="Betaalstatus" />
+          <p style={{ fontSize: 12, color: COLORS.muted, margin: "4px 0 16px" }}>
+            Status van alle rekeningen
+          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 24, height: 220 }}>
+            {paymentStatusData.length > 0 ? (
+              <>
+                <div style={{ width: 180, height: 180, flexShrink: 0 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={paymentStatusData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={58}
+                        outerRadius={82}
+                        dataKey="value"
+                        stroke="none"
+                        paddingAngle={3}
+                        startAngle={90}
+                        endAngle={-270}
+                      >
+                        {paymentStatusData.map((entry, i) => (
+                          <Cell key={i} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      {/* Center label */}
+                      <text
+                        x="50%"
+                        y="46%"
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        style={{
+                          fontSize: 26,
+                          fontWeight: 700,
+                          fill: COLORS.navy,
+                          fontFamily: "'Plus Jakarta Sans', system-ui",
+                        }}
+                      >
+                        {totalPaymentStatus}
+                      </text>
+                      <text
+                        x="50%"
+                        y="58%"
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        style={{
+                          fontSize: 11,
+                          fill: COLORS.muted,
+                          fontFamily: "'Plus Jakarta Sans', system-ui",
+                        }}
+                      >
+                        rekeningen
+                      </text>
+                      <Tooltip
+                        content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null;
+                          const d = payload[0];
+                          return (
+                            <div
+                              style={{
+                                background: "#fff",
+                                border: `1px solid ${COLORS.border}`,
+                                borderRadius: 8,
+                                padding: "8px 12px",
+                                boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                                fontFamily: "'Plus Jakarta Sans', system-ui",
+                              }}
+                            >
+                              <p
+                                style={{
+                                  margin: 0,
+                                  fontSize: 13,
+                                  fontWeight: 600,
+                                  color:
+                                    (d.payload as { color?: string })?.color || COLORS.navy,
+                                }}
+                              >
+                                {d.name}: {d.value}
+                              </p>
+                            </div>
+                          );
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-              </Card>
-              <Card>
-                <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">Nieuwe berichten</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <p className="text-2xl font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">{stats.newContacts}</p>
-                  {stats.newContacts > 0 && <Badge color="blue">nieuw</Badge>}
-                </div>
-              </Card>
-              <Card>
-                <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">Sollicitaties</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <p className="text-2xl font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">{stats.newApplications}</p>
-                  {stats.newApplications > 0 && <Badge color="violet">nieuw</Badge>}
-                </div>
-              </Card>
-            </div>
-
-            {/* Charts Row — from chart+summary pattern */}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <Card>
-                <h3 className="text-lg font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">Escalatie Pipeline</h3>
-                <BarChart
-                  className="mt-4 h-64"
-                  data={escalationData}
-                  index="name"
-                  categories={["Rekeningen"]}
-                  colors={["blue"]}
-                  showLegend={false}
-                  yAxisWidth={32}
-                  valueFormatter={(n: number) => `${numberFmt(n)}`}
-                />
-              </Card>
-
-              <Card>
-                <h3 className="text-lg font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">Betaalstatus</h3>
-                <div className="flex items-center justify-center gap-8 mt-4">
-                  <DonutChart
-                    className="h-44"
-                    data={donutData}
-                    category="value"
-                    index="name"
-                    colors={["emerald", "blue", "red"]}
-                    showLabel={true}
-                    valueFormatter={(n: number) => `${n} rekeningen`}
-                  />
-                  <div className="space-y-3">
-                    {[
-                      { color: "bg-emerald-500", label: "Betaald", val: stats.paidBills },
-                      { color: "bg-blue-500", label: "Openstaand", val: stats.outstandingBills },
-                      { color: "bg-red-500", label: "Achterstallig", val: stats.overdueCount },
-                    ].map((item) => (
-                      <div key={item.label} className="flex items-center gap-2 text-tremor-default">
-                        <span className={`h-3 w-3 rounded-tremor-small ${item.color}`} />
-                        <span className="text-tremor-content dark:text-dark-tremor-content">{item.label}</span>
-                        <span className="font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong ml-auto">{item.val}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </Card>
-            </div>
-
-            {/* BarLists */}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <Card>
-                <h3 className="text-lg font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">Bron van rekeningen</h3>
-                <BarList
-                  data={sourceBarList}
-                  className="mt-4"
-                  color="blue"
-                  valueFormatter={(n: number) => `${numberFmt(n)} rekeningen`}
-                />
-              </Card>
-              <Card>
-                <h3 className="text-lg font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">Top categorieën</h3>
-                <BarList
-                  data={categoryBarList}
-                  className="mt-4"
-                  color="emerald"
-                  valueFormatter={(n: number) => `${numberFmt(n)}`}
-                />
-              </Card>
-            </div>
-
-            {/* Recent users + Quick links */}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <Card>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">Recente gebruikers</h3>
-                  <a href="/users" className="text-tremor-label font-medium text-tremor-brand hover:underline">Alle →</a>
-                </div>
-                <div className="mt-4 space-y-3">
-                  {(stats.recentUsers || []).slice(0, 5).map((u, i) => (
-                    <div key={i} className="flex items-center gap-3 py-2 border-b border-tremor-border dark:border-dark-tremor-border last:border-0">
-                      <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-xs font-bold text-blue-600 dark:text-blue-400 flex-shrink-0">
-                        {(u.display_name || "?")[0].toUpperCase()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong truncate">{u.display_name || "Onbekend"}</p>
-                        <p className="text-tremor-label text-tremor-content dark:text-dark-tremor-content">{u.gemeente || "—"}</p>
-                      </div>
-                      <p className="text-tremor-label text-tremor-content dark:text-dark-tremor-content">{u.created_at ? new Date(u.created_at).toLocaleDateString("nl-NL") : "—"}</p>
+                {/* Legend */}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 12,
+                    justifyContent: "center",
+                  }}
+                >
+                  {paymentStatusData.map((item) => (
+                    <div
+                      key={item.name}
+                      style={{ display: "flex", alignItems: "center", gap: 10 }}
+                    >
+                      <div
+                        style={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: 3,
+                          background: item.color,
+                          flexShrink: 0,
+                        }}
+                      />
+                      <span style={{ fontSize: 13, color: COLORS.muted, flex: 1 }}>
+                        {item.name}
+                      </span>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: COLORS.navy }}>
+                        {item.value}
+                      </span>
                     </div>
                   ))}
-                  {(!stats.recentUsers || stats.recentUsers.length === 0) && (
-                    <p className="text-tremor-default text-tremor-content py-4 text-center">Nog geen gebruikers</p>
-                  )}
                 </div>
-              </Card>
-
-              <Card>
-                <h3 className="text-lg font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">Snelkoppelingen</h3>
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  {[
-                    { href: "/users", label: "Gebruikers beheren" },
-                    { href: "/contacts", label: "Berichten bekijken" },
-                    { href: "/applications", label: "Sollicitaties" },
-                    { href: "/bills", label: "Rekening analyse" },
-                    { href: "https://paywatch.sanity.studio", label: "Sanity Studio", ext: true },
-                    { href: "/api/admin/debug", label: "Debug info", ext: true },
-                  ].map((link) => (
-                    <a key={link.href} href={link.href}
-                      target={link.ext ? "_blank" : undefined}
-                      rel={link.ext ? "noopener noreferrer" : undefined}
-                      className="rounded-tremor-default border border-tremor-border dark:border-dark-tremor-border px-3 py-2.5 text-tremor-label font-medium text-tremor-content-emphasis dark:text-dark-tremor-content-emphasis hover:bg-tremor-background-muted dark:hover:bg-dark-tremor-background-muted transition-colors">
-                      {link.label} →
-                    </a>
-                  ))}
-                </div>
-              </Card>
-            </div>
+              </>
+            ) : (
+              <div
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: COLORS.muted,
+                  fontSize: 13,
+                }}
+              >
+                Geen rekeningen
+              </div>
+            )}
           </div>
-        )}
-      </main>
-    </AuthGate>
+        </div>
+      </div>
+
+      {/* ── Row 4: Bar Lists ──────────────────────────────── */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 16,
+          marginBottom: 24,
+        }}
+      >
+        <div
+          style={{
+            background: COLORS.surface,
+            borderRadius: 12,
+            border: `1px solid ${COLORS.border}`,
+            padding: 20,
+          }}
+        >
+          <SectionHeader title="Bron van rekeningen" />
+          <p style={{ fontSize: 12, color: COLORS.muted, margin: "4px 0 20px" }}>
+            Hoe rekeningen zijn toegevoegd
+          </p>
+          {sourceData.length > 0 ? (
+            <HBarList data={sourceData} color={COLORS.blue} />
+          ) : (
+            <p style={{ fontSize: 13, color: COLORS.muted }}>Geen data</p>
+          )}
+        </div>
+
+        <div
+          style={{
+            background: COLORS.surface,
+            borderRadius: 12,
+            border: `1px solid ${COLORS.border}`,
+            padding: 20,
+          }}
+        >
+          <SectionHeader title="Top categorieën" />
+          <p style={{ fontSize: 12, color: COLORS.muted, margin: "4px 0 20px" }}>
+            Meest voorkomende categorieën
+          </p>
+          {categoryData.length > 0 ? (
+            <HBarList data={categoryData} color={COLORS.green} />
+          ) : (
+            <p style={{ fontSize: 13, color: COLORS.muted }}>Geen data</p>
+          )}
+        </div>
+      </div>
+
+      {/* ── Row 5: Recent Users ───────────────────────────── */}
+      <div
+        style={{
+          background: COLORS.surface,
+          borderRadius: 12,
+          border: `1px solid ${COLORS.border}`,
+          padding: 20,
+          marginBottom: 24,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 16,
+          }}
+        >
+          <SectionHeader title="Recente gebruikers" />
+          <a
+            href="/users"
+            style={{
+              fontSize: 12,
+              fontWeight: 500,
+              color: COLORS.blue,
+              textDecoration: "none",
+            }}
+          >
+            Bekijk alles →
+          </a>
+        </div>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead>
+              <tr>
+                {["Naam", "Lid sinds", "Rekeningen", "Onboarding"].map((h) => (
+                  <th
+                    key={h}
+                    style={{
+                      textAlign: "left",
+                      padding: "10px 12px",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: COLORS.muted,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                      borderBottom: `1px solid ${COLORS.border}`,
+                    }}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {(data.users.recent || []).map((user, i) => (
+                <tr
+                  key={i}
+                  style={{
+                    borderBottom:
+                      i < (data.users.recent || []).length - 1
+                        ? `1px solid ${COLORS.borderLight}`
+                        : "none",
+                  }}
+                >
+                  <td style={{ padding: 12 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <div
+                        style={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: "50%",
+                          background: COLORS.blueLight,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: COLORS.blue,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {getInitials(user)}
+                      </div>
+                      <span style={{ fontWeight: 500, color: COLORS.navy }}>
+                        {getUserName(user)}
+                      </span>
+                    </div>
+                  </td>
+                  <td style={{ padding: 12, color: COLORS.muted }}>
+                    {new Date(user.created_at).toLocaleDateString("nl-NL", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </td>
+                  <td style={{ padding: 12, fontWeight: 600, color: COLORS.navy }}>
+                    {user.bill_count ?? 0}
+                  </td>
+                  <td style={{ padding: 12 }}>
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4,
+                        fontSize: 12,
+                        fontWeight: 500,
+                        color: user.onboarding_complete ? COLORS.green : COLORS.amber,
+                        background: user.onboarding_complete
+                          ? COLORS.greenLight
+                          : COLORS.amberLight,
+                        padding: "3px 10px",
+                        borderRadius: 6,
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: 5,
+                          height: 5,
+                          borderRadius: "50%",
+                          background: user.onboarding_complete ? COLORS.green : COLORS.amber,
+                        }}
+                      />
+                      {user.onboarding_complete ? "Compleet" : "Pending"}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {(!data.users.recent || data.users.recent.length === 0) && (
+                <tr>
+                  <td
+                    colSpan={4}
+                    style={{ padding: 20, textAlign: "center", color: COLORS.muted }}
+                  >
+                    Geen gebruikers gevonden
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ── Row 6: Quick Links ────────────────────────────── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+        {[
+          {
+            title: "Bekijk alle rekeningen",
+            desc: "Beheer en filter rekeningen",
+            href: "/bills",
+          },
+          {
+            title: "Gebruikers beheren",
+            desc: "Zoek, bekijk en verwijder",
+            href: "/users",
+          },
+          {
+            title: "Debug info",
+            desc: "Env vars & DB status",
+            href: "/api/admin/debug",
+          },
+        ].map((link) => (
+          <a
+            key={link.title}
+            href={link.href}
+            style={{
+              background: COLORS.surface,
+              borderRadius: 12,
+              border: `1px solid ${COLORS.border}`,
+              padding: 20,
+              textDecoration: "none",
+              display: "block",
+            }}
+          >
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: COLORS.navy }}>
+              {link.title}
+            </p>
+            <p style={{ margin: "4px 0 0", fontSize: 12, color: COLORS.muted }}>
+              {link.desc}
+            </p>
+            <p style={{ margin: "12px 0 0", fontSize: 12, fontWeight: 600, color: COLORS.blue }}>
+              {link.href} →
+            </p>
+          </a>
+        ))}
+      </div>
+    </div>
   );
 }
