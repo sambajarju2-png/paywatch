@@ -8,6 +8,7 @@ import HeroBanner from "@/components/HeroBanner";
 import ScrollReveal from "@/components/ScrollReveal";
 import SanityImage from "@/components/SanityImage";
 import { siteConfig } from "@/lib/config";
+import FeatureRoadmap from "@/components/FeatureRoadmap";
 
 export default function HomePage() {
   const { lang, t } = useApp();
@@ -122,6 +123,12 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Roadmap */}
+<div className="bg-[var(--bg)] border-t border-[var(--border)]">
+  <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+    <FeatureRoadmap compact />
+  </div>
+</div>
       {/* ─── CTA ─── */}
       <section className="bg-[var(--bg)]">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 text-center">
