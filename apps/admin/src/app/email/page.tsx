@@ -59,6 +59,32 @@ const STATUS_COLORS: Record<string, string> = {
   draft: C.muted,
 };
 
+/* ─── SVG Icons (Lucide-style, 1.5px stroke) ─── */
+function Icon({ d, size = 18, color = C.navy, style }: { d: string; size?: number; color?: string; style?: React.CSSProperties }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}
+      strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+      style={{ flexShrink: 0, ...style }}>
+      <path d={d} />
+    </svg>
+  );
+}
+
+const ICONS = {
+  mail: "M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zM22 6l-10 7L2 6",
+  chart: "M18 20V10M12 20V4M6 20v-6",
+  users: "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z",
+  send: "M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z",
+  edit: "M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z",
+  inbox: "M22 12h-6l-2 3h-4l-2-3H2M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z",
+  messageCircle: "M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z",
+  refresh: "M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15",
+  clipboard: "M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2M9 2h6a1 1 0 011 1v1a1 1 0 01-1 1H9a1 1 0 01-1-1V3a1 1 0 011-1z",
+  filePlus: "M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M12 18v-6M9 15h6",
+  checkCircle: "M22 11.08V12a10 10 0 11-5.93-9.14M22 4L12 14.01l-3-3",
+  mailOpen: "M21.2 8.4c.5.38.8.97.8 1.6v10a2 2 0 01-2 2H4a2 2 0 01-2-2V10a2 2 0 01.8-1.6L12 2l9.2 6.4zM22 10l-10 7-10-7",
+};
+
 /* ─── Types ─── */
 interface EmailData {
   subscribers: {
@@ -208,8 +234,8 @@ export default function EmailPage() {
         setComposeResult({
           ok: true,
           msg: sendNow
-            ? `✅ Broadcast sent! ID: ${json.id}`
-            : `📝 Draft saved. ID: ${json.id}`,
+            ? `Broadcast sent! ID: ${json.id}`
+            : `Draft saved. ID: ${json.id}`,
         });
         // Refresh broadcasts
         const refreshRes = await fetch("/api/admin/email/broadcast");
@@ -329,10 +355,10 @@ export default function EmailPage() {
   const filteredBroadcasts = getFilteredBroadcasts();
 
   const tabs = [
-    { key: "overview", label: "📊 Overview" },
-    { key: "subscribers", label: "👥 Subscribers" },
-    { key: "broadcasts", label: "📨 Broadcasts" },
-    { key: "compose", label: "✉️ Compose" },
+    { key: "overview", label: "Overview", icon: ICONS.chart },
+    { key: "subscribers", label: "Subscribers", icon: ICONS.users },
+    { key: "broadcasts", label: "Broadcasts", icon: ICONS.send },
+    { key: "compose", label: "Compose", icon: ICONS.edit },
   ] as const;
 
   return (
@@ -354,9 +380,13 @@ export default function EmailPage() {
               color: C.navy,
               margin: 0,
               letterSpacing: "-0.02em",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
             }}
           >
-            📧 Email & Newsletter
+            <Icon d={ICONS.mail} size={22} color={C.blue} />
+            Email & Newsletter
           </h1>
           <p style={{ fontSize: 13, color: C.muted, margin: "4px 0 0" }}>
             Subscribers, broadcasts, and email performance
@@ -391,8 +421,13 @@ export default function EmailPage() {
               borderRadius: 8,
               cursor: "pointer",
               transition: "all 0.15s",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
             }}
           >
+            <Icon d={t.icon} size={15} color={tab === t.key ? C.surface : C.muted} />
             {t.label}
           </button>
         ))}
@@ -573,8 +608,9 @@ export default function EmailPage() {
                 padding: 20,
               }}
             >
-              <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 12 }}>
-                📬 Weekly Digest Subscribers
+              <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                <Icon d={ICONS.inbox} size={16} color={C.blue} />
+                Weekly Digest Subscribers
               </div>
               <div style={{ display: "flex", gap: 16, marginBottom: 12 }}>
                 <div>
@@ -626,8 +662,9 @@ export default function EmailPage() {
                 padding: 20,
               }}
             >
-              <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 12 }}>
-                💬 Unsubscribe Feedback
+              <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                <Icon d={ICONS.messageCircle} size={16} color={C.blue} />
+                Unsubscribe Feedback
               </div>
               {data.feedback.length > 0 ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 200, overflowY: "auto" }}>
@@ -668,8 +705,9 @@ export default function EmailPage() {
                 marginBottom: 24,
               }}
             >
-              <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 12 }}>
-                🔄 Resend Audience Sync
+              <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                <Icon d={ICONS.refresh} size={16} color={C.blue} />
+                Resend Audience Sync
               </div>
               <div style={{ display: "flex", gap: 24 }}>
                 {Object.entries(data.resendAudiences).map(([key, count]) => (
@@ -743,7 +781,10 @@ export default function EmailPage() {
                 cursor: "pointer",
               }}
             >
-              ⬇ Export CSV
+              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>
+                Export CSV
+              </span>
             </button>
           </div>
 
@@ -959,7 +1000,9 @@ export default function EmailPage() {
                 color: C.muted,
               }}
             >
-              <div style={{ fontSize: 32, marginBottom: 8 }}>📭</div>
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
+                <Icon d={ICONS.mailOpen} size={32} color={C.muted} />
+              </div>
               <div style={{ fontSize: 14 }}>
                 {broadcasts.length === 0
                   ? "No broadcasts yet. Create your first one!"
@@ -1071,8 +1114,9 @@ export default function EmailPage() {
             padding: 24,
           }}
         >
-          <div style={{ fontSize: 16, fontWeight: 700, color: C.navy, marginBottom: 20 }}>
-            ✉️ Compose Broadcast
+          <div style={{ fontSize: 16, fontWeight: 700, color: C.navy, marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
+            <Icon d={ICONS.edit} size={18} color={C.blue} />
+            Compose Broadcast
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
@@ -1216,8 +1260,9 @@ export default function EmailPage() {
                 padding: "12px 16px",
               }}
             >
-              <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 8 }}>
-                📋 Available Variables
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                <Icon d={ICONS.clipboard} size={14} color={C.blue} />
+                Available Variables
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 24px" }}>
                 {[
@@ -1353,7 +1398,10 @@ export default function EmailPage() {
                 opacity: composeSending || !composeSubject || !composeHtml ? 0.5 : 1,
               }}
             >
-              📝 Save as Draft
+              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <Icon d={ICONS.filePlus} size={15} color={C.navy} />
+                Save as Draft
+              </span>
             </button>
             <button
               onClick={() => {
@@ -1374,7 +1422,9 @@ export default function EmailPage() {
                 opacity: composeSending || !composeSubject || !composeHtml ? 0.5 : 1,
               }}
             >
-              {composeSending ? "Sending..." : "🚀 Send Now"}
+              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                {composeSending ? "Sending..." : <><Icon d={ICONS.send} size={15} color="#fff" /> Send Now</>}
+              </span>
             </button>
           </div>
         </div>
