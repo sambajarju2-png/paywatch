@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import AppProvider from "@/components/AppProvider";
+import SanityContentProvider from "@/components/SanityContentProvider";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CookieBanner from "@/components/CookieBanner";
@@ -46,26 +47,12 @@ export const metadata: Metadata = {
     locale: "nl_NL",
     alternateLocale: "en_US",
     type: "website",
-    /* IMAGE PLACEHOLDER: Add OG image at /public/og-image.png (1200x630) then uncomment:
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "PayWatch — Grip op je rekeningen" }],
-    */
   },
   twitter: {
     card: "summary_large_image",
     title: "PayWatch — Grip op je rekeningen",
     description: "Scan je inbox. Herken rekeningen. Bespaar op incassokosten.",
-    /* IMAGE PLACEHOLDER: Add twitter image then uncomment:
-    images: ["/og-image.png"],
-    */
   },
-  /* IMAGE PLACEHOLDER: Add favicon files to /public/ then uncomment:
-  icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon-16x16.png",
-    apple: "/apple-touch-icon.png",
-  },
-  manifest: "/site.webmanifest",
-  */
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -117,10 +104,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${jakarta.variable} font-sans`}>
         <AppProvider>
-          <Header />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
-          <CookieBanner />
+          <SanityContentProvider>
+            <Header />
+            <main className="min-h-screen">{children}</main>
+            <Footer />
+            <CookieBanner />
+          </SanityContentProvider>
         </AppProvider>
       </body>
     </html>

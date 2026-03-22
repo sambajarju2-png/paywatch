@@ -3,11 +3,29 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useApp } from "./AppProvider";
+import { useSanityContent } from "./SanityContentProvider";
 import { navItems, siteConfig } from "@/lib/config";
 
 export default function Header() {
   const { lang, setLang, theme, setTheme, t } = useApp();
+  const { getNav } = useSanityContent();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  /* Use Sanity nav if available, otherwise hardcoded */
+  const sanityHeaderNav = getNav("header");
+  const headerItems = sanityHeaderNav
+    ? sanityHeaderNav.map((item) => ({
+        key: item.href.replace(/^\//, ""),
+        href: item.href,
+        label: item.label[lang] || item.label.nl || item.label.en,
+        isExternal: item.isExternal || false,
+      }))
+    : navItems.map((item) => ({
+        key: item.key,
+        href: item.href,
+        label: t.nav[item.key as keyof typeof t.nav],
+        isExternal: false,
+      }));
 
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[#0A2540] dark:bg-[#060D1B]">
@@ -19,15 +37,19 @@ export default function Header() {
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-6">
-          {navItems.map((item) => (
-            <Link
-              key={item.key}
-              href={item.href}
-              className="text-sm font-medium text-slate-300 hover:text-white transition-colors"
-            >
-              {t.nav[item.key as keyof typeof t.nav]}
-            </Link>
-          ))}
+          {headerItems.map((item) =>
+            item.isExternal ? (
+              <a key={item.key} href={item.href} target="_blank" rel="noopener noreferrer"
+                className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
+                {item.label}
+              </a>
+            ) : (
+              <Link key={item.key} href={item.href}
+                className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
+                {item.label}
+              </Link>
+            )
+          )}
         </div>
 
         {/* Right side: controls */}
@@ -59,28 +81,20 @@ export default function Header() {
             )}
           </button>
 
-          {/* Login link - hidden on mobile */}
-          <Link
-            href={`https://${siteConfig.appDomain}`}
-            className="hidden sm:inline-flex text-sm font-medium text-slate-300 hover:text-white transition-colors"
-          >
+          {/* Login link */}
+          <Link href={`https://${siteConfig.appDomain}`}
+            className="hidden sm:inline-flex text-sm font-medium text-slate-300 hover:text-white transition-colors">
             {t.nav.login}
           </Link>
 
           {/* CTA button */}
-          <Link
-            href={`https://${siteConfig.appDomain}`}
-            className="hidden sm:inline-flex items-center rounded bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
-          >
+          <Link href={`https://${siteConfig.appDomain}`}
+            className="hidden sm:inline-flex items-center rounded bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity">
             {t.nav.cta}
           </Link>
 
           {/* Mobile hamburger */}
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden flex flex-col gap-1.5 p-1"
-            aria-label="Toggle menu"
-          >
+          <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden flex flex-col gap-1.5 p-1" aria-label="Toggle menu">
             <span className={`block h-0.5 w-5 bg-slate-300 transition-transform ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
             <span className={`block h-0.5 w-5 bg-slate-300 transition-opacity ${menuOpen ? "opacity-0" : ""}`} />
             <span className={`block h-0.5 w-5 bg-slate-300 transition-transform ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
@@ -91,27 +105,28 @@ export default function Header() {
       {/* Mobile menu */}
       {menuOpen && (
         <div className="md:hidden border-t border-slate-700 bg-[#0A2540] dark:bg-[#060D1B] px-4 pb-4">
-          {navItems.map((item) => (
-            <Link
-              key={item.key}
-              href={item.href}
-              onClick={() => setMenuOpen(false)}
-              className="block py-3 text-sm font-medium text-slate-300 hover:text-white border-b border-slate-700/50"
-            >
-              {t.nav[item.key as keyof typeof t.nav]}
-            </Link>
-          ))}
+          {headerItems.map((item) =>
+            item.isExternal ? (
+              <a key={item.key} href={item.href} target="_blank" rel="noopener noreferrer"
+                onClick={() => setMenuOpen(false)}
+                className="block py-3 text-sm font-medium text-slate-300 hover:text-white border-b border-slate-700/50">
+                {item.label}
+              </a>
+            ) : (
+              <Link key={item.key} href={item.href}
+                onClick={() => setMenuOpen(false)}
+                className="block py-3 text-sm font-medium text-slate-300 hover:text-white border-b border-slate-700/50">
+                {item.label}
+              </Link>
+            )
+          )}
           <div className="flex gap-3 mt-4">
-            <Link
-              href={`https://${siteConfig.appDomain}`}
-              className="flex-1 text-center rounded border border-slate-600 px-4 py-2 text-sm font-medium text-slate-300 hover:text-white"
-            >
+            <Link href={`https://${siteConfig.appDomain}`}
+              className="flex-1 text-center rounded border border-slate-600 px-4 py-2 text-sm font-medium text-slate-300 hover:text-white">
               {t.nav.login}
             </Link>
-            <Link
-              href={`https://${siteConfig.appDomain}`}
-              className="flex-1 text-center rounded bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white"
-            >
+            <Link href={`https://${siteConfig.appDomain}`}
+              className="flex-1 text-center rounded bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white">
               {t.nav.cta}
             </Link>
           </div>
