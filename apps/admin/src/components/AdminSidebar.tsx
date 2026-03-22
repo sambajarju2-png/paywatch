@@ -2,93 +2,68 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { supabaseAuth } from "@/lib/auth";
 
-const navItems = [
-  { href: "/", label: "Dashboard", icon: "grid" },
-  { href: "/users", label: "Users", icon: "users" },
-  { href: "/bills", label: "Bills", icon: "card" },
-  { href: "/applications", label: "Applications", icon: "briefcase" },
-  { href: "/contacts", label: "Contacts", icon: "mail" },
+const NAV = [
+  { href: "/", label: "Dashboard", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
+  { href: "/users", label: "Gebruikers", icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" },
+  { href: "/bills", label: "Rekeningen", icon: "M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" },
+  { href: "/contacts", label: "Berichten", icon: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" },
+  { href: "/applications", label: "Sollicitaties", icon: "M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" },
 ];
 
 export default function AdminSidebar() {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
-
-  async function handleLogout() {
-    await fetch("/api/auth", { method: "DELETE" });
-    window.location.reload();
-  }
 
   return (
-    <>
-      {/* Mobile toggle */}
-      <button onClick={() => setOpen(!open)} className="fixed top-4 left-4 z-50 md:hidden w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center shadow-sm">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-      </button>
-
-      {/* Overlay */}
-      {open && <div className="fixed inset-0 bg-black/30 z-40 md:hidden" onClick={() => setOpen(false)} />}
-
-      {/* Sidebar */}
-      <aside className={`fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 z-40 flex flex-col transition-transform md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="p-6 border-b border-gray-200">
-          <h1 className="text-lg font-bold text-gray-900">PayWatch</h1>
-          <p className="text-xs text-gray-500 mt-0.5">Admin Dashboard</p>
-        </div>
-
-        <nav className="flex-1 p-3 flex flex-col gap-1">
-          {navItems.map((item) => {
-            const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  active ? "bg-blue-50 text-blue-700" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                }`}
-              >
-                <NavIcon type={item.icon} active={active} />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Bottom section with logout */}
-        <div className="p-4 border-t border-gray-200">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-            Logout
-          </button>
-          <div className="text-xs text-gray-400 mt-3 px-3">
-            <p className="font-medium text-gray-500">PayWatch</p>
-            <p>admin.paywatch.app</p>
+    <aside className="fixed left-0 top-0 bottom-0 w-[220px] border-r border-[var(--border)] flex flex-col z-30" style={{ background: "var(--surface)" }}>
+      <div className="px-5 py-5 border-b border-[var(--border)]">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-[var(--blue)] flex items-center justify-center flex-shrink-0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+          </div>
+          <div>
+            <p className="text-sm font-bold text-[var(--navy)] leading-tight">PayWatch</p>
+            <p className="text-[10px] font-medium text-[var(--muted)] leading-tight">Admin Panel</p>
           </div>
         </div>
-      </aside>
-    </>
-  );
-}
+      </div>
 
-function NavIcon({ type, active }: { type: string; active: boolean }) {
-  const color = active ? "#1D4ED8" : "#6B7280";
-  const s = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth: 1.5 };
-  switch (type) {
-    case "grid": return <svg {...s}><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>;
-    case "users": return <svg {...s}><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>;
-    case "card": return <svg {...s}><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>;
-    case "mail": return <svg {...s}><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 5L2 7"/></svg>;
-    case "briefcase": return <svg {...s}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>;
-    default: return <svg {...s}><circle cx="12" cy="12" r="10"/></svg>;
-  }
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        {NAV.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all ${
+                isActive
+                  ? "bg-[var(--blue-light)] text-[var(--blue)]"
+                  : "text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--bg)]"
+              }`}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d={item.icon} />
+              </svg>
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="px-3 py-4 border-t border-[var(--border)]">
+        <a href="https://paywatch.app" target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--bg)] transition-all">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Website
+        </a>
+        <button
+          onClick={async () => { await supabaseAuth.auth.signOut(); window.location.reload(); }}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium text-[var(--muted)] hover:text-[var(--red)] hover:bg-[var(--red-light)] transition-all">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Uitloggen
+        </button>
+      </div>
+    </aside>
+  );
 }

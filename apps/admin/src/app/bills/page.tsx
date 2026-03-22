@@ -1,137 +1,145 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import AuthGate from "@/components/AuthGate";
+import AdminSidebar from "@/components/AdminSidebar";
+import { Card, BarChart, DonutChart, BarList, CategoryBar } from "@tremor/react";
 
 interface Stats {
-  users: {
-    total: number;
-    completed: number;
-    recentWeek: number;
-  };
-  bills: {
-    total: number;
-    paid: number;
-    overdue: number;
-    totalOutstandingEur: string;
-    stages: Record<string, number>;
-  };
+  totalBills: number;
+  paidBills: number;
+  outstandingBills: number;
+  overdueCount: number;
+  totalAmountCents: number;
+  paidAmountCents: number;
+  escalation: Record<string, number>;
+  sources: Record<string, number>;
+  categories: Record<string, number>;
 }
+
+const STAGE_LABELS: Record<string, string> = { factuur: "Factuur", herinnering: "Herinnering", aanmaning: "Aanmaning", incasso: "Incasso", deurwaarder: "Deurwaarder" };
+const fmt = (c: number) => new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(c / 100);
 
 export default function BillsPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch("/api/admin/stats")
-      .then((r) => r.json())
-      .then(setStats)
-      .finally(() => setLoading(false));
-  }, []);
+  useEffect(() => { fetch("/api/admin/stats").then(r => r.json()).then(d => setStats(d)).catch(() => {}).finally(() => setLoading(false)); }, []);
 
-  if (loading) return <div className="animate-pulse"><div className="h-8 w-48 bg-gray-200 rounded mb-8" /><div className="grid grid-cols-3 gap-4">{[1,2,3].map(i=><div key={i} className="h-32 bg-gray-100 rounded-xl"/>)}</div></div>;
+  const escalationData = stats
+    ? Object.entries(stats.escalation).map(([s, c]) => ({ name: STAGE_LABELS[s] || s, Rekeningen: c }))
+    : [];
 
-  const b = stats?.bills || { total: 0, paid: 0, overdue: 0, totalOutstandingEur: "0.00", stages: {} };
-  const stageOrder = ["factuur", "herinnering", "aanmaning", "incasso", "deurwaarder"];
-  const stageColors: Record<string, string> = { factuur: "#2563EB", herinnering: "#D97706", aanmaning: "#EA580C", incasso: "#DC2626", deurwaarder: "#991B1B" };
-  const stageLabels: Record<string, string> = { factuur: "Factuur", herinnering: "Herinnering", aanmaning: "Aanmaning", incasso: "Incasso", deurwaarder: "Deurwaarder" };
-  const totalStaged = Object.values(b.stages).reduce((a, b2) => a + b2, 0) || 1;
+  const donutData = stats
+    ? [
+        { name: "Betaald", amount: stats.paidBills },
+        { name: "Openstaand", amount: stats.outstandingBills },
+        { name: "Achterstallig", amount: stats.overdueCount },
+      ]
+    : [];
+
+  const sourceBarList = stats
+    ? Object.entries(stats.sources || {}).map(([src, count]) => ({
+        name: src === "gmail_scan" ? "Gmail scan" : src === "manual" ? "Handmatig" : src === "camera_scan" ? "Camera scan" : src,
+        value: count as number,
+      }))
+    : [];
+
+  const categoryBarList = stats
+    ? Object.entries(stats.categories || {}).sort((a, b) => (b[1] as number) - (a[1] as number)).slice(0, 8).map(([cat, count]) => ({ name: cat || "Overig", value: count as number }))
+    : [];
+
+  const paidPct = stats && stats.totalBills > 0 ? Math.round((stats.paidBills / stats.totalBills) * 100) : 0;
+  const openPct = stats && stats.totalBills > 0 ? Math.round((stats.outstandingBills / stats.totalBills) * 100) : 0;
+  const overduePct = stats && stats.totalBills > 0 ? Math.round((stats.overdueCount / stats.totalBills) * 100) : 0;
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-1">Bill Analytics</h1>
-      <p className="text-sm text-gray-500 mb-8">Aggregated bill data across all users</p>
+    <AuthGate><AdminSidebar />
+      <main className="ml-[220px] min-h-screen p-6 bg-tremor-background dark:bg-dark-tremor-background">
+        <h1 className="text-tremor-title font-bold text-tremor-content-strong dark:text-dark-tremor-content-strong mb-1">Rekeningen</h1>
+        <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content mb-6">Analyse van alle rekeningen</p>
 
-      {/* Top stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Card label="Total Bills" value={b.total} color="#2563EB" />
-        <Card label="Paid" value={b.paid} color="#059669" />
-        <Card label="Overdue" value={b.overdue} color="#DC2626" />
-        <Card label="Outstanding" value={`€ ${b.totalOutstandingEur}`} color="#D97706" />
-      </div>
-
-      {/* Escalation pipeline */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 mb-6">
-        <h3 className="text-sm font-semibold text-gray-900 mb-6">Escalation Pipeline</h3>
-
-        {/* Visual pipeline */}
-        <div className="flex gap-1 h-12 rounded-lg overflow-hidden mb-6">
-          {stageOrder.map((stage) => {
-            const count = b.stages[stage] || 0;
-            const pct = (count / totalStaged) * 100;
-            if (pct === 0) return null;
-            return (
-              <div
-                key={stage}
-                className="flex items-center justify-center text-xs font-semibold text-white transition-all"
-                style={{ width: `${Math.max(pct, 5)}%`, background: stageColors[stage] }}
-                title={`${stageLabels[stage]}: ${count}`}
-              >
-                {pct > 10 && count}
-              </div>
-            );
-          })}
-          {totalStaged <= 1 && Object.keys(b.stages).length === 0 && (
-            <div className="flex-1 bg-gray-100 flex items-center justify-center text-xs text-gray-400">No data</div>
-          )}
-        </div>
-
-        {/* Legend */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          {stageOrder.map((stage) => (
-            <div key={stage} className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-sm" style={{ background: stageColors[stage] }} />
-              <div>
-                <p className="text-xs font-medium text-gray-900">{stageLabels[stage]}</p>
-                <p className="text-xs text-gray-400">{b.stages[stage] || 0} bills</p>
-              </div>
+        {loading ? <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-tremor-brand border-t-transparent rounded-full animate-spin" /></div> : stats && (
+          <>
+            {/* Top stat cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              {[
+                { label: "Totaal", value: stats.totalBills, css: "text-tremor-content-strong dark:text-dark-tremor-content-strong" },
+                { label: "Betaald", value: stats.paidBills, css: "text-emerald-600 dark:text-emerald-400" },
+                { label: "Openstaand", value: stats.outstandingBills, css: "text-blue-600 dark:text-blue-400" },
+                { label: "Achterstallig", value: stats.overdueCount, css: "text-red-600 dark:text-red-400" },
+              ].map((c) => (
+                <Card key={c.label} className="!p-4">
+                  <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">{c.label}</p>
+                  <p className={`text-tremor-metric font-semibold mt-1 ${c.css}`}>{c.value}</p>
+                </Card>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Payment stats */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
-        <h3 className="text-sm font-semibold text-gray-900 mb-4">Payment Overview</h3>
-        <div className="grid sm:grid-cols-3 gap-6">
-          <div>
-            <p className="text-xs text-gray-500 mb-1">Payment Rate</p>
-            <div className="flex items-end gap-2">
-              <span className="text-3xl font-bold text-gray-900">{b.total > 0 ? Math.round((b.paid / b.total) * 100) : 0}%</span>
-              <span className="text-xs text-gray-400 mb-1">of all bills paid</span>
+            {/* Amount cards + progress */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <Card>
+                <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">Totaal bedrag</p>
+                <p className="text-2xl font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong mt-1">{fmt(stats.totalAmountCents)}</p>
+              </Card>
+              <Card>
+                <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">Betaald bedrag</p>
+                <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1">{fmt(stats.paidAmountCents)}</p>
+                <CategoryBar
+                  values={[paidPct, openPct, overduePct, Math.max(0, 100 - paidPct - openPct - overduePct)]}
+                  colors={["emerald", "blue", "red", "gray"]}
+                  className="mt-3"
+                />
+                <div className="flex gap-4 mt-2 text-tremor-label text-tremor-content dark:text-dark-tremor-content">
+                  <span>Betaald {paidPct}%</span>
+                  <span>Open {openPct}%</span>
+                  <span>Achterstallig {overduePct}%</span>
+                </div>
+              </Card>
             </div>
-            <div className="h-2 bg-gray-100 rounded-full mt-3 overflow-hidden">
-              <div className="h-2 bg-green-500 rounded-full" style={{ width: `${b.total > 0 ? (b.paid / b.total) * 100 : 0}%` }} />
-            </div>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 mb-1">Overdue Rate</p>
-            <div className="flex items-end gap-2">
-              <span className="text-3xl font-bold text-red-600">{b.total > 0 ? Math.round((b.overdue / b.total) * 100) : 0}%</span>
-              <span className="text-xs text-gray-400 mb-1">currently overdue</span>
-            </div>
-            <div className="h-2 bg-gray-100 rounded-full mt-3 overflow-hidden">
-              <div className="h-2 bg-red-500 rounded-full" style={{ width: `${b.total > 0 ? (b.overdue / b.total) * 100 : 0}%` }} />
-            </div>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 mb-1">Avg Outstanding / User</p>
-            <p className="text-3xl font-bold text-gray-900">
-              € {stats?.users?.total ? (parseFloat(b.totalOutstandingEur) / stats.users.total).toFixed(0) : "0"}
-            </p>
-            <p className="text-xs text-gray-400 mt-1">per active user</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
-function Card({ label, value, color }: { label: string; value: string | number; color: string }) {
-  return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5">
-      <div className="w-2 h-8 rounded-full mb-3" style={{ background: color }} />
-      <p className="text-xs text-gray-500">{label}</p>
-      <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
-    </div>
+            {/* Escalation chart + Donut */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <Card>
+                <h3 className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">Escalatie verdeling</h3>
+                <BarChart
+                  className="mt-4 h-64"
+                  data={escalationData}
+                  index="name"
+                  categories={["Rekeningen"]}
+                  colors={["blue"]}
+                  showLegend={false}
+                  yAxisWidth={32}
+                />
+              </Card>
+              <Card>
+                <h3 className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">Status verdeling</h3>
+                <DonutChart
+                  className="mt-4 h-56"
+                  data={donutData}
+                  category="amount"
+                  index="name"
+                  colors={["emerald", "blue", "red"]}
+                  showLabel={true}
+                  valueFormatter={(v) => `${v} rekeningen`}
+                />
+              </Card>
+            </div>
+
+            {/* BarLists */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <h3 className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">Bron</h3>
+                <BarList data={sourceBarList} className="mt-4" color="blue" />
+              </Card>
+              <Card>
+                <h3 className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">Categorie</h3>
+                <BarList data={categoryBarList} className="mt-4" color="emerald" />
+              </Card>
+            </div>
+          </>
+        )}
+      </main>
+    </AuthGate>
   );
 }

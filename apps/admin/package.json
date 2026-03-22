@@ -9,12 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@paywatch/ui": "workspace:*",
-    "@paywatch/database": "workspace:*",
     "@paywatch/config": "workspace:*",
-    "@supabase/supabase-js": "^2.39.0",
+    "@paywatch/database": "workspace:*",
+    "@paywatch/ui": "workspace:*",
+    "@remixicon/react": "^4.9.0",
     "@supabase/ssr": "^0.1.0",
-    "@tremor/react": "^3.17.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "@tremor/react": "^3.18.7",
     "lucide-react": "^0.383.0",
     "next": "^16.0.0",
     "react": "^19.0.0",

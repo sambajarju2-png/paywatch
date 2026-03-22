@@ -1,52 +1,65 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getAdminClient } from "@/lib/supabase";
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
-export async function GET(request: NextRequest) {
-  const search = request.nextUrl.searchParams.get("search") || "";
-  const sb = getAdminClient();
+export const dynamic = "force-dynamic";
 
-  let query = sb
-    .from("user_settings")
-    .select("user_id, display_name, first_name, last_name, language, onboarding_complete, gemeente, created_at, updated_at")
-    .order("created_at", { ascending: false })
-    .limit(50);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
-  if (search) {
-    query = query.or(`display_name.ilike.%${search}%,first_name.ilike.%${search}%,last_name.ilike.%${search}%`);
-  }
-
-  const { data, error } = await query;
-  return NextResponse.json({ users: data ?? [], error: error?.message });
+function getAdmin() {
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
 }
 
-export async function DELETE(request: NextRequest) {
-  const { userId } = await request.json();
-  if (!userId) return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+export async function GET() {
+  try {
+    const supabase = getAdmin();
+    const { data, error } = await supabase
+      .from("user_settings")
+      .select("user_id, display_name, first_name, last_name, language, gemeente, onboarding_complete, created_at")
+      .order("created_at", { ascending: false });
 
-  const sb = getAdminClient();
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ users: data || [] });
+  } catch (err) {
+    return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
+  }
+}
 
-  // Cascade delete in correct order
-  await sb.from("ai_usage_log").delete().eq("user_id", userId);
-  await sb.from("user_achievements").delete().eq("user_id", userId);
-  await sb.from("user_feedback").delete().eq("user_id", userId);
-  await sb.from("mood_log").delete().eq("user_id", userId);
-  await sb.from("mood_analytics").delete().eq("user_id", userId);
-  await sb.from("notification_log").delete().eq("user_id", userId);
-  await sb.from("push_subscriptions").delete().eq("user_id", userId);
-  await sb.from("scan_processed").delete().eq("user_id", userId);
-  await sb.from("bills").delete().eq("user_id", userId);
-  await sb.from("gmail_accounts").delete().eq("user_id", userId);
-  await sb.from("recurring_patterns").delete().eq("user_id", userId);
-  await sb.from("vendor_directory").delete().eq("user_id", userId);
-  await sb.from("rate_limits").delete().eq("user_id", userId);
-  await sb.from("consent_log").delete().eq("user_id", userId);
-  await sb.from("custom_categories").delete().eq("user_id", userId);
-  await sb.from("referrals").delete().eq("referrer_id", userId);
-  await sb.from("user_settings").delete().eq("user_id", userId);
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
+    if (!userId) return NextResponse.json({ error: "Missing userId" }, { status: 400 });
 
-  // Delete auth user
-  const { error } = await sb.auth.admin.deleteUser(userId);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const supabase = getAdmin();
 
-  return NextResponse.json({ success: true });
+    /* Cascade delete from all 17 tables */
+    const tables = [
+      "ai_usage_log", "user_achievements", "user_feedback", "mood_log",
+      "mood_analytics", "notification_log", "push_subscriptions", "scan_processed",
+      "bills", "gmail_accounts", "recurring_patterns", "vendor_directory",
+      "rate_limits", "consent_log", "custom_categories", "referrals", "user_settings",
+    ];
+
+    const errors: string[] = [];
+    for (const table of tables) {
+      const { error } = await supabase.from(table).delete().eq("user_id", userId);
+      if (error && !error.message.includes("does not exist")) {
+        errors.push(`${table}: ${error.message}`);
+      }
+    }
+
+    /* Delete auth user */
+    const { error: authErr } = await supabase.auth.admin.deleteUser(userId);
+    if (authErr) errors.push(`auth: ${authErr.message}`);
+
+    if (errors.length > 0) {
+      return NextResponse.json({ success: true, warnings: errors });
+    }
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return NextResponse.json({ error: "Delete failed" }, { status: 500 });
+  }
 }

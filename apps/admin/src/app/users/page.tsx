@@ -1,15 +1,18 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
+import AuthGate from "@/components/AuthGate";
+import AdminSidebar from "@/components/AdminSidebar";
+import { Card, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "@tremor/react";
 
 interface User {
   user_id: string;
-  display_name: string | null;
-  first_name: string | null;
-  last_name: string | null;
+  display_name: string;
+  first_name: string;
+  last_name: string;
   language: string;
+  gemeente: string;
   onboarding_complete: boolean;
-  gemeente: string | null;
   created_at: string;
 }
 
@@ -18,115 +21,105 @@ export default function UsersPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
-  const fetchUsers = useCallback(async () => {
+  const load = () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    if (search) params.set("search", search);
-    const res = await fetch(`/api/admin/users?${params}`);
-    const data = await res.json();
-    setUsers(data.users || []);
-    setLoading(false);
-  }, [search]);
+    fetch("/api/admin/users").then(r => r.json()).then(d => setUsers(d.users || [])).catch(() => {}).finally(() => setLoading(false));
+  };
+  useEffect(() => { load(); }, []);
 
-  useEffect(() => { fetchUsers(); }, [fetchUsers]);
+  const filtered = users.filter((u) => {
+    const q = search.toLowerCase();
+    return (u.display_name || "").toLowerCase().includes(q) || (u.gemeente || "").toLowerCase().includes(q) || (u.first_name || "").toLowerCase().includes(q);
+  });
 
-  async function handleDelete(userId: string) {
+  const handleDelete = async (userId: string, name: string) => {
+    if (!confirm(`Wil je "${name}" en al hun data definitief verwijderen?`)) return;
     setDeleting(userId);
-    await fetch("/api/admin/users", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId }),
-    });
-    setConfirmDelete(null);
+    try {
+      const res = await fetch(`/api/admin/users?userId=${userId}`, { method: "DELETE" });
+      const d = await res.json();
+      if (d.success) load(); else alert("Fout: " + (d.error || "Onbekend"));
+    } catch { alert("Mislukt"); }
     setDeleting(null);
-    fetchUsers();
-  }
+  };
 
-  function getName(u: User) {
-    if (u.first_name || u.last_name) return [u.first_name, u.last_name].filter(Boolean).join(" ");
-    if (u.display_name) return u.display_name;
-    return "—";
-  }
+  const getName = (u: User) => u.display_name || `${u.first_name || ""} ${u.last_name || ""}`.trim() || "Onbekend";
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-          <p className="text-sm text-gray-500 mt-1">{users.length} users loaded</p>
+    <AuthGate><AdminSidebar />
+      <main className="ml-[220px] min-h-screen p-6 bg-tremor-background dark:bg-dark-tremor-background">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-tremor-title font-bold text-tremor-content-strong dark:text-dark-tremor-content-strong">Gebruikers</h1>
+            <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content mt-1">{users.length} geregistreerd</p>
+          </div>
+          <div className="relative">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Zoek gebruiker..."
+              className="pl-9 pr-4 py-2 rounded-tremor-default border border-tremor-border dark:border-dark-tremor-border text-tremor-default bg-tremor-background dark:bg-dark-tremor-background text-tremor-content-strong dark:text-dark-tremor-content-strong w-72 outline-none focus:ring-2 focus:ring-tremor-brand" />
+          </div>
         </div>
-      </div>
 
-      <div className="mb-6">
-        <input type="text" placeholder="Search by name..." value={search} onChange={(e) => setSearch(e.target.value)}
-          className="w-full max-w-sm rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-      </div>
-
-      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left text-xs font-semibold text-gray-500 uppercase px-4 py-3">Name</th>
-                <th className="text-left text-xs font-semibold text-gray-500 uppercase px-4 py-3">Language</th>
-                <th className="text-left text-xs font-semibold text-gray-500 uppercase px-4 py-3">Gemeente</th>
-                <th className="text-left text-xs font-semibold text-gray-500 uppercase px-4 py-3">Onboarded</th>
-                <th className="text-left text-xs font-semibold text-gray-500 uppercase px-4 py-3">Joined</th>
-                <th className="text-right text-xs font-semibold text-gray-500 uppercase px-4 py-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={6} className="text-center py-12 text-sm text-gray-400">Loading...</td></tr>
-              ) : users.length === 0 ? (
-                <tr><td colSpan={6} className="text-center py-12 text-sm text-gray-400">No users found</td></tr>
-              ) : (
-                users.map((user) => (
-                  <tr key={user.user_id} className="border-b border-gray-50 hover:bg-gray-50/50">
-                    <td className="px-4 py-3">
-                      <p className="text-sm font-medium text-gray-900">{getName(user)}</p>
-                      <p className="text-xs text-gray-400 font-mono">{user.user_id.slice(0, 8)}...</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-xs font-semibold uppercase text-gray-500">{user.language || "nl"}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-xs text-gray-500">{user.gemeente || "—"}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      {user.onboarding_complete ? (
-                        <span className="inline-flex items-center rounded bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700">Yes</span>
-                      ) : (
-                        <span className="inline-flex items-center rounded bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500">No</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-500">{new Date(user.created_at).toLocaleDateString("nl-NL")}</td>
-                    <td className="px-4 py-3 text-right">
-                      {confirmDelete === user.user_id ? (
-                        <div className="flex items-center justify-end gap-2">
-                          <span className="text-xs text-red-600 font-medium">Delete forever?</span>
-                          <button onClick={() => handleDelete(user.user_id)} disabled={deleting === user.user_id}
-                            className="rounded bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50">
-                            {deleting === user.user_id ? "..." : "Confirm"}
-                          </button>
-                          <button onClick={() => setConfirmDelete(null)} className="rounded border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50">Cancel</button>
+        {loading ? (
+          <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-tremor-brand border-t-transparent rounded-full animate-spin" /></div>
+        ) : (
+          <Card className="!p-0 overflow-hidden">
+            <Table>
+              <TableHead>
+                <TableRow className="border-b border-tremor-border dark:border-dark-tremor-border">
+                  <TableHeaderCell>Naam</TableHeaderCell>
+                  <TableHeaderCell>Gemeente</TableHeaderCell>
+                  <TableHeaderCell>Taal</TableHeaderCell>
+                  <TableHeaderCell>Onboarding</TableHeaderCell>
+                  <TableHeaderCell>Lid sinds</TableHeaderCell>
+                  <TableHeaderCell className="text-right">Actie</TableHeaderCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filtered.map((u) => (
+                  <TableRow key={u.user_id} className="hover:bg-tremor-background-muted dark:hover:bg-dark-tremor-background-muted">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-xs font-bold text-blue-600 dark:text-blue-400 flex-shrink-0">
+                          {getName(u)[0].toUpperCase()}
                         </div>
+                        <span className="font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">{getName(u)}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{u.gemeente || "—"}</TableCell>
+                    <TableCell>
+                      <span className="inline-flex rounded-tremor-small bg-tremor-background-muted dark:bg-dark-tremor-background-muted px-2 py-0.5 text-tremor-label font-medium">
+                        {u.language === "nl" ? "NL" : "EN"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      {u.onboarding_complete ? (
+                        <span className="inline-flex items-center gap-1 text-tremor-label font-semibold text-emerald-700 dark:text-emerald-500">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                          Voltooid
+                        </span>
                       ) : (
-                        <button onClick={() => setConfirmDelete(user.user_id)}
-                          className="rounded border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors">
-                          Delete
-                        </button>
+                        <span className="text-tremor-label font-semibold text-amber-700 dark:text-amber-500">Bezig</span>
                       )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+                    </TableCell>
+                    <TableCell className="text-tremor-label">{u.created_at ? new Date(u.created_at).toLocaleDateString("nl-NL") : "—"}</TableCell>
+                    <TableCell className="text-right">
+                      <button onClick={() => handleDelete(u.user_id, getName(u))} disabled={deleting === u.user_id}
+                        className="text-tremor-label font-medium text-tremor-content hover:text-red-600 dark:hover:text-red-400 disabled:opacity-50 transition-colors">
+                        {deleting === u.user_id ? "..." : "Verwijder"}
+                      </button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {filtered.length === 0 && (
+                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-tremor-content">{search ? "Geen resultaten" : "Nog geen gebruikers"}</TableCell></TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </Card>
+        )}
+      </main>
+    </AuthGate>
   );
 }

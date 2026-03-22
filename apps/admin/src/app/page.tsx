@@ -1,153 +1,262 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import AuthGate from "@/components/AuthGate";
+import AdminSidebar from "@/components/AdminSidebar";
+import { Card, BarChart, DonutChart, BarList, SparkAreaChart } from "@tremor/react";
 
 interface Stats {
-  users: { total: number; completed: number; recentWeek: number };
-  bills: { total: number; paid: number; overdue: number; totalOutstandingEur: string; stages: Record<string, number> };
-  moods: Record<string, number>;
-  contacts: number;
-  applications: number;
-  error?: string;
+  totalUsers: number;
+  totalBills: number;
+  paidBills: number;
+  outstandingBills: number;
+  totalAmountCents: number;
+  paidAmountCents: number;
+  overdueCount: number;
+  escalation: Record<string, number>;
+  recentUsers: { display_name: string; created_at: string; gemeente: string }[];
+  newContacts: number;
+  newApplications: number;
+  sources: Record<string, number>;
+  categories: Record<string, number>;
 }
 
-export default function AdminDashboard() {
+const STAGE_LABELS: Record<string, string> = {
+  factuur: "Factuur", herinnering: "Herinnering", aanmaning: "Aanmaning", incasso: "Incasso", deurwaarder: "Deurwaarder",
+};
+
+const fmt = (cents: number) =>
+  new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(cents / 100);
+
+export default function DashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetch("/api/admin/stats")
       .then((r) => r.json())
-      .then(setStats)
+      .then((d) => { if (d.error) throw new Error(d.error); setStats(d); })
+      .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <LoadingSkeleton />;
+  /* Build chart data from stats */
+  const escalationData = stats
+    ? Object.entries(stats.escalation).map(([stage, count]) => ({
+        name: STAGE_LABELS[stage] || stage,
+        Rekeningen: count,
+      }))
+    : [];
 
-  const s = stats!;
-  const stageColors: Record<string, string> = {
-    factuur: "#2563EB", herinnering: "#D97706", aanmaning: "#EA580C", incasso: "#DC2626", deurwaarder: "#991B1B",
-  };
-  const stageLabels: Record<string, string> = {
-    factuur: "Factuur", herinnering: "Herinnering", aanmaning: "Aanmaning", incasso: "Incasso", deurwaarder: "Deurwaarder",
-  };
-  const maxStage = Math.max(...Object.values(s.bills.stages), 1);
+  const donutData = stats
+    ? [
+        { name: "Betaald", amount: stats.paidBills },
+        { name: "Openstaand", amount: stats.outstandingBills },
+        { name: "Achterstallig", amount: stats.overdueCount },
+      ]
+    : [];
+
+  const sourceBarList = stats
+    ? Object.entries(stats.sources || {}).map(([src, count]) => ({
+        name: src === "gmail_scan" ? "Gmail scan" : src === "manual" ? "Handmatig" : src === "camera_scan" ? "Camera scan" : src,
+        value: count as number,
+      }))
+    : [];
+
+  const categoryBarList = stats
+    ? Object.entries(stats.categories || {})
+        .sort((a, b) => (b[1] as number) - (a[1] as number))
+        .slice(0, 6)
+        .map(([cat, count]) => ({ name: cat || "Overig", value: count as number }))
+    : [];
+
+  /* Spark data for stat cards (simple placeholder trend) */
+  const sparkData = [
+    { date: "1", v: 2 }, { date: "2", v: 4 }, { date: "3", v: 3 },
+    { date: "4", v: 6 }, { date: "5", v: 5 }, { date: "6", v: 8 }, { date: "7", v: 7 },
+  ];
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-1">PayWatch admin overview</p>
+    <AuthGate>
+      <AdminSidebar />
+      <main className="ml-[220px] min-h-screen p-6 bg-tremor-background dark:bg-dark-tremor-background">
+        <div className="mb-6">
+          <h1 className="text-tremor-title font-bold text-tremor-content-strong dark:text-dark-tremor-content-strong">Dashboard</h1>
+          <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content mt-1">Overzicht van PayWatch data</p>
         </div>
-        <span className="text-xs text-gray-400">Last updated: {new Date().toLocaleString("nl-NL")}</span>
-      </div>
 
-      {s.error && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 mb-6 text-sm text-amber-800">
-          {s.error}
-        </div>
-      )}
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="w-8 h-8 border-2 border-tremor-brand border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard label="Total Users" value={s.users.total} sub={`${s.users.completed} completed onboarding`} color="#2563EB" />
-        <StatCard label="New This Week" value={s.users.recentWeek} sub="signups in last 7 days" color="#059669" />
-        <StatCard label="Total Bills" value={s.bills.total} sub={`${s.bills.paid} paid · ${s.bills.overdue} overdue`} color="#D97706" />
-        <StatCard label="Outstanding" value={`€ ${s.bills.totalOutstandingEur}`} sub="total across all users" color="#DC2626" />
-      </div>
+        {error && (
+          <Card className="text-center">
+            <p className="text-sm text-red-600">{error}</p>
+            <a href="/api/admin/debug" target="_blank" className="text-xs text-tremor-brand mt-2 inline-block hover:underline">Debug →</a>
+          </Card>
+        )}
 
-      <div className="grid lg:grid-cols-2 gap-6 mb-8">
-        {/* Escalation stages chart */}
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">Escalation Stage Distribution</h3>
-          {Object.keys(s.bills.stages).length === 0 ? (
-            <p className="text-sm text-gray-400 py-8 text-center">No bill data yet</p>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {Object.entries(s.bills.stages).map(([stage, count]) => (
-                <div key={stage} className="flex items-center gap-3">
-                  <span className="text-xs text-gray-500 w-24 text-right">{stageLabels[stage] || stage}</span>
-                  <div className="flex-1 h-7 bg-gray-100 rounded overflow-hidden">
-                    <div
-                      className="h-full rounded flex items-center px-2"
-                      style={{ width: `${Math.max(8, (count / maxStage) * 100)}%`, background: stageColors[stage] || "#64748B" }}
-                    >
-                      <span className="text-xs font-semibold text-white">{count}</span>
-                    </div>
+        {stats && (
+          <>
+            {/* Stat cards with sparklines */}
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+              {[
+                { name: "Gebruikers", stat: String(stats.totalUsers), color: "blue" as const },
+                { name: "Rekeningen", stat: String(stats.totalBills), color: "slate" as const },
+                { name: "Betaald", stat: fmt(stats.paidAmountCents), color: "emerald" as const },
+                { name: "Openstaand", stat: fmt(stats.totalAmountCents - stats.paidAmountCents), color: "amber" as const },
+              ].map((item) => (
+                <Card key={item.name} className="!p-4">
+                  <dt className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">{item.name}</dt>
+                  <div className="flex items-center justify-between mt-1">
+                    <dd className="text-tremor-metric font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
+                      {item.stat}
+                    </dd>
+                    <SparkAreaChart
+                      data={sparkData}
+                      index="date"
+                      categories={["v"]}
+                      colors={[item.color]}
+                      showGradient={false}
+                      className="h-10 w-20"
+                    />
                   </div>
-                </div>
+                </Card>
               ))}
             </div>
-          )}
-        </div>
 
-        {/* Quick stats */}
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">Quick Stats</h3>
-          <div className="flex flex-col gap-4">
-            <QuickStat label="Onboarding completion" value={s.users.total > 0 ? `${Math.round((s.users.completed / s.users.total) * 100)}%` : "0%"} />
-            <QuickStat label="Bill payment rate" value={s.bills.total > 0 ? `${Math.round((s.bills.paid / s.bills.total) * 100)}%` : "0%"} />
-            <QuickStat label="Contact submissions" value={String(s.contacts)} />
-            <QuickStat label="Job applications" value={String(s.applications)} />
-            <QuickStat label="Avg outstanding per user" value={s.users.total > 0 ? `€ ${(parseFloat(s.bills.totalOutstandingEur) / s.users.total).toFixed(2)}` : "€ 0.00"} />
-          </div>
-        </div>
-      </div>
-
-      {/* Quick links */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { href: "/users", label: "Manage Users", desc: `${s.users.total} total users`, color: "#2563EB" },
-          { href: "/bills", label: "Bill Analytics", desc: `${s.bills.total} total bills`, color: "#D97706" },
-          { href: "/contacts", label: "Contact Inbox", desc: `${s.contacts} submissions`, color: "#059669" },
-          { href: "/applications", label: "Job Applications", desc: `${s.applications} applications`, color: "#7C3AED" },
-        ].map((link) => (
-          <Link key={link.href} href={link.href} className="rounded-xl border border-gray-200 bg-white p-5 hover:border-blue-300 transition-colors">
-            <div className="w-8 h-8 rounded-lg mb-3 flex items-center justify-center" style={{ background: `${link.color}15` }}>
-              <div className="w-3 h-3 rounded-full" style={{ background: link.color }} />
+            {/* Mini stat row */}
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <Card className="!p-4">
+                <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">Betaalratio</p>
+                <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
+                  {stats.totalBills > 0 ? Math.round((stats.paidBills / stats.totalBills) * 100) : 0}%
+                </p>
+                <p className="text-tremor-label text-tremor-content dark:text-dark-tremor-content mt-1">{stats.paidBills} van {stats.totalBills}</p>
+              </Card>
+              <Card className="!p-4">
+                <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">Nieuwe berichten</p>
+                <p className="text-2xl font-semibold text-blue-600 dark:text-blue-400 mt-1">{stats.newContacts}</p>
+              </Card>
+              <Card className="!p-4">
+                <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">Sollicitaties</p>
+                <p className="text-2xl font-semibold text-violet-600 dark:text-violet-400 mt-1">{stats.newApplications}</p>
+              </Card>
             </div>
-            <p className="text-sm font-semibold text-gray-900">{link.label}</p>
-            <p className="text-xs text-gray-500 mt-0.5">{link.desc}</p>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
-}
 
-function StatCard({ label, value, sub, color }: { label: string; value: string | number; sub: string; color: string }) {
-  return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5">
-      <div className="w-2 h-8 rounded-full mb-3" style={{ background: color }} />
-      <p className="text-xs text-gray-500">{label}</p>
-      <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
-      <p className="text-xs text-gray-400 mt-1">{sub}</p>
-    </div>
-  );
-}
+            {/* Charts row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              {/* Escalation BarChart */}
+              <Card>
+                <h3 className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">Escalatie Pipeline</h3>
+                <BarChart
+                  className="mt-4 h-60"
+                  data={escalationData}
+                  index="name"
+                  categories={["Rekeningen"]}
+                  colors={["blue"]}
+                  showLegend={false}
+                  showGridLines={true}
+                  yAxisWidth={32}
+                />
+              </Card>
 
-function QuickStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-      <span className="text-sm text-gray-600">{label}</span>
-      <span className="text-sm font-semibold text-gray-900">{value}</span>
-    </div>
-  );
-}
+              {/* Payment DonutChart */}
+              <Card>
+                <h3 className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">Betaalstatus</h3>
+                <div className="flex items-center justify-center gap-8 mt-4">
+                  <DonutChart
+                    className="h-44"
+                    data={donutData}
+                    category="amount"
+                    index="name"
+                    colors={["emerald", "blue", "red"]}
+                    showLabel={true}
+                    valueFormatter={(v) => `${v}`}
+                  />
+                  <div className="space-y-3">
+                    {[
+                      { color: "bg-emerald-500", label: "Betaald", value: stats.paidBills },
+                      { color: "bg-blue-500", label: "Openstaand", value: stats.outstandingBills },
+                      { color: "bg-red-500", label: "Achterstallig", value: stats.overdueCount },
+                    ].map((item) => (
+                      <div key={item.label} className="flex items-center gap-2 text-tremor-default">
+                        <span className={`h-3 w-3 rounded-tremor-small ${item.color}`} />
+                        <span className="text-tremor-content dark:text-dark-tremor-content">{item.label}</span>
+                        <span className="font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong ml-auto">{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            </div>
 
-function LoadingSkeleton() {
-  return (
-    <div>
-      <div className="h-8 w-48 bg-gray-200 rounded mb-2 animate-pulse" />
-      <div className="h-4 w-32 bg-gray-100 rounded mb-8 animate-pulse" />
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {[1,2,3,4].map(i => <div key={i} className="h-32 bg-gray-100 rounded-xl animate-pulse" />)}
-      </div>
-      <div className="grid lg:grid-cols-2 gap-6">
-        {[1,2].map(i => <div key={i} className="h-64 bg-gray-100 rounded-xl animate-pulse" />)}
-      </div>
-    </div>
+            {/* BarLists row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <Card>
+                <h3 className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">Bron van rekeningen</h3>
+                <BarList data={sourceBarList} className="mt-4" color="blue" />
+              </Card>
+              <Card>
+                <h3 className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">Top categorieën</h3>
+                <BarList data={categoryBarList} className="mt-4" color="emerald" />
+              </Card>
+            </div>
+
+            {/* Recent users + Quick links */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">Recente gebruikers</h3>
+                  <a href="/users" className="text-tremor-label font-medium text-tremor-brand hover:underline">Alle →</a>
+                </div>
+                <div className="space-y-3">
+                  {(stats.recentUsers || []).slice(0, 5).map((u, i) => (
+                    <div key={i} className="flex items-center gap-3 py-2 border-b border-tremor-border dark:border-dark-tremor-border last:border-0">
+                      <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-xs font-bold text-blue-600 dark:text-blue-400">
+                        {(u.display_name || "?")[0].toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong truncate">{u.display_name || "Onbekend"}</p>
+                        <p className="text-tremor-label text-tremor-content dark:text-dark-tremor-content">{u.gemeente || "—"}</p>
+                      </div>
+                      <p className="text-tremor-label text-tremor-content dark:text-dark-tremor-content">{u.created_at ? new Date(u.created_at).toLocaleDateString("nl-NL") : "—"}</p>
+                    </div>
+                  ))}
+                  {(!stats.recentUsers || stats.recentUsers.length === 0) && (
+                    <p className="text-tremor-default text-tremor-content py-4 text-center">Nog geen gebruikers</p>
+                  )}
+                </div>
+              </Card>
+
+              <Card>
+                <h3 className="text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong mb-4">Snelkoppelingen</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { href: "/users", label: "Gebruikers beheren" },
+                    { href: "/contacts", label: "Berichten bekijken" },
+                    { href: "/applications", label: "Sollicitaties" },
+                    { href: "/bills", label: "Rekening analyse" },
+                    { href: "https://paywatch.sanity.studio", label: "Sanity Studio", external: true },
+                    { href: "/api/admin/debug", label: "Debug info", external: true },
+                  ].map((link) => (
+                    <a key={link.href} href={link.href}
+                      target={link.external ? "_blank" : undefined}
+                      rel={link.external ? "noopener noreferrer" : undefined}
+                      className="rounded-tremor-default border border-tremor-border dark:border-dark-tremor-border px-3 py-2.5 text-tremor-label font-medium text-tremor-content-emphasis dark:text-dark-tremor-content-emphasis hover:bg-tremor-background-muted dark:hover:bg-dark-tremor-background-muted transition-colors"
+                    >
+                      {link.label} →
+                    </a>
+                  ))}
+                </div>
+              </Card>
+            </div>
+          </>
+        )}
+      </main>
+    </AuthGate>
   );
 }
