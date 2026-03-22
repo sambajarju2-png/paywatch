@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useApp } from "@/components/AppProvider";
-import GemeenteSearch from "@/components/GemeenteSearch";
+import NetherlandsMap from "@/components/NetherlandsMap";
 import { aidOrganizations, legalAdvisors, type AidOrg } from "@/lib/config";
 
 type Category = "all" | "legal" | "debtHelp" | "financial";
@@ -100,8 +100,11 @@ export default function ResourcesPage() {
             {filterOrgs(legalAdvisors).length === 0 && <p className="text-sm text-[var(--muted)] py-4">{isNl ? "Geen resultaten." : "No results."}</p>}
           </div>
 
+          {/* Netherlands Map — replaces old GemeenteSearch */}
           <div id="gemeente" className="bg-[var(--surface)] border-t border-[var(--border)]">
-            <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 text-center"><GemeenteSearch /></div>
+            <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+              <NetherlandsMap />
+            </div>
           </div>
         </>
       )}
