@@ -358,7 +358,7 @@ function OrgCard({ org, isNl, t, isLocal }: { org: Org; isNl: boolean; t: Record
   const catStyle = CAT_STYLES[org.cat] || CAT_STYLES.Financieel;
 
   return (
-    <div className={`rounded-xl border p-3.5 flex flex-col gap-2 ${isLocal ? "border-[var(--green)]" : "border-[var(--border)]"}`} style={isLocal ? { borderColor: "var(--green)", borderOpacity: 0.3 } : undefined}>
+    <div className={`rounded-xl border p-3.5 flex flex-col gap-2 ${isLocal ? "border-[var(--green)]" : "border-[var(--border)]"}`} style={isLocal ? { borderColor: "var(--green)" } : undefined}>
       <div className="flex items-center gap-2.5">
         <div
           className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center text-sm font-bold"
