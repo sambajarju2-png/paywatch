@@ -113,7 +113,7 @@ export default function BillsPage() {
                   colors={["blue"]}
                   showLegend={false}
                   yAxisWidth={32}
-                  valueFormatter={(n) => `${numberFmt(n)}`}
+                  valueFormatter={(n: number) => `${numberFmt(n)}`}
                 />
               </Card>
               <Card>
