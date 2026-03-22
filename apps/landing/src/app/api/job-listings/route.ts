@@ -1,24 +1,59 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getJobListings, getJobListingById } from "@/lib/sanity-queries";
-import { jobListings } from "@/lib/config";
+import { createClient } from "next-sanity";
+
+const client = createClient({
+  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "pwf6qbjc",
+  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
+  apiVersion: "2024-03-15",
+  useCdn: false,
+  token: process.env.SANITY_API_TOKEN,
+});
+
+const ALL_JOBS_QUERY = `*[_type == "jobListing" && active == true] | order(_createdAt desc) {
+  "id": id.current,
+  title,
+  department,
+  seniority,
+  location,
+  salary,
+  description,
+  longDescription,
+  requirements,
+  niceToHave,
+  perks,
+  active
+}`;
+
+const SINGLE_JOB_QUERY = `*[_type == "jobListing" && id.current == $jobId && active == true][0] {
+  "id": id.current,
+  title,
+  department,
+  seniority,
+  location,
+  salary,
+  description,
+  longDescription,
+  requirements,
+  niceToHave,
+  perks,
+  active
+}`;
 
 export const revalidate = 60;
 
 export async function GET(request: NextRequest) {
   const jobId = request.nextUrl.searchParams.get("id");
 
-  if (jobId) {
-    // Single job
-    const sanityJob = await getJobListingById(jobId);
-    if (sanityJob) return NextResponse.json({ job: sanityJob });
-    const hardcodedJob = jobListings.find((j) => j.id === jobId) || null;
-    return NextResponse.json({ job: hardcodedJob });
-  }
+  try {
+    if (jobId) {
+      const job = await client.fetch(SINGLE_JOB_QUERY, { jobId });
+      return NextResponse.json({ job: job || null });
+    }
 
-  // All jobs
-  const sanityJobs = await getJobListings();
-  if (sanityJobs && sanityJobs.length > 0) {
-    return NextResponse.json({ jobs: sanityJobs });
+    const jobs = await client.fetch(ALL_JOBS_QUERY);
+    return NextResponse.json({ jobs: jobs || [] });
+  } catch (e) {
+    console.error("[Sanity] Job listings API error:", e);
+    return NextResponse.json({ jobs: [], job: null });
   }
-  return NextResponse.json({ jobs: jobListings });
 }

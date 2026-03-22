@@ -1,78 +1,65 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { getBlogPostBySlug } from "@/lib/sanity-queries";
+import { createClient } from "next-sanity";
 import { blogPostsFull } from "@/lib/blog-content";
 import BlogPostContent from "@/components/BlogPostContent";
+
+const client = createClient({
+  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "pwf6qbjc",
+  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
+  apiVersion: "2024-03-15",
+  useCdn: false,
+  token: process.env.SANITY_API_TOKEN,
+});
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
+async function getPostMeta(slug: string) {
+  // Try Sanity first
+  try {
+    const post = await client.fetch(
+      `*[_type == "blogPost" && slug.current == $slug][0]{
+        title, metaDescription, publishedAt, author, "keywords": keywords[]
+      }`,
+      { slug }
+    );
+    if (post) return post;
+  } catch {
+    // fall through
+  }
+  // Fallback to hardcoded
+  return blogPostsFull.find((p) => p.slug === slug) || null;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
-  if (!post) return { title: "Post niet gevonden" };
+  const post = await getPostMeta(slug);
+  if (!post) return { title: "Blog | PayWatch" };
+
+  const title = post.title?.nl || post.title?.en || slug;
+  const desc = post.metaDescription?.nl || post.metaDescription?.en || "";
 
   return {
-    title: post.title.nl,
-    description: post.metaDescription.nl,
-    keywords: post.keywords,
-    alternates: { canonical: `https://paywatch.app/blog/${post.slug}` },
+    title,
+    description: desc,
+    alternates: { canonical: `https://paywatch.app/blog/${slug}` },
     openGraph: {
-      title: post.title.nl,
-      description: post.metaDescription.nl,
-      url: `https://paywatch.app/blog/${post.slug}`,
+      title,
+      description: desc,
+      url: `https://paywatch.app/blog/${slug}`,
       type: "article",
-      publishedTime: post.date,
-      authors: [post.author],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: post.title.nl,
-      description: post.metaDescription.nl,
     },
   };
 }
 
 export function generateStaticParams() {
+  // Pre-generate hardcoded slugs; Sanity slugs are handled dynamically
   return blogPostsFull.map((post) => ({ slug: post.slug }));
 }
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
-  if (!post) notFound();
 
-  /* JSON-LD Article structured data */
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: post.title.nl,
-    description: post.metaDescription.nl,
-    datePublished: post.date,
-    author: {
-      "@type": "Person",
-      name: post.author,
-      url: "https://paywatch.app/about",
-    },
-    publisher: {
-      "@type": "Organization",
-      name: "PayWatch",
-      url: "https://paywatch.app",
-    },
-    mainEntityOfPage: `https://paywatch.app/blog/${post.slug}`,
-    keywords: post.keywords.join(", "),
-    inLanguage: ["nl", "en"],
-    isAccessibleForFree: true,
-  };
-
-  return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <BlogPostContent slug={slug} />
-    </>
-  );
+  return <BlogPostContent slug={slug} />;
 }

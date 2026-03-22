@@ -3,20 +3,22 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useApp } from "@/components/AppProvider";
-import { jobListings, type JobListing } from "@/lib/config";
+import type { JobListing } from "@/lib/config";
 
 export default function JobsPage() {
   const { lang, t } = useApp();
-  const [jobs, setJobs] = useState<JobListing[]>(jobListings);
+  const [jobs, setJobs] = useState<JobListing[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  /* Try fetching from Sanity (via API), fall back to hardcoded */
+  /* Fetch from Sanity (via API), with hardcoded fallback handled server-side */
   useEffect(() => {
     fetch("/api/job-listings")
       .then((r) => r.json())
       .then((d) => {
-        if (d.jobs && d.jobs.length > 0) setJobs(d.jobs);
+        if (d.jobs) setJobs(d.jobs);
       })
-      .catch(() => { /* keep hardcoded */ });
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const locationLabels: Record<string, string> = {
@@ -30,6 +32,29 @@ export default function JobsPage() {
     hybrid: "var(--blue)",
     office: "var(--amber)",
   };
+
+  if (loading) {
+    return (
+      <div className="bg-[var(--bg)]">
+        <div className="mx-auto max-w-6xl px-4 pt-12 pb-4 sm:px-6 sm:pt-20 sm:pb-8 text-center">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-[var(--navy)] tracking-tight">{t.jobs.title}</h1>
+          <p className="text-base text-[var(--muted)] mt-3 max-w-xl mx-auto">{t.jobs.subtitle}</p>
+        </div>
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 pb-16">
+          <div className="flex flex-col gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 animate-pulse">
+                <div className="h-5 w-48 bg-[var(--border)] rounded mb-3" />
+                <div className="h-4 w-32 bg-[var(--border)] rounded mb-4" />
+                <div className="h-3 w-full bg-[var(--border)] rounded mb-2" />
+                <div className="h-3 w-2/3 bg-[var(--border)] rounded" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[var(--bg)]">
@@ -77,16 +102,10 @@ export default function JobsPage() {
                 </div>
 
                 <div className="flex gap-3">
-                  <Link
-                    href={`/jobs/${job.id}`}
-                    className="inline-flex rounded border border-[var(--border)] px-5 py-2.5 text-sm font-semibold text-[var(--text)] hover:border-[var(--blue)] transition-colors"
-                  >
+                  <Link href={`/jobs/${job.id}`} className="inline-flex rounded border border-[var(--border)] px-5 py-2.5 text-sm font-semibold text-[var(--text)] hover:border-[var(--blue)] transition-colors">
                     {t.jobs.readMore}
                   </Link>
-                  <Link
-                    href={`/jobs/${job.id}#apply`}
-                    className="inline-flex rounded bg-[var(--blue)] px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
-                  >
+                  <Link href={`/jobs/${job.id}#apply`} className="inline-flex rounded bg-[var(--blue)] px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity">
                     {t.jobs.apply} →
                   </Link>
                 </div>

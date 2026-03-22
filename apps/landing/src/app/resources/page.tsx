@@ -1,20 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useApp } from "@/components/AppProvider";
 import GemeenteSearch from "@/components/GemeenteSearch";
 import { aidOrganizations, legalAdvisors, type AidOrg } from "@/lib/config";
-import { blogPostsFull } from "@/lib/blog-content";
 
 type Category = "all" | "legal" | "debtHelp" | "financial";
 type Tab = "directory" | "blog";
+
+interface BlogPreview {
+  slug: string;
+  title: { nl: string; en: string };
+  excerpt: { nl: string; en: string };
+  category: { nl: string; en: string };
+  categorySlug: string;
+}
 
 export default function ResourcesPage() {
   const { lang, t } = useApp();
   const isNl = lang === "nl";
   const [tab, setTab] = useState<Tab>("directory");
   const [filter, setFilter] = useState<Category>("all");
+  const [blogPosts, setBlogPosts] = useState<BlogPreview[]>([]);
+
+  /* Fetch blog posts from Sanity API */
+  useEffect(() => {
+    fetch("/api/blog-posts")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.posts && d.posts.length > 0) {
+          setBlogPosts(d.posts);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const categories: { key: Category; label: string }[] = [
     { key: "all", label: t.resources.all },
@@ -114,32 +134,38 @@ export default function ResourcesPage() {
 
       {tab === "blog" && (
         <div id="blog" className="mx-auto max-w-6xl px-4 sm:px-6 pb-16 sm:pb-24">
-          {/* Latest 3 posts preview */}
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-8">
-            {blogPostsFull.slice(0, 3).map((post) => (
-              <Link key={post.slug} href={`/blog/${post.slug}`}
-                className="group rounded-2xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden hover:border-[var(--blue)] transition-colors"
-              >
-                <div className="h-36 bg-[var(--bg)] border-b border-[var(--border)] flex items-center justify-center">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="1" className="opacity-30">
-                    <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
-                  </svg>
-                </div>
-                <div className="p-4">
-                  <span className="text-[10px] text-[var(--muted)] uppercase">{post.category[lang]}</span>
-                  <h3 className="text-sm font-bold text-[var(--navy)] mt-1 mb-1 group-hover:text-[var(--blue)] transition-colors leading-snug">{post.title[lang]}</h3>
-                  <p className="text-xs text-[var(--muted)] leading-relaxed">{post.excerpt[lang]}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
+          {blogPosts.length === 0 ? (
+            <p className="text-center text-base text-[var(--muted)] py-12">
+              {isNl ? "Blogartikelen laden..." : "Loading blog articles..."}
+            </p>
+          ) : (
+            <>
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+                {blogPosts.slice(0, 3).map((post) => (
+                  <Link key={post.slug} href={`/blog/${post.slug}`}
+                    className="group rounded-2xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden hover:border-[var(--blue)] transition-colors"
+                  >
+                    <div className="h-36 bg-[var(--bg)] border-b border-[var(--border)] flex items-center justify-center">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="1" className="opacity-30">
+                        <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
+                      </svg>
+                    </div>
+                    <div className="p-4">
+                      <span className="text-[10px] text-[var(--muted)] uppercase">{post.category[lang]}</span>
+                      <h3 className="text-sm font-bold text-[var(--navy)] mt-1 mb-1 group-hover:text-[var(--blue)] transition-colors leading-snug">{post.title[lang]}</h3>
+                      <p className="text-xs text-[var(--muted)] leading-relaxed">{post.excerpt[lang]}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
 
-          {/* Link to full blog */}
-          <div className="text-center">
-            <Link href="/blog" className="inline-flex items-center gap-2 rounded bg-[var(--blue)] px-6 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity">
-              {isNl ? "Bekijk alle artikelen" : "View all articles"} →
-            </Link>
-          </div>
+              <div className="text-center">
+                <Link href="/blog" className="inline-flex items-center gap-2 rounded bg-[var(--blue)] px-6 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity">
+                  {isNl ? "Bekijk alle artikelen" : "View all articles"} →
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
