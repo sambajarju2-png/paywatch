@@ -106,8 +106,8 @@ export default function ContactsPage() {
                     <span className="text-xs text-gray-400">Mark as:</span>
                     {(["new", "read", "done"] as const).map(s => (
                       <button key={s} onClick={() => updateStatus(c.id, s)}
-                        className={`rounded px-3 py-1.5 text-xs font-semibold transition-colors ${c.status === s ? "ring-2 ring-offset-1" : "opacity-60 hover:opacity-100"}`}
-                        style={{ color: statusColors[s], background: `color-mix(in srgb, ${statusColors[s]} 10%, transparent)`, ringColor: statusColors[s] }}>
+                        className={`rounded px-3 py-1.5 text-xs font-semibold transition-colors ${c.status === s ? "ring-2 ring-offset-1 ring-current" : "opacity-60 hover:opacity-100"}`}
+                        style={{ color: statusColors[s], background: `color-mix(in srgb, ${statusColors[s]} 10%, transparent)` }}>
                         {statusLabels[s]}
                       </button>
                     ))}

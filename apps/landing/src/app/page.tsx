@@ -6,6 +6,7 @@ import TrustBar from "@/components/TrustBar";
 import GemeenteSearch from "@/components/GemeenteSearch";
 import HeroBanner from "@/components/HeroBanner";
 import ScrollReveal from "@/components/ScrollReveal";
+import SanityImage from "@/components/SanityImage";
 import { siteConfig } from "@/lib/config";
 
 export default function HomePage() {
@@ -56,11 +57,8 @@ export default function HomePage() {
                   <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[var(--blue-light)] mb-4">
                     <span className="text-lg font-extrabold text-[var(--blue)]">{i + 1}</span>
                   </div>
-                  {/* IMAGE PLACEHOLDER: Add screenshot showing this step */}
-                  <div className="rounded-lg border-2 border-dashed border-[var(--border)] bg-[var(--bg)] h-40 mb-4 flex flex-col items-center justify-center gap-2">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="1" className="opacity-40"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                    <span className="text-[10px] text-[var(--muted)] opacity-60">{step.title}</span>
-                  </div>
+                  {/* Image from Sanity: upload in Studio → Site Image → key "step-1", "step-2", "step-3" */}
+                  <SanityImage imageKey={`step-${i + 1}`} placeholderLabel={step.title} className="rounded-lg bg-[var(--bg)] h-40 mb-4" />
                   <h3 className="text-base font-bold text-[var(--navy)] mb-2">{step.title}</h3>
                   <p className="text-sm text-[var(--muted)] leading-relaxed">{step.desc}</p>
                 </div>
@@ -81,11 +79,8 @@ export default function HomePage() {
             {t.features.items.slice(0, 3).map((feature, i) => (
               <ScrollReveal key={i} delay={i * 100}>
                 <div className="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-5 hover:border-[var(--blue)] transition-all h-full">
-                  {/* IMAGE PLACEHOLDER: Add feature screenshot */}
-                  <div className="rounded-lg border-2 border-dashed border-[var(--border)] bg-[var(--surface)] h-28 mb-3 flex flex-col items-center justify-center gap-1.5">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="1" className="opacity-40"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                    <span className="text-[9px] text-[var(--muted)] opacity-50">{feature.title}</span>
-                  </div>
+                  {/* Image from Sanity: upload in Studio → Site Image → key "feature-1", "feature-2", "feature-3" */}
+                  <SanityImage imageKey={`feature-${i + 1}`} placeholderLabel={feature.title} className="rounded-lg bg-[var(--surface)] h-28 mb-3" />
                   <h3 className="text-sm font-bold text-[var(--navy)] mb-1">{feature.title}</h3>
                   <p className="text-sm text-[var(--muted)] leading-relaxed">{feature.desc}</p>
                 </div>

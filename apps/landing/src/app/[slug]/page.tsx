@@ -34,8 +34,13 @@ async function getPage(slug: string): Promise<SanityPage | null> {
   );
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const page = await getPage(params.slug);
+type Props = {
+  params: Promise<{ slug: string }>;
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const page = await getPage(slug);
   if (!page) return {};
   return {
     title: page.title,
@@ -43,8 +48,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function DynamicPage({ params }: { params: { slug: string } }) {
-  const page = await getPage(params.slug);
+export default async function DynamicPage({ params }: Props) {
+  const { slug } = await params;
+  const page = await getPage(slug);
 
   if (!page) {
     notFound();
@@ -57,7 +63,6 @@ export default async function DynamicPage({ params }: { params: { slug: string }
 
         {page.sections?.map((section) => (
           <div key={section._key} className="mb-12">
-            {/* Hero section */}
             {section._type === "hero" && (
               <div className="text-center mb-12">
                 {section.headline?.nl && (
@@ -74,7 +79,6 @@ export default async function DynamicPage({ params }: { params: { slug: string }
               </div>
             )}
 
-            {/* Stats section */}
             {section._type === "stats" && (
               <div>
                 {section.heading?.nl && (
@@ -91,7 +95,6 @@ export default async function DynamicPage({ params }: { params: { slug: string }
               </div>
             )}
 
-            {/* CTA section */}
             {section._type === "cta" && (
               <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-8 text-center">
                 {section.heading?.nl && (

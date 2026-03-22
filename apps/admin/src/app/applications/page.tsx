@@ -107,7 +107,7 @@ export default function ApplicationsPage() {
                     <span className="text-xs text-gray-400">Mark as:</span>
                     {(["new", "read", "done"] as const).map(s => (
                       <button key={s} onClick={() => updateStatus(a.id, s)}
-                        className={`rounded px-3 py-1.5 text-xs font-semibold transition-colors ${a.status === s ? "ring-2 ring-offset-1" : "opacity-60 hover:opacity-100"}`}
+                        className={`rounded px-3 py-1.5 text-xs font-semibold transition-colors ${a.status === s ? "ring-2 ring-offset-1 ring-current" : "opacity-60 hover:opacity-100"}`}
                         style={{ color: statusColors[s], background: `color-mix(in srgb, ${statusColors[s]} 10%, transparent)` }}>
                         {statusLabels[s]}
                       </button>

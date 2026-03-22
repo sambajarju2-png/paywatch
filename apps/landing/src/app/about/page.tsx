@@ -1,6 +1,7 @@
 "use client";
 
 import { useApp } from "@/components/AppProvider";
+import SanityImage from "@/components/SanityImage";
 import { founders } from "@/lib/config";
 
 export default function AboutPage() {
@@ -32,25 +33,12 @@ export default function AboutPage() {
         <div className="flex flex-wrap justify-center gap-6 max-w-4xl mx-auto">
           {founders.map((person) => (
             <div key={person.name} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 w-full sm:w-80">
-              {/*
-                PHOTO: Replace the placeholder below with a real image.
-                Option A — Add image to /public/team/ and use:
-                  <img src="/team/samba.jpg" alt="Samba" className="w-24 h-24 rounded-full object-cover mx-auto mb-4" />
-                Option B — Use an external URL:
-                  <img src="https://..." alt="Samba" className="w-24 h-24 rounded-full object-cover mx-auto mb-4" />
-              */}
-              {person.photo ? (
-                <img
-                  src={person.photo}
-                  alt={person.name}
-                  className="w-24 h-24 rounded-full object-cover border-2 border-[var(--border)] mx-auto mb-4"
-                />
-              ) : (
-                <div className="w-24 h-24 rounded-full bg-[var(--blue-light)] border-2 border-dashed border-[var(--border)] flex flex-col items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl font-extrabold text-[var(--blue)]">{person.name[0]}</span>
-                  <span className="text-[8px] text-[var(--muted)] mt-0.5">Add photo</span>
-                </div>
-              )}
+              {/* Photo from Sanity: upload in Studio → Site Image → key "about-samba", "about-mariama" */}
+              <SanityImage
+                imageKey={`about-${person.name.toLowerCase()}`}
+                placeholderLabel={person.name}
+                className="w-24 h-24 rounded-full object-cover border-2 border-[var(--border)] mx-auto mb-4 overflow-hidden"
+              />
 
               <div className="text-center">
                 <h3 className="text-lg font-bold text-[var(--navy)]">{person.name}</h3>

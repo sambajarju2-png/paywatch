@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useApp } from "@/components/AppProvider";
 import ScrollReveal from "@/components/ScrollReveal";
+import SanityImage from "@/components/SanityImage";
 import { siteConfig } from "@/lib/config";
 
 const featureDetails = {
@@ -61,12 +62,9 @@ export default function FeaturesPage() {
                   <p className="text-sm sm:text-base text-[var(--muted)] leading-relaxed max-w-md">{feature.desc}</p>
                 </div>
 
-                {/* IMAGE PLACEHOLDER: Add feature screenshot/mockup */}
+                {/* Image from Sanity: upload in Studio → Site Image → key "feature-detail-1", "feature-detail-2", etc */}
                 <div className="flex-1 flex justify-center">
-                  <div className="w-full max-w-sm h-56 sm:h-64 rounded-2xl border-2 border-dashed border-[var(--border)] bg-[var(--surface)] flex flex-col items-center justify-center gap-3">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="1" className="opacity-30"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                    <span className="text-xs text-[var(--muted)] opacity-50">{feature.title}</span>
-                  </div>
+                  <SanityImage imageKey={`feature-detail-${i + 1}`} placeholderLabel={feature.title} className="w-full max-w-sm h-56 sm:h-64 rounded-2xl overflow-hidden" />
                 </div>
               </div>
             </ScrollReveal>

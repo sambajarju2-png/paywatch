@@ -124,3 +124,39 @@ function mapSanityToLocal(post: Record<string, unknown>): BlogPostFull {
     sections: [], // Sanity uses portable text — sections are in `body` field
   };
 }
+
+/* ─── Site Images ─── */
+
+const SITE_IMAGES_QUERY = `*[_type == "siteImage"]{
+  key,
+  "url": image.asset->url,
+  alt,
+  page
+}`;
+
+export async function getSiteImages(): Promise<Record<string, { url: string; alt: string }>> {
+  try {
+    const images = await sanityClient.fetch(SITE_IMAGES_QUERY);
+    const map: Record<string, { url: string; alt: string }> = {};
+    for (const img of images || []) {
+      if (img.key && img.url) {
+        map[img.key] = { url: img.url, alt: img.alt || "" };
+      }
+    }
+    return map;
+  } catch {
+    return {};
+  }
+}
+
+export async function getSiteImage(key: string): Promise<string | null> {
+  try {
+    const result = await sanityClient.fetch(
+      `*[_type == "siteImage" && key == $key][0]{"url": image.asset->url}`,
+      { key }
+    );
+    return result?.url || null;
+  } catch {
+    return null;
+  }
+}

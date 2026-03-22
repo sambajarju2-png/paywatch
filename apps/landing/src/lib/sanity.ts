@@ -1,8 +1,8 @@
 import { createClient } from "next-sanity";
 import imageUrlBuilder from "@sanity/image-url";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-type SanityImageSource = any;
+// SanityImageSource works with both @sanity/image-url v1 and v2
+type SanityImageSource = Parameters<ReturnType<typeof imageUrlBuilder>["image"]>[0];
 
 export const sanityConfig = {
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "pwf6qbjc",
