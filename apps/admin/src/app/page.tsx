@@ -170,7 +170,7 @@ export default function DashboardPage() {
                   colors={["blue"]}
                   showLegend={false}
                   yAxisWidth={32}
-                  valueFormatter={(n) => `${numberFmt(n)}`}
+                  valueFormatter={(n: number) => `${numberFmt(n)}`}
                 />
               </Card>
 
@@ -184,7 +184,7 @@ export default function DashboardPage() {
                     index="name"
                     colors={["emerald", "blue", "red"]}
                     showLabel={true}
-                    valueFormatter={(n) => `${n} rekeningen`}
+                    valueFormatter={(n: number) => `${n} rekeningen`}
                   />
                   <div className="space-y-3">
                     {[
@@ -211,7 +211,7 @@ export default function DashboardPage() {
                   data={sourceBarList}
                   className="mt-4"
                   color="blue"
-                  valueFormatter={(n) => `${numberFmt(n)} rekeningen`}
+                  valueFormatter={(n: number) => `${numberFmt(n)} rekeningen`}
                 />
               </Card>
               <Card>
@@ -220,7 +220,7 @@ export default function DashboardPage() {
                   data={categoryBarList}
                   className="mt-4"
                   color="emerald"
-                  valueFormatter={(n) => `${numberFmt(n)}`}
+                  valueFormatter={(n: number) => `${numberFmt(n)}`}
                 />
               </Card>
             </div>
