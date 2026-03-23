@@ -61,6 +61,10 @@ export async function GET() {
       commentCountMap[c.user_id] = (commentCountMap[c.user_id] || 0) + 1;
     }
 
+    // Build name lookup from profiles
+    const nameMap: Record<string, string> = {};
+    for (const p of profiles || []) nameMap[p.user_id] = p.display_name;
+
     // Get flagged post counts
     const { data: flaggedPosts } = await supabase
       .from("community_posts")
@@ -76,6 +80,42 @@ export async function GET() {
       .eq("is_flagged", true)
       .order("created_at", { ascending: false })
       .limit(50);
+
+    // Get pending reports (from community_reports table)
+    const { data: pendingReports } = await supabase
+      .from("community_reports")
+      .select("id, reporter_user_id, post_id, comment_id, reason, details, status, created_at")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    // Enrich reports with content previews
+    const enrichedReports = [];
+    for (const report of (pendingReports || [])) {
+      let contentPreview = "";
+      let authorUserId = "";
+      let targetType: "post" | "comment" = "post";
+
+      if (report.post_id) {
+        const { data: post } = await supabase.from("community_posts").select("content, user_id").eq("id", report.post_id).single();
+        contentPreview = post?.content || "[Verwijderd]";
+        authorUserId = post?.user_id || "";
+        targetType = "post";
+      } else if (report.comment_id) {
+        const { data: comment } = await supabase.from("community_comments").select("content, user_id").eq("id", report.comment_id).single();
+        contentPreview = comment?.content || "[Verwijderd]";
+        authorUserId = comment?.user_id || "";
+        targetType = "comment";
+      }
+
+      enrichedReports.push({
+        ...report,
+        target_type: targetType,
+        content_preview: contentPreview.length > 120 ? contentPreview.slice(0, 120) + "..." : contentPreview,
+        author_name: nameMap[authorUserId] || "Onbekend",
+        reporter_name: nameMap[report.reporter_user_id] || "Onbekend",
+      });
+    }
 
     // Enrich profiles
     const members = profiles.map((p) => {
@@ -109,12 +149,14 @@ export async function GET() {
       members,
       flagged_posts: flaggedPosts || [],
       flagged_comments: flaggedComments || [],
+      reports: enrichedReports,
       stats: {
         total: profiles.length,
         banned: bannedCount,
         posts: totalPosts,
         comments: totalComments,
         flagged: (flaggedPosts?.length || 0) + (flaggedComments?.length || 0),
+        reports: enrichedReports.length,
       },
     });
   } catch (err) {
@@ -199,6 +241,47 @@ export async function POST(req: NextRequest) {
         if (!comment_id) return NextResponse.json({ error: "comment_id required" }, { status: 400 });
         await supabase.from("community_comments").delete().eq("id", comment_id);
         return NextResponse.json({ ok: true, message: "Reactie verwijderd" });
+      }
+
+      case "dismiss_report": {
+        const reportId = body.report_id;
+        if (!reportId) return NextResponse.json({ error: "report_id required" }, { status: 400 });
+        await supabase.from("community_reports").update({ status: "dismissed" }).eq("id", reportId);
+        return NextResponse.json({ ok: true, message: "Melding afgewezen" });
+      }
+
+      case "action_report": {
+        // Flag the content + mark report as actioned
+        const reportId = body.report_id;
+        if (!reportId) return NextResponse.json({ error: "report_id required" }, { status: 400 });
+        const { data: report } = await supabase.from("community_reports").select("post_id, comment_id").eq("id", reportId).single();
+        if (report?.post_id) {
+          await supabase.from("community_posts").update({ is_flagged: true }).eq("id", report.post_id);
+        }
+        if (report?.comment_id) {
+          await supabase.from("community_comments").update({ is_flagged: true }).eq("id", report.comment_id);
+        }
+        await supabase.from("community_reports").update({ status: "actioned" }).eq("id", reportId);
+        return NextResponse.json({ ok: true, message: "Melding verwerkt en content geflagged" });
+      }
+
+      case "delete_reported": {
+        // Delete the content + mark report as actioned
+        const reportId = body.report_id;
+        if (!reportId) return NextResponse.json({ error: "report_id required" }, { status: 400 });
+        const { data: report } = await supabase.from("community_reports").select("post_id, comment_id").eq("id", reportId).single();
+        if (report?.post_id) {
+          await supabase.from("community_comments").delete().eq("post_id", report.post_id);
+          await supabase.from("community_reactions").delete().eq("post_id", report.post_id);
+          await supabase.from("community_posts").delete().eq("id", report.post_id);
+        }
+        if (report?.comment_id) {
+          await supabase.from("community_comments").delete().eq("id", report.comment_id);
+        }
+        // Mark all reports for this content as actioned
+        if (report?.post_id) await supabase.from("community_reports").update({ status: "actioned" }).eq("post_id", report.post_id);
+        if (report?.comment_id) await supabase.from("community_reports").update({ status: "actioned" }).eq("comment_id", report.comment_id);
+        return NextResponse.json({ ok: true, message: "Content verwijderd en meldingen afgesloten" });
       }
 
       default:

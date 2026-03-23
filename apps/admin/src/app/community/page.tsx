@@ -49,6 +49,22 @@ interface Stats {
   posts: number;
   comments: number;
   flagged: number;
+  reports: number;
+}
+
+interface Report {
+  id: string;
+  reporter_user_id: string;
+  post_id: string | null;
+  comment_id: string | null;
+  reason: string;
+  details: string | null;
+  status: string;
+  target_type: "post" | "comment";
+  content_preview: string;
+  author_name: string;
+  reporter_name: string;
+  created_at: string;
 }
 
 type ActionModal = {
@@ -61,10 +77,11 @@ export default function CommunityPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [flaggedPosts, setFlaggedPosts] = useState<FlaggedPost[]>([]);
   const [flaggedComments, setFlaggedComments] = useState<FlaggedComment[]>([]);
-  const [stats, setStats] = useState<Stats>({ total: 0, banned: 0, posts: 0, comments: 0, flagged: 0 });
+  const [reports, setReports] = useState<Report[]>([]);
+  const [stats, setStats] = useState<Stats>({ total: 0, banned: 0, posts: 0, comments: 0, flagged: 0, reports: 0 });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [tab, setTab] = useState<"members" | "flagged">("members");
+  const [tab, setTab] = useState<"members" | "flagged" | "reports">("members");
   const [filter, setFilter] = useState<"all" | "banned" | "active">("all");
   const [actionModal, setActionModal] = useState<ActionModal>(null);
   const [actionReason, setActionReason] = useState("");
@@ -80,7 +97,8 @@ export default function CommunityPage() {
         setMembers(data.members || []);
         setFlaggedPosts(data.flagged_posts || []);
         setFlaggedComments(data.flagged_comments || []);
-        setStats(data.stats || { total: 0, banned: 0, posts: 0, comments: 0, flagged: 0 });
+        setReports(data.reports || []);
+        setStats(data.stats || { total: 0, banned: 0, posts: 0, comments: 0, flagged: 0, reports: 0 });
       }
     } catch {} finally { setLoading(false); }
   }
@@ -154,13 +172,14 @@ export default function CommunityPage() {
       <p style={{ margin: "4px 0 24px", fontSize: 14, color: C.muted }}>Beheer gebruikers, bekijk en verwijder content</p>
 
       {/* Stats row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 24 }}>
         {[
           { label: "Leden", value: stats.total, color: C.blue },
           { label: "Geblokkeerd", value: stats.banned, color: C.red },
           { label: "Posts", value: stats.posts, color: C.green },
           { label: "Reacties", value: stats.comments, color: C.amber },
           { label: "Geflagged", value: stats.flagged, color: C.orange },
+          { label: "Meldingen", value: stats.reports, color: C.red },
         ].map((s) => (
           <div key={s.label} style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 16 }}>
             <p style={{ margin: 0, fontSize: 12, fontWeight: 500, color: C.muted }}>{s.label}</p>
@@ -173,6 +192,7 @@ export default function CommunityPage() {
       <div style={{ display: "flex", gap: 4, marginBottom: 16, background: C.borderLight, borderRadius: 8, padding: 3, width: "fit-content" }}>
         {[
           { key: "members" as const, label: "Leden" },
+          { key: "reports" as const, label: `Meldingen (${reports.length})` },
           { key: "flagged" as const, label: `Geflagged (${(flaggedPosts.length) + (flaggedComments.length)})` },
         ].map((t) => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
@@ -302,6 +322,89 @@ export default function CommunityPage() {
             )}
           </div>
         </>
+      )}
+
+      {tab === "reports" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {reports.length > 0 ? (
+            <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 20 }}>
+              <h3 style={{ margin: "0 0 16px", fontSize: 15, fontWeight: 600, color: C.navy }}>
+                Openstaande meldingen ({reports.length})
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {reports.map((r) => (
+                  <div key={r.id} style={{
+                    padding: 16, borderRadius: 10,
+                    background: C.redLight, border: `1px solid ${C.red}20`,
+                  }}>
+                    {/* Report header */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                      <span style={{
+                        display: "inline-flex", alignItems: "center", gap: 4,
+                        fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 6,
+                        color: C.red, background: "#fff", border: `1px solid ${C.red}30`,
+                      }}>
+                        {r.target_type === "post" ? "📄 Post" : "💬 Reactie"}
+                      </span>
+                      <span style={{
+                        display: "inline-flex", alignItems: "center", gap: 4,
+                        fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 6,
+                        color: C.orange, background: C.amberLight,
+                      }}>
+                        {r.reason === "racism" ? "🚫 Racisme" :
+                         r.reason === "scam" ? "💰 Oplichting" :
+                         r.reason === "harassment" ? "😡 Intimidatie" :
+                         r.reason === "spam" ? "📢 Spam" :
+                         r.reason === "misinformation" ? "❌ Onjuiste info" :
+                         r.reason === "inappropriate" ? "⚠️ Ongepast" :
+                         "📝 Anders"}
+                      </span>
+                      <span style={{ marginLeft: "auto", fontSize: 10, color: C.muted }}>
+                        {new Date(r.created_at).toLocaleDateString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    </div>
+
+                    {/* Content preview */}
+                    <div style={{ padding: 12, background: "#fff", borderRadius: 8, border: `1px solid ${C.border}`, marginBottom: 10 }}>
+                      <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: C.muted, marginBottom: 4 }}>
+                        Door: {r.author_name}
+                      </p>
+                      <p style={{ margin: 0, fontSize: 13, color: C.navy, lineHeight: 1.5 }}>
+                        &ldquo;{r.content_preview}&rdquo;
+                      </p>
+                    </div>
+
+                    {/* Reporter + details */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: r.details ? 6 : 10 }}>
+                      <span style={{ fontSize: 11, color: C.muted }}>Gemeld door:</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: C.navy }}>{r.reporter_name}</span>
+                    </div>
+                    {r.details && (
+                      <p style={{ margin: "0 0 10px", fontSize: 12, color: C.muted, fontStyle: "italic", lineHeight: 1.5 }}>
+                        &ldquo;{r.details}&rdquo;
+                      </p>
+                    )}
+
+                    {/* Actions */}
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <ActionBtn label="Negeren" color={C.muted} loading={acting === r.id}
+                        onClick={() => doAction("dismiss_report", { report_id: r.id })} />
+                      <ActionBtn label="Flag content" color={C.orange} loading={acting === r.id}
+                        onClick={() => doAction("action_report", { report_id: r.id })} />
+                      <ActionBtn label="Verwijder content" color={C.red} loading={acting === r.id}
+                        onClick={() => { if (confirm("Content permanent verwijderen + melding afsluiten?")) doAction("delete_reported", { report_id: r.id }); }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 40, textAlign: "center" }}>
+              <p style={{ fontSize: 14, fontWeight: 500, color: C.green }}>✓ Geen openstaande meldingen</p>
+              <p style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Alle meldingen zijn afgehandeld!</p>
+            </div>
+          )}
+        </div>
       )}
 
       {tab === "flagged" && (
