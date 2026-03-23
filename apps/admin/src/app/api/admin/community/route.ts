@@ -35,7 +35,8 @@ export async function GET() {
       .select("user_id, display_name, first_name, last_name, language, gemeente, last_active_at, created_at")
       .in("user_id", userIds);
 
-    const settingsMap: Record<string, typeof settings extends Array<infer T> ? T : never> = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const settingsMap: Record<string, any> = {};
     for (const s of settings || []) settingsMap[s.user_id] = s;
 
     // Get post counts per user
