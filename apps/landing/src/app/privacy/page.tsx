@@ -1,190 +1,536 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
-import { LayoutDashboard, Camera, Mail, Plus, Shield, AlertTriangle } from 'lucide-react';
-import { formatCents, type Bill } from '@/lib/bills';
-import { calculateWIKCosts } from '@/lib/wik';
-import { useRouter } from 'next/navigation';
-import MoodTracker from '@/components/mood-tracker';
-import AchievementsDisplay from '@/components/achievements';
+import { useState } from "react";
+import { useApp } from "@/components/AppProvider";
+import { siteConfig } from "@/lib/config";
 
-export default function OverzichtPage() {
-  const t = useTranslations('dashboard');
-  const router = useRouter();
+/* ── Tab 1: Existing Privacy Policy ── */
+const privacyContent = {
+  nl: {
+    lastUpdated: "Laatst bijgewerkt: 15 maart 2026",
+    sections: [
+      {
+        title: "1. Wie zijn wij?",
+        body: `PayWatch (KVK: ${siteConfig.company.kvk}) is verantwoordelijk voor de verwerking van persoonsgegevens zoals beschreven in dit privacybeleid. Ons kantoor is gevestigd in Rotterdam, Nederland. Voor vragen over privacy kunt u contact opnemen via ${siteConfig.company.emails.privacy}.`,
+      },
+      {
+        title: "2. Welke gegevens verzamelen wij?",
+        body: "Wij verzamelen de volgende categorieën persoonsgegevens: accountgegevens (naam, e-mailadres), e-mailinhoud (tijdelijk, alleen voor het herkennen van rekeningen via Gmail OAuth), rekening- en betaalgegevens die uit e-mails worden geëxtraheerd, gebruiksgegevens (inlogmomenten, gebruikte functies), en taalvoorkeur en thema-instelling (opgeslagen in localStorage).",
+      },
+      {
+        title: "3. Waarvoor gebruiken wij je gegevens?",
+        body: "Wij verwerken je gegevens voor het leveren van onze dienst (rekeningen herkennen en bijhouden), het verbeteren van onze AI-modellen (geanonimiseerd), het versturen van service-gerelateerde e-mails, en het naleven van wettelijke verplichtingen.",
+      },
+      {
+        title: "4. Rechtsgronden",
+        body: "Wij verwerken je gegevens op basis van: uitvoering van de overeenkomst (het leveren van de PayWatch-dienst), toestemming (voor Gmail-koppeling), en gerechtvaardigd belang (voor dienstverlening en verbetering).",
+      },
+      {
+        title: "5. Delen met derden",
+        body: "Wij delen je gegevens alleen met verwerkers die noodzakelijk zijn voor onze dienstverlening. Zie onze pagina Gegevensverwerking voor een complete lijst van subverwerkers. Wij verkopen nooit je gegevens aan derden.",
+      },
+      {
+        title: "6. Beveiliging",
+        body: "Wij nemen de bescherming van je gegevens serieus. We gebruiken AES-256 encryptie, TLS 1.3, Row Level Security, en OAuth 2.0 met read-only scope voor Gmail. Zie onze pagina Gegevensverwerking voor alle beveiligingsmaatregelen.",
+      },
+      {
+        title: "7. Bewaartermijnen",
+        body: "Accountgegevens: zolang je account actief is + 6 maanden na verwijdering. E-mailinhoud: wordt niet opgeslagen, alleen tijdelijk verwerkt tijdens scanning. Rekeninggegevens: zolang je account actief is. Gebruiksgegevens: maximaal 12 maanden.",
+      },
+      {
+        title: "8. Jouw rechten",
+        body: `Je hebt het recht op inzage, rectificatie, verwijdering, beperking van verwerking, dataportabiliteit, en het recht om bezwaar te maken. Neem contact op via ${siteConfig.company.emails.privacy} om je rechten uit te oefenen. We reageren binnen 30 dagen.`,
+      },
+      {
+        title: "9. Cookies en tracking",
+        body: "PayWatch gebruikt geen tracking cookies en geen advertentiecookies. We slaan alleen je taalvoorkeur en thema-instelling op in localStorage. Dit zijn geen cookies en worden niet naar onze servers gestuurd.",
+      },
+      {
+        title: "10. Wijzigingen",
+        body: "Wij kunnen dit privacybeleid van tijd tot tijd wijzigen. Bij belangrijke wijzigingen stellen wij je op de hoogte via e-mail of een melding in de app.",
+      },
+    ],
+  },
+  en: {
+    lastUpdated: "Last updated: March 15, 2026",
+    sections: [
+      {
+        title: "1. Who are we?",
+        body: `PayWatch (KVK: ${siteConfig.company.kvk}) is responsible for the processing of personal data as described in this privacy policy. Our office is located in Rotterdam, Netherlands. For privacy questions, contact us at ${siteConfig.company.emails.privacy}.`,
+      },
+      {
+        title: "2. What data do we collect?",
+        body: "We collect the following categories of personal data: account information (name, email address), email content (temporary, only for recognizing bills via Gmail OAuth), bill and payment data extracted from emails, usage data (login times, features used), and language preference and theme setting (stored in localStorage).",
+      },
+      {
+        title: "3. What do we use your data for?",
+        body: "We process your data to deliver our service (recognizing and tracking bills), improve our AI models (anonymized), send service-related emails, and comply with legal obligations.",
+      },
+      {
+        title: "4. Legal basis",
+        body: "We process your data based on: performance of contract (delivering the PayWatch service), consent (for Gmail connection), and legitimate interest (for service delivery and improvement).",
+      },
+      {
+        title: "5. Sharing with third parties",
+        body: "We only share your data with processors necessary for our service delivery. See our Data Processing page for a complete list of sub-processors. We never sell your data to third parties.",
+      },
+      {
+        title: "6. Security",
+        body: "We take the protection of your data seriously. We use AES-256 encryption, TLS 1.3, Row Level Security, and OAuth 2.0 with read-only scope for Gmail. See our Data Processing page for all security measures.",
+      },
+      {
+        title: "7. Retention periods",
+        body: "Account data: as long as your account is active + 6 months after deletion. Email content: not stored, only temporarily processed during scanning. Bill data: as long as your account is active. Usage data: maximum 12 months.",
+      },
+      {
+        title: "8. Your rights",
+        body: `You have the right to access, rectification, erasure, restriction of processing, data portability, and the right to object. Contact ${siteConfig.company.emails.privacy} to exercise your rights. We respond within 30 days.`,
+      },
+      {
+        title: "9. Cookies and tracking",
+        body: "PayWatch does not use tracking cookies or advertising cookies. We only store your language preference and theme setting in localStorage. These are not cookies and are not sent to our servers.",
+      },
+      {
+        title: "10. Changes",
+        body: "We may update this privacy policy from time to time. For significant changes, we will notify you via email or a notification in the app.",
+      },
+    ],
+  },
+};
 
-  const [bills, setBills] = useState<Bill[]>([]);
-  const [loading, setLoading] = useState(true);
+/* ── Tab 2: Google API / Data Processing ── */
+type DataItem = {
+  title: string;
+  items: string[];
+};
 
-  useEffect(() => {
-    async function fetchBills() {
-      try {
-        const res = await fetch('/api/bills');
-        if (res.ok) {
-          const data = await res.json();
-          setBills(data.bills || []);
-        }
-      } catch {
-        console.error('Failed to fetch bills');
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchBills();
+type DataSection = {
+  title: string;
+  body?: string;
+  subsections?: DataItem[];
+};
 
-    // Recalculate streak in background
-    fetch('/api/streak').catch(() => {});
-  }, []);
+const dataProcessingContent: Record<string, { lastUpdated: string; badge: string; sections: DataSection[]; flowTitle: string; flow: [string, "blue" | "red", string][] }> = {
+  nl: {
+    lastUpdated: "Laatst bijgewerkt: 25 maart 2026",
+    badge: "Het gebruik van informatie ontvangen via Google API's door PayWatch voldoet aan het Google API Services User Data Policy, inclusief de Limited Use-vereisten.",
+    flowTitle: "Samenvatting gegevensstroom Gmail",
+    flow: [
+      ["1", "blue", "Gebruiker verbindt Gmail (gmail.readonly scope)"],
+      ["2", "blue", "AI classificeert e-mail: rekening of niet?"],
+      ["3", "red", "Niet-rekeningen worden direct genegeerd (niet opgeslagen)"],
+      ["4", "blue", "Van rekeningen worden alleen velden geëxtraheerd: leverancier, bedrag, datum, IBAN, referentie"],
+      ["5", "blue", "Geëxtraheerde velden worden opgeslagen als rekeningrecord"],
+      ["6", "red", "Originele e-mailtekst wordt NIET opgeslagen"],
+    ],
+    sections: [
+      {
+        title: "1. Gmail-gegevens (bij verbinding)",
+        subsections: [
+          {
+            title: "Wat wij opvragen en verwerken",
+            items: [
+              "Wij vragen toegang tot je Gmail via de scope gmail.readonly (alleen-lezen)",
+              "Onze AI scant e-mailonderwerpen en afzenders om rekeningen te herkennen",
+              "Van herkende rekeningen extraheren wij uitsluitend: leveranciersnaam, bedrag, vervaldatum, IBAN en referentienummer",
+              "Wij slaan NOOIT volledige e-mailteksten op",
+              "Wij slaan NOOIT bijlagen op (alleen geëxtraheerde velden)",
+              "Wij slaan NOOIT persoonlijke e-mails op die geen rekeningen zijn",
+              "E-mails die niet als rekening worden herkend, worden direct genegeerd en niet opgeslagen",
+              "Gmail Message ID's worden opgeslagen om dubbele verwerking te voorkomen",
+            ],
+          },
+        ],
+      },
+      {
+        title: "2. Camerascan-gegevens",
+        subsections: [
+          {
+            title: "Hoe foto's worden verwerkt",
+            items: [
+              "Wanneer je een foto maakt van een rekening, wordt deze naar onze AI gestuurd voor extractie",
+              "De foto zelf wordt NOOIT opgeslagen — alleen de geëxtraheerde rekeninggegevens",
+              "QR-codes worden lokaal op je apparaat gescand",
+            ],
+          },
+        ],
+      },
+      {
+        title: "3. AI-verwerking",
+        subsections: [
+          {
+            title: "Welke AI-diensten wij gebruiken",
+            items: [
+              "Google Gemini 2.5 Flash: classificeert e-mails (rekening/geen rekening) en extraheert gegevens uit camerafoto's",
+              "Anthropic Claude Haiku 4.5: extraheert rekeninggegevens uit e-mailtekst, genereert financiële inzichten en conceptbrieven",
+              "AI-modellen ontvangen alleen de minimaal benodigde data per verzoek",
+              "Wij trainen GEEN AI-modellen met jouw gegevens",
+              "AI-verwerking vindt plaats via beveiligde API-verbindingen (HTTPS)",
+            ],
+          },
+        ],
+      },
+      {
+        title: "4. Opslag en beveiliging",
+        subsections: [
+          {
+            title: "Database",
+            items: [
+              "Alle gegevens worden opgeslagen in Supabase (PostgreSQL), gehost in de EU (eu-west-1, Ierland)",
+              "Row Level Security (RLS) is ingeschakeld op alle tabellen — je kunt alleen je eigen gegevens zien",
+              "Betalingsbewijzen worden opgeslagen in een privé Supabase Storage-bucket met getekende URL's (signed URLs)",
+              "Wachtwoorden worden gehasht opgeslagen (nooit in platte tekst)",
+            ],
+          },
+          {
+            title: "Beveiligingsmaatregelen",
+            items: [
+              "Alle communicatie verloopt via HTTPS (TLS-encryptie)",
+              "Rate limiting op alle API-eindpunten",
+              "Content Security Policy (CSP) headers",
+              "Minimale data-overdracht naar AI-diensten",
+            ],
+          },
+        ],
+      },
+      {
+        title: "5. Verwerkers (sub-processors)",
+        body: "Wij verkopen je gegevens NOOIT aan derden. Wij delen je gegevens alleen met de volgende verwerkers:",
+        subsections: [
+          {
+            title: "Lijst van verwerkers",
+            items: [
+              "Supabase (database en authenticatie) — EU-gehost, GDPR-compliant",
+              "Google Gemini API (AI-classificatie en extractie) — alleen e-mailfragmenten worden verstuurd",
+              "Anthropic Claude API (AI-extractie en inzichten) — alleen minimale e-mailtekst wordt verstuurd",
+              "Vercel (hosting) — verwerkt geen gebruikersgegevens direct",
+              "Resend (e-mail) — alleen voor transactionele e-mails (wachtwoord reset, verificatie)",
+            ],
+          },
+        ],
+      },
+      {
+        title: "6. Google API Services — Gebruikersgegevensbeleid",
+        body: "Het gebruik van informatie ontvangen via Google API's door PayWatch voldoet aan het Google API Services User Data Policy, inclusief de Limited Use-vereisten:",
+        subsections: [
+          {
+            title: "Onze verplichtingen",
+            items: [
+              "Wij gebruiken Gmail-gegevens uitsluitend voor het herkennen en extraheren van rekeningen — het kerndoel van PayWatch",
+              "Wij dragen geen Gmail-gegevens over aan derden, tenzij noodzakelijk voor de kernfunctionaliteit (AI-extractie), met expliciete toestemming, of vereist door de wet",
+              "Wij gebruiken Gmail-gegevens NIET voor advertenties, marktonderzoek, of het trainen van AI-modellen",
+              "Wij staan menselijke toegang tot Gmail-gegevens NIET toe, tenzij met jouw toestemming, noodzakelijk voor beveiligingsdoeleinden, of vereist door de wet",
+              "Je kunt je Gmail-verbinding op elk moment ontkoppelen via Instellingen — hierbij worden alle opgeslagen Gmail-tokens verwijderd",
+            ],
+          },
+        ],
+      },
+      {
+        title: "7. Gegevensverwijdering",
+        body: "Je kunt op elk moment je gegevens verwijderen:",
+        subsections: [
+          {
+            title: "Verwijderingsopties",
+            items: [
+              "Gmail ontkoppelen: verwijdert alle Gmail-tokens en stopt het scannen",
+              "Individuele rekeningen verwijderen: verwijdert de rekening en bijbehorend betalingsbewijs",
+              "Account verwijderen: verwijdert alle gegevens permanent — rekeningen, instellingen, buddy-relaties, community-posts, en Gmail-koppelingen",
+              "Verwijdering is permanent en kan niet ongedaan worden gemaakt",
+              "Verwijdering wordt binnen 30 dagen voltooid in alle systemen",
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  en: {
+    lastUpdated: "Last updated: March 25, 2026",
+    badge: "PayWatch's use of information received from Google APIs adheres to the Google API Services User Data Policy, including the Limited Use requirements.",
+    flowTitle: "Gmail data flow summary",
+    flow: [
+      ["1", "blue", "User connects Gmail (gmail.readonly scope)"],
+      ["2", "blue", "AI classifies email: bill or not?"],
+      ["3", "red", "Non-bills are immediately discarded (not stored)"],
+      ["4", "blue", "From bills, only fields are extracted: vendor, amount, date, IBAN, reference"],
+      ["5", "blue", "Extracted fields are stored as a bill record"],
+      ["6", "red", "Original email text is NOT stored"],
+    ],
+    sections: [
+      {
+        title: "1. Gmail data (when connected)",
+        subsections: [
+          {
+            title: "What we request and process",
+            items: [
+              "We request access to your Gmail via the scope gmail.readonly (read-only)",
+              "Our AI scans email subjects and senders to identify bills",
+              "From recognized bills, we extract only: vendor name, amount, due date, IBAN and reference number",
+              "We NEVER store full email texts",
+              "We NEVER store email attachments (only extracted fields)",
+              "We NEVER store personal emails that are not bills",
+              "Emails not recognized as bills are immediately discarded and not stored",
+              "Gmail Message IDs are stored to prevent duplicate processing",
+            ],
+          },
+        ],
+      },
+      {
+        title: "2. Camera scan data",
+        subsections: [
+          {
+            title: "How photos are processed",
+            items: [
+              "When you take a photo of a bill, it is sent to our AI for extraction",
+              "The photo itself is NEVER stored — only the extracted bill data",
+              "QR codes are scanned locally on your device",
+            ],
+          },
+        ],
+      },
+      {
+        title: "3. AI processing",
+        subsections: [
+          {
+            title: "Which AI services we use",
+            items: [
+              "Google Gemini 2.5 Flash: classifies emails (bill/not bill) and extracts data from camera photos",
+              "Anthropic Claude Haiku 4.5: extracts bill data from email text, generates financial insights and draft letters",
+              "AI models only receive the minimum data required per request",
+              "We do NOT train AI models with your data",
+              "AI processing occurs via secure API connections (HTTPS)",
+            ],
+          },
+        ],
+      },
+      {
+        title: "4. Storage and security",
+        subsections: [
+          {
+            title: "Database",
+            items: [
+              "All data is stored in Supabase (PostgreSQL), hosted in the EU (eu-west-1, Ireland)",
+              "Row Level Security (RLS) is enabled on all tables — you can only see your own data",
+              "Payment proofs are stored in a private Supabase Storage bucket with signed URLs",
+              "Passwords are stored hashed (never in plain text)",
+            ],
+          },
+          {
+            title: "Security measures",
+            items: [
+              "All communication is over HTTPS (TLS encryption)",
+              "Rate limiting on all API endpoints",
+              "Content Security Policy (CSP) headers",
+              "Minimal data transfer to AI services",
+            ],
+          },
+        ],
+      },
+      {
+        title: "5. Processors (sub-processors)",
+        body: "We NEVER sell your data to third parties. We only share your data with the following processors:",
+        subsections: [
+          {
+            title: "List of processors",
+            items: [
+              "Supabase (database and authentication) — EU-hosted, GDPR-compliant",
+              "Google Gemini API (AI classification and extraction) — only email fragments are sent",
+              "Anthropic Claude API (AI extraction and insights) — only minimal email text is sent",
+              "Vercel (hosting) — does not process user data directly",
+              "Resend (email) — only for transactional emails (password reset, verification)",
+            ],
+          },
+        ],
+      },
+      {
+        title: "6. Google API Services — User Data Policy",
+        body: "PayWatch's use of information received from Google APIs adheres to the Google API Services User Data Policy, including the Limited Use requirements:",
+        subsections: [
+          {
+            title: "Our commitments",
+            items: [
+              "We use Gmail data solely to identify and extract bills — the core purpose of PayWatch",
+              "We do not transfer Gmail data to third parties, except as necessary for core functionality (AI extraction), with explicit user consent, or as required by law",
+              "We do NOT use Gmail data for advertising, market research, or training AI models",
+              "We do NOT allow human access to Gmail data, unless with your consent, necessary for security purposes, or required by law",
+              "You can disconnect your Gmail at any time via Settings — this deletes all stored Gmail tokens",
+            ],
+          },
+        ],
+      },
+      {
+        title: "7. Data deletion",
+        body: "You can delete your data at any time:",
+        subsections: [
+          {
+            title: "Deletion options",
+            items: [
+              "Disconnect Gmail: deletes all Gmail tokens and stops scanning",
+              "Delete individual bills: removes the bill and associated payment proof",
+              "Delete account: permanently removes all data — bills, settings, buddy relationships, community posts, and Gmail connections",
+              "Deletion is permanent and cannot be undone",
+              "Deletion is completed within 30 days across all systems",
+            ],
+          },
+        ],
+      },
+    ],
+  },
+};
 
-  const today = new Date().toISOString().split('T')[0];
-  const threeDaysFromNow = new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0];
-
-  const outstanding = bills.filter((b) => b.status !== 'settled');
-  const overdue = outstanding.filter((b) => b.due_date < today);
-  const upcoming = outstanding.filter(
-    (b) => b.due_date >= today && b.due_date <= threeDaysFromNow
-  );
-  const settled = bills.filter((b) => b.status === 'settled');
-
-  const outstandingTotal = outstanding.reduce((sum, b) => sum + b.amount, 0);
-  const settledTotal = settled.reduce((sum, b) => sum + b.amount, 0);
-
-  // Escalation stats
-  const escalated = outstanding.filter((b) => b.escalation_stage && b.escalation_stage !== 'factuur');
-
-  // Savings: WIK costs avoided by paying on time
-  const savedCents = settled
-    .filter((b) => b.paid_date && b.due_date && b.paid_date <= b.due_date)
-    .reduce((sum, b) => sum + calculateWIKCosts(b.amount), 0);
-
-  return (
-    <div className="space-y-4">
-      <h1 className="text-heading text-pw-navy">{t('title')}</h1>
-
-      {/* Stat cards (2x2) */}
-      {loading ? (
-        <div className="grid grid-cols-2 gap-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="skeleton h-[76px] rounded-card" />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-3">
-          <StatCard label={t('outstanding')} value={formatCents(outstandingTotal)} color="blue" />
-          <StatCard label={t('overdue')} value={String(overdue.length)} color="red" />
-          <StatCard label={t('upcoming')} value={String(upcoming.length)} color="amber" />
-          <StatCard label={t('paid')} value={formatCents(settledTotal)} color="green" />
-        </div>
-      )}
-
-      {/* Mijn schulden card */}
-      {!loading && outstanding.length > 0 && (
-        <div className="rounded-card border border-pw-border bg-pw-surface p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-medium text-pw-muted">{t('debtCard') || 'Mijn schulden'}</p>
-              <p className="mt-0.5 text-[24px] font-extrabold text-pw-navy">
-                {formatCents(outstandingTotal)}
-              </p>
-            </div>
-            {escalated.length > 0 && (
-              <div className="flex items-center gap-1.5 rounded-[4px] bg-red-50 px-2 py-1">
-                <AlertTriangle className="h-3 w-3 text-pw-red" strokeWidth={2} />
-                <span className="text-[11px] font-semibold text-pw-red">
-                  {escalated.length} {t('inEscalation') || 'in escalatie'}
-                </span>
-              </div>
-            )}
-          </div>
-          <div className="mt-3 flex items-center gap-2 border-t border-pw-border pt-3">
-            <Shield className="h-4 w-4 text-pw-green" strokeWidth={1.5} />
-            <span className="text-[13px] font-semibold text-pw-green">
-              {savedCents > 0
-                ? `${formatCents(savedCents)} bespaard aan incassokosten`
-                : 'Betaal op tijd om incassokosten te besparen'}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Quick actions */}
-      <div className="flex gap-3">
-        <button
-          onClick={() => router.push('/scan')}
-          className="btn-press flex flex-1 items-center justify-center gap-2 rounded-card border border-pw-border bg-pw-surface px-3 py-3 text-[13px] font-semibold text-pw-text"
-        >
-          <Camera className="h-4 w-4 text-pw-blue" strokeWidth={1.5} />
-          {t('scanBill')}
-        </button>
-        <button
-          onClick={() => router.push('/instellingen?tab=gmail')}
-          className="btn-press flex flex-1 items-center justify-center gap-2 rounded-card border border-pw-border bg-pw-surface px-3 py-3 text-[13px] font-semibold text-pw-text"
-        >
-          <Mail className="h-4 w-4 text-pw-blue" strokeWidth={1.5} />
-          {t('scanEmail')}
-        </button>
-      </div>
-
-      {/* Overdue bills */}
-      {overdue.length > 0 && (
-        <div>
-          <h2 className="mb-2 text-[16px] font-bold text-pw-navy">{t('overdueSection') || 'Achterstallig'}</h2>
-          <div className="space-y-2">
-            {overdue.slice(0, 3).map((bill) => (
-              <div
-                key={bill.id}
-                className="flex items-center justify-between rounded-card border border-pw-red/20 bg-red-50/50 px-3.5 py-3"
-              >
-                <div>
-                  <p className="text-[14px] font-semibold text-pw-text">{bill.vendor}</p>
-                  <p className="text-[11px] text-pw-red">
-                    {new Date(bill.due_date + 'T00:00:00').toLocaleDateString('nl-NL', {
-                      day: 'numeric',
-                      month: 'short',
-                    })}
-                  </p>
-                </div>
-                <p className="text-[15px] font-bold text-pw-red">{formatCents(bill.amount)}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Achievements */}
-      <AchievementsDisplay />
-
-      {/* Mood tracker — shows once per day */}
-      <MoodTracker />
-
-      {/* Empty state */}
-      {!loading && bills.length === 0 && (
-        <div className="flex flex-col items-center py-12 text-center">
-          <LayoutDashboard className="mb-4 h-12 w-12 text-pw-muted/40" strokeWidth={1.5} />
-          <h2 className="text-[16px] font-semibold text-pw-text">{t('noBillsTitle')}</h2>
-          <p className="mt-1 max-w-[280px] text-[13px] text-pw-muted">
-            {t('noBillsDescription')}
-          </p>
-        </div>
-      )}
-    </div>
-  );
+/* ── Helper: highlight NOOIT/NEVER/NIET/NOT lines ── */
+function isNeverLine(text: string) {
+  return /NOOIT|NEVER|NIET\b|NOT\b|GEEN\b/.test(text);
 }
 
-function StatCard({ label, value, color }: { label: string; value: string; color: 'blue' | 'red' | 'amber' | 'green' }) {
-  const colors = {
-    blue: { accent: 'bg-pw-blue', text: 'text-pw-blue', bg: 'bg-blue-50/30' },
-    red: { accent: 'bg-pw-red', text: 'text-pw-red', bg: 'bg-red-50/30' },
-    amber: { accent: 'bg-amber-500', text: 'text-amber-600', bg: 'bg-amber-50/30' },
-    green: { accent: 'bg-pw-green', text: 'text-pw-green', bg: 'bg-green-50/30' },
+/* ── Component ── */
+export default function PrivacyPage() {
+  const { lang, t } = useApp();
+  const [activeTab, setActiveTab] = useState<"privacy" | "data">("privacy");
+
+  const privacy = privacyContent[lang];
+  const data = dataProcessingContent[lang];
+
+  const tabs = {
+    nl: { privacy: "Privacybeleid", data: "Gegevensverwerking" },
+    en: { privacy: "Privacy Policy", data: "Data Processing" },
   };
-  const c = colors[color];
 
   return (
-    <div className={`stat-card rounded-card border border-pw-border ${c.bg} p-3.5`}>
-      <div className={`mb-2 h-[3px] w-8 rounded-full ${c.accent}`} />
-      <p className="text-[11px] font-medium text-pw-muted">{label}</p>
-      <p className={`mt-0.5 text-[18px] font-extrabold ${c.text}`}>{value}</p>
+    <div className="bg-[var(--bg)]">
+      <div className="mx-auto max-w-3xl px-4 pt-12 pb-16 sm:px-6 sm:pt-20 sm:pb-24">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-[var(--navy)] tracking-tight text-center">
+          {t.privacy.title}
+        </h1>
+        <p className="text-base text-[var(--muted)] mt-3 text-center">{t.privacy.subtitle}</p>
+
+        {/* ── Tab Switcher ── */}
+        <div className="mt-8 flex justify-center">
+          <div className="inline-flex rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--border)_30%,transparent)] p-1 gap-1">
+            <button
+              onClick={() => setActiveTab("privacy")}
+              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                activeTab === "privacy"
+                  ? "bg-[var(--surface)] text-[var(--navy)] shadow-sm"
+                  : "text-[var(--muted)] hover:text-[var(--text)]"
+              }`}
+            >
+              {tabs[lang].privacy}
+            </button>
+            <button
+              onClick={() => setActiveTab("data")}
+              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                activeTab === "data"
+                  ? "bg-[var(--surface)] text-[var(--navy)] shadow-sm"
+                  : "text-[var(--muted)] hover:text-[var(--text)]"
+              }`}
+            >
+              {tabs[lang].data}
+            </button>
+          </div>
+        </div>
+
+        {/* ── Tab 1: Privacy Policy (existing) ── */}
+        {activeTab === "privacy" && (
+          <div className="mt-6">
+            <p className="text-xs text-[var(--muted)] text-center mb-6">{privacy.lastUpdated}</p>
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-10">
+              {privacy.sections.map((section, i) => (
+                <div key={i} className={i > 0 ? "mt-8 pt-6 border-t border-[var(--border)]" : ""}>
+                  <h2 className="text-base font-bold text-[var(--navy)] mb-2">{section.title}</h2>
+                  <p className="text-sm text-[var(--text)] leading-relaxed">{section.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Tab 2: Data Processing (new) ── */}
+        {activeTab === "data" && (
+          <div className="mt-6">
+            <p className="text-xs text-[var(--muted)] text-center mb-6">{data.lastUpdated}</p>
+
+            {/* Google API compliance badge */}
+            <div className="flex gap-3 items-start rounded-xl border border-[var(--blue)]/20 bg-[color-mix(in_srgb,var(--blue)_8%,transparent)] p-4 mb-6">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" strokeWidth="2" strokeLinecap="round" className="shrink-0 mt-0.5">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-4M12 8h.01" />
+              </svg>
+              <p className="text-sm text-[var(--text)] leading-relaxed">{data.badge}</p>
+            </div>
+
+            {/* Sections */}
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-10">
+              {data.sections.map((section, si) => (
+                <div key={si} className={si > 0 ? "mt-8 pt-6 border-t border-[var(--border)]" : ""}>
+                  <h2 className="text-base font-bold text-[var(--navy)] mb-2">{section.title}</h2>
+                  {section.body && (
+                    <p className="text-sm text-[var(--text)] leading-relaxed mb-4">{section.body}</p>
+                  )}
+                  {section.subsections?.map((sub, subi) => (
+                    <div key={subi} className={subi > 0 ? "mt-4" : "mt-3"}>
+                      <h3 className="text-sm font-semibold text-[var(--text)] mb-2">{sub.title}</h3>
+                      <div className="rounded-xl border border-[var(--border)] overflow-hidden">
+                        {sub.items.map((item, ii) => {
+                          const never = isNeverLine(item);
+                          return (
+                            <div
+                              key={ii}
+                              className={`flex gap-3 items-start px-4 py-2.5 text-sm leading-relaxed ${
+                                ii < sub.items.length - 1 ? "border-b border-[var(--border)]" : ""
+                              } ${never ? "text-[var(--red)] font-semibold" : "text-[var(--text)]"}`}
+                            >
+                              <span
+                                className="mt-[7px] shrink-0 w-1.5 h-1.5 rounded-full"
+                                style={{ background: never ? "var(--red)" : "var(--blue)" }}
+                              />
+                              <span>{item}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+
+            {/* Gmail Data Flow Summary */}
+            <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-10">
+              <h3 className="text-base font-bold text-[var(--navy)] mb-4">{data.flowTitle}</h3>
+              {data.flow.map(([num, color, text], i) => (
+                <div
+                  key={i}
+                  className={`flex gap-3 items-start py-3 ${
+                    i < data.flow.length - 1 ? "border-b border-[var(--border)]" : ""
+                  }`}
+                >
+                  <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
+                    style={{
+                      background: `color-mix(in srgb, var(--${color}) 12%, transparent)`,
+                      color: `var(--${color})`,
+                    }}
+                  >
+                    {num}
+                  </div>
+                  <p className={`text-sm leading-snug ${color === "red" ? "font-semibold text-[var(--text)]" : "text-[var(--text)]"}`}>
+                    {text}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <p className="text-xs text-[var(--muted)] text-center mt-12">
+          © {new Date().getFullYear()} PayWatch — Samba Finance, Rotterdam, Netherlands
+          <br />
+          <a href={`mailto:${siteConfig.company.emails.privacy}`} className="text-[var(--blue)] hover:underline">
+            {siteConfig.company.emails.privacy}
+          </a>
+        </p>
+      </div>
     </div>
   );
 }
