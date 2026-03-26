@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { checkPublicRateLimit } from "@/lib/rate-limit";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY!;
 
@@ -25,6 +21,15 @@ function splitName(fullName: string): { firstName: string; lastName: string } {
 }
 
 export async function POST(req: NextRequest) {
+  // Rate limit: max 5 newsletter subscriptions per IP per hour
+  const limited = await checkPublicRateLimit("newsletter", 5, 60);
+  if (limited) return limited;
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
   try {
     const body = await req.json();
     const {
@@ -59,7 +64,7 @@ export async function POST(req: NextRequest) {
           language,
           source,
           subscribed_at: new Date().toISOString(),
-          unsubscribed_at: null, // re-subscribe if they come back
+          unsubscribed_at: null,
         },
         { onConflict: "email,audience_type" }
       )
@@ -71,11 +76,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to save subscriber" }, { status: 500 });
     }
 
-    // 2. Add to Resend Audience with first_name, last_name, and tags
+    // 2. Add to Resend Audience
     const audienceId = AUDIENCE_IDS[audience_type];
     const { firstName, lastName } = splitName(name || email.split("@")[0]);
 
-    // Build tags for B2B segmentation
     const tags: string[] = [audience_type];
     if (language) tags.push(`lang:${language}`);
     if (source) tags.push(`source:${source}`);

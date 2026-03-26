@@ -2,7 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@paywatch/ui", "@paywatch/config"],
-  // FIX: Remove X-Powered-By header
   poweredByHeader: false,
   images: {
     remotePatterns: [
@@ -12,7 +11,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // FIX: Add all security headers (were completely missing)
   async headers() {
     return [
       {
@@ -22,6 +20,8 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+          // FIX: Explicitly set CORS to override Vercel's default wildcard
+          { key: "Access-Control-Allow-Origin", value: "https://paywatch.app" },
           {
             key: "Content-Security-Policy",
             value: [

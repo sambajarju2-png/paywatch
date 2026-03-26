@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
+import { checkPublicRateLimit } from "@/lib/rate-limit";
 
 /**
  * POST /api/contact
@@ -38,6 +39,10 @@ function getSupabase() {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limit: max 5 contact submissions per IP per hour
+  const limited = await checkPublicRateLimit("contact", 5, 60);
+  if (limited) return limited;
+
   try {
     const body = await request.json();
     const { name, email, type, companyName, subject, message, lang, subscribeNewsletter } = body;

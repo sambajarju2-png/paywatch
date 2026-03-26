@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { checkPublicRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
+  // Rate limit: max 3 job applications per IP per hour
+  const limited = await checkPublicRateLimit("apply", 3, 60);
+  if (limited) return limited;
+
   try {
     const body = await request.json();
     const { jobId, jobTitle, name, email, phone, message, lang } = body;
