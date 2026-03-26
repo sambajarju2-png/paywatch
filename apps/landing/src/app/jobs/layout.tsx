@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { jobListings } from "@/lib/config";
+import { generateJobPostingSchema } from "@/lib/job-schema-util";
 
 export const metadata: Metadata = {
   title: "Vacatures — Werken bij PayWatch",
@@ -12,5 +14,17 @@ export const metadata: Metadata = {
 };
 
 export default function JobsLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  const jobSchemas = generateJobPostingSchema(jobListings);
+  return (
+    <>
+      {jobSchemas.map((schema, i) => (
+        <script
+          key={`job-schema-${i}`}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      ))}
+      {children}
+    </>
+  );
 }
