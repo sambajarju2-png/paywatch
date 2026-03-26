@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { verifyAdmin } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,9 @@ function getAdmin() {
 }
 
 export async function GET() {
+  const admin = await verifyAdmin();
+  if (!admin.isAdmin) return admin.response;
+
   try {
     const supabase = getAdmin();
 
@@ -25,10 +29,8 @@ export async function GET() {
       .order("created_at", { ascending: false })
       .limit(5);
 
-    // Get bill counts per user for recent users
     const usersWithBills = await Promise.all(
       (recentUsers || []).map(async (u) => {
-        // We need user_id to count bills — get it from created_at match
         return { ...u, bill_count: 0 };
       })
     );

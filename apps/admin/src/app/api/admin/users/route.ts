@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { verifyAdmin } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,9 @@ function getAdmin() {
 }
 
 export async function GET() {
+  const admin = await verifyAdmin();
+  if (!admin.isAdmin) return admin.response;
+
   try {
     const supabase = getAdmin();
     const { data: users } = await supabase
@@ -26,8 +30,16 @@ export async function GET() {
 }
 
 export async function DELETE(request: NextRequest) {
+  const admin = await verifyAdmin();
+  if (!admin.isAdmin) return admin.response;
+
   const userId = request.nextUrl.searchParams.get("userId");
   if (!userId) return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+
+  // Prevent admin from deleting themselves
+  if (userId === admin.userId) {
+    return NextResponse.json({ error: "Cannot delete own account" }, { status: 400 });
+  }
 
   try {
     const supabase = getAdmin();
@@ -47,6 +59,7 @@ export async function DELETE(request: NextRequest) {
     // Delete auth user
     await supabase.auth.admin.deleteUser(userId);
 
+    console.log(`[Admin] User ${userId} deleted by ${admin.email}`);
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("Delete error:", err);

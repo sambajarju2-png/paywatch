@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { verifyAdmin } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const admin = await verifyAdmin();
+  if (!admin.isAdmin) return admin.response;
+
   const envStatus = {
     NEXT_PUBLIC_SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
