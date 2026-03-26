@@ -11,6 +11,9 @@ importers:
       '@remixicon/react':
         specifier: ^4.9.0
         version: 4.9.0(react@19.2.4)
+      '@sanity/client':
+        specifier: ^7.20.0
+        version: 7.20.0
       '@tremor/react':
         specifier: ^3.18.7
         version: 3.18.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -2284,6 +2287,10 @@ packages:
 
   '@sanity/client@7.19.0':
     resolution: {integrity: sha512-7q0UujhMJGKKWDwkCwlK9hEryjWWttklSpcn5wmXYnXZPpYAbrJtQluW5k3q9rIsW/s9JJyjLOIptgNErk9ToA==}
+    engines: {node: '>=20'}
+
+  '@sanity/client@7.20.0':
+    resolution: {integrity: sha512-uKwfqA+UfyWH6QzqpDD2DQnZu+WRa2iCM3OJ9AoyDZB9oHLl2NKI+9mX1xEZ7PiBuq09pogI7sxKaTKnaB6d+g==}
     engines: {node: '>=20'}
 
   '@sanity/codegen@6.0.1':
@@ -8001,6 +8008,15 @@ snapshots:
       - xstate
 
   '@sanity/client@7.19.0(debug@4.4.3)':
+    dependencies:
+      '@sanity/eventsource': 5.0.2
+      get-it: 8.7.0(debug@4.4.3)
+      nanoid: 3.3.11
+      rxjs: 7.8.2
+    transitivePeerDependencies:
+      - debug
+
+  '@sanity/client@7.20.0':
     dependencies:
       '@sanity/eventsource': 5.0.2
       get-it: 8.7.0(debug@4.4.3)

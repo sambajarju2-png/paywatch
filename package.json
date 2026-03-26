@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@remixicon/react": "^4.9.0",
+    "@sanity/client": "^7.20.0",
     "@tremor/react": "^3.18.7"
   }
 }
