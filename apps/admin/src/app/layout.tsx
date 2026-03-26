@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AuthGate } from "@/components/AuthGate";
 import { AdminSidebar } from "@/components/AdminSidebar";
+import { SessionSync } from "@/components/SessionSync";
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], display: "swap" });
 
@@ -16,6 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="nl">
       <body className={jakarta.className} style={{ margin: 0, background: "#F8FAFC" }}>
         <AuthGate>
+          <SessionSync />
           <div style={{ display: "flex", minHeight: "100vh" }}>
             <AdminSidebar />
             <main style={{ flex: 1, padding: "32px 40px", maxWidth: 1200, overflowX: "hidden" }}>
