@@ -4,6 +4,7 @@ import { createClient } from '@sanity/client';
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY!;
 const CRON_SECRET = process.env.CRON_SECRET!;
 const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY!;
+const GNEWS_API_KEY = process.env.GNEWS_API_KEY || '';
 
 const sanity = createClient({
   projectId: 'pwf6qbjc',
@@ -24,6 +25,44 @@ const CATEGORIES: Record<string, string> = {
   'educatie': '74356885-8199-4528-a837-52e5cd5d7427',
 };
 
+// ─── Dutch News Fetcher ───────────────────────────────────────────
+async function fetchDutchNews(): Promise<string> {
+  if (!GNEWS_API_KEY) return 'No news API configured.';
+
+  const queries = [
+    'schulden Nederland',
+    'incasso deurwaarder',
+    'belastingdienst schuld',
+    'huur energie kosten',
+    'schuldhulpverlening gemeente',
+  ];
+
+  // Pick 2 random queries to stay within rate limits
+  const shuffled = queries.sort(() => Math.random() - 0.5).slice(0, 2);
+  const allHeadlines: string[] = [];
+
+  for (const q of shuffled) {
+    try {
+      const res = await fetch(
+        `https://gnews.io/api/v4/search?q=${encodeURIComponent(q)}&lang=nl&country=nl&max=5&apikey=${GNEWS_API_KEY}`
+      );
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data.articles) {
+        for (const article of data.articles) {
+          allHeadlines.push(`- ${article.title} (${article.source.name}, ${article.publishedAt?.split('T')[0]})`);
+        }
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  if (allHeadlines.length === 0) return 'No recent Dutch finance news found.';
+  return allHeadlines.slice(0, 10).join('\n');
+}
+
+// ─── Unsplash Image ───────────────────────────────────────────────
 async function fetchUnsplashImage(query: string) {
   try {
     const res = await fetch(
@@ -48,6 +87,7 @@ async function fetchUnsplashImage(query: string) {
   }
 }
 
+// ─── Upload to Sanity ─────────────────────────────────────────────
 async function uploadImageToSanity(imageUrl: string, filename: string) {
   try {
     const imageRes = await fetch(imageUrl);
@@ -63,6 +103,7 @@ async function uploadImageToSanity(imageUrl: string, filename: string) {
   }
 }
 
+// ─── System Prompt ────────────────────────────────────────────────
 const SYSTEM_PROMPT = `You are the autonomous content engine for PayWatch (paywatch.app), a Dutch household bill tracking app. You write ONE blog post per day in Dutch, targeting SEO keywords around schulden, incasso, deurwaarders, besparen, and personal finance in the Netherlands.
 
 IMPORTANT: You must respond with ONLY a valid JSON object. No markdown, no backticks, no explanation. Just the JSON.
@@ -104,9 +145,12 @@ TOPIC ROTATION (based on day of week):
 - Tuesday: Overheid & Belasting
 - Wednesday: Besparen & Budget
 - Thursday: Juridisch
-- Friday: Nieuws & Trends
+- Friday: Nieuws & Trends (USE THE NEWS HEADLINES BELOW to write about something timely)
 - Saturday: Hulp & Organisaties
 - Sunday: Persoonlijk & Verhalen
+
+RECENT DUTCH NEWS HEADLINES (use these for inspiration, especially on Fridays):
+{NEWS_HEADLINES}
 
 EXISTING POSTS (avoid duplicates):
 {EXISTING_SLUGS}
@@ -114,8 +158,9 @@ EXISTING POSTS (avoid duplicates):
 TODAY'S DATE: {TODAY}
 DAY OF WEEK: {DAY_OF_WEEK}
 
-Write a blog post following the rotation schedule. Pick a specific, searchable topic that Dutch people actually Google.`;
+Write a blog post following the rotation schedule. Pick a specific, searchable topic that Dutch people actually Google. On Fridays, write about something from the news headlines. Be creative — don't repeat topics from existing posts.`;
 
+// ─── Main Handler ─────────────────────────────────────────────────
 export async function POST(request: Request) {
   try {
     const authHeader = request.headers.get('authorization');
@@ -123,6 +168,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Get existing posts to avoid duplicates
     const existingPosts = await sanity.fetch(
       `*[_type == "blogPost"]{"slug": slug.current, "title": title.nl}`
     );
@@ -130,16 +176,23 @@ export async function POST(request: Request) {
       .map((p: { slug: string; title: string }) => `- ${p.slug} (${p.title})`)
       .join('\n');
 
+    // Fetch Dutch news
+    const newsHeadlines = await fetchDutchNews();
+
+    // Date info
     const now = new Date();
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const today = now.toISOString().split('T')[0];
     const dayOfWeek = days[now.getUTCDay()];
 
+    // Build prompt
     const prompt = SYSTEM_PROMPT
       .replace('{EXISTING_SLUGS}', existingSlugs)
+      .replace('{NEWS_HEADLINES}', newsHeadlines)
       .replace('{TODAY}', today)
       .replace('{DAY_OF_WEEK}', dayOfWeek);
 
+    // Call Claude
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -185,8 +238,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to parse AI response', raw: cleanJson.substring(0, 500) }, { status: 500 });
     }
 
-    // Fetch header image from Unsplash
-    let mainImage: { _type: string; asset: { _type: string; _ref: string }; attribution: { photographer: string; photographerUrl: string; source: string; sourceUrl: string } } | undefined;
+    // Fetch Unsplash image
+    let mainImage: {
+      _type: string;
+      asset: { _type: string; _ref: string };
+      attribution: { photographer: string; photographerUrl: string; source: string; sourceUrl: string };
+    } | undefined;
+
     const imageQuery = blogData.image_query || blogData.title_en || 'personal finance';
     const unsplashImage = await fetchUnsplashImage(imageQuery);
 
@@ -206,7 +264,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // Build Portable Text body
+    // Build body
     const body = blogData.body.map((block, i) => ({
       _key: `block_${i}`,
       _type: 'block' as const,
@@ -222,7 +280,7 @@ export async function POST(request: Request) {
 
     const categoryRef = CATEGORIES[blogData.category] || CATEGORIES['educatie'];
 
-    // Create document in Sanity — include mainImage in the initial object
+    // Create in Sanity
     const doc = await sanity.create({
       _type: 'blogPost',
       title: { nl: blogData.title_nl, en: blogData.title_en },
@@ -238,26 +296,17 @@ export async function POST(request: Request) {
       ...(mainImage ? { mainImage } : {}),
     });
 
-    // Publish the document
+    // Publish
     const publishId = doc._id.replace('drafts.', '');
-    await sanity.mutate([
-      { createOrReplace: { ...doc, _id: publishId } },
-    ]);
-
-    // Delete draft
-    try {
-      if (doc._id.startsWith('drafts.')) {
-        await sanity.delete(doc._id);
-      }
-    } catch {
-      // not critical
-    }
+    await sanity.mutate([{ createOrReplace: { ...doc, _id: publishId } }]);
+    try { if (doc._id.startsWith('drafts.')) await sanity.delete(doc._id); } catch { /* ok */ }
 
     return NextResponse.json({
       success: true,
       title: blogData.title_nl,
       slug: blogData.slug,
       category: blogData.category,
+      newsUsed: newsHeadlines !== 'No news API configured.' && newsHeadlines !== 'No recent Dutch finance news found.',
       image: unsplashImage ? { photographer: unsplashImage.photographer, source: unsplashImage.unsplashUrl } : null,
       url: `https://www.paywatch.app/blog/${blogData.slug}`,
     });
