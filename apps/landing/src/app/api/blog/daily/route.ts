@@ -254,7 +254,7 @@ export async function POST(request: Request) {
     const categoryRef = CATEGORIES[categoryKey] || CATEGORIES['educatie'];
 
     // Build document
-    const docData: Record<string, unknown> = {
+    const docData = {
       _type: 'blogPost',
       title: { nl: blogData.title_nl, en: blogData.title_en },
       slug: { _type: 'slug', current: blogData.slug },
