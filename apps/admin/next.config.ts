@@ -2,9 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@paywatch/ui", "@paywatch/database", "@paywatch/config"],
-  // FIX: Remove X-Powered-By header
   poweredByHeader: false,
-  // FIX: Add all security headers (were completely missing)
   async headers() {
     return [
       {
@@ -18,10 +16,10 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https://ectcwerjdpiurubdpxcp.supabase.co",
-              "connect-src 'self' https://ectcwerjdpiurubdpxcp.supabase.co",
+              "img-src 'self' data: blob: https://ectcwerjdpiurubdpxcp.supabase.co https://api.dicebear.com",
+              "connect-src 'self' https://ectcwerjdpiurubdpxcp.supabase.co https://vercel.live",
               "font-src 'self'",
               "frame-src 'none'",
               "object-src 'none'",
