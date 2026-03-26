@@ -7,7 +7,7 @@ import { siteConfig } from "@/lib/config";
 /* ── Tab 1: Existing Privacy Policy ── */
 const privacyContent = {
   nl: {
-    lastUpdated: "Laatst bijgewerkt: 15 maart 2026",
+    lastUpdated: "Laatst bijgewerkt: 26 maart 2026",
     sections: [
       {
         title: "1. Wie zijn wij?",
@@ -15,7 +15,7 @@ const privacyContent = {
       },
       {
         title: "2. Welke gegevens verzamelen wij?",
-        body: "Wij verzamelen de volgende categorieën persoonsgegevens: accountgegevens (naam, e-mailadres), e-mailinhoud (tijdelijk, alleen voor het herkennen van rekeningen via Gmail OAuth), rekening- en betaalgegevens die uit e-mails worden geëxtraheerd, gebruiksgegevens (inlogmomenten, gebruikte functies), en taalvoorkeur en thema-instelling (opgeslagen in localStorage).",
+        body: `Wij verzamelen de volgende categorieën persoonsgegevens: accountgegevens (naam, e-mailadres), e-mailmetadata (afzender, onderwerp, datum — tijdelijk verwerkt via de Gmail OAuth-scope gmail.readonly en/of de Microsoft Graph-scope Mail.Read, uitsluitend voor het herkennen van rekeningen), rekening- en betaalgegevens die uit e-mails worden geëxtraheerd (bedrijfsnaam, bedrag, vervaldatum, IBAN, referentie), gebruiksgegevens (inlogmomenten, gebruikte functies), en taalvoorkeur en thema-instelling (opgeslagen in localStorage). Volledige e-mailteksten en bijlagen worden niet opgeslagen.`,
       },
       {
         title: "3. Waarvoor gebruiken wij je gegevens?",
@@ -52,7 +52,7 @@ const privacyContent = {
     ],
   },
   en: {
-    lastUpdated: "Last updated: March 15, 2026",
+    lastUpdated: "Last updated: March 26, 2026",
     sections: [
       {
         title: "1. Who are we?",
@@ -60,7 +60,7 @@ const privacyContent = {
       },
       {
         title: "2. What data do we collect?",
-        body: "We collect the following categories of personal data: account information (name, email address), email content (temporary, only for recognizing bills via Gmail OAuth), bill and payment data extracted from emails, usage data (login times, features used), and language preference and theme setting (stored in localStorage).",
+        body: "We collect the following categories of personal data: account information (name, email address), email metadata (sender, subject, date — temporarily processed via the Gmail OAuth scope gmail.readonly and/or the Microsoft Graph scope Mail.Read, solely for recognizing bills), bill and payment data extracted from emails (vendor name, amount, due date, IBAN, reference), usage data (login times, features used), and language preference and theme setting (stored in localStorage). Full email texts and attachments are not stored.",
       },
       {
         title: "3. What do we use your data for?",
@@ -112,7 +112,7 @@ type DataSection = {
 
 const dataProcessingContent: Record<string, { lastUpdated: string; badge: string; sections: DataSection[]; flowTitle: string; flow: [string, "blue" | "red", string][] }> = {
   nl: {
-    lastUpdated: "Laatst bijgewerkt: 25 maart 2026",
+    lastUpdated: "Laatst bijgewerkt: 26 maart 2026",
     badge: "Het gebruik van informatie ontvangen via Google API's door PayWatch voldoet aan het Google API Services User Data Policy, inclusief de Limited Use-vereisten.",
     flowTitle: "Samenvatting gegevensstroom Gmail",
     flow: [
@@ -125,19 +125,21 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
     ],
     sections: [
       {
-        title: "1. Gmail-gegevens (bij verbinding)",
+        title: "1. Gmail- en Outlook-gegevens (bij verbinding)",
         subsections: [
           {
             title: "Wat wij opvragen en verwerken",
             items: [
               "Wij vragen toegang tot je Gmail via de scope gmail.readonly (alleen-lezen)",
+              "Voor Outlook/Hotmail gebruiken wij de Microsoft Graph scope Mail.Read (alleen-lezen)",
+              "Dezelfde principes gelden voor zowel Gmail- als Outlook-koppelingen",
               "Onze AI scant e-mailonderwerpen en afzenders om rekeningen te herkennen",
               "Van herkende rekeningen extraheren wij uitsluitend: leveranciersnaam, bedrag, vervaldatum, IBAN en referentienummer",
               "Wij slaan NOOIT volledige e-mailteksten op",
               "Wij slaan NOOIT bijlagen op (alleen geëxtraheerde velden)",
               "Wij slaan NOOIT persoonlijke e-mails op die geen rekeningen zijn",
               "E-mails die niet als rekening worden herkend, worden direct genegeerd en niet opgeslagen",
-              "Gmail Message ID's worden opgeslagen om dubbele verwerking te voorkomen",
+              "Gmail Message ID's en Outlook Message ID's worden opgeslagen om dubbele verwerking te voorkomen",
             ],
           },
         ],
@@ -186,6 +188,7 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
             title: "Beveiligingsmaatregelen",
             items: [
               "Alle communicatie verloopt via HTTPS (TLS-encryptie)",
+              "OAuth-tokens worden versleuteld opgeslagen met AES-256-GCM met unieke IV per token",
               "Rate limiting op alle API-eindpunten",
               "Content Security Policy (CSP) headers",
               "Minimale data-overdracht naar AI-diensten",
@@ -203,6 +206,7 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
               "Supabase (database en authenticatie) — EU-gehost, GDPR-compliant",
               "Google Gemini API (AI-classificatie en extractie) — alleen e-mailfragmenten worden verstuurd",
               "Anthropic Claude API (AI-extractie en inzichten) — alleen minimale e-mailtekst wordt verstuurd",
+              "Microsoft Graph API (Outlook e-mail scanning) — alleen-lezen toegang via Mail.Read scope",
               "Vercel (hosting) — verwerkt geen gebruikersgegevens direct",
               "Resend (e-mail) — alleen voor transactionele e-mails (wachtwoord reset, verificatie)",
             ],
@@ -233,8 +237,9 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
             title: "Verwijderingsopties",
             items: [
               "Gmail ontkoppelen: verwijdert alle Gmail-tokens en stopt het scannen",
+              "Outlook ontkoppelen: verwijdert alle Outlook-tokens en stopt het scannen",
               "Individuele rekeningen verwijderen: verwijdert de rekening en bijbehorend betalingsbewijs",
-              "Account verwijderen: verwijdert alle gegevens permanent — rekeningen, instellingen, buddy-relaties, community-posts, en Gmail-koppelingen",
+              "Account verwijderen: verwijdert alle gegevens permanent — rekeningen, instellingen, buddy-relaties, community-posts, Gmail- en Outlook-koppelingen",
               "Verwijdering is permanent en kan niet ongedaan worden gemaakt",
               "Verwijdering wordt binnen 30 dagen voltooid in alle systemen",
             ],
@@ -244,7 +249,7 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
     ],
   },
   en: {
-    lastUpdated: "Last updated: March 25, 2026",
+    lastUpdated: "Last updated: March 26, 2026",
     badge: "PayWatch's use of information received from Google APIs adheres to the Google API Services User Data Policy, including the Limited Use requirements.",
     flowTitle: "Gmail data flow summary",
     flow: [
@@ -257,19 +262,21 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
     ],
     sections: [
       {
-        title: "1. Gmail data (when connected)",
+        title: "1. Gmail and Outlook data (when connected)",
         subsections: [
           {
             title: "What we request and process",
             items: [
               "We request access to your Gmail via the scope gmail.readonly (read-only)",
+              "For Outlook/Hotmail we use the Microsoft Graph scope Mail.Read (read-only)",
+              "The same principles apply to both Gmail and Outlook connections",
               "Our AI scans email subjects and senders to identify bills",
               "From recognized bills, we extract only: vendor name, amount, due date, IBAN and reference number",
               "We NEVER store full email texts",
               "We NEVER store email attachments (only extracted fields)",
               "We NEVER store personal emails that are not bills",
               "Emails not recognized as bills are immediately discarded and not stored",
-              "Gmail Message IDs are stored to prevent duplicate processing",
+              "Gmail Message IDs and Outlook Message IDs are stored to prevent duplicate processing",
             ],
           },
         ],
@@ -318,6 +325,7 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
             title: "Security measures",
             items: [
               "All communication is over HTTPS (TLS encryption)",
+              "OAuth tokens are encrypted at rest with AES-256-GCM using unique IVs per token",
               "Rate limiting on all API endpoints",
               "Content Security Policy (CSP) headers",
               "Minimal data transfer to AI services",
@@ -335,6 +343,7 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
               "Supabase (database and authentication) — EU-hosted, GDPR-compliant",
               "Google Gemini API (AI classification and extraction) — only email fragments are sent",
               "Anthropic Claude API (AI extraction and insights) — only minimal email text is sent",
+              "Microsoft Graph API (Outlook email scanning) — read-only access via Mail.Read scope",
               "Vercel (hosting) — does not process user data directly",
               "Resend (email) — only for transactional emails (password reset, verification)",
             ],
@@ -365,8 +374,9 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
             title: "Deletion options",
             items: [
               "Disconnect Gmail: deletes all Gmail tokens and stops scanning",
+              "Disconnect Outlook: deletes all Outlook tokens and stops scanning",
               "Delete individual bills: removes the bill and associated payment proof",
-              "Delete account: permanently removes all data — bills, settings, buddy relationships, community posts, and Gmail connections",
+              "Delete account: permanently removes all data — bills, settings, buddy relationships, community posts, Gmail and Outlook connections",
               "Deletion is permanent and cannot be undone",
               "Deletion is completed within 30 days across all systems",
             ],
