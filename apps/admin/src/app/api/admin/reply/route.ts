@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+import { verifyAdmin } from "@/lib/admin-auth";
 
 export async function POST(request: NextRequest) {
+  const admin = await verifyAdmin();
+  if (!admin.isAdmin) return admin.response;
+
   try {
     const { to, name, subject, message } = await request.json();
     if (!to || !subject || !message) {

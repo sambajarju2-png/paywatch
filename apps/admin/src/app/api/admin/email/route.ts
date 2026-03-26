@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { verifyAdmin } from "@/lib/admin-auth";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY!;
 
@@ -15,6 +11,14 @@ const AUDIENCES = {
 };
 
 export async function GET() {
+  const admin = await verifyAdmin();
+  if (!admin.isAdmin) return admin.response;
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
   try {
     // 1. Newsletter subscribers from Supabase
     const { data: subscribers, error: subErr } = await supabase

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifyAdmin } from "@/lib/admin-auth";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY!;
 
@@ -16,6 +17,9 @@ const AUDIENCE_LABELS: Record<string, string> = {
 
 // GET: Fetch broadcast history from Resend
 export async function GET() {
+  const admin = await verifyAdmin();
+  if (!admin.isAdmin) return admin.response;
+
   try {
     const res = await fetch("https://api.resend.com/broadcasts", {
       headers: { Authorization: `Bearer ${RESEND_API_KEY}` },
@@ -52,6 +56,9 @@ export async function GET() {
 
 // POST: Create and optionally send a broadcast
 export async function POST(req: NextRequest) {
+  const admin = await verifyAdmin();
+  if (!admin.isAdmin) return admin.response;
+
   try {
     const body = await req.json();
     const { audience, from, subject, html, sendNow, scheduledAt } = body;

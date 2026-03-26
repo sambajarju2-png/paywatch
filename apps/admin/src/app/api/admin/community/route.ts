@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { verifyAdmin } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,9 @@ function getAdmin() {
  * GET /api/admin/community — list community profiles with linked user info + post stats
  */
 export async function GET() {
+  const admin = await verifyAdmin();
+  if (!admin.isAdmin) return admin.response;
+
   try {
     const supabase = getAdmin();
 
@@ -167,9 +171,11 @@ export async function GET() {
 
 /**
  * POST /api/admin/community — moderation actions
- * Actions: ban, unban, timeout, flag_post, unflag_post, flag_comment, unflag_comment, delete_post, delete_comment
  */
 export async function POST(req: NextRequest) {
+  const admin = await verifyAdmin();
+  if (!admin.isAdmin) return admin.response;
+
   try {
     const body = await req.json();
     const { action, user_id, post_id, comment_id, reason, duration_hours } = body;
@@ -218,7 +224,6 @@ export async function POST(req: NextRequest) {
 
       case "delete_post": {
         if (!post_id) return NextResponse.json({ error: "post_id required" }, { status: 400 });
-        // Delete comments first (FK), then reactions, then post
         await supabase.from("community_comments").delete().eq("post_id", post_id);
         await supabase.from("community_reactions").delete().eq("post_id", post_id);
         await supabase.from("community_posts").delete().eq("id", post_id);
@@ -251,7 +256,6 @@ export async function POST(req: NextRequest) {
       }
 
       case "action_report": {
-        // Flag the content + mark report as actioned
         const reportId = body.report_id;
         if (!reportId) return NextResponse.json({ error: "report_id required" }, { status: 400 });
         const { data: report } = await supabase.from("community_reports").select("post_id, comment_id").eq("id", reportId).single();
@@ -266,7 +270,6 @@ export async function POST(req: NextRequest) {
       }
 
       case "delete_reported": {
-        // Delete the content + mark report as actioned
         const reportId = body.report_id;
         if (!reportId) return NextResponse.json({ error: "report_id required" }, { status: 400 });
         const { data: report } = await supabase.from("community_reports").select("post_id, comment_id").eq("id", reportId).single();
@@ -278,7 +281,6 @@ export async function POST(req: NextRequest) {
         if (report?.comment_id) {
           await supabase.from("community_comments").delete().eq("id", report.comment_id);
         }
-        // Mark all reports for this content as actioned
         if (report?.post_id) await supabase.from("community_reports").update({ status: "actioned" }).eq("post_id", report.post_id);
         if (report?.comment_id) await supabase.from("community_reports").update({ status: "actioned" }).eq("comment_id", report.comment_id);
         return NextResponse.json({ ok: true, message: "Content verwijderd en meldingen afgesloten" });

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { verifyAdmin } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,9 @@ function getAdmin() {
 }
 
 export async function GET() {
+  const admin = await verifyAdmin();
+  if (!admin.isAdmin) return admin.response;
+
   try {
     const supabase = getAdmin();
     const { data } = await supabase
@@ -26,6 +30,9 @@ export async function GET() {
 }
 
 export async function PATCH(request: NextRequest) {
+  const admin = await verifyAdmin();
+  if (!admin.isAdmin) return admin.response;
+
   try {
     const { id, status } = await request.json();
     if (!id || !status) return NextResponse.json({ error: "Missing id or status" }, { status: 400 });
