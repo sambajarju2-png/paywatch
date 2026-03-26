@@ -13,7 +13,7 @@ const sanity = createClient({
   useCdn: false,
 });
 
-const CATEGORIES = {
+const CATEGORIES: Record<string, string> = {
   'schulden-incasso': '6cc622ef-5fdb-4cac-839c-db63e8ca3dc5',
   'besparen-budget': 'acd00829-63ec-47ed-869a-50157e82158b',
   'overheid-belasting': '8bf04c97-aa20-4d2f-aa3d-ede4d3a4d584',
@@ -24,66 +24,41 @@ const CATEGORIES = {
   'educatie': '74356885-8199-4528-a837-52e5cd5d7427',
 };
 
-// Search Unsplash for a relevant image
-async function fetchUnsplashImage(query: string): Promise<{
-  url: string;
-  photographer: string;
-  photographerUrl: string;
-  unsplashUrl: string;
-} | null> {
+async function fetchUnsplashImage(query: string) {
   try {
-    // Clean query: use simple English terms for better Unsplash results
     const res = await fetch(
       `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&orientation=landscape&content_filter=high`,
-      {
-        headers: { Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}` },
-      }
+      { headers: { Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}` } }
     );
-
-    if (!res.ok) {
-      console.error('Unsplash API error:', res.status);
-      return null;
-    }
-
+    if (!res.ok) return null;
     const data = await res.json();
     const photo = data.results?.[0];
     if (!photo) return null;
-
-    // Trigger Unsplash download endpoint (required by API guidelines)
     fetch(photo.links.download_location, {
       headers: { Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}` },
     }).catch(() => {});
-
     return {
-      url: photo.urls.regular, // 1080px wide
-      photographer: photo.user.name,
-      photographerUrl: photo.user.links.html,
-      unsplashUrl: photo.links.html,
+      url: photo.urls.regular as string,
+      photographer: photo.user.name as string,
+      photographerUrl: photo.user.links.html as string,
+      unsplashUrl: photo.links.html as string,
     };
-  } catch (error) {
-    console.error('Unsplash fetch error:', error);
+  } catch {
     return null;
   }
 }
 
-// Upload image to Sanity from URL
-async function uploadImageToSanity(imageUrl: string, filename: string): Promise<string | null> {
+async function uploadImageToSanity(imageUrl: string, filename: string) {
   try {
-    // Fetch the image
     const imageRes = await fetch(imageUrl);
     if (!imageRes.ok) return null;
-
     const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
-
-    // Upload to Sanity
     const asset = await sanity.assets.upload('image', imageBuffer, {
       filename: `${filename}.jpg`,
       contentType: 'image/jpeg',
     });
-
     return asset._id;
-  } catch (error) {
-    console.error('Sanity image upload error:', error);
+  } catch {
     return null;
   }
 }
@@ -104,12 +79,10 @@ The JSON must have this exact structure:
   "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
   "readTime": "X min",
   "category": "one of: schulden-incasso, besparen-budget, overheid-belasting, juridisch, hulp-organisaties, nieuws-trends, persoonlijk-verhalen",
-  "image_query": "2-3 English words for Unsplash image search (e.g. 'financial stress', 'dutch mailbox', 'budget planning', 'court justice')",
+  "image_query": "2-3 English words for Unsplash image search",
   "body": [
     {"bold": true, "text": "Bold heading text"},
-    {"bold": false, "text": "Paragraph text here..."},
-    {"bold": true, "text": "Next heading"},
-    {"bold": false, "text": "Next paragraph..."}
+    {"bold": false, "text": "Paragraph text here..."}
   ]
 }
 
@@ -125,7 +98,6 @@ WRITING RULES:
 - End with a concrete action step
 - No bullet points — use flowing paragraphs
 - Don't sound like AI
-- image_query should be simple English terms that would return a good stock photo related to the topic (finance, bills, stress, saving, legal, etc.)
 
 TOPIC ROTATION (based on day of week):
 - Monday: Schulden & Incasso
@@ -142,17 +114,15 @@ EXISTING POSTS (avoid duplicates):
 TODAY'S DATE: {TODAY}
 DAY OF WEEK: {DAY_OF_WEEK}
 
-Write a blog post following the rotation schedule. Pick a specific, searchable topic that Dutch people actually Google. Be creative — don't repeat topics from existing posts.`;
+Write a blog post following the rotation schedule. Pick a specific, searchable topic that Dutch people actually Google.`;
 
 export async function POST(request: Request) {
   try {
-    // Verify cron secret
     const authHeader = request.headers.get('authorization');
     if (authHeader !== `Bearer ${CRON_SECRET}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get existing posts to avoid duplicates
     const existingPosts = await sanity.fetch(
       `*[_type == "blogPost"]{"slug": slug.current, "title": title.nl}`
     );
@@ -160,19 +130,16 @@ export async function POST(request: Request) {
       .map((p: { slug: string; title: string }) => `- ${p.slug} (${p.title})`)
       .join('\n');
 
-    // Get today's date info
     const now = new Date();
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const today = now.toISOString().split('T')[0];
     const dayOfWeek = days[now.getUTCDay()];
 
-    // Build the prompt
     const prompt = SYSTEM_PROMPT
       .replace('{EXISTING_SLUGS}', existingSlugs)
       .replace('{TODAY}', today)
       .replace('{DAY_OF_WEEK}', dayOfWeek);
 
-    // Call Anthropic API
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -183,37 +150,43 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 4096,
-        messages: [
-          {
-            role: 'user',
-            content: `Write today's blog post. Respond with ONLY the JSON object, nothing else.`,
-          },
-        ],
+        messages: [{ role: 'user', content: 'Write today\'s blog post. Respond with ONLY the JSON object, nothing else.' }],
         system: prompt,
       }),
     });
 
     if (!anthropicRes.ok) {
       const err = await anthropicRes.text();
-      console.error('Anthropic API error:', err);
       return NextResponse.json({ error: 'Anthropic API failed', details: err }, { status: 500 });
     }
 
     const anthropicData = await anthropicRes.json();
     const rawText = anthropicData.content?.[0]?.text || '';
-
-    // Parse JSON from response
     const cleanJson = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    let blogData;
+
+    let blogData: {
+      title_nl: string;
+      title_en: string;
+      slug: string;
+      excerpt_nl: string;
+      excerpt_en: string;
+      meta_nl: string;
+      meta_en: string;
+      keywords: string[];
+      readTime: string;
+      category: string;
+      image_query?: string;
+      body: { bold: boolean; text: string }[];
+    };
+
     try {
       blogData = JSON.parse(cleanJson);
     } catch {
-      console.error('Failed to parse blog JSON:', cleanJson.substring(0, 500));
       return NextResponse.json({ error: 'Failed to parse AI response', raw: cleanJson.substring(0, 500) }, { status: 500 });
     }
 
     // Fetch header image from Unsplash
-    let mainImage = undefined;
+    let mainImage: { _type: string; asset: { _type: string; _ref: string }; attribution: { photographer: string; photographerUrl: string; source: string; sourceUrl: string } } | undefined;
     const imageQuery = blogData.image_query || blogData.title_en || 'personal finance';
     const unsplashImage = await fetchUnsplashImage(imageQuery);
 
@@ -234,27 +207,23 @@ export async function POST(request: Request) {
     }
 
     // Build Portable Text body
-    const body = blogData.body.map((block: { bold: boolean; text: string }, i: number) => ({
+    const body = blogData.body.map((block, i) => ({
       _key: `block_${i}`,
-      _type: 'block',
-      style: 'normal',
-      markDefs: [],
-      children: [
-        {
-          _key: `span_${i}`,
-          _type: 'span',
-          marks: block.bold ? ['strong'] : [],
-          text: block.text,
-        },
-      ],
+      _type: 'block' as const,
+      style: 'normal' as const,
+      markDefs: [] as never[],
+      children: [{
+        _key: `span_${i}`,
+        _type: 'span' as const,
+        marks: block.bold ? ['strong'] : ([] as string[]),
+        text: block.text,
+      }],
     }));
 
-    // Get category ref
-    const categoryKey = blogData.category as keyof typeof CATEGORIES;
-    const categoryRef = CATEGORIES[categoryKey] || CATEGORIES['educatie'];
+    const categoryRef = CATEGORIES[blogData.category] || CATEGORIES['educatie'];
 
-    // Build document
-    const docData = {
+    // Create document in Sanity — include mainImage in the initial object
+    const doc = await sanity.create({
       _type: 'blogPost',
       title: { nl: blogData.title_nl, en: blogData.title_en },
       slug: { _type: 'slug', current: blogData.slug },
@@ -266,19 +235,13 @@ export async function POST(request: Request) {
       readTime: blogData.readTime,
       category: { _ref: categoryRef, _type: 'reference' },
       body,
-    };
-
-    // Add image if we got one
-    if (mainImage) {
-      docData.mainImage = mainImage;
-    }
-
-    // Create document in Sanity
-    const doc = await sanity.create(docData);
+      ...(mainImage ? { mainImage } : {}),
+    });
 
     // Publish the document
+    const publishId = doc._id.replace('drafts.', '');
     await sanity.mutate([
-      { createOrReplace: { ...doc, _id: doc._id.replace('drafts.', '') } },
+      { createOrReplace: { ...doc, _id: publishId } },
     ]);
 
     // Delete draft
@@ -287,7 +250,7 @@ export async function POST(request: Request) {
         await sanity.delete(doc._id);
       }
     } catch {
-      // Draft cleanup failed, not critical
+      // not critical
     }
 
     return NextResponse.json({
@@ -295,29 +258,21 @@ export async function POST(request: Request) {
       title: blogData.title_nl,
       slug: blogData.slug,
       category: blogData.category,
-      image: unsplashImage ? {
-        photographer: unsplashImage.photographer,
-        source: unsplashImage.unsplashUrl,
-      } : null,
+      image: unsplashImage ? { photographer: unsplashImage.photographer, source: unsplashImage.unsplashUrl } : null,
       url: `https://www.paywatch.app/blog/${blogData.slug}`,
     });
   } catch (error) {
     console.error('Daily blog error:', error);
-    return NextResponse.json(
-      { error: 'Internal error', details: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal error', details: String(error) }, { status: 500 });
   }
 }
 
-// Also support GET for easy testing
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const secret = url.searchParams.get('secret');
   if (secret !== CRON_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
   const fakeRequest = new Request(request.url, {
     method: 'POST',
     headers: { authorization: `Bearer ${CRON_SECRET}` },
