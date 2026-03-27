@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@sanity/client';
 
+export const dynamic = 'force-dynamic';
+export const maxDuration = 300;
+
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY!;
 const CRON_SECRET = process.env.CRON_SECRET!;
 const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY!;
