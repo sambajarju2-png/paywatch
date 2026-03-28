@@ -28,7 +28,7 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https://cdn.sanity.io",
+              "img-src 'self' data: blob: https://cdn.sanity.io https://cdn.jsdelivr.net https://cdn.simpleicons.org https://cdn.jsdelivr.net https://cdn.simpleicons.org",
               "connect-src 'self' https://ectcwerjdpiurubdpxcp.supabase.co https://cdn.sanity.io",
               "font-src 'self'",
               "frame-src 'none'",
