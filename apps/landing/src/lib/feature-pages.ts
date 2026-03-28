@@ -8,7 +8,7 @@ export interface FeatureSection {
 
 export interface FeaturePageData {
   slug: string;
-  icon: string;
+  icon: string; /* Lucide icon name */
   overview: {
     title: { nl: string; en: string };
     desc: { nl: string; en: string };
@@ -25,7 +25,7 @@ export const featurePages: FeaturePageData[] = [
   /* ── 1. Email Scanner ── */
   {
     slug: "email-scanner",
-    icon: "📬",
+    icon: "Mail",
     overview: {
       title: { nl: "E-mail scanner", en: "Email scanner" },
       desc: {
@@ -75,7 +75,7 @@ export const featurePages: FeaturePageData[] = [
   /* ── 2. Camera & QR Scanner ── */
   {
     slug: "camera-scanner",
-    icon: "📷",
+    icon: "Camera",
     overview: {
       title: { nl: "Camera & QR scanner", en: "Camera & QR scanner" },
       desc: {
@@ -125,7 +125,7 @@ export const featurePages: FeaturePageData[] = [
   /* ── 3. Betaalfases & Meldingen ── */
   {
     slug: "betaalfases",
-    icon: "📊",
+    icon: "Layers",
     overview: {
       title: { nl: "Betaalfases & meldingen", en: "Payment stages & alerts" },
       desc: {
@@ -175,7 +175,7 @@ export const featurePages: FeaturePageData[] = [
   /* ── 4. Betalingen & Betalingsregeling ── */
   {
     slug: "betalingen",
-    icon: "💳",
+    icon: "CreditCard",
     overview: {
       title: { nl: "Betalingen & betalingsregeling", en: "Payments & payment plans" },
       desc: {
@@ -225,7 +225,7 @@ export const featurePages: FeaturePageData[] = [
   /* ── 5. Community ── */
   {
     slug: "community",
-    icon: "👥",
+    icon: "Users",
     overview: {
       title: { nl: "Community", en: "Community" },
       desc: {
@@ -275,7 +275,7 @@ export const featurePages: FeaturePageData[] = [
   /* ── 6. Buddy Systeem ── */
   {
     slug: "buddy",
-    icon: "🤝",
+    icon: "HeartHandshake",
     overview: {
       title: { nl: "Buddy systeem", en: "Buddy system" },
       desc: {
@@ -325,7 +325,7 @@ export const featurePages: FeaturePageData[] = [
   /* ── 7. Conceptbrieven ── */
   {
     slug: "conceptbrieven",
-    icon: "✉️",
+    icon: "PenLine",
     overview: {
       title: { nl: "Conceptbrieven", en: "Draft letters" },
       desc: {
@@ -367,7 +367,7 @@ export const featurePages: FeaturePageData[] = [
   /* ── 8. Cashflow ── */
   {
     slug: "cashflow",
-    icon: "📈",
+    icon: "TrendingUp",
     overview: {
       title: { nl: "Cashflow overzicht", en: "Cashflow overview" },
       desc: {
@@ -409,7 +409,7 @@ export const featurePages: FeaturePageData[] = [
   /* ── 9. Hulpverleners ── */
   {
     slug: "hulpverleners",
-    icon: "🏛️",
+    icon: "Building2",
     overview: {
       title: { nl: "Hulpverleners", en: "Support organizations" },
       desc: {
@@ -451,7 +451,7 @@ export const featurePages: FeaturePageData[] = [
   /* ── 10. Agenda ── */
   {
     slug: "agenda",
-    icon: "📅",
+    icon: "Calendar",
     overview: {
       title: { nl: "Agenda", en: "Agenda" },
       desc: {
@@ -493,7 +493,7 @@ export const featurePages: FeaturePageData[] = [
   /* ── 11. Schuldvrij Countdown ── */
   {
     slug: "schuldvrij-countdown",
-    icon: "🎯",
+    icon: "Target",
     overview: {
       title: { nl: "Schuldvrij countdown", en: "Debt-free countdown" },
       desc: {
@@ -535,7 +535,7 @@ export const featurePages: FeaturePageData[] = [
   /* ── 12. Persoonlijke Inzichten ── */
   {
     slug: "inzichten",
-    icon: "💡",
+    icon: "Lightbulb",
     overview: {
       title: { nl: "Persoonlijke inzichten", en: "Personal insights" },
       desc: {
@@ -577,7 +577,7 @@ export const featurePages: FeaturePageData[] = [
   /* ── 13. Maandbudget ── */
   {
     slug: "maandbudget",
-    icon: "🧮",
+    icon: "Wallet",
     overview: {
       title: { nl: "Maandbudget", en: "Monthly budget" },
       desc: {
