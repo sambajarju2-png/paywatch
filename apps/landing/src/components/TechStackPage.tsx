@@ -8,18 +8,18 @@ import {
   ChevronDown, ExternalLink,
 } from "lucide-react";
 
-/* ─── Brand logo URLs (CDN — no install needed) ─── */
+/* ─── Brand logo URLs (pinned versions for stability) ─── */
 const LOGO = {
-  nextjs:     "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg",
-  react:      "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg",
-  typescript: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/typescript/typescript-original.svg",
-  tailwind:   "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/tailwindcss/tailwindcss-original.svg",
-  supabase:   "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/supabase/supabase-original.svg",
-  postgresql: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/postgresql/postgresql-original.svg",
-  vercel:     "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vercel/vercel-original.svg",
-  github:     "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/github/github-original.svg",
-  vscode:     "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vscode/vscode-original.svg",
-  google:     "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/google/google-original.svg",
+  nextjs:     "https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/nextjs/nextjs-original.svg",
+  react:      "https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/react/react-original.svg",
+  typescript: "https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/typescript/typescript-original.svg",
+  tailwind:   "https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/tailwindcss/tailwindcss-original.svg",
+  supabase:   "https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/supabase/supabase-original.svg",
+  postgresql: "https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/postgresql/postgresql-original.svg",
+  vercel:     "https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/vercel/vercel-original.svg",
+  github:     "https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/github/github-original.svg",
+  vscode:     "https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/vscode/vscode-original.svg",
+  google:     "https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/google/google-original.svg",
   sanity:     "https://cdn.simpleicons.org/sanity/F03E2F",
   pnpm:       "https://cdn.simpleicons.org/pnpm/F69220",
   turborepo:  "https://cdn.simpleicons.org/turborepo/EF4444",
@@ -27,14 +27,32 @@ const LOGO = {
   recharts:   "https://cdn.simpleicons.org/recharts/22B5BF",
 };
 
+/* Icons that are dark/black and need inversion in dark mode */
+const DARK_ICONS = new Set(["nextjs", "vercel", "github", "anthropic"]);
+
+function BrandIcon({ src, alt, size = 22, className = "" }: { src: string; alt: string; size?: number; className?: string }) {
+  const needsInvert = Object.entries(LOGO).some(
+    ([key, url]) => url === src && DARK_ICONS.has(key)
+  );
+  return (
+    <img
+      src={src}
+      width={size}
+      height={size}
+      alt={alt}
+      className={`rounded ${needsInvert ? "dark:invert" : ""} ${className}`}
+    />
+  );
+}
+
 /* ─── Types ─── */
 type IconType = "brand" | "lucide";
 
 interface StackItem {
   name: string;
   iconType: IconType;
-  brandIcon?: string;          /* CDN URL for brand logos */
-  lucideIcon?: React.ReactNode; /* Lucide component for concepts */
+  brandIcon?: string;
+  lucideIcon?: React.ReactNode;
   desc: { nl: string; en: string };
   why: { nl: string; en: string };
   snippet?: string;
@@ -145,7 +163,7 @@ const STACK: StackCategory[] = [
         name: "Turborepo", iconType: "brand", brandIcon: LOGO.turborepo,
         desc: { nl: "Monorepo: 3 apps + shared packages", en: "Monorepo: 3 apps + shared packages" },
         why: { nl: "Eén repo, drie apps. Cached builds: alleen gewijzigde code herbouwen. Gedeelde TypeScript types.", en: "One repo, three apps. Cached builds: only rebuild changed code. Shared TypeScript types." },
-        snippet: `paywatch/\n├── apps/\n│   ├── landing/   → paywatch.app\n│   ├── admin/     → admin.paywatch.app\n│   └── web/       → app.paywatch.app\n└── packages/\n    ├── ui/        → shared components\n    └── config/    → shared configs`,
+        snippet: `paywatch/\n├── apps/\n│   ├── landing/   → paywatch.app\n│   ├── app/       → app.paywatch.app\n│   └── admin/     → intern dashboard\n└── packages/\n    ├── ui/        → shared components\n    └── config/    → shared configs`,
       },
       {
         name: "Recharts", iconType: "lucide", lucideIcon: <BarChart3 size={20} strokeWidth={1.5} />,
@@ -177,11 +195,11 @@ const STATS = [
   { v: "~89KB", l: { nl: "First load", en: "First load" }, s: "JS bundle", icon: <Rocket size={14} /> },
 ];
 
-/* ─── Apps ─── */
+/* ─── Apps (admin URL hidden) ─── */
 const APPS = [
   { name: "paywatch.app", label: { nl: "Landing & CMS", en: "Landing & CMS" }, tech: "Next.js 16 · Sanity · Tailwind", color: "var(--blue)", icon: <Globe size={16} /> },
   { name: "app.paywatch.app", label: { nl: "Gebruikers app (PWA)", en: "User app (PWA)" }, tech: "Next.js 14 · Supabase · Recharts", color: "var(--green)", icon: <Smartphone size={16} /> },
-  { name: "admin.paywatch.app", label: { nl: "Admin dashboard", en: "Admin dashboard" }, tech: "Next.js 16 · Supabase · OAuth", color: "var(--purple)", icon: <Lock size={16} /> },
+  { name: "Intern dashboard", label: { nl: "Admin dashboard", en: "Admin dashboard" }, tech: "Next.js 16 · Supabase · OAuth", color: "var(--purple)", icon: <Lock size={16} /> },
 ];
 
 /* ─── Principles ─── */
@@ -345,9 +363,9 @@ export default function TechStackPage() {
                     {/* Header */}
                     <div className="flex items-center gap-3">
                       {/* Icon */}
-                      <div className="w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center bg-[var(--bg)]">
+                      <div className="w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center bg-[var(--bg)] dark:bg-white/10">
                         {item.iconType === "brand" && item.brandIcon ? (
-                          <img src={item.brandIcon} width={22} height={22} alt={item.name} className="rounded" />
+                          <BrandIcon src={item.brandIcon} alt={item.name} size={22} />
                         ) : (
                           <span className="text-[var(--blue)]">{item.lucideIcon}</span>
                         )}
@@ -420,7 +438,7 @@ export default function TechStackPage() {
             {TOOLS.map((tool) => (
               <span key={tool.name} className="inline-flex items-center gap-2 text-xs font-medium text-[var(--navy)] bg-[var(--surface)] border border-[var(--border)] rounded-lg px-3 py-2">
                 {tool.type === "brand" ? (
-                  <img src={tool.icon} width={14} height={14} alt={tool.name} />
+                  <BrandIcon src={tool.icon!} alt={tool.name} size={14} />
                 ) : (
                   <span className="text-[var(--muted)]">{tool.lucide}</span>
                 )}
