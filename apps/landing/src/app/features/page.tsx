@@ -64,7 +64,7 @@ export default function FeaturesPage() {
 
                 {/* Image from Sanity: upload in Studio → Site Image → key "feature-detail-1", "feature-detail-2", etc */}
                 <div className="flex-1 flex justify-center">
-                  <SanityImage imageKey={`feature-detail-${i + 1}`} placeholderLabel={feature.title} className="w-full max-w-sm h-56 sm:h-64 rounded-2xl overflow-hidden" />
+                  <SanityImage imageKey={`feature-detail-${i + 1}`} placeholderLabel={feature.title} className="w-full max-w-sm aspect-[4/5] rounded-2xl overflow-hidden" />
                 </div>
               </div>
             </ScrollReveal>
