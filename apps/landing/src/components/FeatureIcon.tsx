@@ -14,6 +14,7 @@ import {
   Target,
   Lightbulb,
   Wallet,
+  MapPin,
 } from "lucide-react";
 
 const iconMap: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
@@ -30,6 +31,7 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   Target,
   Lightbulb,
   Wallet,
+  MapPin,
 };
 
 interface FeatureIconProps {
