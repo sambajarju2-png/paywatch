@@ -126,7 +126,8 @@ The JSON must have this exact structure:
   "image_query": "2-3 English words for Unsplash image search",
   "body": [
     {"bold": true, "text": "Bold heading text"},
-    {"bold": false, "text": "Paragraph text here..."}
+    {"bold": false, "text": "Paragraph text here with [Humanitas](https://www.humanitas.nl/) for help.", "links": [{"text": "Humanitas", "href": "https://www.humanitas.nl/"}]},
+    {"bold": false, "text": "Check je [betaalfases](https://www.paywatch.app/features/betaalfases) in de app.", "links": [{"text": "betaalfases", "href": "https://www.paywatch.app/features/betaalfases"}]}
   ]
 }
 
@@ -142,6 +143,21 @@ WRITING RULES:
 - End with a concrete action step
 - No bullet points — use flowing paragraphs
 - Don't sound like AI
+- Include 2-4 links per post using markdown-style [text](url) in the text
+- Also list them in the "links" array for each block that has links
+- External links: link to organizations, government sites, or news sources mentioned in the text
+- Internal links: link to relevant PayWatch feature pages when mentioning features:
+  - Escalation/incasso/deurwaarder → https://www.paywatch.app/features/betaalfases
+  - Payment plans/betalingsregeling → https://www.paywatch.app/features/betalingen
+  - Buddy system → https://www.paywatch.app/features/buddy
+  - Community → https://www.paywatch.app/features/community
+  - Draft letters/bezwaar → https://www.paywatch.app/features/conceptbrieven
+  - Support organizations → https://www.paywatch.app/features/hulpverleners
+  - Email scanning → https://www.paywatch.app/features/email-scanner
+  - Cash flow → https://www.paywatch.app/features/cashflow
+  - Monthly budget → https://www.paywatch.app/features/maandbudget
+  - FAQ/how it works → https://www.paywatch.app/support
+  - PayWatch general → https://www.paywatch.app/
 
 TOPIC ROTATION (based on day of week):
 - Monday: Schulden & Incasso
@@ -162,6 +178,102 @@ TODAY'S DATE: {TODAY}
 DAY OF WEEK: {DAY_OF_WEEK}
 
 Write a blog post following the rotation schedule. Pick a specific, searchable topic that Dutch people actually Google. On Fridays, write about something from the news headlines. Be creative — don't repeat topics from existing posts.`;
+
+// ─── Body Builder (with link support) ─────────────────────────────
+function buildPortableTextBody(
+  bodyData: { bold: boolean; text: string; links?: { text: string; href: string }[] }[]
+) {
+  return bodyData.map((block, blockIdx) => {
+    const markDefs: { _key: string; _type: string; href: string }[] = [];
+    const links = block.links || [];
+
+    if (links.length === 0) {
+      // No links — simple block (strip any leftover markdown link syntax)
+      return {
+        _key: `block_${blockIdx}`,
+        _type: 'block' as const,
+        style: 'normal' as const,
+        markDefs: [] as never[],
+        children: [{
+          _key: `span_${blockIdx}_0`,
+          _type: 'span' as const,
+          marks: block.bold ? ['strong'] : ([] as string[]),
+          text: block.text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1'),
+        }],
+      };
+    }
+
+    // Has links — split text into spans with markDefs
+    const linkMap: { text: string; href: string; markKey: string }[] = [];
+
+    links.forEach((link, linkIdx) => {
+      const markKey = `link_${blockIdx}_${linkIdx}`;
+      markDefs.push({ _key: markKey, _type: 'link', href: link.href });
+      linkMap.push({ text: link.text, href: link.href, markKey });
+    });
+
+    // Remove markdown syntax from text
+    let plainText = block.text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+
+    // Split text by link texts and create spans
+    const children: { _key: string; _type: string; marks: string[]; text: string }[] = [];
+    let remaining = plainText;
+    let spanIdx = 0;
+
+    for (const lm of linkMap) {
+      const idx = remaining.indexOf(lm.text);
+      if (idx === -1) continue; // link text not found, skip
+
+      // Text before the link
+      if (idx > 0) {
+        children.push({
+          _key: `span_${blockIdx}_${spanIdx++}`,
+          _type: 'span',
+          marks: block.bold ? ['strong'] : [],
+          text: remaining.substring(0, idx),
+        });
+      }
+
+      // The link itself
+      children.push({
+        _key: `span_${blockIdx}_${spanIdx++}`,
+        _type: 'span',
+        marks: block.bold ? ['strong', lm.markKey] : [lm.markKey],
+        text: lm.text,
+      });
+
+      remaining = remaining.substring(idx + lm.text.length);
+    }
+
+    // Remaining text after last link
+    if (remaining) {
+      children.push({
+        _key: `span_${blockIdx}_${spanIdx++}`,
+        _type: 'span',
+        marks: block.bold ? ['strong'] : [],
+        text: remaining,
+      });
+    }
+
+    // Fallback if no children were created
+    if (children.length === 0) {
+      children.push({
+        _key: `span_${blockIdx}_0`,
+        _type: 'span',
+        marks: block.bold ? ['strong'] : [],
+        text: plainText,
+      });
+    }
+
+    return {
+      _key: `block_${blockIdx}`,
+      _type: 'block' as const,
+      style: 'normal' as const,
+      markDefs,
+      children,
+    };
+  });
+}
 
 // ─── Main Handler ─────────────────────────────────────────────────
 export async function POST(request: Request) {
@@ -232,7 +344,7 @@ export async function POST(request: Request) {
       readTime: string;
       category: string;
       image_query?: string;
-      body: { bold: boolean; text: string }[];
+      body: { bold: boolean; text: string; links?: { text: string; href: string }[] }[];
     };
 
     try {
@@ -267,19 +379,8 @@ export async function POST(request: Request) {
       }
     }
 
-    // Build body
-    const body = blogData.body.map((block, i) => ({
-      _key: `block_${i}`,
-      _type: 'block' as const,
-      style: 'normal' as const,
-      markDefs: [] as never[],
-      children: [{
-        _key: `span_${i}`,
-        _type: 'span' as const,
-        marks: block.bold ? ['strong'] : ([] as string[]),
-        text: block.text,
-      }],
-    }));
+    // Build body with link support
+    const body = buildPortableTextBody(blogData.body);
 
     const categoryRef = CATEGORIES[blogData.category] || CATEGORIES['educatie'];
 
@@ -304,11 +405,15 @@ export async function POST(request: Request) {
     await sanity.mutate([{ createOrReplace: { ...doc, _id: publishId } }]);
     try { if (doc._id.startsWith('drafts.')) await sanity.delete(doc._id); } catch { /* ok */ }
 
+    // Count links in generated post
+    const linkCount = blogData.body.reduce((acc, b) => acc + (b.links?.length || 0), 0);
+
     return NextResponse.json({
       success: true,
       title: blogData.title_nl,
       slug: blogData.slug,
       category: blogData.category,
+      linksAdded: linkCount,
       newsUsed: newsHeadlines !== 'No news API configured.' && newsHeadlines !== 'No recent Dutch finance news found.',
       image: unsplashImage ? { photographer: unsplashImage.photographer, source: unsplashImage.unsplashUrl } : null,
       url: `https://www.paywatch.app/blog/${blogData.slug}`,
