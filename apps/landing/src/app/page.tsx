@@ -65,6 +65,21 @@ export default function HomePage() {
               </ScrollReveal>
             ))}
           </div>
+          <ScrollReveal delay={500}>
+            <div className="flex justify-center mt-10">
+              <Link
+                href="/support"
+                className="inline-flex items-center gap-2 rounded border border-[var(--border)] bg-[var(--surface)] px-6 py-3 text-sm font-semibold text-[var(--text)] hover:border-[var(--blue)] transition-colors"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="opacity-70">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+                {lang === "nl" ? "Veelgestelde vragen bekijken" : "View frequently asked questions"}
+              </Link>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 

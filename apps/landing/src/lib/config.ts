@@ -50,7 +50,7 @@ export const footerColumns = {
     { labelNl: "Gegevensverwerking", labelEn: "Data Processing", href: "/data-processing" },
   ],
   support: [
-    { labelNl: "Hulpmiddelen", labelEn: "Resources", href: "/resources" },
+    { labelNl: "Artikelen", labelEn: "Resources", href: "/resources" },
     { labelNl: "Hulporganisaties", labelEn: "Aid Organizations", href: "/resources#aid" },
     { labelNl: "Gemeente zoeken", labelEn: "Find municipality", href: "/resources#gemeente" },
   ],
