@@ -58,7 +58,7 @@ export default function HomePage() {
                   <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[var(--blue-light)] mb-4">
                     <span className="text-lg font-extrabold text-[var(--blue)]">{i + 1}</span>
                   </div>
-                  <SanityImage imageKey={`step-${i + 1}`} placeholderLabel={step.title} className="rounded-lg bg-[var(--bg)] aspect-[4/3] w-full mb-4 overflow-hidden" />
+                  <SanityImage imageKey={`step-${i + 1}`} placeholderLabel={step.title} className="rounded-lg bg-[var(--bg)] aspect-[3/4] w-full mb-4 overflow-hidden" />
                   <h3 className="text-base font-bold text-[var(--navy)] mb-2">{step.title}</h3>
                   <p className="text-sm text-[var(--muted)] leading-relaxed">{step.desc}</p>
                 </div>
@@ -79,7 +79,7 @@ export default function HomePage() {
             {t.features.items.slice(0, 3).map((feature, i) => (
               <ScrollReveal key={i} delay={i * 100}>
                 <div className="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-5 hover:border-[var(--blue)] transition-all h-full">
-                  <SanityImage imageKey={`feature-${i + 1}`} placeholderLabel={feature.title} className="rounded-lg bg-[var(--surface)] aspect-[3/2] w-full mb-3 overflow-hidden" />
+                  <SanityImage imageKey={`feature-${i + 1}`} placeholderLabel={feature.title} className="rounded-lg bg-[var(--surface)] aspect-[4/5] w-full mb-3 overflow-hidden" />
                   <h3 className="text-sm font-bold text-[var(--navy)] mb-1">{feature.title}</h3>
                   <p className="text-sm text-[var(--muted)] leading-relaxed">{feature.desc}</p>
                 </div>
