@@ -58,8 +58,7 @@ export default function HomePage() {
                   <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[var(--blue-light)] mb-4">
                     <span className="text-lg font-extrabold text-[var(--blue)]">{i + 1}</span>
                   </div>
-                  {/* Image from Sanity: upload in Studio → Site Image → key "step-1", "step-2", "step-3" */}
-                  <SanityImage imageKey={`step-${i + 1}`} placeholderLabel={step.title} className="rounded-lg bg-[var(--bg)] h-40 mb-4" />
+                  <SanityImage imageKey={`step-${i + 1}`} placeholderLabel={step.title} className="rounded-lg bg-[var(--bg)] aspect-[4/3] w-full mb-4 overflow-hidden" />
                   <h3 className="text-base font-bold text-[var(--navy)] mb-2">{step.title}</h3>
                   <p className="text-sm text-[var(--muted)] leading-relaxed">{step.desc}</p>
                 </div>
@@ -80,8 +79,7 @@ export default function HomePage() {
             {t.features.items.slice(0, 3).map((feature, i) => (
               <ScrollReveal key={i} delay={i * 100}>
                 <div className="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-5 hover:border-[var(--blue)] transition-all h-full">
-                  {/* Image from Sanity: upload in Studio → Site Image → key "feature-1", "feature-2", "feature-3" */}
-                  <SanityImage imageKey={`feature-${i + 1}`} placeholderLabel={feature.title} className="rounded-lg bg-[var(--surface)] h-28 mb-3" />
+                  <SanityImage imageKey={`feature-${i + 1}`} placeholderLabel={feature.title} className="rounded-lg bg-[var(--surface)] aspect-[3/2] w-full mb-3 overflow-hidden" />
                   <h3 className="text-sm font-bold text-[var(--navy)] mb-1">{feature.title}</h3>
                   <p className="text-sm text-[var(--muted)] leading-relaxed">{feature.desc}</p>
                 </div>
