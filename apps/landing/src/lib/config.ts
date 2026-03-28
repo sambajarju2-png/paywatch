@@ -51,6 +51,7 @@ export const footerColumns = {
   ],
   support: [
     { labelNl: "Artikelen", labelEn: "Resources", href: "/resources" },
+    { labelNl: "Hulp & uitleg", labelEn: "Help & guides", href: "/support" },
     { labelNl: "Hulporganisaties", labelEn: "Aid Organizations", href: "/resources#aid" },
     { labelNl: "Gemeente zoeken", labelEn: "Find municipality", href: "/resources#gemeente" },
   ],
@@ -67,8 +68,6 @@ export const gemeenten = [
 ];
 
 /* ─── Team Members ─── */
-/* To add a new person: copy a block, fill in the fields, done. */
-/* To add a photo: put image in /public/team/ and set photo to "/team/filename.jpg" */
 export const founders = [
   {
     name: "Samba",
@@ -77,7 +76,7 @@ export const founders = [
       nl: "Techneut met een missie. Bouwt PayWatch van de grond af op met AI en een obsessie voor gebruiksvriendelijkheid.",
       en: "Tech builder on a mission. Building PayWatch from the ground up with AI and an obsession for user experience.",
     },
-    photo: "", // Add: "/team/samba.jpg"
+    photo: "",
     linkedin: "https://www.linkedin.com/in/sambajarju/",
     email: "samba@paywatch.nl",
   },
@@ -88,21 +87,10 @@ export const founders = [
       nl: "De stem van PayWatch. Zorgt dat onze boodschap warm, helder en menselijk is — nooit corporate.",
       en: "The voice of PayWatch. Ensures our message stays warm, clear and human — never corporate.",
     },
-    photo: "", // Add: "/team/mariama.jpg"
+    photo: "",
     linkedin: "https://www.linkedin.com/in/hadja-mariama-sesay-3a5392228/",
     email: "mariama@paywatch.com",
   },
- 
-  
-  // To add more team members, copy this template:
-  // {
-  //   name: "Name",
-  //   role: { nl: "Rol", en: "Role" },
-  //   bio: { nl: "Bio in het Nederlands.", en: "Bio in English." },
-  //   photo: "", // "/team/name.jpg"
-  //   linkedin: "https://linkedin.com/in/...",
-  //   email: "name@paywatch.nl",
-  // },
 ];
 
 /* ─── Pricing ─── */
@@ -311,147 +299,39 @@ export interface BlogPost {
 export const blogPosts: BlogPost[] = [
   {
     slug: "wat-is-escalatie",
-    title: {
-      nl: "Wat is escalatie? De 5 fases van een onbetaalde rekening",
-      en: "What is escalation? The 5 stages of an unpaid bill",
-    },
-    excerpt: {
-      nl: "Van factuur tot deurwaarder: begrijp elke fase en weet wat je kunt doen om extra kosten te voorkomen.",
-      en: "From invoice to bailiff: understand each stage and know what you can do to avoid extra costs.",
-    },
-    category: "educatie",
-    date: "2026-03-15",
-    readTime: "5 min",
-    author: "Samba",
+    title: { nl: "Wat is escalatie? De 5 fases van een onbetaalde rekening", en: "What is escalation? The 5 stages of an unpaid bill" },
+    excerpt: { nl: "Van factuur tot deurwaarder: begrijp elke fase en weet wat je kunt doen om extra kosten te voorkomen.", en: "From invoice to bailiff: understand each stage and know what you can do to avoid extra costs." },
+    category: "educatie", date: "2026-03-15", readTime: "5 min", author: "Samba",
   },
   {
     slug: "besparen-op-incassokosten",
-    title: {
-      nl: "Zo bespaar je honderden euro's aan incassokosten",
-      en: "How to save hundreds of euros in collection costs",
-    },
-    excerpt: {
-      nl: "Praktische tips om je rekeningen op tijd te betalen en onnodige kosten te vermijden.",
-      en: "Practical tips to pay your bills on time and avoid unnecessary costs.",
-    },
-    category: "tips",
-    date: "2026-03-10",
-    readTime: "4 min",
-    author: "Mariama",
+    title: { nl: "Zo bespaar je honderden euro's aan incassokosten", en: "How to save hundreds of euros in collection costs" },
+    excerpt: { nl: "Praktische tips om je rekeningen op tijd te betalen en onnodige kosten te vermijden.", en: "Practical tips to pay your bills on time and avoid unnecessary costs." },
+    category: "tips", date: "2026-03-10", readTime: "4 min", author: "Mariama",
   },
   {
     slug: "schuldhulp-nederland",
-    title: {
-      nl: "Schuldhulp in Nederland: waar kun je terecht?",
-      en: "Debt help in the Netherlands: where can you go?",
-    },
-    excerpt: {
-      nl: "Een overzicht van gratis hulporganisaties, gemeentelijke regelingen en juridisch advies.",
-      en: "An overview of free support organizations, municipal programs and legal advice.",
-    },
-    category: "hulp",
-    date: "2026-03-05",
-    readTime: "6 min",
-    author: "Samba",
+    title: { nl: "Schuldhulp in Nederland: waar kun je terecht?", en: "Debt help in the Netherlands: where can you go?" },
+    excerpt: { nl: "Een overzicht van gratis hulporganisaties, gemeentelijke regelingen en juridisch advies.", en: "An overview of free support organizations, municipal programs and legal advice." },
+    category: "hulp", date: "2026-03-05", readTime: "6 min", author: "Samba",
   },
 ];
 
 /* ─── Aid Organizations ─── */
-export interface AidOrg {
-  name: string;
-  description: { nl: string; en: string };
-  category: "legal" | "debtHelp" | "financial";
-  cities: string[];
-  phone?: string;
-  website?: string;
-}
+export interface AidOrg { name: string; description: { nl: string; en: string }; category: "legal" | "debtHelp" | "financial"; cities: string[]; phone?: string; website?: string; }
 
 export const aidOrganizations: AidOrg[] = [
-  {
-    name: "Juridisch Loket",
-    description: {
-      nl: "Gratis juridisch advies voor iedereen. Helpt bij schulden, incasso's en consumentenrecht.",
-      en: "Free legal advice for everyone. Helps with debts, collections and consumer law.",
-    },
-    category: "legal",
-    cities: ["Landelijk"],
-    phone: "0900-8020",
-    website: "https://juridischloket.nl",
-  },
-  {
-    name: "Nibud",
-    description: {
-      nl: "Nationaal Instituut voor Budgetvoorlichting. Tips, tools en begrotingsadviezen.",
-      en: "National Institute for Budget Information. Tips, tools and budget advice.",
-    },
-    category: "financial",
-    cities: ["Landelijk"],
-    website: "https://nibud.nl",
-  },
-  {
-    name: "SchuldHulpMaatje",
-    description: {
-      nl: "Vrijwilligers die je helpen met schulden. Persoonlijke begeleiding in jouw gemeente.",
-      en: "Volunteers who help you with debts. Personal guidance in your municipality.",
-    },
-    category: "debtHelp",
-    cities: ["Amsterdam", "Rotterdam", "Den Haag", "Utrecht", "Eindhoven"],
-    phone: "088-7788990",
-    website: "https://schuldhulpmaatje.nl",
-  },
-  {
-    name: "Sociaal Raadslieden",
-    description: {
-      nl: "Gratis hulp bij financiële en juridische problemen via je gemeente.",
-      en: "Free help with financial and legal problems through your municipality.",
-    },
-    category: "debtHelp",
-    cities: ["Rotterdam", "Amsterdam", "Den Haag", "Utrecht"],
-    website: "https://socialraadslieden.nl",
-  },
-  {
-    name: "NVVK",
-    description: {
-      nl: "Vereniging voor schuldhulpverlening en sociaal bankieren. Verwijst door naar lokale hulp.",
-      en: "Association for debt assistance and social banking. Refers to local help.",
-    },
-    category: "financial",
-    cities: ["Landelijk"],
-    website: "https://nvvk.nl",
-  },
+  { name: "Juridisch Loket", description: { nl: "Gratis juridisch advies voor iedereen. Helpt bij schulden, incasso's en consumentenrecht.", en: "Free legal advice for everyone. Helps with debts, collections and consumer law." }, category: "legal", cities: ["Landelijk"], phone: "0900-8020", website: "https://juridischloket.nl" },
+  { name: "Nibud", description: { nl: "Nationaal Instituut voor Budgetvoorlichting. Tips, tools en begrotingsadviezen.", en: "National Institute for Budget Information. Tips, tools and budget advice." }, category: "financial", cities: ["Landelijk"], website: "https://nibud.nl" },
+  { name: "SchuldHulpMaatje", description: { nl: "Vrijwilligers die je helpen met schulden. Persoonlijke begeleiding in jouw gemeente.", en: "Volunteers who help you with debts. Personal guidance in your municipality." }, category: "debtHelp", cities: ["Amsterdam", "Rotterdam", "Den Haag", "Utrecht", "Eindhoven"], phone: "088-7788990", website: "https://schuldhulpmaatje.nl" },
+  { name: "Sociaal Raadslieden", description: { nl: "Gratis hulp bij financiële en juridische problemen via je gemeente.", en: "Free help with financial and legal problems through your municipality." }, category: "debtHelp", cities: ["Rotterdam", "Amsterdam", "Den Haag", "Utrecht"], website: "https://socialraadslieden.nl" },
+  { name: "NVVK", description: { nl: "Vereniging voor schuldhulpverlening en sociaal bankieren. Verwijst door naar lokale hulp.", en: "Association for debt assistance and social banking. Refers to local help." }, category: "financial", cities: ["Landelijk"], website: "https://nvvk.nl" },
 ];
 
 export const legalAdvisors: AidOrg[] = [
-  {
-    name: "Van Doorne Advocaten",
-    description: {
-      nl: "Gespecialiseerd in schuldenrecht en consumentenbescherming.",
-      en: "Specialized in debt law and consumer protection.",
-    },
-    category: "legal",
-    cities: ["Amsterdam"],
-    website: "https://vandoorne.com",
-  },
-  {
-    name: "Houthoff",
-    description: {
-      nl: "Advocatenkantoor met expertise op het gebied van financieel recht.",
-      en: "Law firm with expertise in financial law.",
-    },
-    category: "legal",
-    cities: ["Amsterdam", "Rotterdam"],
-    website: "https://houthoff.com",
-  },
-  {
-    name: "Kennedy Van der Laan",
-    description: {
-      nl: "Juridische hulp bij incassozaken en betalingsgeschillen.",
-      en: "Legal help with collection cases and payment disputes.",
-    },
-    category: "legal",
-    cities: ["Amsterdam"],
-    website: "https://kvdl.com",
-  },
+  { name: "Van Doorne Advocaten", description: { nl: "Gespecialiseerd in schuldenrecht en consumentenbescherming.", en: "Specialized in debt law and consumer protection." }, category: "legal", cities: ["Amsterdam"], website: "https://vandoorne.com" },
+  { name: "Houthoff", description: { nl: "Advocatenkantoor met expertise op het gebied van financieel recht.", en: "Law firm with expertise in financial law." }, category: "legal", cities: ["Amsterdam", "Rotterdam"], website: "https://houthoff.com" },
+  { name: "Kennedy Van der Laan", description: { nl: "Juridische hulp bij incassozaken en betalingsgeschillen.", en: "Legal help with collection cases and payment disputes." }, category: "legal", cities: ["Amsterdam"], website: "https://kvdl.com" },
 ];
 
 /* ─── Subprocessors ─── */
@@ -465,24 +345,6 @@ export const subprocessors = [
 ];
 
 export const securityMeasures = {
-  nl: [
-    "AES-256 encryptie voor alle data in rust",
-    "TLS 1.3 voor data in transit",
-    "Row Level Security (RLS) op Supabase",
-    "OAuth 2.0 voor Gmail-koppeling (read-only scope)",
-    "Geen opslag van e-mailwachtwoorden",
-    "Automatische sessie-expiratie na 30 dagen",
-    "SOC 2 Type II compliance via Supabase",
-    "Tweefactorauthenticatie beschikbaar",
-  ],
-  en: [
-    "AES-256 encryption for all data at rest",
-    "TLS 1.3 for data in transit",
-    "Row Level Security (RLS) on Supabase",
-    "OAuth 2.0 for Gmail connection (read-only scope)",
-    "No storage of email passwords",
-    "Automatic session expiry after 30 days",
-    "SOC 2 Type II compliance via Supabase",
-    "Two-factor authentication available",
-  ],
+  nl: [ "AES-256 encryptie voor alle data in rust", "TLS 1.3 voor data in transit", "Row Level Security (RLS) op Supabase", "OAuth 2.0 voor Gmail-koppeling (read-only scope)", "Geen opslag van e-mailwachtwoorden", "Automatische sessie-expiratie na 30 dagen", "SOC 2 Type II compliance via Supabase", "Tweefactorauthenticatie beschikbaar" ],
+  en: [ "AES-256 encryption for all data at rest", "TLS 1.3 for data in transit", "Row Level Security (RLS) on Supabase", "OAuth 2.0 for Gmail connection (read-only scope)", "No storage of email passwords", "Automatic session expiry after 30 days", "SOC 2 Type II compliance via Supabase", "Two-factor authentication available" ],
 };
