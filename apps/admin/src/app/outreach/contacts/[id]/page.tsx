@@ -359,25 +359,30 @@ export default function ContactDetailPage() {
                               {event.detail && (
                                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 truncate">{event.detail}</p>
                               )}
-                              {event.meta && (
-                                <div className="flex flex-wrap gap-2 mt-1">
-                                  {event.meta.campaign && (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
-                                      {event.meta.campaign as string}
-                                    </span>
-                                  )}
-                                  {event.meta.step && (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
-                                      {event.meta.step as string}
-                                    </span>
-                                  )}
-                                  {event.meta.from && (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
-                                      via {event.meta.from as string}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
+                              {event.meta && (() => {
+                                const campaign = event.meta.campaign as string | undefined;
+                                const step = event.meta.step as string | undefined;
+                                const from = event.meta.from as string | undefined;
+                                return (
+                                  <div className="flex flex-wrap gap-2 mt-1">
+                                    {campaign && (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                                        {campaign}
+                                      </span>
+                                    )}
+                                    {step && (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                                        {step}
+                                      </span>
+                                    )}
+                                    {from && (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                                        via {from}
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })()}
                             </div>
                           </div>
                         );
