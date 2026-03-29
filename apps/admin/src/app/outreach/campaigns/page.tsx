@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Plus,
   Send,
@@ -46,6 +46,13 @@ interface Account {
   display_name: string;
 }
 
+interface ContactBasic {
+  id: string;
+  type: string;
+  tags?: string[];
+  status: string;
+}
+
 const STATUS_STYLES: Record<string, { bg: string; text: string }> = {
   draft: { bg: "bg-gray-100", text: "text-gray-600" },
   active: { bg: "bg-green-50", text: "text-pw-green" },
@@ -73,6 +80,7 @@ const TARGET_TYPES = [
 export default function OutreachCampaigns() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [allContacts, setAllContacts] = useState<ContactBasic[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -103,7 +111,9 @@ export default function OutreachCampaigns() {
       const tagSet = new Set<string>();
       if (contactsRes.ok) {
         const data = await contactsRes.json();
-        (data.contacts || []).forEach((c: { tags?: string[] }) =>
+        const contacts = data.contacts || [];
+        setAllContacts(contacts);
+        contacts.forEach((c: { tags?: string[] }) =>
           (c.tags || []).forEach((t: string) => tagSet.add(t))
         );
       }
@@ -366,6 +376,7 @@ export default function OutreachCampaigns() {
       {showModal && (
         <NewCampaignModal
           accounts={accounts}
+          allContacts={allContacts}
           availableTags={availableTags}
           onClose={() => setShowModal(false)}
           onCreated={() => {
@@ -381,11 +392,13 @@ export default function OutreachCampaigns() {
 /* ─── New Campaign Modal ─── */
 function NewCampaignModal({
   accounts,
+  allContacts,
   availableTags,
   onClose,
   onCreated,
 }: {
   accounts: Account[];
+  allContacts: ContactBasic[];
   availableTags: string[];
   onClose: () => void;
   onCreated: () => void;
@@ -406,6 +419,21 @@ function NewCampaignModal({
       { day: 7, type: "final" },
     ],
   });
+
+  /* ── Live contact count ── */
+  const matchingContacts = useMemo(() => {
+    return allContacts.filter((c) => {
+      // Filter by type
+      if (form.target_type && c.type !== form.target_type) return false;
+      // Filter by tags (any match)
+      if (form.target_tags.length > 0) {
+        const contactTags = c.tags || [];
+        const hasMatch = form.target_tags.some((t) => contactTags.includes(t));
+        if (!hasMatch) return false;
+      }
+      return true;
+    });
+  }, [allContacts, form.target_type, form.target_tags]);
 
   function toggleAccount(email: string) {
     setForm((prev) => {
@@ -492,7 +520,26 @@ function NewCampaignModal({
       <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-pw-border shrink-0">
-          <h3 className="text-sm font-bold text-pw-navy">New Campaign</h3>
+          <div>
+            <h3 className="text-sm font-bold text-pw-navy">New Campaign</h3>
+            {/* Live contact count */}
+            <p className="text-[10px] text-pw-muted mt-0.5 flex items-center gap-1">
+              <Users size={10} className={matchingContacts.length > 0 ? "text-pw-green" : "text-pw-muted"} />
+              <span className={matchingContacts.length > 0 ? "text-pw-green font-semibold" : ""}>
+                {matchingContacts.length} contact{matchingContacts.length !== 1 ? "s" : ""} match
+              </span>
+              {form.target_type && (
+                <span>
+                  · {TARGET_TYPES.find((t) => t.value === form.target_type)?.label}
+                </span>
+              )}
+              {form.target_tags.length > 0 && (
+                <span>
+                  · {form.target_tags.length} tag{form.target_tags.length !== 1 ? "s" : ""}
+                </span>
+              )}
+            </p>
+          </div>
           <button
             onClick={onClose}
             className="p-1 rounded-lg hover:bg-gray-100"
@@ -558,6 +605,18 @@ function NewCampaignModal({
                 <option value="en">English</option>
               </select>
             </div>
+          </div>
+
+          {/* Matching contacts indicator below segment */}
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
+            matchingContacts.length > 0
+              ? "bg-green-50 border-green-200"
+              : "bg-amber-50 border-amber-200"
+          }`}>
+            <Users size={12} className={matchingContacts.length > 0 ? "text-pw-green" : "text-amber-500"} />
+            <span className={`text-[11px] font-semibold ${matchingContacts.length > 0 ? "text-green-700" : "text-amber-700"}`}>
+              {matchingContacts.length} contact{matchingContacts.length !== 1 ? "s" : ""} will receive this campaign
+            </span>
           </div>
 
           {/* Target tags */}

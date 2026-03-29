@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -8,28 +7,26 @@ import {
   Send,
   Mail,
   Shield,
+  Kanban,
 } from "lucide-react";
-
 const TABS = [
   { href: "/outreach", label: "Overview", icon: BarChart3, exact: true },
   { href: "/outreach/contacts", label: "Contacts", icon: Users },
+  { href: "/outreach/pipeline", label: "Pipeline", icon: Kanban },
   { href: "/outreach/campaigns", label: "Campaigns", icon: Send },
   { href: "/outreach/queue", label: "Queue", icon: Mail },
   { href: "/outreach/accounts", label: "Accounts", icon: Shield },
 ];
-
 export default function OutreachLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-
   function isActive(tab: (typeof TABS)[number]) {
     if (tab.exact) return pathname === tab.href;
     return pathname.startsWith(tab.href);
   }
-
   return (
     <div>
       {/* Header */}
@@ -41,16 +38,15 @@ export default function OutreachLayout({
           </span>
         </div>
       </div>
-
       {/* Tab Navigation */}
-      <div className="flex gap-0 border-b border-pw-border mb-6 -mx-1">
+      <div className="flex gap-0 border-b border-pw-border mb-6 -mx-1 overflow-x-auto">
         {TABS.map((tab) => {
           const active = isActive(tab);
           return (
             <Link
               key={tab.href}
               href={tab.href}
-              className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors ${
+              className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap ${
                 active
                   ? "text-pw-blue border-pw-blue"
                   : "text-pw-muted border-transparent hover:text-pw-text hover:border-gray-200"
@@ -62,7 +58,6 @@ export default function OutreachLayout({
           );
         })}
       </div>
-
       {children}
     </div>
   );
