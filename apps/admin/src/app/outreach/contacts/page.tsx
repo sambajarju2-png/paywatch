@@ -18,6 +18,8 @@ import {
   Plus,
   ChevronDown,
   Users,
+  UserPlus,
+  Check,
 } from "lucide-react";
 
 /* ─── Types ─── */
@@ -54,7 +56,7 @@ const TYPE_LABELS: Record<string, string> = {
   journalist: "Journalist",
 };
 
-const TYPE_OPTIONS: { value: string; label: string }[] = [
+const TYPE_OPTIONS = [
   { value: "incasso", label: "Incasso" },
   { value: "aid_org", label: "Hulporganisatie" },
   { value: "gemeente", label: "Gemeente" },
@@ -63,7 +65,7 @@ const TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: "journalist", label: "Journalist" },
 ];
 
-const STATUS_OPTIONS: { value: string; label: string }[] = [
+const STATUS_OPTIONS = [
   { value: "new", label: "New" },
   { value: "researched", label: "Researched" },
   { value: "queued", label: "Queued" },
@@ -74,7 +76,7 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: "bounced", label: "Bounced" },
 ];
 
-const BEAT_OPTIONS: { value: string; label: string }[] = [
+const BEAT_OPTIONS = [
   { value: "", label: "— None —" },
   { value: "tech", label: "Tech" },
   { value: "society", label: "Society" },
@@ -85,12 +87,8 @@ const BEAT_OPTIONS: { value: string; label: string }[] = [
 ];
 
 const BEAT_LABELS: Record<string, string> = {
-  tech: "Tech",
-  society: "Society",
-  debt: "Debt",
-  young_people: "Young People",
-  finance: "Finance",
-  politics: "Politics",
+  tech: "Tech", society: "Society", debt: "Debt",
+  young_people: "Young People", finance: "Finance", politics: "Politics",
 };
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
@@ -104,7 +102,11 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   bounced: { bg: "bg-red-50", text: "text-pw-red" },
 };
 
-/* ─── Main Component ─── */
+const inputClass = "w-full px-3 py-2 text-xs rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue";
+const selectClass = "w-full px-3 py-2 text-xs rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue appearance-none";
+const labelClass = "block text-[11px] font-semibold text-pw-muted mb-1";
+
+/* ─── Main ─── */
 export default function OutreachContacts() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
@@ -113,61 +115,54 @@ export default function OutreachContacts() {
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [researchingId, setResearchingId] = useState<string | null>(null);
-  const [importResult, setImportResult] = useState<{
-    success: number;
-    errors: number;
-  } | null>(null);
+  const [importResult, setImportResult] = useState<{ success: number; errors: number } | null>(null);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
 
-  // 3-dot menu — portal approach
+  // 3-dot menu portal
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(
-    null
-  );
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
 
   // Bulk selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  // Lists
-  const [allTags, setAllTags] = useState<string[]>([]);
+  // Lists — persisted in b2b_lists
+  const [persistedLists, setPersistedLists] = useState<string[]>([]);
   const [showNewList, setShowNewList] = useState(false);
   const [newListName, setNewListName] = useState("");
   const [showBulkListMenu, setShowBulkListMenu] = useState(false);
   const [bulkTagLoading, setBulkTagLoading] = useState(false);
 
-  /* ─── Fetch contacts ─── */
+  /* ─── Fetching ─── */
   const fetchContacts = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
       if (typeFilter !== "all") params.set("type", typeFilter);
       if (searchQuery) params.set("search", searchQuery);
-      const res = await fetch(
-        `/api/admin/outreach/contacts?${params.toString()}`
-      );
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data = await res.json();
-      setContacts(data.contacts);
-    } catch {
-      console.error("Failed to load contacts");
-    } finally {
-      setLoading(false);
-    }
+      const res = await fetch(`/api/admin/outreach/contacts?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setContacts(data.contacts);
+      }
+    } catch { console.error("Failed to load contacts"); }
+    finally { setLoading(false); }
   }, [typeFilter, searchQuery]);
 
-  useEffect(() => {
-    fetchContacts();
-  }, [fetchContacts]);
+  const fetchLists = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/outreach/lists");
+      if (res.ok) {
+        const data = await res.json();
+        setPersistedLists((data.lists || []).map((l: { name: string }) => l.name));
+      }
+    } catch { console.error("Failed to load lists"); }
+  }, []);
 
-  // Derive unique tags from contacts
-  useEffect(() => {
-    const tagSet = new Set<string>();
-    contacts.forEach((c) => (c.tags || []).forEach((t) => tagSet.add(t)));
-    setAllTags(Array.from(tagSet).sort());
-  }, [contacts]);
+  useEffect(() => { fetchContacts(); fetchLists(); }, [fetchContacts, fetchLists]);
 
   // Close menus on outside click
   useEffect(() => {
@@ -180,148 +175,141 @@ export default function OutreachContacts() {
     return () => document.removeEventListener("click", handleClick);
   }, []);
 
-  // Clear beat filter when leaving journalist tab
-  useEffect(() => {
-    if (typeFilter !== "journalist") setBeatFilter(null);
-  }, [typeFilter]);
+  useEffect(() => { if (typeFilter !== "journalist") setBeatFilter(null); }, [typeFilter]);
+  useEffect(() => { setSelectedIds(new Set()); }, [typeFilter, beatFilter, tagFilter, searchQuery]);
 
-  // Clear selection when filters change
-  useEffect(() => {
-    setSelectedIds(new Set());
-  }, [typeFilter, beatFilter, tagFilter, searchQuery]);
+  /* ─── Derived data ─── */
+  // Merge persisted lists with any tags found on contacts
+  const tagCounts = contacts.reduce((acc, c) => {
+    (c.tags || []).forEach((t) => { acc[t] = (acc[t] || 0) + 1; });
+    return acc;
+  }, {} as Record<string, number>);
 
-  /* ─── Filtered contacts ─── */
+  const allTags = Array.from(new Set([...persistedLists, ...Object.keys(tagCounts)])).sort();
+
   const filteredContacts = contacts.filter((c) => {
     if (beatFilter && c.beat !== beatFilter) return false;
     if (tagFilter && !(c.tags || []).includes(tagFilter)) return false;
     return true;
   });
 
+  const typeCounts = contacts.reduce(
+    (acc, c) => { acc[c.type] = (acc[c.type] || 0) + 1; acc.all = (acc.all || 0) + 1; return acc; },
+    { all: 0 } as Record<string, number>
+  );
+
+  const beatCounts = contacts.reduce((acc, c) => {
+    if (c.type === "journalist" && c.beat) acc[c.beat] = (acc[c.beat] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const menuContact = openMenuId ? contacts.find((c) => c.id === openMenuId) || null : null;
+
   /* ─── Handlers ─── */
   function openMenu(e: React.MouseEvent, contactId: string) {
     e.stopPropagation();
-    if (openMenuId === contactId) {
-      setOpenMenuId(null);
-      setMenuPos(null);
-      return;
-    }
+    if (openMenuId === contactId) { setOpenMenuId(null); setMenuPos(null); return; }
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     setOpenMenuId(contactId);
-    setMenuPos({
-      top: rect.bottom + 4,
-      right: window.innerWidth - rect.right,
-    });
+    setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
   }
 
   async function handleResearch(contactId: string) {
     setResearchingId(contactId);
     try {
       const res = await fetch("/api/admin/outreach/research", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contactId }),
       });
-      if (!res.ok) throw new Error("Research failed");
-      await fetchContacts();
-    } catch (err) {
-      console.error("Research error:", err);
-    } finally {
-      setResearchingId(null);
-    }
+      if (res.ok) await fetchContacts();
+    } catch (err) { console.error("Research error:", err); }
+    finally { setResearchingId(null); }
   }
 
   async function handleVerify(contactId: string) {
     setVerifyingId(contactId);
     try {
       const res = await fetch("/api/admin/outreach/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contactId }),
       });
       if (res.ok) await fetchContacts();
-    } catch {
-      console.error("Verify error");
-    } finally {
-      setVerifyingId(null);
-    }
+    } catch { console.error("Verify error"); }
+    finally { setVerifyingId(null); }
   }
 
   async function handleDelete(contactId: string) {
     try {
-      const res = await fetch(
-        `/api/admin/outreach/contacts?id=${contactId}`,
-        { method: "DELETE" }
-      );
+      const res = await fetch(`/api/admin/outreach/contacts?id=${contactId}`, { method: "DELETE" });
       if (res.ok) await fetchContacts();
-    } catch {
-      console.error("Delete error");
-    } finally {
-      setDeleteConfirmId(null);
-    }
+    } catch { console.error("Delete error"); }
+    finally { setDeleteConfirmId(null); }
   }
 
-  async function handleEditSave(
-    contactId: string,
-    updates: Partial<Contact>
-  ) {
-    try {
-      const res = await fetch("/api/admin/outreach/contacts", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: contactId, ...updates }),
-      });
-      if (!res.ok) throw new Error("Update failed");
-      await fetchContacts();
-      setEditingContact(null);
-    } catch (err) {
-      console.error("Edit error:", err);
-      throw err;
-    }
+  async function handleEditSave(contactId: string, updates: Partial<Contact>) {
+    const res = await fetch("/api/admin/outreach/contacts", {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: contactId, ...updates }),
+    });
+    if (!res.ok) throw new Error("Update failed");
+    await fetchContacts();
+    setEditingContact(null);
+  }
+
+  async function handleAddContact(data: Partial<Contact>) {
+    const res = await fetch("/api/admin/outreach/contacts", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Create failed");
+    await fetchContacts();
+    setShowAddModal(false);
   }
 
   async function handleImport(file: File) {
     const formData = new FormData();
     formData.append("file", file);
     try {
-      const res = await fetch("/api/admin/outreach/import", {
-        method: "POST",
-        body: formData,
-      });
-      if (!res.ok) throw new Error("Import failed");
-      const result = await res.json();
-      setImportResult({ success: result.imported, errors: result.errors });
-      await fetchContacts();
-      setTimeout(() => setImportResult(null), 5000);
-    } catch {
-      console.error("Import error");
-    }
+      const res = await fetch("/api/admin/outreach/import", { method: "POST", body: formData });
+      if (res.ok) {
+        const result = await res.json();
+        setImportResult({ success: result.imported, errors: result.errors });
+        await fetchContacts();
+        setTimeout(() => setImportResult(null), 5000);
+      }
+    } catch { console.error("Import error"); }
     setShowImportModal(false);
   }
 
-  /* ─── Bulk tag handlers ─── */
+  /* ─── List handlers ─── */
+  async function handleCreateList() {
+    const name = newListName.trim().toLowerCase().replace(/\s+/g, "-");
+    if (!name) return;
+    // Persist the list
+    await fetch("/api/admin/outreach/lists", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    // If contacts are selected, tag them
+    if (selectedIds.size > 0) {
+      await handleBulkAddTag(name);
+    }
+    await fetchLists();
+    setNewListName("");
+    setShowNewList(false);
+  }
+
   async function handleBulkAddTag(tag: string) {
     if (selectedIds.size === 0) return;
     setBulkTagLoading(true);
     try {
       const res = await fetch("/api/admin/outreach/contacts/bulk-tags", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contactIds: Array.from(selectedIds),
-          tag,
-          action: "add",
-        }),
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contactIds: Array.from(selectedIds), tag, action: "add" }),
       });
-      if (res.ok) {
-        await fetchContacts();
-        setSelectedIds(new Set());
-        setShowBulkListMenu(false);
-      }
-    } catch {
-      console.error("Bulk tag error");
-    } finally {
-      setBulkTagLoading(false);
-    }
+      if (res.ok) { await fetchContacts(); setSelectedIds(new Set()); setShowBulkListMenu(false); }
+    } catch { console.error("Bulk tag error"); }
+    finally { setBulkTagLoading(false); }
   }
 
   async function handleBulkRemoveTag(tag: string) {
@@ -329,127 +317,51 @@ export default function OutreachContacts() {
     setBulkTagLoading(true);
     try {
       const res = await fetch("/api/admin/outreach/contacts/bulk-tags", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contactIds: Array.from(selectedIds),
-          tag,
-          action: "remove",
-        }),
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contactIds: Array.from(selectedIds), tag, action: "remove" }),
       });
-      if (res.ok) {
-        await fetchContacts();
-        setSelectedIds(new Set());
-      }
-    } catch {
-      console.error("Bulk remove error");
-    } finally {
-      setBulkTagLoading(false);
-    }
-  }
-
-  function handleCreateList() {
-    const name = newListName.trim().toLowerCase().replace(/\s+/g, "-");
-    if (!name) return;
-    // The list is created by assigning it to selected contacts
-    if (selectedIds.size > 0) {
-      handleBulkAddTag(name);
-    }
-    // Even if no contacts selected, add to allTags for display
-    if (!allTags.includes(name)) {
-      setAllTags((prev) => [...prev, name].sort());
-    }
-    setNewListName("");
-    setShowNewList(false);
+      if (res.ok) { await fetchContacts(); setSelectedIds(new Set()); }
+    } catch { console.error("Bulk remove error"); }
+    finally { setBulkTagLoading(false); }
   }
 
   function toggleSelect(id: string) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    setSelectedIds((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   }
-
   function toggleSelectAll() {
-    if (selectedIds.size === filteredContacts.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(filteredContacts.map((c) => c.id)));
-    }
+    setSelectedIds(selectedIds.size === filteredContacts.length ? new Set() : new Set(filteredContacts.map((c) => c.id)));
   }
 
-  /* ─── Derived data ─── */
-  const typeCounts = contacts.reduce(
-    (acc, c) => {
-      acc[c.type] = (acc[c.type] || 0) + 1;
-      acc.all = (acc.all || 0) + 1;
-      return acc;
-    },
-    { all: 0 } as Record<string, number>
-  );
-
-  const beatCounts = contacts.reduce((acc, c) => {
-    if (c.type === "journalist" && c.beat) {
-      acc[c.beat] = (acc[c.beat] || 0) + 1;
-    }
-    return acc;
-  }, {} as Record<string, number>);
-
-  const tagCounts = contacts.reduce((acc, c) => {
-    (c.tags || []).forEach((t) => {
-      acc[t] = (acc[t] || 0) + 1;
-    });
-    return acc;
-  }, {} as Record<string, number>);
-
-  const menuContact = openMenuId
-    ? contacts.find((c) => c.id === openMenuId) || null
-    : null;
-
+  /* ─── Render ─── */
   return (
     <div className="space-y-4">
       {importResult && (
         <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-2.5 text-xs">
           <CheckCircle2 size={14} className="text-pw-green" />
-          <span className="text-pw-green font-semibold">
-            Imported {importResult.success} contacts
-          </span>
-          {importResult.errors > 0 && (
-            <span className="text-pw-red">
-              ({importResult.errors} errors)
-            </span>
-          )}
+          <span className="text-pw-green font-semibold">Imported {importResult.success} contacts</span>
+          {importResult.errors > 0 && <span className="text-pw-red">({importResult.errors} errors)</span>}
         </div>
       )}
 
       {/* Top bar */}
       <div className="flex items-center justify-between gap-3">
         <div className="relative flex-1 max-w-sm">
-          <Search
-            size={14}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-pw-muted"
-          />
-          <input
-            type="text"
-            placeholder="Search contacts..."
-            value={searchQuery}
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-pw-muted" />
+          <input type="text" placeholder="Search contacts..." value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue"
-          />
+            className="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue" />
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowImportModal(true)}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-pw-border bg-white hover:bg-gray-50"
-          >
+          <button onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-pw-blue text-white hover:bg-blue-600">
+            <UserPlus size={12} /> Add Contact
+          </button>
+          <button onClick={() => setShowImportModal(true)}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-pw-border bg-white hover:bg-gray-50">
             <Upload size={12} /> Import CSV
           </button>
-          <button
-            onClick={fetchContacts}
-            className="p-2 rounded-lg border border-pw-border bg-white hover:bg-gray-50"
-          >
+          <button onClick={() => { fetchContacts(); fetchLists(); }}
+            className="p-2 rounded-lg border border-pw-border bg-white hover:bg-gray-50">
             <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
           </button>
         </div>
@@ -458,24 +370,13 @@ export default function OutreachContacts() {
       {/* Type filter tabs */}
       <div className="flex gap-1 flex-wrap">
         {Object.entries(TYPE_LABELS).map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => setTypeFilter(key)}
+          <button key={key} onClick={() => setTypeFilter(key)}
             className={`px-3 py-1.5 text-[11px] font-semibold rounded-lg transition-colors ${
-              typeFilter === key
-                ? "bg-pw-blue text-white"
-                : "bg-white text-pw-muted border border-pw-border hover:bg-gray-50"
-            }`}
-          >
+              typeFilter === key ? "bg-pw-blue text-white" : "bg-white text-pw-muted border border-pw-border hover:bg-gray-50"
+            }`}>
             {label}
             {typeCounts[key] !== undefined && (
-              <span
-                className={`ml-1 ${
-                  typeFilter === key ? "text-blue-200" : "text-gray-400"
-                }`}
-              >
-                {typeCounts[key] || 0}
-              </span>
+              <span className={`ml-1 ${typeFilter === key ? "text-blue-200" : "text-gray-400"}`}>{typeCounts[key] || 0}</span>
             )}
           </button>
         ))}
@@ -484,124 +385,60 @@ export default function OutreachContacts() {
       {/* Journalist beat sub-filter */}
       {typeFilter === "journalist" && (
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[10px] font-semibold text-pw-muted mr-1">
-            Beat:
-          </span>
-          <button
-            onClick={() => setBeatFilter(null)}
+          <span className="text-[10px] font-semibold text-pw-muted mr-1">Beat:</span>
+          <button onClick={() => setBeatFilter(null)}
             className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors ${
-              !beatFilter
-                ? "bg-purple-100 text-purple-700"
-                : "bg-white text-pw-muted border border-pw-border hover:bg-gray-50"
-            }`}
-          >
-            All beats
-          </button>
+              !beatFilter ? "bg-purple-100 text-purple-700" : "bg-white text-pw-muted border border-pw-border hover:bg-gray-50"
+            }`}>All beats</button>
           {Object.entries(BEAT_LABELS).map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => setBeatFilter(beatFilter === key ? null : key)}
+            <button key={key} onClick={() => setBeatFilter(beatFilter === key ? null : key)}
               className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors ${
-                beatFilter === key
-                  ? "bg-purple-100 text-purple-700"
-                  : "bg-white text-pw-muted border border-pw-border hover:bg-gray-50"
-              }`}
-            >
+                beatFilter === key ? "bg-purple-100 text-purple-700" : "bg-white text-pw-muted border border-pw-border hover:bg-gray-50"
+              }`}>
               {label}
-              {beatCounts[key] ? (
-                <span
-                  className={`ml-1 ${
-                    beatFilter === key ? "text-purple-400" : "text-gray-400"
-                  }`}
-                >
-                  {beatCounts[key]}
-                </span>
-              ) : null}
+              {beatCounts[key] ? <span className={`ml-1 ${beatFilter === key ? "text-purple-400" : "text-gray-400"}`}>{beatCounts[key]}</span> : null}
             </button>
           ))}
         </div>
       )}
 
-      {/* Lists / Tags */}
+      {/* Lists */}
       <div className="flex items-center gap-1.5 flex-wrap">
         <Tag size={12} className="text-pw-muted" />
-        <span className="text-[10px] font-semibold text-pw-muted mr-0.5">
-          Lists:
-        </span>
+        <span className="text-[10px] font-semibold text-pw-muted mr-0.5">Lists:</span>
         {tagFilter && (
-          <button
-            onClick={() => setTagFilter(null)}
-            className="px-2.5 py-1 text-[10px] font-semibold rounded-md bg-white text-pw-muted border border-pw-border hover:bg-gray-50"
-          >
-            Show all
-          </button>
+          <button onClick={() => setTagFilter(null)}
+            className="px-2.5 py-1 text-[10px] font-semibold rounded-md bg-white text-pw-muted border border-pw-border hover:bg-gray-50">Show all</button>
         )}
         {allTags.length === 0 && !tagFilter && (
-          <span className="text-[10px] text-pw-muted italic">
-            No lists yet
-          </span>
+          <span className="text-[10px] text-pw-muted italic">No lists yet</span>
         )}
         {allTags.map((tag) => (
-          <button
-            key={tag}
-            onClick={() => setTagFilter(tagFilter === tag ? null : tag)}
+          <button key={tag} onClick={() => setTagFilter(tagFilter === tag ? null : tag)}
             className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors ${
-              tagFilter === tag
-                ? "bg-pw-blue text-white"
-                : "bg-blue-50 text-pw-blue hover:bg-blue-100"
-            }`}
-          >
+              tagFilter === tag ? "bg-pw-blue text-white" : "bg-blue-50 text-pw-blue hover:bg-blue-100"
+            }`}>
             {tag}
-            {tagCounts[tag] ? (
-              <span
-                className={`ml-1 ${
-                  tagFilter === tag ? "text-blue-200" : "text-blue-300"
-                }`}
-              >
-                {tagCounts[tag]}
-              </span>
-            ) : null}
+            {tagCounts[tag] ? <span className={`ml-1 ${tagFilter === tag ? "text-blue-200" : "text-blue-300"}`}>{tagCounts[tag]}</span> : null}
           </button>
         ))}
-
-        {/* New list inline input */}
         {showNewList ? (
           <div className="flex items-center gap-1">
-            <input
-              autoFocus
-              value={newListName}
+            <input autoFocus value={newListName}
               onChange={(e) => setNewListName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleCreateList();
-                if (e.key === "Escape") {
-                  setShowNewList(false);
-                  setNewListName("");
-                }
-              }}
-              placeholder="List name..."
-              className="px-2 py-1 text-[10px] rounded-md border border-pw-blue bg-white focus:outline-none w-28"
-            />
-            <button
-              onClick={handleCreateList}
-              className="px-2 py-1 text-[10px] font-semibold rounded-md bg-pw-blue text-white hover:bg-blue-600"
-            >
+              onKeyDown={(e) => { if (e.key === "Enter") handleCreateList(); if (e.key === "Escape") { setShowNewList(false); setNewListName(""); } }}
+              placeholder="List name..." className="px-2 py-1 text-[10px] rounded-md border border-pw-blue bg-white focus:outline-none w-28" />
+            <button onClick={handleCreateList}
+              className="px-2 py-1 text-[10px] font-semibold rounded-md bg-pw-blue text-white hover:bg-blue-600">
               {selectedIds.size > 0 ? `Add ${selectedIds.size}` : "Create"}
             </button>
-            <button
-              onClick={() => {
-                setShowNewList(false);
-                setNewListName("");
-              }}
-              className="p-1 text-pw-muted hover:text-pw-text"
-            >
+            <button onClick={() => { setShowNewList(false); setNewListName(""); }} className="p-1 text-pw-muted hover:text-pw-text">
               <X size={10} />
             </button>
           </div>
         ) : (
-          <button
-            onClick={() => setShowNewList(true)}
-            className="flex items-center gap-0.5 px-2 py-1 text-[10px] font-semibold rounded-md text-pw-blue hover:bg-blue-50 transition-colors"
-          >
+          <button onClick={() => setShowNewList(true)}
+            className="flex items-center gap-0.5 px-2 py-1 text-[10px] font-semibold rounded-md text-pw-blue hover:bg-blue-50 transition-colors">
             <Plus size={10} /> New List
           </button>
         )}
@@ -613,252 +450,111 @@ export default function OutreachContacts() {
           <thead>
             <tr className="border-b border-pw-border bg-gray-50/50">
               <th className="w-10 px-3 py-2.5">
-                <input
-                  type="checkbox"
-                  checked={
-                    filteredContacts.length > 0 &&
-                    selectedIds.size === filteredContacts.length
-                  }
-                  onChange={toggleSelectAll}
-                  className="rounded border-gray-300 accent-pw-blue"
-                />
+                <input type="checkbox"
+                  checked={filteredContacts.length > 0 && selectedIds.size === filteredContacts.length}
+                  onChange={toggleSelectAll} className="rounded border-gray-300 accent-pw-blue" />
               </th>
-              <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">
-                Organization
-              </th>
-              <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">
-                Contact
-              </th>
-              <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">
-                Type
-              </th>
-              <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">
-                City
-              </th>
-              <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">
-                Status
-              </th>
-              <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">
-                AI Research
-              </th>
-              <th className="text-right px-4 py-2.5 font-semibold text-pw-muted">
-                Actions
-              </th>
+              <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">Organization</th>
+              <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">Contact</th>
+              <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">Type</th>
+              <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">City</th>
+              <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">Status</th>
+              <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">AI Research</th>
+              <th className="text-right px-4 py-2.5 font-semibold text-pw-muted">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading && contacts.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="text-center py-12">
-                  <Loader2
-                    className="animate-spin mx-auto text-pw-muted"
-                    size={20}
-                  />
-                </td>
-              </tr>
+              <tr><td colSpan={8} className="text-center py-12"><Loader2 className="animate-spin mx-auto text-pw-muted" size={20} /></td></tr>
             ) : filteredContacts.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="text-center py-12 text-pw-muted">
-                  {contacts.length === 0 ? (
-                    <>
-                      No contacts found.{" "}
-                      <button
-                        onClick={() => setShowImportModal(true)}
-                        className="text-pw-blue font-semibold hover:underline"
-                      >
-                        Import your first CSV
-                      </button>
-                    </>
-                  ) : (
-                    "No contacts match the current filters."
-                  )}
-                </td>
-              </tr>
-            ) : (
-              filteredContacts.map((c) => {
-                const statusStyle =
-                  STATUS_COLORS[c.status] || STATUS_COLORS.new;
-                return (
-                  <tr
-                    key={c.id}
-                    className={`border-b border-pw-border last:border-0 hover:bg-gray-50/50 transition-colors ${
-                      selectedIds.has(c.id) ? "bg-blue-50/40" : ""
-                    }`}
-                  >
-                    <td className="w-10 px-3 py-3">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(c.id)}
-                        onChange={() => toggleSelect(c.id)}
-                        className="rounded border-gray-300 accent-pw-blue"
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="font-semibold text-pw-text">
-                        {c.organization_name}
+              <tr><td colSpan={8} className="text-center py-12 text-pw-muted">
+                {contacts.length === 0 ? (<>No contacts found. <button onClick={() => setShowAddModal(true)} className="text-pw-blue font-semibold hover:underline">Add your first contact</button></>) : "No contacts match the current filters."}
+              </td></tr>
+            ) : filteredContacts.map((c) => {
+              const statusStyle = STATUS_COLORS[c.status] || STATUS_COLORS.new;
+              return (
+                <tr key={c.id} className={`border-b border-pw-border last:border-0 hover:bg-gray-50/50 transition-colors ${selectedIds.has(c.id) ? "bg-blue-50/40" : ""}`}>
+                  <td className="w-10 px-3 py-3">
+                    <input type="checkbox" checked={selectedIds.has(c.id)} onChange={() => toggleSelect(c.id)} className="rounded border-gray-300 accent-pw-blue" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="font-semibold text-pw-text">{c.organization_name}</div>
+                    {c.website && (
+                      <a href={c.website} target="_blank" rel="noopener noreferrer" className="text-[10px] text-pw-blue flex items-center gap-0.5 hover:underline mt-0.5">
+                        <Globe size={8} /> {c.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
+                      </a>
+                    )}
+                    {(c.tags || []).length > 0 && (
+                      <div className="flex gap-1 mt-1 flex-wrap">
+                        {c.tags.map((tag) => (
+                          <span key={tag} className="inline-block px-1.5 py-0.5 rounded text-[9px] font-medium bg-blue-50 text-pw-blue">{tag}</span>
+                        ))}
                       </div>
-                      {c.website && (
-                        <a
-                          href={c.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[10px] text-pw-blue flex items-center gap-0.5 hover:underline mt-0.5"
-                        >
-                          <Globe size={8} />{" "}
-                          {c.website
-                            .replace(/^https?:\/\/(www\.)?/, "")
-                            .replace(/\/$/, "")}
-                        </a>
-                      )}
-                      {(c.tags || []).length > 0 && (
-                        <div className="flex gap-1 mt-1 flex-wrap">
-                          {c.tags.map((tag) => (
-                            <span
-                              key={tag}
-                              className="inline-block px-1.5 py-0.5 rounded text-[9px] font-medium bg-blue-50 text-pw-blue"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      {c.contact_person ? (
-                        <div>
-                          <div className="font-medium text-pw-text">
-                            {c.contact_person}
-                          </div>
-                          <div className="text-[10px] text-pw-muted">
-                            {c.contact_role || ""}
-                          </div>
-                          {c.contact_email && (
-                            <div className="text-[10px] text-pw-blue mt-0.5">
-                              {c.contact_email}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-pw-muted">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-600">
-                        {TYPE_LABELS[c.type] || c.type}
-                      </span>
-                      {c.beat && (
-                        <div className="text-[9px] text-purple-500 font-medium mt-0.5">
-                          {BEAT_LABELS[c.beat] || c.beat}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-pw-muted">
-                      {c.city || "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold ${statusStyle.bg} ${statusStyle.text}`}
-                      >
-                        {c.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      {c.ai_research_summary ? (
-                        <div className="max-w-[200px]">
-                          <p className="text-[10px] text-pw-text line-clamp-2">
-                            {c.ai_research_summary}
-                          </p>
-                          <p className="text-[9px] text-pw-muted mt-0.5">
-                            {c.ai_researched_at
-                              ? new Date(
-                                  c.ai_researched_at
-                                ).toLocaleDateString("nl-NL")
-                              : ""}
-                          </p>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => handleResearch(c.id)}
-                          disabled={researchingId === c.id}
-                          className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-purple-600 bg-purple-50 rounded hover:bg-purple-100 disabled:opacity-50"
-                        >
-                          {researchingId === c.id ? (
-                            <Loader2 size={10} className="animate-spin" />
-                          ) : (
-                            <Sparkles size={10} />
-                          )}
-                          Research
-                        </button>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={(e) => openMenu(e, c.id)}
-                        className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-                      >
-                        <MoreHorizontal size={14} className="text-pw-muted" />
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {c.contact_person ? (
+                      <div>
+                        <div className="font-medium text-pw-text">{c.contact_person}</div>
+                        <div className="text-[10px] text-pw-muted">{c.contact_role || ""}</div>
+                        {c.contact_email && <div className="text-[10px] text-pw-blue mt-0.5">{c.contact_email}</div>}
+                      </div>
+                    ) : <span className="text-pw-muted">—</span>}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-600">{TYPE_LABELS[c.type] || c.type}</span>
+                    {c.beat && <div className="text-[9px] text-purple-500 font-medium mt-0.5">{BEAT_LABELS[c.beat] || c.beat}</div>}
+                  </td>
+                  <td className="px-4 py-3 text-pw-muted">{c.city || "—"}</td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold ${statusStyle.bg} ${statusStyle.text}`}>{c.status}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {c.ai_research_summary ? (
+                      <div className="max-w-[200px]">
+                        <p className="text-[10px] text-pw-text line-clamp-2">{c.ai_research_summary}</p>
+                        <p className="text-[9px] text-pw-muted mt-0.5">{c.ai_researched_at ? new Date(c.ai_researched_at).toLocaleDateString("nl-NL") : ""}</p>
+                      </div>
+                    ) : (
+                      <button onClick={() => handleResearch(c.id)} disabled={researchingId === c.id}
+                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-purple-600 bg-purple-50 rounded hover:bg-purple-100 disabled:opacity-50">
+                        {researchingId === c.id ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />} Research
                       </button>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button onClick={(e) => openMenu(e, c.id)} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                      <MoreHorizontal size={14} className="text-pw-muted" />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
-      {/* 3-dot dropdown — rendered as portal (fixed position, outside table) */}
+      {/* 3-dot dropdown portal */}
       {openMenuId && menuPos && menuContact && (
-        <div
-          className="fixed z-50 w-44 bg-white rounded-lg border border-pw-border shadow-lg py-1"
+        <div className="fixed z-50 w-44 bg-white rounded-lg border border-pw-border shadow-lg py-1"
           style={{ top: menuPos.top, right: menuPos.right }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            onClick={() => {
-              setEditingContact(menuContact);
-              setOpenMenuId(null);
-              setMenuPos(null);
-            }}
-            className="flex items-center gap-2 w-full px-3 py-2 text-[11px] text-pw-text hover:bg-gray-50 text-left"
-          >
+          onClick={(e) => e.stopPropagation()}>
+          <button onClick={() => { setEditingContact(menuContact); setOpenMenuId(null); setMenuPos(null); }}
+            className="flex items-center gap-2 w-full px-3 py-2 text-[11px] text-pw-text hover:bg-gray-50 text-left">
             <Pencil size={12} className="text-pw-blue" /> Edit Contact
           </button>
-          <button
-            onClick={() => {
-              handleResearch(menuContact.id);
-              setOpenMenuId(null);
-              setMenuPos(null);
-            }}
-            className="flex items-center gap-2 w-full px-3 py-2 text-[11px] text-pw-text hover:bg-gray-50 text-left"
-          >
+          <button onClick={() => { handleResearch(menuContact.id); setOpenMenuId(null); setMenuPos(null); }}
+            className="flex items-center gap-2 w-full px-3 py-2 text-[11px] text-pw-text hover:bg-gray-50 text-left">
             <Sparkles size={12} className="text-purple-500" /> AI Research
           </button>
-          <button
-            onClick={() => {
-              handleVerify(menuContact.id);
-              setOpenMenuId(null);
-              setMenuPos(null);
-            }}
+          <button onClick={() => { handleVerify(menuContact.id); setOpenMenuId(null); setMenuPos(null); }}
             disabled={verifyingId === menuContact.id}
-            className="flex items-center gap-2 w-full px-3 py-2 text-[11px] text-pw-text hover:bg-gray-50 text-left"
-          >
-            {verifyingId === menuContact.id ? (
-              <Loader2 size={12} className="animate-spin" />
-            ) : (
-              <ShieldCheck size={12} className="text-pw-green" />
-            )}
-            Verify Email
+            className="flex items-center gap-2 w-full px-3 py-2 text-[11px] text-pw-text hover:bg-gray-50 text-left">
+            {verifyingId === menuContact.id ? <Loader2 size={12} className="animate-spin" /> : <ShieldCheck size={12} className="text-pw-green" />} Verify Email
           </button>
           <div className="border-t border-pw-border my-1" />
-          <button
-            onClick={() => {
-              setDeleteConfirmId(menuContact.id);
-              setOpenMenuId(null);
-              setMenuPos(null);
-            }}
-            className="flex items-center gap-2 w-full px-3 py-2 text-[11px] text-pw-red hover:bg-red-50 text-left"
-          >
+          <button onClick={() => { setDeleteConfirmId(menuContact.id); setOpenMenuId(null); setMenuPos(null); }}
+            className="flex items-center gap-2 w-full px-3 py-2 text-[11px] text-pw-red hover:bg-red-50 text-left">
             <Trash2 size={12} /> Delete
           </button>
         </div>
@@ -869,149 +565,93 @@ export default function OutreachContacts() {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-pw-navy text-white rounded-xl shadow-2xl px-5 py-3 flex items-center gap-4 z-40">
           <div className="flex items-center gap-2">
             <Users size={14} />
-            <span className="text-xs font-semibold">
-              {selectedIds.size} selected
-            </span>
+            <span className="text-xs font-semibold">{selectedIds.size} selected</span>
           </div>
           <div className="w-px h-5 bg-white/20" />
-          {/* Add to list */}
           <div className="relative">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowBulkListMenu(!showBulkListMenu);
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-            >
+            <button onClick={(e) => { e.stopPropagation(); setShowBulkListMenu(!showBulkListMenu); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
               <Tag size={11} /> Add to List <ChevronDown size={10} />
             </button>
             {showBulkListMenu && (
-              <div
-                className="absolute bottom-full mb-2 left-0 w-48 bg-white rounded-lg border border-pw-border shadow-lg py-1 text-pw-text"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {allTags.length > 0 && (
-                  <>
-                    {allTags.map((tag) => (
-                      <button
-                        key={tag}
-                        onClick={() => handleBulkAddTag(tag)}
-                        disabled={bulkTagLoading}
-                        className="flex items-center gap-2 w-full px-3 py-2 text-[11px] hover:bg-gray-50 text-left disabled:opacity-50"
-                      >
-                        <Tag size={10} className="text-pw-blue" /> {tag}
-                        <span className="text-[9px] text-pw-muted ml-auto">
-                          {tagCounts[tag] || 0}
-                        </span>
-                      </button>
-                    ))}
-                    <div className="border-t border-pw-border my-1" />
-                  </>
-                )}
-                <button
-                  onClick={() => {
-                    setShowBulkListMenu(false);
-                    setShowNewList(true);
-                  }}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-[11px] text-pw-blue hover:bg-blue-50 text-left font-semibold"
-                >
+              <div className="absolute bottom-full mb-2 left-0 w-48 bg-white rounded-lg border border-pw-border shadow-lg py-1 text-pw-text"
+                onClick={(e) => e.stopPropagation()}>
+                {allTags.length > 0 && (<>
+                  {allTags.map((tag) => (
+                    <button key={tag} onClick={() => handleBulkAddTag(tag)} disabled={bulkTagLoading}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-[11px] hover:bg-gray-50 text-left disabled:opacity-50">
+                      <Tag size={10} className="text-pw-blue" /> {tag}
+                      <span className="text-[9px] text-pw-muted ml-auto">{tagCounts[tag] || 0}</span>
+                    </button>
+                  ))}
+                  <div className="border-t border-pw-border my-1" />
+                </>)}
+                <button onClick={() => { setShowBulkListMenu(false); setShowNewList(true); }}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-[11px] text-pw-blue hover:bg-blue-50 text-left font-semibold">
                   <Plus size={10} /> Create New List
                 </button>
               </div>
             )}
           </div>
-          {/* Remove from current list */}
           {tagFilter && (
-            <button
-              onClick={() => handleBulkRemoveTag(tagFilter)}
-              disabled={bulkTagLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-red-500/20 hover:bg-red-500/30 transition-colors disabled:opacity-50"
-            >
+            <button onClick={() => handleBulkRemoveTag(tagFilter)} disabled={bulkTagLoading}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-red-500/20 hover:bg-red-500/30 transition-colors disabled:opacity-50">
               <X size={11} /> Remove from &quot;{tagFilter}&quot;
             </button>
           )}
-          <button
-            onClick={() => setSelectedIds(new Set())}
-            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
-          >
+          <button onClick={() => setSelectedIds(new Set())} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
             <X size={14} />
           </button>
         </div>
       )}
 
-      {/* Delete confirm */}
+      {/* Modals */}
       {deleteConfirmId && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl text-center">
             <Trash2 size={24} className="mx-auto mb-3 text-pw-red" />
-            <h3 className="text-sm font-bold text-pw-navy mb-1">
-              Delete contact?
-            </h3>
-            <p className="text-xs text-pw-muted mb-4">
-              This action cannot be undone.
-            </p>
+            <h3 className="text-sm font-bold text-pw-navy mb-1">Delete contact?</h3>
+            <p className="text-xs text-pw-muted mb-4">This action cannot be undone.</p>
             <div className="flex gap-2">
-              <button
-                onClick={() => setDeleteConfirmId(null)}
-                className="flex-1 px-3 py-2 text-xs font-semibold rounded-lg border border-pw-border hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDelete(deleteConfirmId)}
-                className="flex-1 px-3 py-2 text-xs font-semibold rounded-lg bg-pw-red text-white hover:bg-red-700"
-              >
-                Delete
-              </button>
+              <button onClick={() => setDeleteConfirmId(null)} className="flex-1 px-3 py-2 text-xs font-semibold rounded-lg border border-pw-border hover:bg-gray-50">Cancel</button>
+              <button onClick={() => handleDelete(deleteConfirmId)} className="flex-1 px-3 py-2 text-xs font-semibold rounded-lg bg-pw-red text-white hover:bg-red-700">Delete</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Edit modal */}
-      {editingContact && (
-        <EditContactModal
-          contact={editingContact}
-          onClose={() => setEditingContact(null)}
-          onSave={handleEditSave}
-        />
-      )}
-
-      {showImportModal && (
-        <ImportModal
-          onClose={() => setShowImportModal(false)}
-          onImport={handleImport}
-        />
-      )}
+      {editingContact && <ContactFormModal mode="edit" contact={editingContact} onClose={() => setEditingContact(null)} onSave={handleEditSave} />}
+      {showAddModal && <ContactFormModal mode="add" onClose={() => setShowAddModal(false)} onAdd={handleAddContact} />}
+      {showImportModal && <ImportModal onClose={() => setShowImportModal(false)} onImport={handleImport} />}
     </div>
   );
 }
 
-/* ─── Edit Contact Modal ─── */
-function EditContactModal({
-  contact,
-  onClose,
-  onSave,
+/* ─── Contact Form Modal (Add + Edit) ─── */
+function ContactFormModal({
+  mode, contact, onClose, onSave, onAdd,
 }: {
-  contact: Contact;
+  mode: "add" | "edit";
+  contact?: Contact;
   onClose: () => void;
-  onSave: (id: string, updates: Partial<Contact>) => Promise<void>;
+  onSave?: (id: string, updates: Partial<Contact>) => Promise<void>;
+  onAdd?: (data: Partial<Contact>) => Promise<void>;
 }) {
   const [form, setForm] = useState({
-    organization_name: contact.organization_name,
-    type: contact.type,
-    website: contact.website || "",
-    contact_person: contact.contact_person || "",
-    contact_role: contact.contact_role || "",
-    contact_email: contact.contact_email || "",
-    general_email: contact.general_email || "",
-    phone: contact.phone || "",
-    city: contact.city || "",
-    kvk_number: contact.kvk_number || "",
-    linkedin_url: contact.linkedin_url || "",
-    beat: contact.beat || "",
-    notes: contact.notes || "",
-    status: contact.status,
+    organization_name: contact?.organization_name || "",
+    type: contact?.type || "aid_org",
+    website: contact?.website || "",
+    contact_person: contact?.contact_person || "",
+    contact_role: contact?.contact_role || "",
+    contact_email: contact?.contact_email || "",
+    general_email: contact?.general_email || "",
+    phone: contact?.phone || "",
+    city: contact?.city || "",
+    kvk_number: contact?.kvk_number || "",
+    linkedin_url: contact?.linkedin_url || "",
+    beat: contact?.beat || "",
+    notes: contact?.notes || "",
+    status: contact?.status || "new",
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1025,14 +665,11 @@ function EditContactModal({
   }
 
   async function handleSubmit() {
-    if (!form.organization_name.trim()) {
-      setError("Organization name is required");
-      return;
-    }
+    if (!form.organization_name.trim()) { setError("Organization name is required"); return; }
     setSaving(true);
     setError(null);
     try {
-      await onSave(contact.id, {
+      const payload = {
         organization_name: form.organization_name.trim(),
         type: form.type,
         website: form.website.trim() || null,
@@ -1044,233 +681,87 @@ function EditContactModal({
         city: form.city.trim() || null,
         kvk_number: form.kvk_number.trim() || null,
         linkedin_url: form.linkedin_url.trim() || null,
-        beat:
-          form.type === "journalist" && form.beat.trim()
-            ? form.beat.trim()
-            : null,
+        beat: form.type === "journalist" && form.beat.trim() ? form.beat.trim() : null,
         notes: form.notes.trim() || null,
         status: form.status,
-      });
-    } catch {
-      setError("Failed to save changes. Try again.");
-    } finally {
-      setSaving(false);
-    }
+      };
+      if (mode === "edit" && contact && onSave) {
+        await onSave(contact.id, payload);
+      } else if (mode === "add" && onAdd) {
+        await onAdd(payload);
+      }
+    } catch { setError("Failed to save. Try again."); }
+    finally { setSaving(false); }
   }
-
-  const inputClass =
-    "w-full px-3 py-2 text-xs rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue";
-  const selectClass =
-    "w-full px-3 py-2 text-xs rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue appearance-none";
-  const labelClass = "block text-[11px] font-semibold text-pw-muted mb-1";
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl max-h-[90vh] flex flex-col">
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-pw-border shrink-0">
           <div className="flex items-center gap-2">
-            <Pencil size={16} className="text-pw-blue" />
-            <h3 className="text-sm font-bold text-pw-navy">Edit Contact</h3>
+            {mode === "edit" ? <Pencil size={16} className="text-pw-blue" /> : <UserPlus size={16} className="text-pw-blue" />}
+            <h3 className="text-sm font-bold text-pw-navy">{mode === "edit" ? "Edit Contact" : "Add Contact"}</h3>
           </div>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100">
-            <X size={16} className="text-pw-muted" />
-          </button>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100"><X size={16} className="text-pw-muted" /></button>
         </div>
-
-        {/* Body */}
         <div className="overflow-y-auto px-6 py-4 space-y-4 flex-1">
-          {error && (
-            <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-pw-red">
-              <X size={12} /> {error}
-            </div>
-          )}
+          {error && <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-pw-red"><X size={12} /> {error}</div>}
 
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={labelClass}>Organization Name *</label>
-              <input
-                value={form.organization_name}
-                onChange={(e) => update("organization_name", e.target.value)}
-                className={inputClass}
-                placeholder="e.g. Gemeente Rotterdam"
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Type *</label>
-              <select
-                value={form.type}
-                onChange={(e) => update("type", e.target.value)}
-                className={selectClass}
-              >
-                {TYPE_OPTIONS.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
+            <div><label className={labelClass}>Organization Name *</label><input value={form.organization_name} onChange={(e) => update("organization_name", e.target.value)} className={inputClass} placeholder="e.g. Gemeente Rotterdam" /></div>
+            <div><label className={labelClass}>Type *</label>
+              <select value={form.type} onChange={(e) => update("type", e.target.value)} className={selectClass}>
+                {TYPE_OPTIONS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
             </div>
           </div>
 
           {form.type === "journalist" && (
-            <div>
-              <label className={labelClass}>Beat</label>
-              <select
-                value={form.beat}
-                onChange={(e) => update("beat", e.target.value)}
-                className={selectClass}
-              >
-                {BEAT_OPTIONS.map((b) => (
-                  <option key={b.value} value={b.value}>
-                    {b.label}
-                  </option>
-                ))}
+            <div><label className={labelClass}>Beat</label>
+              <select value={form.beat} onChange={(e) => update("beat", e.target.value)} className={selectClass}>
+                {BEAT_OPTIONS.map((b) => <option key={b.value} value={b.value}>{b.label}</option>)}
               </select>
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={labelClass}>Contact Person</label>
-              <input
-                value={form.contact_person}
-                onChange={(e) => update("contact_person", e.target.value)}
-                className={inputClass}
-                placeholder="e.g. Jan de Vries"
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Role</label>
-              <input
-                value={form.contact_role}
-                onChange={(e) => update("contact_role", e.target.value)}
-                className={inputClass}
-                placeholder="e.g. Projectleider"
-              />
-            </div>
+            <div><label className={labelClass}>Contact Person</label><input value={form.contact_person} onChange={(e) => update("contact_person", e.target.value)} className={inputClass} placeholder="e.g. Jan de Vries" /></div>
+            <div><label className={labelClass}>Role</label><input value={form.contact_role} onChange={(e) => update("contact_role", e.target.value)} className={inputClass} placeholder="e.g. Projectleider" /></div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={labelClass}>Contact Email</label>
-              <input
-                type="email"
-                value={form.contact_email}
-                onChange={(e) => update("contact_email", e.target.value)}
-                className={inputClass}
-                placeholder="jan@example.nl"
-              />
-            </div>
-            <div>
-              <label className={labelClass}>General Email</label>
-              <input
-                type="email"
-                value={form.general_email}
-                onChange={(e) => update("general_email", e.target.value)}
-                className={inputClass}
-                placeholder="info@example.nl"
-              />
-            </div>
+            <div><label className={labelClass}>Contact Email</label><input type="email" value={form.contact_email} onChange={(e) => update("contact_email", e.target.value)} className={inputClass} placeholder="jan@example.nl" /></div>
+            <div><label className={labelClass}>General Email</label><input type="email" value={form.general_email} onChange={(e) => update("general_email", e.target.value)} className={inputClass} placeholder="info@example.nl" /></div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={labelClass}>Phone</label>
-              <input
-                value={form.phone}
-                onChange={(e) => update("phone", e.target.value)}
-                className={inputClass}
-                placeholder="+31 6 12345678"
-              />
-            </div>
-            <div>
-              <label className={labelClass}>City</label>
-              <input
-                value={form.city}
-                onChange={(e) => update("city", e.target.value)}
-                className={inputClass}
-                placeholder="e.g. Rotterdam"
-              />
-            </div>
+            <div><label className={labelClass}>Phone</label><input value={form.phone} onChange={(e) => update("phone", e.target.value)} className={inputClass} placeholder="+31 6 12345678" /></div>
+            <div><label className={labelClass}>City</label><input value={form.city} onChange={(e) => update("city", e.target.value)} className={inputClass} placeholder="e.g. Rotterdam" /></div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={labelClass}>Website</label>
-              <input
-                value={form.website}
-                onChange={(e) => update("website", e.target.value)}
-                className={inputClass}
-                placeholder="https://example.nl"
-              />
+            <div><label className={labelClass}>Website</label><input value={form.website} onChange={(e) => update("website", e.target.value)} className={inputClass} placeholder="https://example.nl" /></div>
+            <div><label className={labelClass}>KvK Number</label><input value={form.kvk_number} onChange={(e) => update("kvk_number", e.target.value)} className={inputClass} placeholder="e.g. 12345678" /></div>
+          </div>
+
+          <div><label className={labelClass}>LinkedIn URL</label><input value={form.linkedin_url} onChange={(e) => update("linkedin_url", e.target.value)} className={inputClass} placeholder="https://linkedin.com/in/..." /></div>
+
+          {mode === "edit" && (
+            <div><label className={labelClass}>Status</label>
+              <select value={form.status} onChange={(e) => update("status", e.target.value)} className={selectClass}>
+                {STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
             </div>
-            <div>
-              <label className={labelClass}>KvK Number</label>
-              <input
-                value={form.kvk_number}
-                onChange={(e) => update("kvk_number", e.target.value)}
-                className={inputClass}
-                placeholder="e.g. 12345678"
-              />
-            </div>
-          </div>
+          )}
 
-          <div>
-            <label className={labelClass}>LinkedIn URL</label>
-            <input
-              value={form.linkedin_url}
-              onChange={(e) => update("linkedin_url", e.target.value)}
-              className={inputClass}
-              placeholder="https://linkedin.com/in/..."
-            />
-          </div>
-
-          <div>
-            <label className={labelClass}>Status</label>
-            <select
-              value={form.status}
-              onChange={(e) => update("status", e.target.value)}
-              className={selectClass}
-            >
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className={labelClass}>Notes</label>
-            <textarea
-              value={form.notes}
-              onChange={(e) => update("notes", e.target.value)}
-              rows={3}
-              className={`${inputClass} resize-none`}
-              placeholder="Internal notes..."
-            />
-          </div>
+          <div><label className={labelClass}>Notes</label><textarea value={form.notes} onChange={(e) => update("notes", e.target.value)} rows={3} className={`${inputClass} resize-none`} placeholder="Internal notes..." /></div>
         </div>
-
-        {/* Footer */}
         <div className="flex gap-2 px-6 py-4 border-t border-pw-border shrink-0">
-          <button
-            onClick={onClose}
-            className="flex-1 px-3 py-2 text-xs font-semibold rounded-lg border border-pw-border hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={saving}
-            className="flex-1 px-3 py-2 text-xs font-semibold rounded-lg bg-pw-blue text-white hover:bg-blue-600 disabled:opacity-50 flex items-center justify-center gap-1.5"
-          >
-            {saving ? (
-              <Loader2 size={12} className="animate-spin" />
-            ) : (
-              <CheckCircle2 size={12} />
-            )}
-            Save Changes
+          <button onClick={onClose} className="flex-1 px-3 py-2 text-xs font-semibold rounded-lg border border-pw-border hover:bg-gray-50">Cancel</button>
+          <button onClick={handleSubmit} disabled={saving}
+            className="flex-1 px-3 py-2 text-xs font-semibold rounded-lg bg-pw-blue text-white hover:bg-blue-600 disabled:opacity-50 flex items-center justify-center gap-1.5">
+            {saving ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
+            {mode === "edit" ? "Save Changes" : "Add Contact"}
           </button>
         </div>
       </div>
@@ -1279,29 +770,15 @@ function EditContactModal({
 }
 
 /* ─── Import Modal ─── */
-function ImportModal({
-  onClose,
-  onImport,
-}: {
-  onClose: () => void;
-  onImport: (file: File) => void;
-}) {
+function ImportModal({ onClose, onImport }: { onClose: () => void; onImport: (file: File) => void }) {
   const [dragOver, setDragOver] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
   function handleDrop(e: React.DragEvent) {
-    e.preventDefault();
-    setDragOver(false);
+    e.preventDefault(); setDragOver(false);
     const f = e.dataTransfer.files[0];
     if (f && (f.name.endsWith(".csv") || f.name.endsWith(".tsv"))) setFile(f);
-  }
-
-  async function handleSubmit() {
-    if (!file) return;
-    setUploading(true);
-    await onImport(file);
-    setUploading(false);
   }
 
   return (
@@ -1309,87 +786,38 @@ function ImportModal({
       <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-bold text-pw-navy">Import Contacts</h3>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg hover:bg-gray-100"
-          >
-            <X size={16} className="text-pw-muted" />
-          </button>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100"><X size={16} className="text-pw-muted" /></button>
         </div>
-        <div
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragOver(true);
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-xl p-8 text-center ${
-            dragOver ? "border-pw-blue bg-blue-50" : "border-pw-border"
-          }`}
-        >
+        <div onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={handleDrop}
+          className={`border-2 border-dashed rounded-xl p-8 text-center ${dragOver ? "border-pw-blue bg-blue-50" : "border-pw-border"}`}>
           {file ? (
             <div>
-              <CheckCircle2
-                size={24}
-                className="mx-auto mb-2 text-pw-green"
-              />
+              <CheckCircle2 size={24} className="mx-auto mb-2 text-pw-green" />
               <p className="text-xs font-semibold text-pw-text">{file.name}</p>
-              <p className="text-[10px] text-pw-muted mt-1">
-                {(file.size / 1024).toFixed(1)} KB
-              </p>
+              <p className="text-[10px] text-pw-muted mt-1">{(file.size / 1024).toFixed(1)} KB</p>
             </div>
           ) : (
             <div>
               <Upload size={24} className="mx-auto mb-2 text-pw-muted" />
-              <p className="text-xs text-pw-muted mb-2">
-                Drag &amp; drop a CSV, or click to browse
-              </p>
+              <p className="text-xs text-pw-muted mb-2">Drag &amp; drop a CSV, or click to browse</p>
               <label className="inline-block px-3 py-1.5 text-[11px] font-semibold text-pw-blue bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100">
                 Choose file
-                <input
-                  type="file"
-                  accept=".csv,.tsv"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) setFile(f);
-                  }}
-                />
+                <input type="file" accept=".csv,.tsv" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) setFile(f); }} />
               </label>
             </div>
           )}
         </div>
         <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-          <p className="text-[10px] font-semibold text-pw-muted mb-1">
-            Expected CSV columns:
-          </p>
-          <p className="text-[10px] text-pw-muted font-mono">
-            organization_name, type, website, contact_person, contact_role,
-            contact_email, city, beat
-          </p>
-          <p className="text-[9px] text-pw-muted mt-1">
-            Types: incasso, aid_org, gemeente, bewindvoerder, kredietbank,
-            journalist
-          </p>
+          <p className="text-[10px] font-semibold text-pw-muted mb-1">Expected CSV columns:</p>
+          <p className="text-[10px] text-pw-muted font-mono">organization_name, type, website, contact_person, contact_role, contact_email, city, beat</p>
+          <p className="text-[9px] text-pw-muted mt-1">Types: incasso, aid_org, gemeente, bewindvoerder, kredietbank, journalist</p>
         </div>
         <div className="flex gap-2 mt-4">
-          <button
-            onClick={onClose}
-            className="flex-1 px-3 py-2 text-xs font-semibold rounded-lg border border-pw-border hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
+          <button onClick={onClose} className="flex-1 px-3 py-2 text-xs font-semibold rounded-lg border border-pw-border hover:bg-gray-50">Cancel</button>
+          <button onClick={async () => { if (!file) return; setUploading(true); await onImport(file); setUploading(false); }}
             disabled={!file || uploading}
-            className="flex-1 px-3 py-2 text-xs font-semibold rounded-lg bg-pw-blue text-white hover:bg-blue-600 disabled:opacity-50 flex items-center justify-center gap-1.5"
-          >
-            {uploading ? (
-              <Loader2 size={12} className="animate-spin" />
-            ) : (
-              <Upload size={12} />
-            )}{" "}
-            Import
+            className="flex-1 px-3 py-2 text-xs font-semibold rounded-lg bg-pw-blue text-white hover:bg-blue-600 disabled:opacity-50 flex items-center justify-center gap-1.5">
+            {uploading ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />} Import
           </button>
         </div>
       </div>

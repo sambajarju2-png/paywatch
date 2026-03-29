@@ -33,18 +33,12 @@ export async function GET(req: NextRequest) {
     const { data, error } = await query.limit(200);
     if (error) {
       console.error("[Outreach Contacts]", error);
-      return NextResponse.json(
-        { error: "Failed to fetch contacts" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to fetch contacts" }, { status: 500 });
     }
     return NextResponse.json({ contacts: data || [] });
   } catch (err) {
     console.error("[Outreach Contacts]", err);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -78,18 +72,12 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error("[Outreach Contacts POST]", error);
-      return NextResponse.json(
-        { error: "Failed to create contact" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to create contact" }, { status: 500 });
     }
     return NextResponse.json({ contact: data }, { status: 201 });
   } catch (err) {
     console.error("[Outreach Contacts POST]", err);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -97,42 +85,25 @@ export async function PATCH(req: NextRequest) {
   try {
     const supabase = createServiceRoleClient();
     const body = await req.json();
-
     const { id, ...fields } = body;
+
     if (!id) {
       return NextResponse.json({ error: "id required" }, { status: 400 });
     }
 
     const allowedFields = [
-      "organization_name",
-      "type",
-      "website",
-      "contact_person",
-      "contact_role",
-      "contact_email",
-      "general_email",
-      "phone",
-      "city",
-      "kvk_number",
-      "linkedin_url",
-      "beat",
-      "notes",
-      "status",
-      "tags",
+      "organization_name", "type", "website", "contact_person", "contact_role",
+      "contact_email", "general_email", "phone", "city", "kvk_number",
+      "linkedin_url", "beat", "notes", "status", "tags",
     ];
 
     const updates: Record<string, unknown> = {};
     for (const key of allowedFields) {
-      if (key in fields) {
-        updates[key] = fields[key];
-      }
+      if (key in fields) updates[key] = fields[key];
     }
 
     if (Object.keys(updates).length === 0) {
-      return NextResponse.json(
-        { error: "No valid fields to update" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
     }
 
     updates.updated_at = new Date().toISOString();
@@ -146,19 +117,12 @@ export async function PATCH(req: NextRequest) {
 
     if (error) {
       console.error("[Outreach Contacts PATCH]", error);
-      return NextResponse.json(
-        { error: "Failed to update contact" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to update contact" }, { status: 500 });
     }
-
     return NextResponse.json({ contact: data });
   } catch (err) {
     console.error("[Outreach Contacts PATCH]", err);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -172,24 +136,14 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "id required" }, { status: 400 });
     }
 
-    const { error } = await supabase
-      .from("b2b_contacts")
-      .delete()
-      .eq("id", id);
-
+    const { error } = await supabase.from("b2b_contacts").delete().eq("id", id);
     if (error) {
       console.error("[Outreach Contacts DELETE]", error);
-      return NextResponse.json(
-        { error: "Failed to delete" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
     }
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("[Outreach Contacts DELETE]", err);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
