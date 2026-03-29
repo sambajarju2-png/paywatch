@@ -264,17 +264,19 @@ export async function POST(req: NextRequest) {
 
         // Update campaign total_sent
         if (email.campaign_id) {
-          await supabase.rpc("increment_campaign_sent", {
-            cid: email.campaign_id,
-          }).catch(() => {
+          try {
+            await supabase.rpc("increment_campaign_sent", {
+              cid: email.campaign_id,
+            });
+          } catch {
             // Fallback: direct update
-            supabase
+            await supabase
               .from("b2b_campaigns")
               .update({
-                total_sent: currentSent + 1,
+                total_sent: (sendCounts.get(email.campaign_id) || 0) + 1,
               })
               .eq("id", email.campaign_id);
-          });
+          }
         }
 
         totalSent++;
