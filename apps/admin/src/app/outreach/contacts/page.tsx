@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 import { useState, useEffect, useCallback } from "react";
 import {
@@ -478,7 +479,7 @@ export default function OutreachContacts() {
                     <input type="checkbox" checked={selectedIds.has(c.id)} onChange={() => toggleSelect(c.id)} className="rounded border-gray-300 accent-pw-blue" />
                   </td>
                   <td className="px-4 py-3">
-                    <div className="font-semibold text-pw-text">{c.organization_name}</div>
+                    <Link href={`/outreach/contacts/${c.id}`} className="font-semibold text-pw-text hover:text-pw-blue transition-colors">{c.organization_name}</Link>
                     {c.website && (
                       <a href={c.website} target="_blank" rel="noopener noreferrer" className="text-[10px] text-pw-blue flex items-center gap-0.5 hover:underline mt-0.5">
                         <Globe size={8} /> {c.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
