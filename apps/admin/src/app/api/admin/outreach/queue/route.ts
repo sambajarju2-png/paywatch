@@ -18,46 +18,40 @@ export async function GET(req: NextRequest) {
     let query = supabase
       .from("b2b_email_log")
       .select(
-        "id, to_name, to_email, from_email, from_name, subject, sequence_step, status, sent_at, delivered_at, opened_at, replied_at, bounced_at, scheduled_for, campaign_id"
+        "id, campaign_id, contact_id, sequence_step, to_email, to_name, from_email, from_name, subject, body_html, body_text, status, sent_at, delivered_at, opened_at, clicked_at, replied_at, bounced_at, bounce_type, scheduled_for, created_at, b2b_campaigns(name)"
       )
-      .order("scheduled_for", { ascending: false })
-      .limit(100);
+      .order("scheduled_for", { ascending: true });
 
     if (status && status !== "all") {
       query = query.eq("status", status);
     }
 
-    const { data: emails, error } = await query;
+    const { data, error } = await query.limit(200);
 
     if (error) {
-      console.error("[Queue GET]", error);
-      return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
-    }
-
-    // Enrich with campaign names
-    const campaignIds = [
-      ...new Set((emails || []).map((e) => e.campaign_id).filter(Boolean)),
-    ];
-
-    let campaignMap = new Map<string, string>();
-    if (campaignIds.length > 0) {
-      const { data: campaigns } = await supabase
-        .from("b2b_campaigns")
-        .select("id, name")
-        .in("id", campaignIds);
-      campaignMap = new Map(
-        campaigns?.map((c) => [c.id, c.name]) || []
+      console.error("[Outreach Queue]", error);
+      return NextResponse.json(
+        { error: "Failed to fetch queue" },
+        { status: 500 }
       );
     }
 
-    const enriched = (emails || []).map((e) => ({
-      ...e,
-      campaign_name: campaignMap.get(e.campaign_id) || "—",
-    }));
+    // Map campaign name from join
+    const emails = (data || []).map((e: Record<string, unknown>) => {
+      const campaigns = e.b2b_campaigns as { name: string } | null;
+      return {
+        ...e,
+        campaign_name: campaigns?.name || "—",
+        b2b_campaigns: undefined,
+      };
+    });
 
-    return NextResponse.json({ emails: enriched });
+    return NextResponse.json({ emails });
   } catch (err) {
-    console.error("[Queue GET]", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    console.error("[Outreach Queue]", err);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

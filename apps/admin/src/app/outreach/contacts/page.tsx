@@ -121,6 +121,7 @@ export default function OutreachContacts() {
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
+  const [expandedResearch, setExpandedResearch] = useState<Set<string>>(new Set());
 
   // 3-dot menu portal
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -385,7 +386,7 @@ export default function OutreachContacts() {
       {/* Journalist beat sub-filter */}
       {typeFilter === "journalist" && (
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[10px] font-semibold text-pw-muted mr-1">Beat:</span>
+          <span className="text-[10px] font-semibold text-pw-muted mr-1">Sub category:</span>
           <button onClick={() => setBeatFilter(null)}
             className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors ${
               !beatFilter ? "bg-purple-100 text-purple-700" : "bg-white text-pw-muted border border-pw-border hover:bg-gray-50"
@@ -511,9 +512,12 @@ export default function OutreachContacts() {
                   </td>
                   <td className="px-4 py-3">
                     {c.ai_research_summary ? (
-                      <div className="max-w-[200px]">
-                        <p className="text-[10px] text-pw-text line-clamp-2">{c.ai_research_summary}</p>
-                        <p className="text-[9px] text-pw-muted mt-0.5">{c.ai_researched_at ? new Date(c.ai_researched_at).toLocaleDateString("nl-NL") : ""}</p>
+                      <div className="max-w-[250px] cursor-pointer" onClick={() => setExpandedResearch((prev) => { const n = new Set(prev); if (n.has(c.id)) n.delete(c.id); else n.add(c.id); return n; })}>
+                        <p className={`text-[10px] text-pw-text ${expandedResearch.has(c.id) ? "" : "line-clamp-2"}`}>{c.ai_research_summary}</p>
+                        <p className="text-[9px] text-pw-muted mt-0.5">
+                          {c.ai_researched_at ? new Date(c.ai_researched_at).toLocaleDateString("nl-NL") : ""}
+                          <span className="ml-1 text-pw-blue">{expandedResearch.has(c.id) ? "Show less" : "Show more"}</span>
+                        </p>
                       </div>
                     ) : (
                       <button onClick={() => handleResearch(c.id)} disabled={researchingId === c.id}
