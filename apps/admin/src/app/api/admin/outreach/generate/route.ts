@@ -11,35 +11,43 @@ function createServiceRoleClient() {
 }
 
 // Derive sign-off name from sender email
-function getSenderSignOff(email: string, displayName: string): string {
+function getSenderSignOff(email: string): string {
   const local = email.split("@")[0].toLowerCase();
-  if (local === "mariama") return "Mariama Sesay";
-  // samba@, info@, team@ → Samba Jarju
+  if (local === "mariama" || local === "sesay") return "Mariama Sesay";
   return "Samba Jarju";
 }
 
-const EMAIL_SYSTEM_PROMPT = `You are the outreach copywriter for PayWatch (paywatch.app), a Dutch bill tracking app.
-ABOUT: PWA scanning Gmail/Outlook, tracking escalation (factuur to deurwaarder), AI extraction.
-TONE: Natural, warm but professional. Use "u" form. Write like a real person, not a template. Never sound robotic or salesy.
-CRITICAL STYLE RULES:
-- NEVER use dashes (-), em dashes (—), or double dashes (--) anywhere in the email
-- Write naturally flowing sentences, no bullet points
-- Dutch "u" form unless language is English
-- Max 120 words step 1, 80 words follow-ups
-- One clear ask per email
-- Reference their specific company/role
-- Subject under 50 chars, natural sounding
-- No images, max 1 link
-- Include real postal address: PayWatch B.V., Rotterdam
-- End with small unsubscribe line
-BY TYPE:
-- incasso: help them get paid earlier and reduce collection costs
-- aid_org: help them help their clients get financial oversight and avoid debt spiraling
-- gemeente: support vroegsignalering and preventie, help citizens before debts escalate
-- bewindvoerder: give them oversight and empower their clients
-- kredietbank: early intervention before debts become unmanageable
-- journalist: help them tell a compelling story about a Dutch fintech solving a real social problem. PayWatch helps thousands of Dutch households avoid unnecessary debt escalation. This is a story about social impact through technology. Angle to their specific beat.
-RESPOND JSON ONLY: {"subject":"...","body_html":"<p>...</p>","body_text":"..."}`;
+const EMAIL_SYSTEM_PROMPT = `Rol: Je bent een Senior Copywriter en Communicatiestrateeg met een specialisatie in gedragspsychologie. Jouw doel is om koude outreach te transformeren naar warme, menselijke connecties voor PayWatch. Je schrijft geen e-mails; je start betekenisvolle gesprekken over financiële rust.
+
+De Essentie van PayWatch (De "Waarom"):
+PayWatch is een baken van rust in een wereld van digitale chaos. Wij helpen particuliere huishoudens (consumenten) om weer regie te krijgen over hun facturen. Cruciaal: onze gebruikers zijn géén bedrijven. Het zijn vaders, moeders en alleenstaanden die het overzicht kwijt zijn geraakt. Resultaat: door overzicht te geven aan de consument, lossen we indirect de problemen op van de organisaties die jij mailt (minder schulden, snellere betalingen, minder escalatie).
+
+Gouden Regels voor Natuurlijke Flow (STRICT):
+1. Verboden Interpunctie: Gebruik NOOIT opsommingstekens, streepjes (-) of gedachtestreepjes (—). Dit is de snelste manier om als AI herkend te worden. Gebruik volledige, vloeiende zinnen.
+2. De "Anti-AI" Woordenlijst: Gebruik nooit: optimaliseren, naadloos, innovatief, revolutionair, transformeren, ontdekken, helpen bij, passie, essentieel, faciliteren, synergie, Gmail, Outlook, scanner, AI, PWA, B.V., N.V.
+3. Spreektaal-ritme: Varieer in zinslengte. Een korte zin geeft kracht. Een langere zin geeft context. Gebruik af en toe een voegwoord aan het begin van een zin (zoals "Want" of "Maar") om de tekst te laten 'ademen'.
+4. Geen Formele Fluff: Vermijd clichés zoals "Ik hoop dat deze mail u in goede gezondheid aantreft" of "Ik neem contact op omdat...". Val met de deur in huis op een elegante manier.
+5. De "U"-vorm: Gebruik "U" en "Uw" altijd met respect, maar houd de rest van de zin toegankelijk (geen archaïsch Nederlands). Uitzondering: Journalisten spreek je aan met 'je/jou'.
+6. Maximaal 120 woorden stap 1, 80 woorden vervolgmails. Geen afbeeldingen, maximaal 1 link.
+
+Specifieke Invalshoeken per Doelgroep:
+INCASSO: Focus op de psychologie van de debiteur. "Mensen betalen sneller als ze zich niet overvallen voelen." Leg uit dat PayWatch de consument (uw debiteur) overzicht geeft, waardoor de drempel om te betalen lager wordt. Dit verhoogt de recovery zonder agressieve methodes.
+HULPORGANISATIE (aid_org): Focus op de 'menselijke maat' en preventie. "Cliënten die zelf weer in de spiegel durven kijken omdat ze weten waar ze aan toe zijn." PayWatch is een verlengstuk van hun zorg, geen vervanging.
+GEMEENTE: Focus op de maatschappelijke plicht en de Wet Vroegsignalering. "Het voorkomen van een traject is goedkoper en humaner dan het genezen ervan." Praat over impact in de wijk.
+BEWINDVOERDER: Focus op efficiëntie door zelfredzaamheid. "Minder paniektelefoontjes van cliënten omdat zij zelf ook het overzicht hebben in de app."
+KREDIETBANK: Focus op vroeg ingrijpen. Minder aanmeldingen voor schuldsanering als consumenten eerder overzicht krijgen.
+JOURNALIST: Schrijf als een vakgenoot die een 'primeur' of een frisse hoek deelt. De insteek is de "stille schuldencrisis" en hoe Nederlandse tech dit eindelijk menselijk maakt. Toon is informeel (je/jij). Pas de invalshoek aan op hun beat.
+
+Stappenplan voor de Output:
+1. Onderwerp: Maximaal 5 tot 7 woorden. Moet lijken op een interne mail (bijv: "Vraagje over de vroegsignalering in [Stad]").
+2. De Hook: Gebruik de RESEARCH data om direct te laten zien dat je weet wie ze zijn. Geen algemeenheden.
+3. De Brug: Verbind hun probleem (bijv. hoge werkdruk, oplopende schulden in de wijk) met de oplossing die PayWatch biedt aan de consument.
+4. Call to Action: Altijd een vraag die met "Ja" of een kort antwoord beantwoord kan worden. Geen verzoek om een "demo van 30 minuten".
+5. Afsluiting: Altijd "Groetjes," gevolgd door de AFZENDER naam, dan op een nieuwe regel "PayWatch, Rotterdam".
+
+Eindcontrole: Scan de tekst. Zitten er streepjes in? Verwijder ze. Klinkt het als een template? Schrijf het om. Is de focus op de consument als eindgebruiker duidelijk? Zo ja, genereer de JSON.
+
+ANTWOORD ALLEEN JSON: {"subject":"...","body_html":"<p>...</p>","body_text":"..."}`;
 
 // POST — Generate emails for a campaign
 export async function POST(req: NextRequest) {
@@ -68,7 +76,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Fetch matching contacts (not bounced, have email)
+    // Fetch matching contacts
     let contactQuery = supabase
       .from("b2b_contacts")
       .select("*")
@@ -79,7 +87,6 @@ export async function POST(req: NextRequest) {
       contactQuery = contactQuery.eq("type", campaign.target_type);
     }
 
-    // Filter by target_tags if set
     if (campaign.target_tags && campaign.target_tags.length > 0) {
       contactQuery = contactQuery.overlaps("tags", campaign.target_tags);
     }
@@ -93,7 +100,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check which contacts already have emails for this campaign
+    // Check existing emails for this campaign
     const { data: existingLogs } = await supabase
       .from("b2b_email_log")
       .select("contact_id, sequence_step")
@@ -105,7 +112,7 @@ export async function POST(req: NextRequest) {
       )
     );
 
-    // Resolve sending accounts (multi-sender support)
+    // Resolve sending accounts (multi-sender)
     const fromAccountEmails =
       campaign.from_accounts && campaign.from_accounts.length > 0
         ? campaign.from_accounts
@@ -119,7 +126,7 @@ export async function POST(req: NextRequest) {
 
     if (!sendingAccounts || sendingAccounts.length === 0) {
       return NextResponse.json(
-        { error: "No active sending accounts found for this campaign" },
+        { error: "No active sending accounts found" },
         { status: 400 }
       );
     }
@@ -132,8 +139,6 @@ export async function POST(req: NextRequest) {
     let generated = 0;
     let skipped = 0;
     let errors = 0;
-
-    // Round-robin account index
     let accountIdx = 0;
 
     for (const contact of contacts) {
@@ -142,26 +147,24 @@ export async function POST(req: NextRequest) {
         const stepNum = stepIdx + 1;
         const key = `${contact.id}-${stepNum}`;
 
-        // Skip if already generated
         if (existingSet.has(key)) {
           skipped++;
           continue;
         }
 
-        // Pick account via round-robin
+        // Round-robin account
         const account =
           sendingAccounts[accountIdx % sendingAccounts.length];
         accountIdx++;
 
         const fromEmail = account.email;
         const fromName = account.display_name;
-        const signOffName = getSenderSignOff(fromEmail, fromName);
+        const signOffName = getSenderSignOff(fromEmail);
 
         try {
-          // Build journalist-specific context
           const beatContext =
             contact.type === "journalist" && contact.beat
-              ? `\nJOURNALIST BEAT: ${contact.beat}. Tailor the angle to this beat.`
+              ? `\nBEAT: ${contact.beat}. Pas de invalshoek aan op deze beat.`
               : "";
 
           const message = await anthropic.messages.create({
@@ -171,17 +174,17 @@ export async function POST(req: NextRequest) {
             messages: [
               {
                 role: "user",
-                content: `COMPANY: ${contact.organization_name} (${contact.type}) — ${contact.city || "NL"}
-Contact: ${contact.contact_person || "Team"}, ${contact.contact_role || ""}
-Research: ${contact.ai_research_summary || "No research available"}${beatContext}
-CAMPAIGN: ${campaign.campaign_brief}
-TONE: ${campaign.tone?.replace(/_/g, " ") || "professional warm"}
-LANGUAGE: ${campaign.language || "nl"}
-STEP: ${stepNum} of ${steps.length} (${step.type})
-${stepNum > 1 ? "This is a follow-up. Be shorter, reference the previous email." : ""}
-SENDER: ${signOffName}. Always sign off with "Groetjes,\\n${signOffName}" (or "Best regards,\\n${signOffName}" if English).
+                content: `ORGANISATIE: ${contact.organization_name} (${contact.type}) in ${contact.city || "Nederland"}
+CONTACT: ${contact.contact_person || "Team"}, ${contact.contact_role || ""}
+RESEARCH: ${contact.ai_research_summary || "Geen research beschikbaar. Schrijf op basis van het organisatietype."}${beatContext}
+CAMPAGNE INSTRUCTIE: ${campaign.campaign_brief}
+TOON: ${campaign.tone?.replace(/_/g, " ") || "professional warm"}
+TAAL: ${campaign.language === "en" ? "Engels" : "Nederlands"}
+STAP: ${stepNum} van ${steps.length} (${step.type})
+${stepNum > 1 ? "Dit is een vervolg. Wees korter, verwijs naar de vorige mail." : ""}
+AFZENDER: ${signOffName}
 
-Generate the email now. JSON only.`,
+Genereer de email. Alleen JSON.`,
               },
             ],
           });
@@ -191,7 +194,6 @@ Generate the email now. JSON only.`,
               ? message.content[0].text
               : "";
 
-          // Parse JSON
           let emailData: {
             subject: string;
             body_html: string;
@@ -209,14 +211,12 @@ Generate the email now. JSON only.`,
             }
           }
 
-          // Calculate scheduled time
+          // Schedule send time
           const scheduledFor = new Date();
           scheduledFor.setDate(scheduledFor.getDate() + (step.day || 0));
-          // Send between 9-17 NL time (UTC+1/+2)
           scheduledFor.setUTCHours(8 + Math.floor(Math.random() * 8));
           scheduledFor.setUTCMinutes(Math.floor(Math.random() * 60));
 
-          // Insert into email log
           const { error: insertError } = await supabase
             .from("b2b_email_log")
             .insert({
@@ -241,7 +241,6 @@ Generate the email now. JSON only.`,
             generated++;
           }
 
-          // Small delay between AI calls
           await new Promise((r) => setTimeout(r, 500));
         } catch (err) {
           console.error(
@@ -253,7 +252,6 @@ Generate the email now. JSON only.`,
       }
     }
 
-    // Update campaign total_contacts
     await supabase
       .from("b2b_campaigns")
       .update({ total_contacts: contacts.length })

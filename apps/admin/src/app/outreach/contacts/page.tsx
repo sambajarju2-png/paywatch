@@ -165,12 +165,11 @@ export default function OutreachContacts() {
 
   useEffect(() => { fetchContacts(); fetchLists(); }, [fetchContacts, fetchLists]);
 
-  // Close menus on outside click
+  // Close 3-dot menu on outside click (NOT the bulk list menu — that has its own toggle)
   useEffect(() => {
     function handleClick() {
       setOpenMenuId(null);
       setMenuPos(null);
-      setShowBulkListMenu(false);
     }
     document.addEventListener("click", handleClick);
     return () => document.removeEventListener("click", handleClick);
