@@ -27,7 +27,10 @@ interface Contact {
   general_email: string | null;
   phone: string | null;
   city: string | null;
+  kvk_number: string | null;
+  linkedin_url: string | null;
   beat: string | null;
+  notes: string | null;
   status: string;
   ai_research_summary: string | null;
   ai_researched_at: string | null;
@@ -44,6 +47,36 @@ const TYPE_LABELS: Record<string, string> = {
   kredietbank: "Kredietbank",
   journalist: "Journalist",
 };
+
+const TYPE_OPTIONS: { value: string; label: string }[] = [
+  { value: "incasso", label: "Incasso" },
+  { value: "aid_org", label: "Hulporganisatie" },
+  { value: "gemeente", label: "Gemeente" },
+  { value: "bewindvoerder", label: "Bewindvoerder" },
+  { value: "kredietbank", label: "Kredietbank" },
+  { value: "journalist", label: "Journalist" },
+];
+
+const STATUS_OPTIONS: { value: string; label: string }[] = [
+  { value: "new", label: "New" },
+  { value: "researched", label: "Researched" },
+  { value: "queued", label: "Queued" },
+  { value: "contacted", label: "Contacted" },
+  { value: "replied", label: "Replied" },
+  { value: "meeting_booked", label: "Meeting Booked" },
+  { value: "not_interested", label: "Not Interested" },
+  { value: "bounced", label: "Bounced" },
+];
+
+const BEAT_OPTIONS: { value: string; label: string }[] = [
+  { value: "", label: "— None —" },
+  { value: "tech", label: "Tech" },
+  { value: "society", label: "Society" },
+  { value: "debt", label: "Debt" },
+  { value: "young_people", label: "Young People" },
+  { value: "finance", label: "Finance" },
+  { value: "politics", label: "Politics" },
+];
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   new: { bg: "bg-blue-50", text: "text-pw-blue" },
@@ -67,6 +100,7 @@ export default function OutreachContacts() {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [editingContact, setEditingContact] = useState<Contact | null>(null);
 
   const fetchContacts = useCallback(async () => {
     try {
@@ -117,7 +151,6 @@ export default function OutreachContacts() {
         body: JSON.stringify({ contactId }),
       });
       if (res.ok) {
-        const data = await res.json();
         await fetchContacts();
       }
     } catch { console.error("Verify error"); }
@@ -132,6 +165,22 @@ export default function OutreachContacts() {
       if (res.ok) await fetchContacts();
     } catch { console.error("Delete error"); }
     finally { setDeleteConfirmId(null); }
+  }
+
+  async function handleEditSave(contactId: string, updates: Partial<Contact>) {
+    try {
+      const res = await fetch("/api/admin/outreach/contacts", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: contactId, ...updates }),
+      });
+      if (!res.ok) throw new Error("Update failed");
+      await fetchContacts();
+      setEditingContact(null);
+    } catch (err) {
+      console.error("Edit error:", err);
+      throw err;
+    }
   }
 
   async function handleImport(file: File) {
@@ -294,6 +343,12 @@ export default function OutreachContacts() {
                         {openMenuId === c.id && (
                           <div className="absolute right-0 top-8 w-40 bg-white rounded-lg border border-pw-border shadow-lg z-20 py-1">
                             <button
+                              onClick={() => { setEditingContact(c); setOpenMenuId(null); }}
+                              className="flex items-center gap-2 w-full px-3 py-2 text-[11px] text-pw-text hover:bg-gray-50 text-left"
+                            >
+                              <Pencil size={12} className="text-pw-blue" /> Edit Contact
+                            </button>
+                            <button
                               onClick={() => { handleResearch(c.id); setOpenMenuId(null); }}
                               className="flex items-center gap-2 w-full px-3 py-2 text-[11px] text-pw-text hover:bg-gray-50 text-left"
                             >
@@ -345,11 +400,308 @@ export default function OutreachContacts() {
         </div>
       )}
 
+      {/* Edit modal */}
+      {editingContact && (
+        <EditContactModal
+          contact={editingContact}
+          onClose={() => setEditingContact(null)}
+          onSave={handleEditSave}
+        />
+      )}
+
       {showImportModal && <ImportModal onClose={() => setShowImportModal(false)} onImport={handleImport} />}
     </div>
   );
 }
 
+/* ─── Edit Contact Modal ─── */
+function EditContactModal({
+  contact,
+  onClose,
+  onSave,
+}: {
+  contact: Contact;
+  onClose: () => void;
+  onSave: (id: string, updates: Partial<Contact>) => Promise<void>;
+}) {
+  const [form, setForm] = useState({
+    organization_name: contact.organization_name,
+    type: contact.type,
+    website: contact.website || "",
+    contact_person: contact.contact_person || "",
+    contact_role: contact.contact_role || "",
+    contact_email: contact.contact_email || "",
+    general_email: contact.general_email || "",
+    phone: contact.phone || "",
+    city: contact.city || "",
+    kvk_number: contact.kvk_number || "",
+    linkedin_url: contact.linkedin_url || "",
+    beat: contact.beat || "",
+    notes: contact.notes || "",
+    status: contact.status,
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function update(field: string, value: string) {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    // Clear beat when switching away from journalist
+    if (field === "type" && value !== "journalist") {
+      setForm((prev) => ({ ...prev, [field]: value, beat: "" }));
+    }
+  }
+
+  async function handleSubmit() {
+    if (!form.organization_name.trim()) {
+      setError("Organization name is required");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      await onSave(contact.id, {
+        organization_name: form.organization_name.trim(),
+        type: form.type,
+        website: form.website.trim() || null,
+        contact_person: form.contact_person.trim() || null,
+        contact_role: form.contact_role.trim() || null,
+        contact_email: form.contact_email.trim() || null,
+        general_email: form.general_email.trim() || null,
+        phone: form.phone.trim() || null,
+        city: form.city.trim() || null,
+        kvk_number: form.kvk_number.trim() || null,
+        linkedin_url: form.linkedin_url.trim() || null,
+        beat: form.type === "journalist" && form.beat.trim() ? form.beat.trim() : null,
+        notes: form.notes.trim() || null,
+        status: form.status,
+      });
+    } catch {
+      setError("Failed to save changes. Try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const inputClass =
+    "w-full px-3 py-2 text-xs rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue";
+  const selectClass =
+    "w-full px-3 py-2 text-xs rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue appearance-none";
+  const labelClass = "block text-[11px] font-semibold text-pw-muted mb-1";
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-pw-border shrink-0">
+          <div className="flex items-center gap-2">
+            <Pencil size={16} className="text-pw-blue" />
+            <h3 className="text-sm font-bold text-pw-navy">Edit Contact</h3>
+          </div>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100">
+            <X size={16} className="text-pw-muted" />
+          </button>
+        </div>
+
+        {/* Body — scrollable */}
+        <div className="overflow-y-auto px-6 py-4 space-y-4 flex-1">
+          {error && (
+            <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-pw-red">
+              <X size={12} /> {error}
+            </div>
+          )}
+
+          {/* Organization & Type row */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelClass}>Organization Name *</label>
+              <input
+                value={form.organization_name}
+                onChange={(e) => update("organization_name", e.target.value)}
+                className={inputClass}
+                placeholder="e.g. Gemeente Rotterdam"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Type *</label>
+              <select
+                value={form.type}
+                onChange={(e) => update("type", e.target.value)}
+                className={selectClass}
+              >
+                {TYPE_OPTIONS.map((t) => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Beat (only for journalists) */}
+          {form.type === "journalist" && (
+            <div>
+              <label className={labelClass}>Beat</label>
+              <select
+                value={form.beat}
+                onChange={(e) => update("beat", e.target.value)}
+                className={selectClass}
+              >
+                {BEAT_OPTIONS.map((b) => (
+                  <option key={b.value} value={b.value}>{b.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Contact Person & Role */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelClass}>Contact Person</label>
+              <input
+                value={form.contact_person}
+                onChange={(e) => update("contact_person", e.target.value)}
+                className={inputClass}
+                placeholder="e.g. Jan de Vries"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Role</label>
+              <input
+                value={form.contact_role}
+                onChange={(e) => update("contact_role", e.target.value)}
+                className={inputClass}
+                placeholder="e.g. Projectleider"
+              />
+            </div>
+          </div>
+
+          {/* Emails */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelClass}>Contact Email</label>
+              <input
+                type="email"
+                value={form.contact_email}
+                onChange={(e) => update("contact_email", e.target.value)}
+                className={inputClass}
+                placeholder="jan@example.nl"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>General Email</label>
+              <input
+                type="email"
+                value={form.general_email}
+                onChange={(e) => update("general_email", e.target.value)}
+                className={inputClass}
+                placeholder="info@example.nl"
+              />
+            </div>
+          </div>
+
+          {/* Phone & City */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelClass}>Phone</label>
+              <input
+                value={form.phone}
+                onChange={(e) => update("phone", e.target.value)}
+                className={inputClass}
+                placeholder="+31 6 12345678"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>City</label>
+              <input
+                value={form.city}
+                onChange={(e) => update("city", e.target.value)}
+                className={inputClass}
+                placeholder="e.g. Rotterdam"
+              />
+            </div>
+          </div>
+
+          {/* Website & KvK */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelClass}>Website</label>
+              <input
+                value={form.website}
+                onChange={(e) => update("website", e.target.value)}
+                className={inputClass}
+                placeholder="https://example.nl"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>KvK Number</label>
+              <input
+                value={form.kvk_number}
+                onChange={(e) => update("kvk_number", e.target.value)}
+                className={inputClass}
+                placeholder="e.g. 12345678"
+              />
+            </div>
+          </div>
+
+          {/* LinkedIn */}
+          <div>
+            <label className={labelClass}>LinkedIn URL</label>
+            <input
+              value={form.linkedin_url}
+              onChange={(e) => update("linkedin_url", e.target.value)}
+              className={inputClass}
+              placeholder="https://linkedin.com/in/..."
+            />
+          </div>
+
+          {/* Status */}
+          <div>
+            <label className={labelClass}>Status</label>
+            <select
+              value={form.status}
+              onChange={(e) => update("status", e.target.value)}
+              className={selectClass}
+            >
+              {STATUS_OPTIONS.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className={labelClass}>Notes</label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => update("notes", e.target.value)}
+              rows={3}
+              className={`${inputClass} resize-none`}
+              placeholder="Internal notes..."
+            />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex gap-2 px-6 py-4 border-t border-pw-border shrink-0">
+          <button
+            onClick={onClose}
+            className="flex-1 px-3 py-2 text-xs font-semibold rounded-lg border border-pw-border hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={saving}
+            className="flex-1 px-3 py-2 text-xs font-semibold rounded-lg bg-pw-blue text-white hover:bg-blue-600 disabled:opacity-50 flex items-center justify-center gap-1.5"
+          >
+            {saving ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Import Modal ─── */
 function ImportModal({ onClose, onImport }: { onClose: () => void; onImport: (file: File) => void }) {
   const [dragOver, setDragOver] = useState(false);
   const [file, setFile] = useState<File | null>(null);
