@@ -239,12 +239,12 @@ export const jobListings: JobListing[] = [
       en: "Improve our AI pipeline: Gmail scanning, document recognition, escalation classification.",
     },
     longDescription: {
-      nl: "Als AI Engineer verbeter en onderhoud je onze volledige AI-pipeline. Dit omvat Gmail-scanning met Gemini Flash voor classificatie, documentextractie met Claude Haiku, en het herkennen van escalatiefases in Nederlandse rekeningen en aanmaningen. Je werkt aan accuracy, snelheid en kostenoptimalisatie van onze modellen.",
-      en: "As an AI Engineer, you'll improve and maintain our complete AI pipeline. This includes Gmail scanning with Gemini Flash for classification, document extraction with Claude Haiku, and recognizing escalation stages in Dutch bills and formal notices. You'll work on accuracy, speed, and cost optimization of our models.",
+      nl: "Als AI Engineer verbeter en onderhoud je onze volledige AI-pipeline. Dit omvat inbox-scanning voor classificatie, documentextractie, en het herkennen van escalatiefases in Nederlandse rekeningen en aanmaningen. Je werkt aan accuracy, snelheid en kostenoptimalisatie van onze modellen.",
+      en: "As an AI Engineer, you'll improve and maintain our complete AI pipeline. This includes inbox scanning for classification, document extraction, and recognizing escalation stages in Dutch bills and formal notices. You'll work on accuracy, speed, and cost optimization of our models.",
     },
     requirements: {
-      nl: ["Ervaring met LLM APIs (Claude, Gemini)", "Python of TypeScript", "Document processing ervaring", "Zelfstandig en proactief"],
-      en: ["Experience with LLM APIs (Claude, Gemini)", "Python or TypeScript", "Document processing experience", "Self-driven and proactive"],
+      nl: ["Ervaring met LLM APIs", "Python of TypeScript", "Document processing ervaring", "Zelfstandig en proactief"],
+      en: ["Experience with LLM APIs", "Python or TypeScript", "Document processing experience", "Self-driven and proactive"],
     },
     niceToHave: {
       nl: ["Ervaring met OCR of PDF-parsing", "Kennis van Nederlandse financiële documenten", "Fine-tuning ervaring"],
@@ -337,8 +337,6 @@ export const legalAdvisors: AidOrg[] = [
 /* ─── Subprocessors ─── */
 export const subprocessors = [
   { service: "Supabase", purpose: { nl: "Database & authenticatie", en: "Database & authentication" }, data: { nl: "Accountgegevens, rekeningen", en: "Account data, bills" }, location: "EU (eu-west-1)", gdpr: true },
-  { service: "Google Gemini Flash", purpose: { nl: "E-mail classificatie", en: "Email classification" }, data: { nl: "E-mailinhoud (tijdelijk)", en: "Email content (temporary)" }, location: "EU", gdpr: true },
-  { service: "Anthropic Claude Haiku", purpose: { nl: "Data extractie uit rekeningen", en: "Data extraction from bills" }, data: { nl: "Rekeningtekst (tijdelijk)", en: "Bill text (temporary)" }, location: "US (EU DPA)", gdpr: true },
   { service: "Vercel", purpose: { nl: "Hosting & deployment", en: "Hosting & deployment" }, data: { nl: "Verzoekdata, cookies", en: "Request data, cookies" }, location: "Global (EU edge)", gdpr: true },
   { service: "Resend", purpose: { nl: "Transactionele e-mails", en: "Transactional emails" }, data: { nl: "E-mailadres, naam", en: "Email address, name" }, location: "US (EU DPA)", gdpr: true },
   { service: "Sanity.io", purpose: { nl: "Content management", en: "Content management" }, data: { nl: "Geen persoonsgegevens", en: "No personal data" }, location: "EU", gdpr: true },
