@@ -124,7 +124,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <CookieBanner />
           </SanityContentProvider>
         </AppProvider>
-      </body>
+      <Analytics />
+</body>
     </html>
   );
 }
