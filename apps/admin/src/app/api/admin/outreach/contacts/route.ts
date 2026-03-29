@@ -22,14 +22,8 @@ export async function GET(req: NextRequest) {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (type && type !== "all") {
-      query = query.eq("type", type);
-    }
-
-    if (status) {
-      query = query.eq("status", status);
-    }
-
+    if (type && type !== "all") query = query.eq("type", type);
+    if (status) query = query.eq("status", status);
     if (search) {
       query = query.or(
         `organization_name.ilike.%${search}%,contact_person.ilike.%${search}%,contact_email.ilike.%${search}%,city.ilike.%${search}%`
@@ -37,31 +31,21 @@ export async function GET(req: NextRequest) {
     }
 
     const { data, error } = await query.limit(200);
-
     if (error) {
       console.error("[Outreach Contacts]", error);
-      return NextResponse.json(
-        { error: "Failed to fetch contacts" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to fetch contacts" }, { status: 500 });
     }
-
     return NextResponse.json({ contacts: data || [] });
   } catch (err) {
     console.error("[Outreach Contacts]", err);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
-// POST — Create a single contact manually
 export async function POST(req: NextRequest) {
   try {
     const supabase = createServiceRoleClient();
     const body = await req.json();
-
     const { data, error } = await supabase
       .from("b2b_contacts")
       .insert({
@@ -76,6 +60,7 @@ export async function POST(req: NextRequest) {
         city: body.city || null,
         kvk_number: body.kvk_number || null,
         linkedin_url: body.linkedin_url || null,
+        beat: body.beat || null,
         notes: body.notes || null,
         source: body.source || "manual",
         tags: body.tags || [],
@@ -83,21 +68,36 @@ export async function POST(req: NextRequest) {
       })
       .select()
       .single();
-
     if (error) {
       console.error("[Outreach Contacts POST]", error);
-      return NextResponse.json(
-        { error: "Failed to create contact" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to create contact" }, { status: 500 });
     }
-
     return NextResponse.json({ contact: data }, { status: 201 });
   } catch (err) {
     console.error("[Outreach Contacts POST]", err);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const supabase = createServiceRoleClient();
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ error: "id required" }, { status: 400 });
+    }
+    const { error } = await supabase
+      .from("b2b_contacts")
+      .delete()
+      .eq("id", id);
+    if (error) {
+      console.error("[Outreach Contacts DELETE]", error);
+      return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
+    }
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("[Outreach Contacts DELETE]", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
