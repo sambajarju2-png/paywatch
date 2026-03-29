@@ -29,7 +29,7 @@ const translations = {
     hero: {
       badge: "🇪🇺 Gebouwd in de EU",
       title: "Grip op je rekeningen.",
-      subtitle: "PayWatch herkent je rekeningen — uit je inbox, via je camera of met een QR-code. Zie direct in welke fase ze zitten en handel voordat het duurder wordt.",
+      subtitle: "PayWatch verzamelt al je rekeningen op één plek en waarschuwt je voordat een betalingstermijn verloopt. Je ziet direct welke rekening vandaag je aandacht nodig heeft, zodat je incassokosten voor bent en altijd grip houdt op je budget.",
       cta: "Start gratis",
       secondary: "Bekijk functies",
       trust: "Beschikbaar in 43+ gemeenten",
@@ -200,7 +200,7 @@ const translations = {
     hero: {
       badge: "🇪🇺 Built in the EU",
       title: "Take control of your bills.",
-      subtitle: "PayWatch finds your bills — from your inbox, your camera, or a QR code. See exactly what stage they're at and act before costs pile up.",
+      subtitle: "PayWatch collects all your bills in one place and alerts you before a payment deadline passes. See which bill needs your attention today, so you stay ahead of collection costs and always keep grip on your budget.",
       cta: "Start free",
       secondary: "View features",
       trust: "Available in 43+ municipalities",
