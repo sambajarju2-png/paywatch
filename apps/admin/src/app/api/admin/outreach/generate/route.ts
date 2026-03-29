@@ -10,6 +10,14 @@ function createServiceRoleClient() {
   );
 }
 
+// Derive sign-off name from sender email
+function getSenderSignOff(email: string, displayName: string): string {
+  const local = email.split("@")[0].toLowerCase();
+  if (local === "mariama") return "Mariama Sesay";
+  // samba@, info@, team@ → Samba Jarju
+  return "Samba Jarju";
+}
+
 const EMAIL_SYSTEM_PROMPT = `You are the outreach copywriter for PayWatch (paywatch.app), a Dutch bill tracking app.
 ABOUT: PWA scanning Gmail/Outlook, tracking escalation (factuur → deurwaarder), AI extraction.
 TONE: Direct, professional, "u" form. To the point — these are customers not users. Understand their world.
@@ -28,10 +36,10 @@ BY TYPE:
 - gemeente: position as vroegsignalering + preventie
 - bewindvoerder: position as oversight + client empowerment
 - kredietbank: position as early intervention tool
+- journalist: position as newsworthy Dutch fintech story with social impact angle. Mention user numbers, the problem of debt escalation in NL, and PayWatch's innovative approach. Angle depends on their beat.
 RESPOND JSON ONLY: {"subject":"...","body_html":"<p>...</p>","body_text":"..."}`;
 
 // POST — Generate emails for a campaign
-// Body: { campaignId }
 export async function POST(req: NextRequest) {
   try {
     const supabase = createServiceRoleClient();
@@ -69,6 +77,11 @@ export async function POST(req: NextRequest) {
       contactQuery = contactQuery.eq("type", campaign.target_type);
     }
 
+    // Filter by target_tags if set
+    if (campaign.target_tags && campaign.target_tags.length > 0) {
+      contactQuery = contactQuery.overlaps("tags", campaign.target_tags);
+    }
+
     const { data: contacts, error: contactError } = await contactQuery;
 
     if (contactError || !contacts || contacts.length === 0) {
@@ -90,6 +103,25 @@ export async function POST(req: NextRequest) {
       )
     );
 
+    // Resolve sending accounts (multi-sender support)
+    const fromAccountEmails =
+      campaign.from_accounts && campaign.from_accounts.length > 0
+        ? campaign.from_accounts
+        : [campaign.from_email];
+
+    const { data: sendingAccounts } = await supabase
+      .from("b2b_sending_accounts")
+      .select("*")
+      .in("email", fromAccountEmails)
+      .eq("is_active", true);
+
+    if (!sendingAccounts || sendingAccounts.length === 0) {
+      return NextResponse.json(
+        { error: "No active sending accounts found for this campaign" },
+        { status: 400 }
+      );
+    }
+
     const anthropic = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY!,
     });
@@ -99,15 +131,8 @@ export async function POST(req: NextRequest) {
     let skipped = 0;
     let errors = 0;
 
-    // Fetch sending account
-    const { data: account } = await supabase
-      .from("b2b_sending_accounts")
-      .select("*")
-      .eq("email", campaign.from_email)
-      .single();
-
-    const fromName = account?.display_name || campaign.from_name;
-    const fromEmail = campaign.from_email;
+    // Round-robin account index
+    let accountIdx = 0;
 
     for (const contact of contacts) {
       for (let stepIdx = 0; stepIdx < steps.length; stepIdx++) {
@@ -121,8 +146,22 @@ export async function POST(req: NextRequest) {
           continue;
         }
 
+        // Pick account via round-robin
+        const account =
+          sendingAccounts[accountIdx % sendingAccounts.length];
+        accountIdx++;
+
+        const fromEmail = account.email;
+        const fromName = account.display_name;
+        const signOffName = getSenderSignOff(fromEmail, fromName);
+
         try {
-          // Generate email with Claude Sonnet
+          // Build journalist-specific context
+          const beatContext =
+            contact.type === "journalist" && contact.beat
+              ? `\nJOURNALIST BEAT: ${contact.beat}. Tailor the angle to this beat.`
+              : "";
+
           const message = await anthropic.messages.create({
             model: "claude-sonnet-4-20250514",
             max_tokens: 600,
@@ -132,12 +171,13 @@ export async function POST(req: NextRequest) {
                 role: "user",
                 content: `COMPANY: ${contact.organization_name} (${contact.type}) — ${contact.city || "NL"}
 Contact: ${contact.contact_person || "Team"}, ${contact.contact_role || ""}
-Research: ${contact.ai_research_summary || "No research available"}
+Research: ${contact.ai_research_summary || "No research available"}${beatContext}
 CAMPAIGN: ${campaign.campaign_brief}
 TONE: ${campaign.tone?.replace(/_/g, " ") || "professional warm"}
 LANGUAGE: ${campaign.language || "nl"}
 STEP: ${stepNum} of ${steps.length} (${step.type})
 ${stepNum > 1 ? "This is a follow-up. Be shorter, reference the previous email." : ""}
+SENDER: ${signOffName}. Always sign off with "Groetjes,\\n${signOffName}" (or "Best regards,\\n${signOffName}" if English).
 
 Generate the email now. JSON only.`,
               },
@@ -149,7 +189,7 @@ Generate the email now. JSON only.`,
               ? message.content[0].text
               : "";
 
-          // Parse JSON from response
+          // Parse JSON
           let emailData: {
             subject: string;
             body_html: string;
@@ -157,10 +197,8 @@ Generate the email now. JSON only.`,
           };
 
           try {
-            // Try direct parse first
             emailData = JSON.parse(responseText);
           } catch {
-            // Try extracting JSON from response
             const jsonMatch = responseText.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
               emailData = JSON.parse(jsonMatch[0]);
@@ -225,6 +263,7 @@ Generate the email now. JSON only.`,
       errors,
       contacts: contacts.length,
       steps: steps.length,
+      accounts_used: sendingAccounts.length,
     });
   } catch (err) {
     console.error("[Generate]", err);

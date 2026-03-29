@@ -10,12 +10,11 @@ import {
   Pause,
   Sparkles,
   X,
-  MoreHorizontal,
   Users,
   Eye,
   MessageSquare,
-  ShieldCheck,
-  Zap,
+  Tag,
+  Check,
 } from "lucide-react";
 
 interface Campaign {
@@ -26,6 +25,7 @@ interface Campaign {
   target_tags: string[];
   from_name: string;
   from_email: string;
+  from_accounts: string[];
   campaign_brief: string;
   tone: string;
   language: string;
@@ -67,11 +67,13 @@ const TARGET_TYPES = [
   { value: "gemeente", label: "Gemeente" },
   { value: "bewindvoerder", label: "Bewindvoerder" },
   { value: "kredietbank", label: "Kredietbank" },
+  { value: "journalist", label: "Journalist" },
 ];
 
 export default function OutreachCampaigns() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
@@ -83,9 +85,10 @@ export default function OutreachCampaigns() {
   const fetchCampaigns = useCallback(async () => {
     try {
       setLoading(true);
-      const [campRes, accRes] = await Promise.all([
+      const [campRes, accRes, contactsRes] = await Promise.all([
         fetch("/api/admin/outreach/campaigns"),
         fetch("/api/admin/outreach/accounts"),
+        fetch("/api/admin/outreach/contacts"),
       ]);
       if (campRes.ok) {
         const data = await campRes.json();
@@ -94,6 +97,15 @@ export default function OutreachCampaigns() {
       if (accRes.ok) {
         const data = await accRes.json();
         setAccounts(data.accounts);
+      }
+      if (contactsRes.ok) {
+        const data = await contactsRes.json();
+        // Derive unique tags
+        const tagSet = new Set<string>();
+        (data.contacts || []).forEach((c: { tags?: string[] }) =>
+          (c.tags || []).forEach((t: string) => tagSet.add(t))
+        );
+        setAvailableTags(Array.from(tagSet).sort());
       }
     } catch {
       console.error("Failed to load campaigns");
@@ -143,7 +155,6 @@ export default function OutreachCampaigns() {
 
   return (
     <div className="space-y-4">
-      {/* Gen result toast */}
       {genResult && (
         <div className="flex items-center gap-2 bg-purple-50 border border-purple-200 rounded-lg px-4 py-2.5 text-xs">
           <Sparkles size={14} className="text-purple-600" />
@@ -156,7 +167,6 @@ export default function OutreachCampaigns() {
         </div>
       )}
 
-      {/* Top bar */}
       <div className="flex items-center justify-between">
         <p className="text-xs text-pw-muted">
           {campaigns.length} campaign{campaigns.length !== 1 ? "s" : ""}
@@ -178,7 +188,6 @@ export default function OutreachCampaigns() {
         </div>
       </div>
 
-      {/* Campaign list */}
       {loading && campaigns.length === 0 ? (
         <div className="flex justify-center py-16">
           <Loader2 className="animate-spin text-pw-muted" size={20} />
@@ -209,6 +218,7 @@ export default function OutreachCampaigns() {
                 ? Math.round((c.total_sent / c.total_contacts) * 100)
                 : 0;
             const isGenerating = generatingId === c.id;
+            const senderCount = (c.from_accounts || []).length || 1;
             return (
               <div
                 key={c.id}
@@ -231,7 +241,6 @@ export default function OutreachCampaigns() {
                     )}
                   </div>
                   <div className="flex gap-1">
-                    {/* Generate emails button */}
                     <button
                       onClick={() => handleGenerate(c.id)}
                       disabled={isGenerating}
@@ -245,7 +254,6 @@ export default function OutreachCampaigns() {
                       )}
                       {isGenerating ? "Generating..." : "Generate"}
                     </button>
-
                     {c.status === "draft" && (
                       <button
                         onClick={() => handleStatusChange(c.id, "active")}
@@ -276,8 +284,7 @@ export default function OutreachCampaigns() {
                   </div>
                 </div>
 
-                {/* Stats row */}
-                <div className="flex gap-4 mb-3">
+                <div className="flex gap-4 mb-3 flex-wrap">
                   <div className="flex items-center gap-1">
                     <Users size={10} className="text-pw-muted" />
                     <span className="text-[10px] text-pw-muted">
@@ -302,9 +309,30 @@ export default function OutreachCampaigns() {
                       {c.total_replied} replied
                     </span>
                   </div>
+                  {senderCount > 1 && (
+                    <div className="flex items-center gap-1">
+                      <Users size={10} className="text-purple-500" />
+                      <span className="text-[10px] text-purple-500 font-medium">
+                        {senderCount} senders
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Progress bar */}
+                {/* Tags shown on campaign card */}
+                {(c.target_tags || []).length > 0 && (
+                  <div className="flex gap-1 mb-3 flex-wrap">
+                    {c.target_tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-block px-1.5 py-0.5 rounded text-[9px] font-medium bg-blue-50 text-pw-blue"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
                 <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-pw-blue rounded-full transition-all"
@@ -315,7 +343,10 @@ export default function OutreachCampaigns() {
                   <span className="text-[10px] text-pw-muted">
                     {c.sequence_steps?.length || 0} step
                     {(c.sequence_steps?.length || 0) !== 1 ? "s" : ""} ·{" "}
-                    {c.tone?.replace(/_/g, " ")} · {c.from_name}
+                    {c.tone?.replace(/_/g, " ")} ·{" "}
+                    {senderCount > 1
+                      ? `${senderCount} accounts`
+                      : c.from_name}
                   </span>
                   <span className="text-[10px] text-pw-muted">
                     {progress}% complete
@@ -327,10 +358,10 @@ export default function OutreachCampaigns() {
         </div>
       )}
 
-      {/* New Campaign Modal */}
       {showModal && (
         <NewCampaignModal
           accounts={accounts}
+          availableTags={availableTags}
           onClose={() => setShowModal(false)}
           onCreated={() => {
             setShowModal(false);
@@ -342,12 +373,15 @@ export default function OutreachCampaigns() {
   );
 }
 
+/* ─── New Campaign Modal ─── */
 function NewCampaignModal({
   accounts,
+  availableTags,
   onClose,
   onCreated,
 }: {
   accounts: Account[];
+  availableTags: string[];
   onClose: () => void;
   onCreated: () => void;
 }) {
@@ -356,7 +390,8 @@ function NewCampaignModal({
     name: "",
     description: "",
     target_type: "",
-    from_email: accounts[0]?.email || "samba@paywatch.nl",
+    target_tags: [] as string[],
+    from_accounts: [accounts[0]?.email || "samba@paywatch.nl"],
     campaign_brief: "",
     tone: "professional_warm",
     language: "nl",
@@ -366,6 +401,28 @@ function NewCampaignModal({
       { day: 7, type: "final" },
     ],
   });
+
+  function toggleAccount(email: string) {
+    setForm((prev) => {
+      const has = prev.from_accounts.includes(email);
+      if (has && prev.from_accounts.length === 1) return prev; // Keep at least one
+      return {
+        ...prev,
+        from_accounts: has
+          ? prev.from_accounts.filter((e) => e !== email)
+          : [...prev.from_accounts, email],
+      };
+    });
+  }
+
+  function toggleTag(tag: string) {
+    setForm((prev) => ({
+      ...prev,
+      target_tags: prev.target_tags.includes(tag)
+        ? prev.target_tags.filter((t) => t !== tag)
+        : [...prev.target_tags, tag],
+    }));
+  }
 
   function updateStep(index: number, field: string, value: number | string) {
     const newSteps = [...form.steps];
@@ -387,10 +444,12 @@ function NewCampaignModal({
   }
 
   async function handleCreate() {
-    if (!form.name || !form.campaign_brief) return;
+    if (!form.name || !form.campaign_brief || form.from_accounts.length === 0)
+      return;
     setSaving(true);
     try {
-      const account = accounts.find((a) => a.email === form.from_email);
+      const primaryEmail = form.from_accounts[0];
+      const primaryAccount = accounts.find((a) => a.email === primaryEmail);
       const res = await fetch("/api/admin/outreach/campaigns", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -398,9 +457,11 @@ function NewCampaignModal({
           name: form.name,
           description: form.description || null,
           target_type: form.target_type || null,
-          from_email: form.from_email,
-          from_name: account?.display_name || "Samba Jarju",
-          reply_to: form.from_email,
+          target_tags: form.target_tags,
+          from_accounts: form.from_accounts,
+          from_email: primaryEmail,
+          from_name: primaryAccount?.display_name || "Samba Jarju",
+          reply_to: primaryEmail,
           campaign_brief: form.campaign_brief,
           tone: form.tone,
           language: form.language,
@@ -415,95 +476,78 @@ function NewCampaignModal({
     }
   }
 
+  const labelClass = "block text-[11px] font-semibold text-pw-muted mb-1";
+  const inputClass =
+    "w-full px-3 py-2 text-xs rounded-lg border border-pw-border focus:outline-none focus:border-pw-blue";
+  const selectClass =
+    "w-full px-3 py-2 text-xs rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue";
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 shadow-xl">
-        <div className="flex items-center justify-between mb-5">
+      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-pw-border shrink-0">
           <h3 className="text-sm font-bold text-pw-navy">New Campaign</h3>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100">
+          <button
+            onClick={onClose}
+            className="p-1 rounded-lg hover:bg-gray-100"
+          >
             <X size={16} className="text-pw-muted" />
           </button>
         </div>
 
-        <div className="space-y-4">
+        {/* Body — scrollable */}
+        <div className="overflow-y-auto px-6 py-4 space-y-4 flex-1">
           <div>
-            <label className="block text-[11px] font-semibold text-pw-muted mb-1">
-              Campaign name
-            </label>
+            <label className={labelClass}>Campaign name</label>
             <input
               type="text"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="e.g. Gemeente Q2 outreach"
-              className="w-full px-3 py-2 text-xs rounded-lg border border-pw-border focus:outline-none focus:border-pw-blue"
+              placeholder="e.g. Journalist PR Q2"
+              className={inputClass}
             />
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-pw-muted mb-1">
-              Description (optional)
-            </label>
+            <label className={labelClass}>Description (optional)</label>
             <input
               type="text"
               value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
               placeholder="Internal notes"
-              className="w-full px-3 py-2 text-xs rounded-lg border border-pw-border focus:outline-none focus:border-pw-blue"
+              className={inputClass}
             />
           </div>
 
+          {/* Target segment + Language */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-semibold text-pw-muted mb-1">
-                Target segment
-              </label>
+              <label className={labelClass}>Target segment</label>
               <select
                 value={form.target_type}
-                onChange={(e) => setForm({ ...form, target_type: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue"
+                onChange={(e) =>
+                  setForm({ ...form, target_type: e.target.value })
+                }
+                className={selectClass}
               >
                 {TARGET_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-[11px] font-semibold text-pw-muted mb-1">
-                Send from
-              </label>
-              <select
-                value={form.from_email}
-                onChange={(e) => setForm({ ...form, from_email: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue"
-              >
-                {accounts.map((a) => (
-                  <option key={a.email} value={a.email}>
-                    {a.display_name} ({a.email})
+                  <option key={t.value} value={t.value}>
+                    {t.label}
                   </option>
                 ))}
               </select>
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-semibold text-pw-muted mb-1">Tone</label>
-              <select
-                value={form.tone}
-                onChange={(e) => setForm({ ...form, tone: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue"
-              >
-                {TONES.map((t) => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-[11px] font-semibold text-pw-muted mb-1">Language</label>
+              <label className={labelClass}>Language</label>
               <select
                 value={form.language}
-                onChange={(e) => setForm({ ...form, language: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue"
+                onChange={(e) =>
+                  setForm({ ...form, language: e.target.value })
+                }
+                className={selectClass}
               >
                 <option value="nl">Nederlands</option>
                 <option value="en">English</option>
@@ -511,37 +555,148 @@ function NewCampaignModal({
             </div>
           </div>
 
+          {/* Target tags */}
+          {availableTags.length > 0 && (
+            <div>
+              <label className={labelClass}>
+                <Tag size={10} className="inline mr-1 text-pw-blue" />
+                Filter by lists (optional — narrows within segment)
+              </label>
+              <div className="flex gap-1.5 flex-wrap mt-1">
+                {availableTags.map((tag) => {
+                  const selected = form.target_tags.includes(tag);
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => toggleTag(tag)}
+                      className={`flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors ${
+                        selected
+                          ? "bg-pw-blue text-white"
+                          : "bg-blue-50 text-pw-blue hover:bg-blue-100"
+                      }`}
+                    >
+                      {selected && <Check size={8} />}
+                      {tag}
+                    </button>
+                  );
+                })}
+              </div>
+              {form.target_tags.length > 0 && (
+                <p className="text-[9px] text-pw-muted mt-1">
+                  Only contacts with{" "}
+                  {form.target_tags.length === 1 ? "this list" : "any of these lists"}{" "}
+                  will receive emails
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Sending accounts — multi-select */}
           <div>
-            <label className="block text-[11px] font-semibold text-pw-muted mb-1">
+            <label className={labelClass}>
+              Send from ({form.from_accounts.length} selected)
+            </label>
+            <div className="space-y-1.5 mt-1">
+              {accounts.map((acc) => {
+                const selected = form.from_accounts.includes(acc.email);
+                return (
+                  <label
+                    key={acc.email}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border cursor-pointer transition-colors ${
+                      selected
+                        ? "border-pw-blue bg-blue-50/50"
+                        : "border-pw-border bg-white hover:bg-gray-50"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={() => toggleAccount(acc.email)}
+                      className="rounded border-gray-300 accent-pw-blue"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[11px] font-semibold text-pw-text truncate">
+                        {acc.display_name}
+                      </div>
+                      <div className="text-[10px] text-pw-muted truncate">
+                        {acc.email}
+                      </div>
+                    </div>
+                    {selected && form.from_accounts.length > 1 && (
+                      <span className="text-[9px] font-semibold text-pw-blue bg-blue-100 px-1.5 py-0.5 rounded">
+                        {Math.round(100 / form.from_accounts.length)}%
+                      </span>
+                    )}
+                  </label>
+                );
+              })}
+            </div>
+            {form.from_accounts.length > 1 && (
+              <p className="text-[9px] text-pw-muted mt-1.5">
+                Emails will be distributed evenly across {form.from_accounts.length} accounts (
+                {Math.round(100 / form.from_accounts.length)}% each)
+              </p>
+            )}
+          </div>
+
+          {/* Tone */}
+          <div>
+            <label className={labelClass}>Tone</label>
+            <select
+              value={form.tone}
+              onChange={(e) => setForm({ ...form, tone: e.target.value })}
+              className={selectClass}
+            >
+              {TONES.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Campaign brief */}
+          <div>
+            <label className={labelClass}>
               <Sparkles size={10} className="inline mr-1 text-purple-500" />
               AI Campaign Brief
             </label>
             <textarea
               value={form.campaign_brief}
-              onChange={(e) => setForm({ ...form, campaign_brief: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, campaign_brief: e.target.value })
+              }
               rows={4}
-              placeholder="Tell Claude what you want to achieve. E.g.: 'Introduce PayWatch to municipalities as a vroegsignalering tool. Mention our free pilot program. Ask for a 15-min call.'"
-              className="w-full px-3 py-2 text-xs rounded-lg border border-pw-border focus:outline-none focus:border-pw-blue resize-none"
+              placeholder="Tell Claude what you want to achieve. E.g.: 'Introduce PayWatch to tech journalists as a Dutch fintech solving debt escalation. Mention our AI email scanning, 10k+ users, and social impact angle. Ask if they'd be open to a quick chat or demo.'"
+              className={`${inputClass} resize-none`}
             />
             <p className="text-[10px] text-pw-muted mt-1">
-              Claude will use this + each contact&apos;s AI research to write personalized emails
+              Claude will use this + each contact&apos;s AI research to write
+              personalized emails
             </p>
           </div>
 
+          {/* Email sequence */}
           <div>
-            <label className="block text-[11px] font-semibold text-pw-muted mb-2">
-              Email sequence
-            </label>
+            <label className={labelClass}>Email sequence</label>
             <div className="space-y-2">
               {form.steps.map((step, i) => (
-                <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-gray-50 border border-gray-100">
-                  <span className="text-[10px] font-bold text-pw-blue w-6 text-center">{i + 1}</span>
+                <div
+                  key={i}
+                  className="flex items-center gap-2 p-2.5 rounded-lg bg-gray-50 border border-gray-100"
+                >
+                  <span className="text-[10px] font-bold text-pw-blue w-6 text-center">
+                    {i + 1}
+                  </span>
                   <div className="flex items-center gap-1 flex-1">
                     <span className="text-[10px] text-pw-muted">Day</span>
                     <input
                       type="number"
                       value={step.day}
-                      onChange={(e) => updateStep(i, "day", parseInt(e.target.value) || 0)}
+                      onChange={(e) =>
+                        updateStep(i, "day", parseInt(e.target.value) || 0)
+                      }
                       min={0}
                       className="w-12 px-1.5 py-1 text-[10px] text-center rounded border border-pw-border focus:outline-none focus:border-pw-blue"
                     />
@@ -557,7 +712,10 @@ function NewCampaignModal({
                     <option value="breakup">Breakup email</option>
                   </select>
                   {form.steps.length > 1 && (
-                    <button onClick={() => removeStep(i)} className="p-0.5 rounded hover:bg-red-50">
+                    <button
+                      onClick={() => removeStep(i)}
+                      className="p-0.5 rounded hover:bg-red-50"
+                    >
                       <X size={10} className="text-pw-red" />
                     </button>
                   )}
@@ -573,7 +731,8 @@ function NewCampaignModal({
           </div>
         </div>
 
-        <div className="flex gap-2 mt-6">
+        {/* Footer */}
+        <div className="flex gap-2 px-6 py-4 border-t border-pw-border shrink-0">
           <button
             onClick={onClose}
             className="flex-1 px-3 py-2.5 text-xs font-semibold rounded-lg border border-pw-border hover:bg-gray-50 transition-colors"
@@ -582,10 +741,19 @@ function NewCampaignModal({
           </button>
           <button
             onClick={handleCreate}
-            disabled={!form.name || !form.campaign_brief || saving}
+            disabled={
+              !form.name ||
+              !form.campaign_brief ||
+              form.from_accounts.length === 0 ||
+              saving
+            }
             className="flex-1 px-3 py-2.5 text-xs font-semibold rounded-lg bg-pw-blue text-white hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
           >
-            {saving ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+            {saving ? (
+              <Loader2 size={12} className="animate-spin" />
+            ) : (
+              <Plus size={12} />
+            )}
             Create Campaign
           </button>
         </div>
