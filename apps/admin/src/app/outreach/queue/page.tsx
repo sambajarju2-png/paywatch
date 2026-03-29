@@ -128,7 +128,7 @@ export default function OutreachQueue() {
       )}
 
       <div className="flex items-center justify-between">
-        <p className="text-xs text-pw-muted">{emails.length} email{emails.length !== 1 ? "s" : ""} in queue</p>
+        <p className="text-xs text-pw-muted">{emails.length} {statusFilter === "all" ? "" : statusFilter + " "}email{emails.length !== 1 ? "s" : ""}</p>
         <button onClick={fetchQueue} className="p-2 rounded-lg border border-pw-border bg-white hover:bg-gray-50 transition-colors">
           <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
         </button>

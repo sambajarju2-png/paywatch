@@ -85,10 +85,11 @@ export default function OutreachCampaigns() {
   const fetchCampaigns = useCallback(async () => {
     try {
       setLoading(true);
-      const [campRes, accRes, contactsRes] = await Promise.all([
+      const [campRes, accRes, contactsRes, listsRes] = await Promise.all([
         fetch("/api/admin/outreach/campaigns"),
         fetch("/api/admin/outreach/accounts"),
         fetch("/api/admin/outreach/contacts"),
+        fetch("/api/admin/outreach/lists"),
       ]);
       if (campRes.ok) {
         const data = await campRes.json();
@@ -98,15 +99,19 @@ export default function OutreachCampaigns() {
         const data = await accRes.json();
         setAccounts(data.accounts);
       }
+      // Merge tags from contacts + persisted lists
+      const tagSet = new Set<string>();
       if (contactsRes.ok) {
         const data = await contactsRes.json();
-        // Derive unique tags
-        const tagSet = new Set<string>();
         (data.contacts || []).forEach((c: { tags?: string[] }) =>
           (c.tags || []).forEach((t: string) => tagSet.add(t))
         );
-        setAvailableTags(Array.from(tagSet).sort());
       }
+      if (listsRes.ok) {
+        const data = await listsRes.json();
+        (data.lists || []).forEach((l: { name: string }) => tagSet.add(l.name));
+      }
+      setAvailableTags(Array.from(tagSet).sort());
     } catch {
       console.error("Failed to load campaigns");
     } finally {
