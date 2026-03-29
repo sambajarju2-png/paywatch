@@ -1,0 +1,103 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+
+function createServiceRoleClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const supabase = createServiceRoleClient();
+    const { searchParams } = new URL(req.url);
+    const type = searchParams.get("type");
+    const search = searchParams.get("search");
+    const status = searchParams.get("status");
+
+    let query = supabase
+      .from("b2b_contacts")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (type && type !== "all") {
+      query = query.eq("type", type);
+    }
+
+    if (status) {
+      query = query.eq("status", status);
+    }
+
+    if (search) {
+      query = query.or(
+        `organization_name.ilike.%${search}%,contact_person.ilike.%${search}%,contact_email.ilike.%${search}%,city.ilike.%${search}%`
+      );
+    }
+
+    const { data, error } = await query.limit(200);
+
+    if (error) {
+      console.error("[Outreach Contacts]", error);
+      return NextResponse.json(
+        { error: "Failed to fetch contacts" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ contacts: data || [] });
+  } catch (err) {
+    console.error("[Outreach Contacts]", err);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+// POST — Create a single contact manually
+export async function POST(req: NextRequest) {
+  try {
+    const supabase = createServiceRoleClient();
+    const body = await req.json();
+
+    const { data, error } = await supabase
+      .from("b2b_contacts")
+      .insert({
+        organization_name: body.organization_name,
+        type: body.type || "aid_org",
+        website: body.website || null,
+        contact_person: body.contact_person || null,
+        contact_role: body.contact_role || null,
+        contact_email: body.contact_email || null,
+        general_email: body.general_email || null,
+        phone: body.phone || null,
+        city: body.city || null,
+        kvk_number: body.kvk_number || null,
+        linkedin_url: body.linkedin_url || null,
+        notes: body.notes || null,
+        source: body.source || "manual",
+        tags: body.tags || [],
+        status: "new",
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("[Outreach Contacts POST]", error);
+      return NextResponse.json(
+        { error: "Failed to create contact" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ contact: data }, { status: 201 });
+  } catch (err) {
+    console.error("[Outreach Contacts POST]", err);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

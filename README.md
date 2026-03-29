@@ -1,52 +1,39 @@
-# PayWatch Monorepo
+# PayWatch Outreach Engine — Phase 1
+# Overview Dashboard + Contact Manager
 
-A **Turborepo** monorepo with 3 apps sharing one codebase.
+## Files included:
+```
+src/app/outreach/
+  layout.tsx          — Tab navigation (Overview, Contacts, Campaigns, Queue, Accounts)
+  page.tsx            — Overview dashboard with stats, campaigns, replies, account health
+  contacts/page.tsx   — Contact manager with table, filters, CSV import, AI research
+  campaigns/page.tsx  — Placeholder (Phase 2)
+  queue/page.tsx      — Placeholder (Phase 2)
+  accounts/page.tsx   — Placeholder (Phase 2)
 
-## Apps
-
-| App | URL | Description |
-|-----|-----|-------------|
-| `apps/landing` | paywatch.app | Sanity CMS landing page |
-| `apps/web` | app.paywatch.app | Main PWA (bill tracker) |
-| `apps/admin` | admin.paywatch.app | Admin dashboard (Tremor) |
-
-## Shared Packages
-
-| Package | Description |
-|---------|-------------|
-| `packages/ui` | Shared React components + design tokens |
-| `packages/database` | Supabase client + types |
-| `packages/config` | Shared Tailwind, TypeScript, ESLint configs |
-| `packages/email` | Shared email templates (Resend) |
-
-## Getting Started
-
-```bash
-# Install dependencies
-pnpm install
-
-# Run all apps in dev mode
-pnpm dev
-
-# Run a specific app
-pnpm dev:landing   # port 3001
-pnpm dev:web       # port 3000
-pnpm dev:admin     # port 3002
-
-# Build all
-pnpm build
+src/app/api/admin/outreach/
+  stats/route.ts      — GET: aggregated dashboard stats
+  contacts/route.ts   — GET: contacts list with filters + POST: create contact
+  import/route.ts     — POST: CSV upload → parse → insert contacts
+  research/route.ts   — POST: Claude Haiku researches a company website
 ```
 
-## Database
+## After unzipping, add the Outreach link to AdminSidebar:
 
-ONE Supabase project (eu-west-1) serves all apps. RLS policies protect user data. Admin app uses `service_role` key.
+Open `src/components/AdminSidebar.tsx` and add this to the NAV array:
 
-## CMS
+```tsx
+{ href: "/outreach", label: "Outreach", icon: "M22 2L11 13M22 2l-7 20-4-9-9-4 20-7Z" },
+```
 
-Sanity CMS (project: pwf6qbjc) powers landing page content, legal pages, blog, pricing, and editable app text strings.
+## Install Anthropic SDK (for AI research):
 
-## Design
+```bash
+pnpm add @anthropic-ai/sdk
+```
 
-- Font: Plus Jakarta Sans
-- Design DNA: Stripe × Revolut × Linear
-- Design system: see `Design_system.md`
+## Deploy commands:
+
+```bash
+cd ~/Downloads/paywatch && unzip -o ~/Downloads/outreach-phase1-overview-contacts.zip -d . && pnpm add @anthropic-ai/sdk && pnpm install && git add -A && git commit -m "feat: outreach engine phase 1 — overview + contacts" && git pull origin main --rebase && git push origin main
+```

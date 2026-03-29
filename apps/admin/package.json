@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.80.0",
     "@paywatch/config": "workspace:*",
     "@paywatch/database": "workspace:*",
     "@paywatch/ui": "workspace:*",
