@@ -1,7 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { Suspense, useEffect, useRef, useCallback } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+
+/* ── Wrapper with Suspense boundary (required by Next.js 16) ── */
+export default function AnalyticsTracker() {
+  return (
+    <Suspense fallback={null}>
+      <TrackerInner />
+    </Suspense>
+  );
+}
 
 /* ── Persistent visitor ID (survives sessions) ── */
 function getVisitorId(): string {
@@ -63,7 +72,8 @@ function send(payload: Record<string, unknown>) {
   }
 }
 
-export default function AnalyticsTracker() {
+/* ── Inner tracker (uses useSearchParams, needs Suspense) ── */
+function TrackerInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const scrollSent = useRef(false);
@@ -89,12 +99,11 @@ export default function AnalyticsTracker() {
       ...utm,
     });
 
-    // Reset scroll tracking per page
     scrollSent.current = false;
     pageStart.current = Date.now();
   }, [pathname, searchParams]);
 
-  /* ── Scroll depth tracking (fires once per page at max depth) ── */
+  /* ── Scroll depth tracking ── */
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") return;
 
@@ -121,12 +130,8 @@ export default function AnalyticsTracker() {
       }
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-
-    // Send on page leave
     const handleBeforeUnload = () => {
       sendScroll();
-      // Also send duration
       const dur = Date.now() - pageStart.current;
       if (dur > 1000) {
         send({
@@ -139,21 +144,23 @@ export default function AnalyticsTracker() {
       }
     };
 
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") sendScroll();
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("beforeunload", handleBeforeUnload);
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "hidden") {
-        sendScroll();
-      }
-    });
+    document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
       sendScroll();
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("beforeunload", handleBeforeUnload);
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [pathname]);
 
-  /* ── CTA click tracking (delegated) ── */
+  /* ── CTA click tracking ── */
   const handleClick = useCallback(
     (e: MouseEvent) => {
       if (process.env.NODE_ENV !== "production") return;
@@ -162,14 +169,12 @@ export default function AnalyticsTracker() {
 
       const trackAttr = target.getAttribute("data-track");
       if (!trackAttr) {
-        // Auto-track external links and CTA buttons
         const href = target.getAttribute("href");
         const isExternal = href && !href.startsWith("/") && !href.startsWith("#");
         const isCta =
           target.textContent?.match(
             /start gratis|aanmelden|sign up|bekijk functies|inloggen/i
-          ) ||
-          href === "https://app.paywatch.app";
+          ) || href === "https://app.paywatch.app";
 
         if (!isExternal && !isCta) return;
 
@@ -183,7 +188,6 @@ export default function AnalyticsTracker() {
             : `cta:${target.textContent?.trim().slice(0, 40)}`,
         });
       } else {
-        // Explicit data-track="event_name"
         send({
           event_type: "event",
           session_id: getSessionId(),
