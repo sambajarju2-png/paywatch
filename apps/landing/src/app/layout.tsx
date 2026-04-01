@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CookieBanner from "@/components/CookieBanner";
 import { Analytics } from '@vercel/analytics/react';
+import AnalyticsTracker from "@/components/AnalyticsTracker";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
