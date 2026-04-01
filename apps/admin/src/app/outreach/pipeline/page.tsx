@@ -19,6 +19,7 @@ import {
   Trophy,
   XCircle,
   GripVertical,
+  RefreshCw,
 } from "lucide-react";
 
 /* ── Types ── */
@@ -162,6 +163,18 @@ export default function PipelinePage() {
         </div>
         <div className="flex items-center gap-2">
           {/* Type filter */}
+          <button
+            onClick={syncFromClickUp}
+            disabled={syncing}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-colors"
+            title="Sync statuses from ClickUp"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} />
+            {syncing ? "Syncing..." : "Sync"}
+          </button>
+          {syncResult && (
+            <span className="text-xs text-gray-500 dark:text-gray-400">{syncResult}</span>
+          )}
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
