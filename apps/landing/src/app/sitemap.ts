@@ -1,70 +1,98 @@
-import { createClient } from '@sanity/client';
-import type { MetadataRoute } from 'next';
+import type { MetadataRoute } from "next";
+import { createClient } from "next-sanity";
 
-const sanity = createClient({
-  projectId: 'pwf6qbjc',
-  dataset: 'production',
-  apiVersion: '2024-01-01',
-  useCdn: true,
+const BASE_URL = "https://paywatch.app";
+
+const client = createClient({
+  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "pwf6qbjc",
+  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
+  apiVersion: "2024-03-15",
+  useCdn: false,
 });
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://paywatch.app';
+/* ── Feature page slugs (matches /features/[slug]) ── */
+const FEATURE_SLUGS = [
+  "agenda",
+  "betaalfases",
+  "betalingen",
+  "buddy",
+  "camera-scanner",
+  "cashflow",
+  "community",
+  "conceptbrieven",
+  "email-scanner",
+  "hulpverleners",
+  "inzichten",
+  "maandbudget",
+  "schuldvrij-countdown",
+];
 
-  // Static pages
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const now = new Date().toISOString();
+
+  /* ── 1. Static pages ── */
   const staticPages: MetadataRoute.Sitemap = [
-    { url: baseUrl, lastModified: new Date(), changeFrequency: 'weekly', priority: 1 },
-    { url: `${baseUrl}/features`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${baseUrl}/pricing`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${baseUrl}/about`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
-    { url: `${baseUrl}/blog`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
-    { url: `${baseUrl}/jobs`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7 },
-    { url: `${baseUrl}/contact`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${baseUrl}/resources`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
-    { url: `${baseUrl}/privacy`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.3 },
-    { url: `${baseUrl}/terms`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.3 },
-    { url: `${baseUrl}/data-processing`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.3 },
-    { url: `${baseUrl}/roadmap`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${baseUrl}/tech-stack`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.4 },
+    { url: BASE_URL, lastModified: now, changeFrequency: "weekly", priority: 1.0 },
+    { url: `${BASE_URL}/features`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${BASE_URL}/pricing`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${BASE_URL}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE_URL}/resources`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${BASE_URL}/blog`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
+    { url: `${BASE_URL}/jobs`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${BASE_URL}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${BASE_URL}/support`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${BASE_URL}/roadmap`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${BASE_URL}/tech-stack`, lastModified: now, changeFrequency: "monthly", priority: 0.4 },
+    { url: `${BASE_URL}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${BASE_URL}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${BASE_URL}/data-processing`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];
 
-  // Fetch all blog post slugs from Sanity
+  /* ── 2. Feature pages ── */
+  const featurePages: MetadataRoute.Sitemap = FEATURE_SLUGS.map((slug) => ({
+    url: `${BASE_URL}/features/${slug}`,
+    lastModified: now,
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+
+  /* ── 3. Blog posts from Sanity ── */
   let blogPages: MetadataRoute.Sitemap = [];
   try {
-    const posts = await sanity.fetch<{ slug: string; publishedAt: string }[]>(
-      `*[_type == "blogPost" && defined(slug.current)] | order(publishedAt desc) {
+    const posts = await client.fetch<Array<{ slug: string; publishedAt: string }>>(
+      `*[_type == "blogPost" && defined(slug.current) && !(_id in path("drafts.**"))]{
         "slug": slug.current,
         publishedAt
       }`
     );
-    blogPages = posts.map((post) => ({
-      url: `${baseUrl}/blog/${post.slug}`,
-      lastModified: post.publishedAt ? new Date(post.publishedAt) : new Date(),
-      changeFrequency: 'monthly' as const,
+    blogPages = (posts || []).map((post) => ({
+      url: `${BASE_URL}/blog/${post.slug}`,
+      lastModified: post.publishedAt || now,
+      changeFrequency: "monthly" as const,
       priority: 0.7,
     }));
-  } catch (error) {
-    console.error('Sitemap: Failed to fetch blog posts from Sanity', error);
+  } catch (e) {
+    console.error("[Sitemap] Blog posts fetch failed:", e);
   }
 
-  // Fetch job listings from Sanity (if they exist there)
+  /* ── 4. Job listings from Sanity ── */
   let jobPages: MetadataRoute.Sitemap = [];
   try {
-    const jobs = await sanity.fetch<{ id: string; updatedAt: string }[]>(
-      `*[_type == "jobListing" && defined(id)] {
-        "id": id,
-        "updatedAt": _updatedAt
+    const jobs = await client.fetch<Array<{ id: string; _updatedAt: string }>>(
+      `*[_type == "jobListing" && active == true]{
+        "id": id.current,
+        _updatedAt
       }`
     );
-    jobPages = jobs.map((job) => ({
-      url: `${baseUrl}/jobs/${job.id}`,
-      lastModified: job.updatedAt ? new Date(job.updatedAt) : new Date(),
-      changeFrequency: 'weekly' as const,
+    jobPages = (jobs || []).map((job) => ({
+      url: `${BASE_URL}/jobs/${job.id}`,
+      lastModified: job._updatedAt || now,
+      changeFrequency: "weekly" as const,
       priority: 0.6,
     }));
-  } catch {
-    // Jobs might be hardcoded, not in Sanity — that's fine
+  } catch (e) {
+    console.error("[Sitemap] Job listings fetch failed:", e);
   }
 
-  return [...staticPages, ...blogPages, ...jobPages];
+  return [...staticPages, ...featurePages, ...blogPages, ...jobPages];
 }
