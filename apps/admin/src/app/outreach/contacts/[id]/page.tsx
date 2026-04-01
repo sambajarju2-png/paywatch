@@ -35,6 +35,8 @@ type Contact = {
   contact_person?: string;
   contact_role?: string;
   contact_email?: string;
+  first_name?: string;
+  last_name?: string;
   phone?: string;
   city?: string;
   kvk_number?: string;
@@ -408,6 +410,8 @@ export default function ContactDetailPage() {
               {[
                 { label: "Organization", value: contact.organization_name },
                 { label: "Type", value: contact.type },
+                { label: "First Name", value: contact.first_name },
+                { label: "Last Name", value: contact.last_name },
                 { label: "Contact Person", value: contact.contact_person },
                 { label: "Role", value: contact.contact_role },
                 { label: "Contact Email", value: contact.contact_email },
