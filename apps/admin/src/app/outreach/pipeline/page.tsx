@@ -55,6 +55,7 @@ const TYPE_BADGE: Record<string, string> = {
   journalist: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
   bewindvoerder: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
   kredietbank: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
+  billing_vendor: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
 };
 
 function formatRelative(dateStr: string) {
@@ -120,6 +121,12 @@ export default function PipelinePage() {
       });
       if (res.ok) {
         setContacts((prev) => prev.map((c) => (c.id === contactId ? { ...c, status: newStatus } : c)));
+        // Sync status to ClickUp (fire-and-forget)
+        fetch("/api/admin/outreach/sync-clickup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contact_id: contactId, status: newStatus }),
+        }).catch(() => {});
       }
     } catch (err) {
       console.error("Failed to move contact", err);
