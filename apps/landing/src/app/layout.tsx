@@ -126,6 +126,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </SanityContentProvider>
         </AppProvider>
       <Analytics />
+        <AnalyticsTracker />
 </body>
     </html>
   );
