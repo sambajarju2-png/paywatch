@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 /**
  * NewsletterSubscribe — Drop into any page or footer.
@@ -69,6 +69,10 @@ export default function NewsletterSubscribe({
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
+  // Anti-spam
+  const formLoadedAt = useRef(Date.now());
+  const honeypotRef = useRef<HTMLInputElement>(null);
+
   const t = T[lang];
   const isB2B = tab !== "consumer";
 
@@ -93,6 +97,9 @@ export default function NewsletterSubscribe({
           audienceType: tab,
           language: lang,
           marketingConsent: true,
+          // Anti-spam fields
+          website: honeypotRef.current?.value || "",
+          _t: formLoadedAt.current,
         }),
       });
       if (res.ok) {
@@ -157,6 +164,16 @@ export default function NewsletterSubscribe({
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-3">
+        {/* Honeypot — hidden from humans, bots auto-fill it */}
+        <input
+          ref={honeypotRef}
+          type="text"
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+          style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0, width: 0 }}
+        />
+
         <input
           type="text"
           value={name}

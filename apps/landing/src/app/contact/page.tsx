@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useApp } from "@/components/AppProvider";
 import NewsletterSubscribe from "@/components/NewsletterSubscribe";
 
@@ -95,6 +95,10 @@ export default function ContactPage() {
   const [subscribe, setSubscribe] = useState(false);
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
 
+  // Anti-spam
+  const formLoadedAt = useRef(Date.now());
+  const honeypotRef = useRef<HTMLInputElement>(null);
+
   const isB2B = type !== "consumer";
 
   async function handleSubmit(e: React.FormEvent) {
@@ -113,6 +117,9 @@ export default function ContactPage() {
           message,
           lang,
           subscribeNewsletter: subscribe,
+          // Anti-spam fields
+          website: honeypotRef.current?.value || "",
+          _t: formLoadedAt.current,
         }),
       });
       setStatus(res.ok ? "success" : "error");
@@ -177,6 +184,16 @@ export default function ContactPage() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Honeypot — hidden from humans, bots auto-fill it */}
+                <input
+                  ref={honeypotRef}
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0, width: 0 }}
+                />
+
                 {/* Name */}
                 <div>
                   <label className="mb-1.5 block text-[12px] font-semibold" style={{ color: "var(--muted)" }}>{t.name} *</label>
