@@ -80,6 +80,32 @@ export default function PipelinePage() {
   const [moving, setMoving] = useState<string | null>(null); // contact id being moved
   const [moveMenu, setMoveMenu] = useState<string | null>(null); // contact id with open move menu
   const [filterType, setFilterType] = useState<string>("all");
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
+
+  const syncFromClickUp = async () => {
+    setSyncing(true);
+    setSyncResult(null);
+    try {
+      const res = await fetch("/api/admin/outreach/sync-clickup");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.synced > 0) {
+          setSyncResult(`Synced ${data.synced} change${data.synced > 1 ? "s" : ""}`);
+          fetchContacts();
+        } else {
+          setSyncResult("Everything up to date");
+        }
+      } else {
+        setSyncResult("Sync failed");
+      }
+    } catch {
+      setSyncResult("Sync failed");
+    } finally {
+      setSyncing(false);
+      setTimeout(() => setSyncResult(null), 3000);
+    }
+  };
 
   const fetchContacts = useCallback(async () => {
     try {
