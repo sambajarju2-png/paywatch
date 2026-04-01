@@ -10,9 +10,6 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
 // GET: Return enrichment stats
 export async function GET() {
-  const { data, error } = await supabase.rpc("exec_sql", { query: "" }).maybeSingle();
-  
-  // Get stats
   const { data: stats } = await supabase
     .from("b2b_contacts")
     .select("id, website, notes")
@@ -28,103 +25,119 @@ export async function GET() {
   return NextResponse.json({ total, enriched, unenriched: total - enriched, nvi, nviEnriched });
 }
 
-// POST: Enrich a batch of contacts
+// POST: Enrich ONE contact at a time (frontend loops, not backend)
 export async function POST(req: NextRequest) {
   if (!ANTHROPIC_API_KEY) {
     return NextResponse.json({ error: "ANTHROPIC_API_KEY not set" }, { status: 500 });
   }
 
   const body = await req.json().catch(() => ({}));
-  const batchSize = Math.min(body.batch_size || 5, 20); // max 20 per call
-  const typeFilter = body.type || "incasso"; // can also enrich other types
+  const typeFilter = body.type || "incasso";
 
-  // Fetch unenriched contacts (NVI first)
+  // Fetch ONE unenriched contact (NVI first)
   const { data: contacts, error } = await supabase
     .from("b2b_contacts")
     .select("id, organization_name, kvk_number, notes, type")
     .eq("type", typeFilter)
     .is("website", null)
-    .order("notes", { ascending: false }) // NVI keurmerk first (alphabetically after null)
+    .order("notes", { ascending: false })
     .order("organization_name")
-    .limit(batchSize);
+    .limit(1);
 
   if (error || !contacts?.length) {
+    const { count: remaining } = await supabase
+      .from("b2b_contacts")
+      .select("id", { count: "exact", head: true })
+      .eq("type", typeFilter)
+      .is("website", null);
+
     return NextResponse.json({
-      message: contacts?.length === 0 ? "All contacts enriched!" : "Error fetching contacts",
-      enriched: 0,
-      remaining: 0,
+      message: remaining === 0 ? "All contacts enriched!" : "Error fetching contacts",
+      remaining: remaining || 0,
+      result: null,
     });
   }
 
-  const results: Array<{
-    id: string;
-    name: string;
-    website: string | null;
-    linkedin_url: string | null;
-    city: string | null;
-    status: "enriched" | "skipped" | "error";
-    error?: string;
-  }> = [];
+  const contact = contacts[0];
 
-  for (const contact of contacts) {
-    try {
-      // Call Claude API with web search
-      const searchResult = await enrichWithClaude(contact.organization_name, contact.kvk_number);
+  try {
+    const searchResult = await enrichWithClaude(contact.organization_name, contact.kvk_number);
 
-      if (!searchResult || (!searchResult.website && !searchResult.linkedin_url && !searchResult.city)) {
-        results.push({ id: contact.id, name: contact.organization_name, website: null, linkedin_url: null, city: null, status: "skipped" });
-        continue;
-      }
+    if (!searchResult || (!searchResult.website && !searchResult.linkedin_url && !searchResult.city)) {
+      // Count remaining
+      const { count: remaining } = await supabase
+        .from("b2b_contacts")
+        .select("id", { count: "exact", head: true })
+        .eq("type", typeFilter)
+        .is("website", null);
 
-      // Update Supabase
-      const updateData: Record<string, string> = {};
-      if (searchResult.website) updateData.website = searchResult.website;
-      if (searchResult.linkedin_url) updateData.linkedin_url = searchResult.linkedin_url;
-      if (searchResult.city) updateData.city = searchResult.city;
+      // Mark as searched but not found — set website to empty string so we don't retry
+      await supabase
+        .from("b2b_contacts")
+        .update({ website: "" })
+        .eq("id", contact.id);
 
-      if (Object.keys(updateData).length > 0) {
-        const { error: updateError } = await supabase
-          .from("b2b_contacts")
-          .update(updateData)
-          .eq("id", contact.id);
-
-        if (updateError) {
-          results.push({ id: contact.id, name: contact.organization_name, ...searchResult, status: "error", error: updateError.message });
-        } else {
-          results.push({ id: contact.id, name: contact.organization_name, ...searchResult, status: "enriched" });
-        }
-      } else {
-        results.push({ id: contact.id, name: contact.organization_name, website: null, linkedin_url: null, city: null, status: "skipped" });
-      }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Unknown error";
-      results.push({ id: contact.id, name: contact.organization_name, website: null, linkedin_url: null, city: null, status: "error", error: msg });
+      return NextResponse.json({
+        remaining: (remaining || 1) - 1,
+        result: { id: contact.id, name: contact.organization_name, website: null, linkedin_url: null, city: null, status: "skipped" },
+      });
     }
 
-    // Small delay between API calls to avoid rate limiting
-    await new Promise((r) => setTimeout(r, 500));
+    // Update Supabase
+    const updateData: Record<string, string> = {};
+    if (searchResult.website) updateData.website = searchResult.website;
+    if (searchResult.linkedin_url) updateData.linkedin_url = searchResult.linkedin_url;
+    if (searchResult.city) updateData.city = searchResult.city;
+
+    if (Object.keys(updateData).length > 0) {
+      await supabase
+        .from("b2b_contacts")
+        .update(updateData)
+        .eq("id", contact.id);
+    }
+
+    const { count: remaining } = await supabase
+      .from("b2b_contacts")
+      .select("id", { count: "exact", head: true })
+      .eq("type", typeFilter)
+      .is("website", null);
+
+    return NextResponse.json({
+      remaining: remaining || 0,
+      result: {
+        id: contact.id,
+        name: contact.organization_name,
+        ...searchResult,
+        status: "enriched",
+      },
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Unknown error";
+
+    // If rate limited, tell frontend to wait
+    const isRateLimit = msg.includes("429") || msg.includes("rate_limit");
+
+    return NextResponse.json({
+      remaining: -1, // signals "don't know"
+      result: {
+        id: contact.id,
+        name: contact.organization_name,
+        website: null,
+        linkedin_url: null,
+        city: null,
+        status: "error",
+        error: msg,
+      },
+      retryAfter: isRateLimit ? 30 : 5, // seconds to wait before retrying
+    });
   }
-
-  // Count remaining
-  const { count: remaining } = await supabase
-    .from("b2b_contacts")
-    .select("id", { count: "exact", head: true })
-    .eq("type", typeFilter)
-    .is("website", null);
-
-  return NextResponse.json({
-    enriched: results.filter((r) => r.status === "enriched").length,
-    skipped: results.filter((r) => r.status === "skipped").length,
-    errors: results.filter((r) => r.status === "error").length,
-    remaining: remaining || 0,
-    results,
-  });
 }
 
-// Use Claude API with web search to find company info
+// Call Claude API with retry on 429
 async function enrichWithClaude(
   companyName: string,
-  justisNumber: string | null
+  justisNumber: string | null,
+  attempt = 1
 ): Promise<{ website: string | null; linkedin_url: string | null; city: string | null } | null> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -135,37 +148,40 @@ async function enrichWithClaude(
     },
     body: JSON.stringify({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 500,
-      system: `You are a Dutch business research assistant. Search for the given company and return ONLY a JSON object:
-{"website": "full URL or null", "linkedin_url": "full LinkedIn company page URL or null", "city": "Dutch city name or null"}
-Rules:
-- Only include URLs you find via search results. Use null if not found.
-- linkedin_url must be a company page URL (linkedin.com/company/...), not personal profiles.
-- Return ONLY the JSON, no other text, no markdown.`,
+      max_tokens: 800,
+      system: `You research Dutch companies. Search for the given company and return ONLY a JSON object:
+{"website": "full URL or null", "linkedin_url": "full LinkedIn company page URL or null", "city": "Dutch city or null"}
+Only include verified URLs from search. No markdown, no explanation, ONLY the JSON.`,
       messages: [
         {
           role: "user",
-          content: `Find website, LinkedIn company page, and headquarters city for: "${companyName}" (Dutch incasso/debt collection registered company${justisNumber ? `, Justis register: ${justisNumber}` : ""})`,
+          content: `Find website, LinkedIn company page, and city for: "${companyName}" (Dutch incasso company${justisNumber ? `, Justis nr: ${justisNumber}` : ""})`,
         },
       ],
       tools: [{ type: "web_search_20250305", name: "web_search" }],
     }),
   });
 
+  // Handle rate limit with retry
+  if (res.status === 429 && attempt < 3) {
+    const retryAfter = parseInt(res.headers.get("retry-after") || "15", 10);
+    console.log(`[enrich] Rate limited, waiting ${retryAfter}s (attempt ${attempt}/3)`);
+    await new Promise((r) => setTimeout(r, retryAfter * 1000));
+    return enrichWithClaude(companyName, justisNumber, attempt + 1);
+  }
+
   if (!res.ok) {
     const errText = await res.text();
-    throw new Error(`Claude API ${res.status}: ${errText.slice(0, 100)}`);
+    throw new Error(`Claude API ${res.status}: ${errText.slice(0, 200)}`);
   }
 
   const data = await res.json();
 
-  // Extract text from response (skip tool_use blocks)
   const text = data.content
     ?.filter((b: { type: string }) => b.type === "text")
     ?.map((b: { text: string }) => b.text)
     ?.join("\n") || "";
 
-  // Parse JSON from response
   const clean = text.replace(/```json\s*/g, "").replace(/```/g, "").trim();
   const start = clean.indexOf("{");
   const end = clean.lastIndexOf("}");

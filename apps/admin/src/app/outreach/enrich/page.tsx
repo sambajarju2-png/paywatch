@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Sparkles, Loader2, CheckCircle, XCircle, SkipForward, RefreshCw } from "lucide-react";
+import { Sparkles, Loader2, CheckCircle, XCircle, SkipForward, RefreshCw, Clock } from "lucide-react";
 
 type EnrichResult = {
   id: string;
@@ -13,25 +13,17 @@ type EnrichResult = {
   error?: string;
 };
 
-type BatchResponse = {
-  enriched: number;
-  skipped: number;
-  errors: number;
-  remaining: number;
-  results: EnrichResult[];
-  message?: string;
-};
-
 export default function EnrichPage() {
   const [running, setRunning] = useState(false);
   const [stats, setStats] = useState<{ total: number; enriched: number; unenriched: number; nvi: number; nviEnriched: number } | null>(null);
-  const [batchSize, setBatchSize] = useState(5);
+  const [delaySeconds, setDelaySeconds] = useState(6);
   const [allResults, setAllResults] = useState<EnrichResult[]>([]);
   const [totalEnriched, setTotalEnriched] = useState(0);
   const [totalSkipped, setTotalSkipped] = useState(0);
   const [totalErrors, setTotalErrors] = useState(0);
   const [remaining, setRemaining] = useState<number | null>(null);
-  const [currentBatch, setCurrentBatch] = useState(0);
+  const [statusText, setStatusText] = useState("");
+  const [countdown, setCountdown] = useState(0);
   const stopRef = useRef(false);
 
   const loadStats = useCallback(async () => {
@@ -48,55 +40,78 @@ export default function EnrichPage() {
   // Load stats on mount
   useState(() => { loadStats(); });
 
-  const runBatch = async (): Promise<BatchResponse | null> => {
-    const res = await fetch("/api/admin/outreach/enrich-contacts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ batch_size: batchSize, type: "incasso" }),
-    });
-    if (!res.ok) return null;
-    return res.json();
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+  const countdownWait = async (seconds: number) => {
+    for (let i = seconds; i > 0; i--) {
+      if (stopRef.current) return;
+      setCountdown(i);
+      await sleep(1000);
+    }
+    setCountdown(0);
   };
 
   const startEnrichment = async () => {
     stopRef.current = false;
     setRunning(true);
-    setCurrentBatch(0);
+    let processed = 0;
 
     while (!stopRef.current) {
-      setCurrentBatch((b) => b + 1);
-      const result = await runBatch();
+      setStatusText("Enriching...");
 
-      if (!result) {
-        break;
+      try {
+        const res = await fetch("/api/admin/outreach/enrich-contacts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "incasso" }),
+        });
+
+        const data = await res.json();
+
+        if (data.message && data.remaining === 0) {
+          setStatusText("All done!");
+          setRemaining(0);
+          break;
+        }
+
+        if (data.result) {
+          setAllResults((prev) => [data.result, ...prev]);
+          if (data.result.status === "enriched") setTotalEnriched((p) => p + 1);
+          else if (data.result.status === "skipped") setTotalSkipped((p) => p + 1);
+          else setTotalErrors((p) => p + 1);
+        }
+
+        if (data.remaining >= 0) setRemaining(data.remaining);
+
+        // If rate limited, wait longer
+        if (data.retryAfter) {
+          setStatusText(`Rate limited — waiting ${data.retryAfter}s...`);
+          await countdownWait(data.retryAfter);
+        } else {
+          // Normal delay between requests
+          processed++;
+          setStatusText(`Waiting ${delaySeconds}s before next...`);
+          await countdownWait(delaySeconds);
+        }
+      } catch (err) {
+        setStatusText("Network error — retrying in 10s...");
+        await countdownWait(10);
       }
-
-      if (result.message || result.remaining === 0) {
-        // All done
-        setRemaining(0);
-        break;
-      }
-
-      setAllResults((prev) => [...prev, ...result.results]);
-      setTotalEnriched((prev) => prev + result.enriched);
-      setTotalSkipped((prev) => prev + result.skipped);
-      setTotalErrors((prev) => prev + result.errors);
-      setRemaining(result.remaining);
-
-      // Small pause between batches
-      await new Promise((r) => setTimeout(r, 1000));
     }
 
     setRunning(false);
-    loadStats(); // Refresh stats
+    setStatusText(stopRef.current ? "Paused" : "Complete!");
+    setCountdown(0);
+    loadStats();
   };
 
   const stopEnrichment = () => {
     stopRef.current = true;
+    setStatusText("Stopping...");
   };
 
-  const enrichedResults = allResults.filter((r) => r.status === "enriched");
   const processedTotal = totalEnriched + totalSkipped + totalErrors;
+  const estimateMinutes = remaining ? Math.ceil((remaining * (delaySeconds + 4)) / 60) : 0;
 
   return (
     <div className="px-4 py-6 max-w-4xl">
@@ -108,12 +123,12 @@ export default function EnrichPage() {
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">AI Contact Enrichment</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Uses Claude + web search to find website, LinkedIn & city for each contact
+            Claude Haiku + web search — 1 agency every {delaySeconds}s to stay within rate limits
           </p>
         </div>
       </div>
 
-      {/* Stats Card */}
+      {/* Stats */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
@@ -137,18 +152,21 @@ export default function EnrichPage() {
 
       {/* Controls */}
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 mb-6">
-        <div className="flex items-center gap-3">
-          <select
-            value={batchSize}
-            onChange={(e) => setBatchSize(Number(e.target.value))}
-            disabled={running}
-            className="px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300"
-          >
-            <option value={1}>1 per batch</option>
-            <option value={3}>3 per batch</option>
-            <option value={5}>5 per batch</option>
-            <option value={10}>10 per batch</option>
-          </select>
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <Clock className="w-4 h-4 text-slate-400" />
+            <select
+              value={delaySeconds}
+              onChange={(e) => setDelaySeconds(Number(e.target.value))}
+              disabled={running}
+              className="px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300"
+            >
+              <option value={4}>4s between calls (~40 min)</option>
+              <option value={6}>6s between calls (~60 min)</option>
+              <option value={10}>10s between calls (~90 min)</option>
+              <option value={15}>15s between calls (safest)</option>
+            </select>
+          </div>
 
           {!running ? (
             <button
@@ -157,7 +175,7 @@ export default function EnrichPage() {
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
               <Sparkles className="w-4 h-4" />
-              {remaining === 0 ? "All Enriched!" : `Start Enrichment (${remaining ?? "..."} remaining)`}
+              {remaining === 0 ? "All Enriched!" : `Start (${remaining ?? "..."} remaining${estimateMinutes ? ` · ~${estimateMinutes}min` : ""})`}
             </button>
           ) : (
             <button
@@ -172,29 +190,28 @@ export default function EnrichPage() {
             onClick={loadStats}
             disabled={running}
             className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            title="Refresh stats"
           >
             <RefreshCw className="w-4 h-4 text-slate-500" />
           </button>
         </div>
 
-        {running && (
-          <div className="mt-3 flex items-center gap-2 text-sm text-blue-600">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Processing batch {currentBatch}... ({remaining} remaining)
+        {/* Status line */}
+        {(running || statusText) && (
+          <div className="mt-3 flex items-center gap-2 text-sm">
+            {running && <Loader2 className="w-4 h-4 animate-spin text-blue-600" />}
+            <span className={running ? "text-blue-600" : "text-slate-500"}>
+              {statusText}
+              {countdown > 0 && ` (${countdown}s)`}
+            </span>
           </div>
         )}
 
         {processedTotal > 0 && (
-          <div className="mt-3 flex gap-4 text-xs">
-            <span className="text-green-600 flex items-center gap-1">
-              <CheckCircle className="w-3 h-3" /> {totalEnriched} enriched
-            </span>
-            <span className="text-slate-400 flex items-center gap-1">
-              <SkipForward className="w-3 h-3" /> {totalSkipped} skipped
-            </span>
-            <span className="text-red-500 flex items-center gap-1">
-              <XCircle className="w-3 h-3" /> {totalErrors} errors
-            </span>
+          <div className="mt-2 flex gap-4 text-xs">
+            <span className="text-green-600 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> {totalEnriched} enriched</span>
+            <span className="text-slate-400 flex items-center gap-1"><SkipForward className="w-3 h-3" /> {totalSkipped} skipped</span>
+            <span className="text-red-500 flex items-center gap-1"><XCircle className="w-3 h-3" /> {totalErrors} errors</span>
           </div>
         )}
       </div>
@@ -218,7 +235,7 @@ export default function EnrichPage() {
                 </tr>
               </thead>
               <tbody>
-                {[...allResults].reverse().map((r, i) => (
+                {allResults.map((r, i) => (
                   <tr key={`${r.id}-${i}`} className="border-t border-slate-100 dark:border-slate-700">
                     <td className="px-4 py-2 font-medium text-slate-900 dark:text-white truncate max-w-48">
                       {r.name}
@@ -233,17 +250,17 @@ export default function EnrichPage() {
                     <td className="px-4 py-2 text-xs text-slate-500">{r.city || "—"}</td>
                     <td className="px-4 py-2">
                       {r.status === "enriched" && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
                           <CheckCircle className="w-3 h-3" /> Done
                         </span>
                       )}
                       {r.status === "skipped" && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-500">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400">
                           <SkipForward className="w-3 h-3" /> Skipped
                         </span>
                       )}
                       {r.status === "error" && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-700" title={r.error}>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" title={r.error}>
                           <XCircle className="w-3 h-3" /> Error
                         </span>
                       )}
