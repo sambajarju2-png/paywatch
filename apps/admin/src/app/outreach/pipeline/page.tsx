@@ -19,7 +19,6 @@ import {
   Trophy,
   XCircle,
   GripVertical,
-  RefreshCw,
 } from "lucide-react";
 
 /* ── Types ── */
