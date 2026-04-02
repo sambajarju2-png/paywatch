@@ -6,7 +6,7 @@ import {
   Search,
   Upload,
   Sparkles,
-  MoreVertical,
+  MoreHorizontal,
   Loader2,
   RefreshCw,
   Globe,
@@ -20,11 +20,10 @@ import {
   ChevronDown,
   Users,
   UserPlus,
+  Check,
+  FileText,
   MapPin,
   Mail,
-  FileText,
-  ChevronRight,
-  AlertTriangle,
 } from "lucide-react";
 
 /* ─── Types ─── */
@@ -109,8 +108,8 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   bounced: { bg: "bg-red-50", text: "text-pw-red" },
 };
 
-const inputClass = "w-full px-3 py-2.5 text-sm rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue focus:ring-1 focus:ring-pw-blue/20 transition-colors";
-const selectClass = "w-full px-3 py-2.5 text-sm rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue focus:ring-1 focus:ring-pw-blue/20 appearance-none transition-colors";
+const inputClass = "w-full px-3 py-2.5 text-sm rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue focus:ring-1 focus:ring-pw-blue/20";
+const selectClass = "w-full px-3 py-2.5 text-sm rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue focus:ring-1 focus:ring-pw-blue/20 appearance-none";
 const labelClass = "block text-xs font-semibold text-pw-muted mb-1.5";
 
 /* ─── Main ─── */
@@ -130,14 +129,14 @@ export default function OutreachContacts() {
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [expandedResearch, setExpandedResearch] = useState<Set<string>>(new Set());
 
-  // Action sheet (mobile bottom sheet / desktop dropdown)
+  // Bottom action sheet (mobile) + dropdown portal (desktop)
   const [actionContact, setActionContact] = useState<Contact | null>(null);
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
 
   // Bulk selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   // Lists
   const [persistedLists, setPersistedLists] = useState<string[]>([]);
@@ -145,6 +144,7 @@ export default function OutreachContacts() {
   const [newListName, setNewListName] = useState("");
   const [showBulkListMenu, setShowBulkListMenu] = useState(false);
   const [bulkTagLoading, setBulkTagLoading] = useState(false);
+  const [showBulkRemoveMenu, setShowBulkRemoveMenu] = useState(false);
 
   /* ─── Fetching ─── */
   const fetchContacts = useCallback(async () => {
@@ -174,15 +174,7 @@ export default function OutreachContacts() {
 
   useEffect(() => { fetchContacts(); fetchLists(); }, [fetchContacts, fetchLists]);
 
-  // Close action sheet on escape
-  useEffect(() => {
-    if (!actionContact) return;
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") { setActionContact(null); setMenuPos(null); } };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [actionContact]);
-
-  // Close desktop dropdown on outside click
+  // Close desktop dropdown on click outside
   useEffect(() => {
     if (!actionContact || !menuPos) return;
     let handler: (() => void) | null = null;
@@ -223,19 +215,29 @@ export default function OutreachContacts() {
     return acc;
   }, {} as Record<string, number>);
 
+  const selectedContactTags = Array.from(selectedIds).reduce((acc, id) => {
+    const c = contacts.find((ct) => ct.id === id);
+    if (c?.tags) c.tags.forEach((t) => acc.add(t));
+    return acc;
+  }, new Set<string>());
+
   /* ─── Handlers ─── */
-  function openActionMenu(e: React.MouseEvent, contact: Contact) {
-    e.preventDefault();
+  function openActionSheet(contact: Contact) {
+    setActionContact(contact);
+    setMenuPos(null);
+  }
+
+  function openDesktopMenu(e: React.MouseEvent, contact: Contact) {
     e.stopPropagation();
-    if (window.innerWidth < 768) {
-      setActionContact(contact);
-      setMenuPos(null);
-    } else {
-      if (actionContact?.id === contact.id) { setActionContact(null); setMenuPos(null); return; }
-      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-      setActionContact(contact);
-      setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
-    }
+    if (actionContact?.id === contact.id) { setActionContact(null); setMenuPos(null); return; }
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setActionContact(contact);
+    setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+  }
+
+  function closeActionMenu() {
+    setActionContact(null);
+    setMenuPos(null);
   }
 
   async function handleResearch(contactId: string) {
@@ -274,13 +276,14 @@ export default function OutreachContacts() {
     if (selectedIds.size === 0) return;
     setBulkDeleting(true);
     try {
-      const res = await fetch("/api/admin/outreach/contacts/bulk-delete", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contactIds: Array.from(selectedIds) }),
-      });
-      if (res.ok) { await fetchContacts(); setSelectedIds(new Set()); }
+      const promises = Array.from(selectedIds).map((id) =>
+        fetch(`/api/admin/outreach/contacts?id=${id}`, { method: "DELETE" })
+      );
+      await Promise.all(promises);
+      await fetchContacts();
+      setSelectedIds(new Set());
     } catch { console.error("Bulk delete error"); }
-    finally { setBulkDeleting(false); setBulkDeleteConfirm(false); }
+    finally { setBulkDeleting(false); setShowBulkDeleteConfirm(false); }
   }
 
   async function handleEditSave(contactId: string, updates: Partial<Contact>) {
@@ -353,7 +356,7 @@ export default function OutreachContacts() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contactIds: Array.from(selectedIds), tag, action: "remove" }),
       });
-      if (res.ok) { await fetchContacts(); setSelectedIds(new Set()); }
+      if (res.ok) { await fetchContacts(); setSelectedIds(new Set()); setShowBulkRemoveMenu(false); }
     } catch { console.error("Bulk remove error"); }
     finally { setBulkTagLoading(false); }
   }
@@ -367,9 +370,9 @@ export default function OutreachContacts() {
 
   /* ─── Render ─── */
   return (
-    <div className="space-y-3 md:space-y-4 pb-24">
+    <div className="space-y-3 sm:space-y-4">
       {importResult && (
-        <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-xs">
+        <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-2.5 text-xs">
           <CheckCircle2 size={14} className="text-pw-green shrink-0" />
           <span className="text-pw-green font-semibold">Imported {importResult.success} contacts</span>
           {importResult.errors > 0 && <span className="text-pw-red">({importResult.errors} errors)</span>}
@@ -377,32 +380,34 @@ export default function OutreachContacts() {
       )}
 
       {/* ── Top bar ── */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
         <div className="relative flex-1 min-w-0">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-pw-muted" />
           <input type="text" placeholder="Search contacts..." value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-3 py-2.5 text-sm rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue" />
         </div>
-        <button onClick={() => setShowAddModal(true)}
-          className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold rounded-lg bg-pw-blue text-white hover:bg-blue-600 active:bg-blue-700 transition-colors">
-          <UserPlus size={12} /> <span className="hidden sm:inline">Add</span>
-        </button>
-        <button onClick={() => setShowImportModal(true)}
-          className="shrink-0 hidden sm:flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold rounded-lg border border-pw-border bg-white hover:bg-gray-50">
-          <Upload size={12} /> Import
-        </button>
-        <button onClick={() => { fetchContacts(); fetchLists(); }}
-          className="shrink-0 p-2.5 rounded-lg border border-pw-border bg-white hover:bg-gray-50 active:bg-gray-100 transition-colors">
-          <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold rounded-lg bg-pw-blue text-white hover:bg-blue-600 active:bg-blue-700">
+            <UserPlus size={12} /> <span className="hidden sm:inline">Add Contact</span><span className="sm:hidden">Add</span>
+          </button>
+          <button onClick={() => setShowImportModal(true)}
+            className="flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold rounded-lg border border-pw-border bg-white hover:bg-gray-50 active:bg-gray-100">
+            <Upload size={12} /> <span className="hidden sm:inline">Import CSV</span><span className="sm:hidden">Import</span>
+          </button>
+          <button onClick={() => { fetchContacts(); fetchLists(); }}
+            className="p-2.5 rounded-lg border border-pw-border bg-white hover:bg-gray-50 active:bg-gray-100">
+            <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
+          </button>
+        </div>
       </div>
 
       {/* ── Type filter tabs ── */}
-      <div className="flex gap-1 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
+      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
         {Object.entries(TYPE_LABELS).map(([key, label]) => (
           <button key={key} onClick={() => setTypeFilter(key)}
-            className={`shrink-0 px-3 py-1.5 text-[11px] font-semibold rounded-lg transition-colors ${
+            className={`px-3 py-1.5 text-[11px] font-semibold rounded-lg transition-colors whitespace-nowrap shrink-0 ${
               typeFilter === key ? "bg-pw-blue text-white" : "bg-white text-pw-muted border border-pw-border hover:bg-gray-50 active:bg-gray-100"
             }`}>
             {label}
@@ -415,15 +420,15 @@ export default function OutreachContacts() {
 
       {/* ── Journalist beat sub-filter ── */}
       {typeFilter === "journalist" && (
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-          <span className="shrink-0 text-[10px] font-semibold text-pw-muted mr-1">Beat:</span>
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+          <span className="text-[10px] font-semibold text-pw-muted mr-1 shrink-0">Beat:</span>
           <button onClick={() => setBeatFilter(null)}
-            className={`shrink-0 px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors ${
+            className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors shrink-0 ${
               !beatFilter ? "bg-purple-100 text-purple-700" : "bg-white text-pw-muted border border-pw-border hover:bg-gray-50"
             }`}>All</button>
           {Object.entries(BEAT_LABELS).map(([key, label]) => (
             <button key={key} onClick={() => setBeatFilter(beatFilter === key ? null : key)}
-              className={`shrink-0 px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors ${
+              className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors shrink-0 ${
                 beatFilter === key ? "bg-purple-100 text-purple-700" : "bg-white text-pw-muted border border-pw-border hover:bg-gray-50"
               }`}>
               {label}
@@ -434,327 +439,351 @@ export default function OutreachContacts() {
       )}
 
       {/* ── Lists ── */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-        <Tag size={11} className="shrink-0 text-pw-muted" />
-        <span className="shrink-0 text-[10px] font-semibold text-pw-muted mr-0.5">Lists:</span>
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+        <Tag size={12} className="text-pw-muted shrink-0" />
+        <span className="text-[10px] font-semibold text-pw-muted mr-0.5 shrink-0">Lists:</span>
         {tagFilter && (
           <button onClick={() => setTagFilter(null)}
-            className="shrink-0 px-2.5 py-1 text-[10px] font-semibold rounded-md bg-white text-pw-muted border border-pw-border hover:bg-gray-50">Show all</button>
+            className="px-2.5 py-1 text-[10px] font-semibold rounded-md bg-white text-pw-muted border border-pw-border hover:bg-gray-50 shrink-0">Show all</button>
         )}
-        {allTags.length === 0 && !tagFilter && <span className="text-[10px] text-pw-muted italic">No lists yet</span>}
+        {allTags.length === 0 && !tagFilter && (
+          <span className="text-[10px] text-pw-muted italic">No lists yet</span>
+        )}
         {allTags.map((tag) => (
           <button key={tag} onClick={() => setTagFilter(tagFilter === tag ? null : tag)}
-            className={`shrink-0 px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors ${
+            className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors shrink-0 ${
               tagFilter === tag ? "bg-pw-blue text-white" : "bg-blue-50 text-pw-blue hover:bg-blue-100"
             }`}>
-            {tag}{tagCounts[tag] ? <span className={`ml-1 ${tagFilter === tag ? "text-blue-200" : "text-blue-300"}`}>{tagCounts[tag]}</span> : null}
+            {tag}
+            {tagCounts[tag] ? <span className={`ml-1 ${tagFilter === tag ? "text-blue-200" : "text-blue-300"}`}>{tagCounts[tag]}</span> : null}
           </button>
         ))}
         {showNewList ? (
           <div className="flex items-center gap-1 shrink-0">
-            <input autoFocus value={newListName} onChange={(e) => setNewListName(e.target.value)}
+            <input autoFocus value={newListName}
+              onChange={(e) => setNewListName(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") handleCreateList(); if (e.key === "Escape") { setShowNewList(false); setNewListName(""); } }}
               placeholder="List name..." className="px-2 py-1 text-[10px] rounded-md border border-pw-blue bg-white focus:outline-none w-28" />
-            <button onClick={handleCreateList} className="px-2 py-1 text-[10px] font-semibold rounded-md bg-pw-blue text-white hover:bg-blue-600">
+            <button onClick={handleCreateList}
+              className="px-2 py-1 text-[10px] font-semibold rounded-md bg-pw-blue text-white hover:bg-blue-600">
               {selectedIds.size > 0 ? `Add ${selectedIds.size}` : "Create"}
             </button>
-            <button onClick={() => { setShowNewList(false); setNewListName(""); }} className="p-1 text-pw-muted hover:text-pw-text"><X size={10} /></button>
+            <button onClick={() => { setShowNewList(false); setNewListName(""); }} className="p-1 text-pw-muted hover:text-pw-text">
+              <X size={10} />
+            </button>
           </div>
         ) : (
           <button onClick={() => setShowNewList(true)}
-            className="shrink-0 flex items-center gap-0.5 px-2 py-1 text-[10px] font-semibold rounded-md text-pw-blue hover:bg-blue-50 transition-colors">
+            className="flex items-center gap-0.5 px-2 py-1 text-[10px] font-semibold rounded-md text-pw-blue hover:bg-blue-50 transition-colors shrink-0">
             <Plus size={10} /> New List
           </button>
         )}
       </div>
 
-      {/* ── Select all row ── */}
-      <div className="flex items-center justify-between">
-        <label className="flex items-center gap-2 text-xs text-pw-muted cursor-pointer select-none">
-          <input type="checkbox"
-            checked={filteredContacts.length > 0 && selectedIds.size === filteredContacts.length}
-            onChange={toggleSelectAll} className="rounded border-gray-300 accent-pw-blue w-4 h-4" />
-          <span className="font-medium">
-            {selectedIds.size > 0 ? `${selectedIds.size} of ${filteredContacts.length} selected` : `${filteredContacts.length} contacts`}
-          </span>
-        </label>
+      {/* ── Select all bar (mobile) ── */}
+      <div className="flex items-center gap-2 md:hidden">
+        <button onClick={toggleSelectAll}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold rounded-lg border border-pw-border bg-white hover:bg-gray-50 active:bg-gray-100">
+          {selectedIds.size === filteredContacts.length && filteredContacts.length > 0 ? (
+            <><Check size={10} className="text-pw-blue" /> Deselect all</>
+          ) : (
+            <><Users size={10} className="text-pw-muted" /> Select all ({filteredContacts.length})</>
+          )}
+        </button>
         {selectedIds.size > 0 && (
-          <button onClick={() => setSelectedIds(new Set())} className="text-[10px] font-semibold text-pw-blue">Clear</button>
+          <span className="text-[11px] font-semibold text-pw-blue">{selectedIds.size} selected</span>
         )}
       </div>
 
-      {/* ── Loading / Empty ── */}
-      {loading && contacts.length === 0 ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 className="animate-spin text-pw-muted" size={24} />
-        </div>
-      ) : filteredContacts.length === 0 ? (
-        <div className="text-center py-16">
-          <Users size={32} className="mx-auto text-gray-300 mb-3" />
-          <p className="text-sm text-pw-muted">
-            {contacts.length === 0 ? (<>No contacts found. <button onClick={() => setShowAddModal(true)} className="text-pw-blue font-semibold hover:underline">Add your first contact</button></>) : "No contacts match the current filters."}
-          </p>
-        </div>
-      ) : (
-        <>
-          {/* ══════════ MOBILE CARD VIEW ══════════ */}
-          <div className="md:hidden space-y-2">
-            {filteredContacts.map((c) => {
-              const statusStyle = STATUS_COLORS[c.status] || STATUS_COLORS.new;
-              const isSelected = selectedIds.has(c.id);
-              return (
-                <div key={c.id} className={`bg-white rounded-xl border transition-colors ${isSelected ? "border-pw-blue bg-blue-50/30" : "border-pw-border"}`}>
-                  <div className="p-3.5">
-                    <div className="flex items-start gap-2.5">
-                      <input type="checkbox" checked={isSelected} onChange={() => toggleSelect(c.id)}
-                        className="mt-1 rounded border-gray-300 accent-pw-blue w-4 h-4 shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        {/* Org name + status */}
-                        <div className="flex items-center gap-2 mb-1">
-                          <Link href={`/outreach/contacts/${c.id}`}
-                            className="font-semibold text-sm text-pw-text hover:text-pw-blue transition-colors truncate">
-                            {c.organization_name}
-                          </Link>
-                          <span className={`shrink-0 inline-block px-2 py-0.5 rounded text-[10px] font-semibold ${statusStyle.bg} ${statusStyle.text}`}>
-                            {c.status}
+      {/* ━━━ MOBILE: Card list ━━━ */}
+      <div className="md:hidden space-y-2">
+        {loading && contacts.length === 0 ? (
+          <div className="flex justify-center py-16"><Loader2 className="animate-spin text-pw-muted" size={20} /></div>
+        ) : filteredContacts.length === 0 ? (
+          <div className="text-center py-16 text-sm text-pw-muted">
+            {contacts.length === 0 ? (
+              <>No contacts found. <button onClick={() => setShowAddModal(true)} className="text-pw-blue font-semibold">Add your first contact</button></>
+            ) : "No contacts match the current filters."}
+          </div>
+        ) : filteredContacts.map((c) => {
+          const statusStyle = STATUS_COLORS[c.status] || STATUS_COLORS.new;
+          const isSelected = selectedIds.has(c.id);
+          return (
+            <div key={c.id}
+              className={`bg-white rounded-xl border transition-colors ${isSelected ? "border-pw-blue bg-blue-50/30" : "border-pw-border"}`}>
+              <div className="flex items-start gap-3 p-3">
+                <input type="checkbox" checked={isSelected} onChange={() => toggleSelect(c.id)}
+                  className="mt-1 rounded border-gray-300 accent-pw-blue shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <Link href={`/outreach/contacts/${c.id}`}
+                        className="text-sm font-semibold text-pw-text hover:text-pw-blue block truncate">
+                        {c.organization_name}
+                      </Link>
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-600">
+                          {TYPE_LABELS[c.type] || c.type}
+                        </span>
+                        <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold ${statusStyle.bg} ${statusStyle.text}`}>
+                          {c.status}
+                        </span>
+                        {c.beat && (
+                          <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-50 text-purple-600">
+                            {BEAT_LABELS[c.beat] || c.beat}
                           </span>
-                        </div>
-
-                        {/* Meta: type, beat, city */}
-                        <div className="flex items-center gap-2 text-[11px] text-pw-muted mb-1.5 flex-wrap">
-                          <span className="inline-block px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-semibold text-[10px]">
-                            {TYPE_LABELS[c.type] || c.type}
-                          </span>
-                          {c.beat && <span className="text-[10px] text-purple-500 font-medium">{BEAT_LABELS[c.beat] || c.beat}</span>}
-                          {c.city && <span className="flex items-center gap-0.5"><MapPin size={10} /> {c.city}</span>}
-                        </div>
-
-                        {/* Contact person */}
-                        {c.contact_person && (
-                          <div className="text-xs text-pw-text mb-0.5">
-                            {c.contact_person}{c.contact_role && <span className="text-pw-muted"> · {c.contact_role}</span>}
-                          </div>
-                        )}
-                        {c.contact_email && (
-                          <div className="flex items-center gap-1 text-[11px] text-pw-blue mb-1"><Mail size={10} /> {c.contact_email}</div>
-                        )}
-                        {c.website && (
-                          <a href={c.website} target="_blank" rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-[10px] text-pw-blue hover:underline mb-1">
-                            <Globe size={9} /> {c.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
-                          </a>
-                        )}
-
-                        {/* Description / notes preview */}
-                        {c.notes && (
-                          <div className="flex items-start gap-1.5 mt-1.5 p-2 bg-gray-50 rounded-lg">
-                            <FileText size={10} className="text-pw-muted mt-0.5 shrink-0" />
-                            <p className="text-[11px] text-pw-muted line-clamp-2 leading-relaxed">{c.notes}</p>
-                          </div>
-                        )}
-
-                        {/* Tags */}
-                        {(c.tags || []).length > 0 && (
-                          <div className="flex gap-1 mt-1.5 flex-wrap">
-                            {c.tags.map((tag) => (
-                              <span key={tag} className="inline-block px-1.5 py-0.5 rounded text-[9px] font-medium bg-blue-50 text-pw-blue">{tag}</span>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* AI Research */}
-                        {c.ai_research_summary && (
-                          <div className="mt-1.5 cursor-pointer" onClick={() => setExpandedResearch((prev) => { const n = new Set(prev); if (n.has(c.id)) n.delete(c.id); else n.add(c.id); return n; })}>
-                            <p className={`text-[10px] text-pw-text ${expandedResearch.has(c.id) ? "" : "line-clamp-2"}`}>{c.ai_research_summary}</p>
-                            <p className="text-[9px] text-pw-blue mt-0.5">{expandedResearch.has(c.id) ? "Show less" : "Show more"}</p>
-                          </div>
                         )}
                       </div>
-
-                      {/* Action trigger */}
-                      <button onClick={(e) => openActionMenu(e, c)}
-                        className="shrink-0 p-2 -mr-1 -mt-0.5 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors">
-                        <MoreVertical size={16} className="text-pw-muted" />
-                      </button>
                     </div>
+                    <button onClick={() => openActionSheet(c)}
+                      className="p-2 -mr-1 -mt-0.5 rounded-lg hover:bg-gray-100 active:bg-gray-200 shrink-0">
+                      <MoreHorizontal size={16} className="text-pw-muted" />
+                    </button>
                   </div>
+
+                  <div className="mt-2 space-y-1">
+                    {c.contact_person && (
+                      <div className="flex items-center gap-1.5 text-xs text-pw-muted">
+                        <Users size={10} className="shrink-0" />
+                        <span className="truncate">{c.contact_person}{c.contact_role ? ` · ${c.contact_role}` : ""}</span>
+                      </div>
+                    )}
+                    {(c.contact_email || c.general_email) && (
+                      <div className="flex items-center gap-1.5 text-xs text-pw-blue">
+                        <Mail size={10} className="shrink-0" />
+                        <span className="truncate">{c.contact_email || c.general_email}</span>
+                      </div>
+                    )}
+                    {c.city && (
+                      <div className="flex items-center gap-1.5 text-xs text-pw-muted">
+                        <MapPin size={10} className="shrink-0" /> <span>{c.city}</span>
+                      </div>
+                    )}
+                    {c.website && (
+                      <a href={c.website} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 text-xs text-pw-blue hover:underline">
+                        <Globe size={10} className="shrink-0" />
+                        <span className="truncate">{c.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}</span>
+                      </a>
+                    )}
+                    {c.notes && (
+                      <div className="flex items-start gap-1.5 text-xs text-pw-muted">
+                        <FileText size={10} className="shrink-0 mt-0.5" />
+                        <span className="line-clamp-2">{c.notes}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {(c.tags || []).length > 0 && (
+                    <div className="flex gap-1 mt-2 flex-wrap">
+                      {c.tags.map((tag) => (
+                        <span key={tag} className="inline-block px-1.5 py-0.5 rounded text-[9px] font-medium bg-blue-50 text-pw-blue">{tag}</span>
+                      ))}
+                    </div>
+                  )}
+
+                  {c.ai_research_summary && (
+                    <div className="mt-2 p-2 bg-purple-50/60 rounded-lg cursor-pointer"
+                      onClick={() => setExpandedResearch((prev) => { const n = new Set(prev); if (n.has(c.id)) n.delete(c.id); else n.add(c.id); return n; })}>
+                      <p className={`text-[10px] text-pw-text ${expandedResearch.has(c.id) ? "" : "line-clamp-2"}`}>{c.ai_research_summary}</p>
+                      <p className="text-[9px] text-purple-500 mt-1 font-medium">{expandedResearch.has(c.id) ? "Show less" : "Show more"}</p>
+                    </div>
+                  )}
+                  {!c.ai_research_summary && (
+                    <button onClick={() => handleResearch(c.id)} disabled={researchingId === c.id}
+                      className="mt-2 flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-100 active:bg-purple-200 disabled:opacity-50">
+                      {researchingId === c.id ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />} Research
+                    </button>
+                  )}
                 </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ━━━ DESKTOP: Table ━━━ */}
+      <div className="hidden md:block bg-white rounded-xl border border-pw-border overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="border-b border-pw-border bg-gray-50/50">
+              <th className="w-10 px-3 py-2.5">
+                <input type="checkbox"
+                  checked={filteredContacts.length > 0 && selectedIds.size === filteredContacts.length}
+                  onChange={toggleSelectAll} className="rounded border-gray-300 accent-pw-blue" />
+              </th>
+              <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">Organization</th>
+              <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">Contact</th>
+              <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">Type</th>
+              <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">City</th>
+              <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">Status</th>
+              <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">AI Research</th>
+              <th className="text-right px-4 py-2.5 font-semibold text-pw-muted">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && contacts.length === 0 ? (
+              <tr><td colSpan={8} className="text-center py-12"><Loader2 className="animate-spin mx-auto text-pw-muted" size={20} /></td></tr>
+            ) : filteredContacts.length === 0 ? (
+              <tr><td colSpan={8} className="text-center py-12 text-pw-muted">
+                {contacts.length === 0 ? (<>No contacts found. <button onClick={() => setShowAddModal(true)} className="text-pw-blue font-semibold hover:underline">Add your first contact</button></>) : "No contacts match the current filters."}
+              </td></tr>
+            ) : filteredContacts.map((c) => {
+              const statusStyle = STATUS_COLORS[c.status] || STATUS_COLORS.new;
+              return (
+                <tr key={c.id} className={`border-b border-pw-border last:border-0 hover:bg-gray-50/50 transition-colors ${selectedIds.has(c.id) ? "bg-blue-50/40" : ""}`}>
+                  <td className="w-10 px-3 py-3">
+                    <input type="checkbox" checked={selectedIds.has(c.id)} onChange={() => toggleSelect(c.id)} className="rounded border-gray-300 accent-pw-blue" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <Link href={`/outreach/contacts/${c.id}`} className="font-semibold text-pw-text hover:text-pw-blue transition-colors">{c.organization_name}</Link>
+                    {c.website && (
+                      <a href={c.website} target="_blank" rel="noopener noreferrer" className="text-[10px] text-pw-blue flex items-center gap-0.5 hover:underline mt-0.5">
+                        <Globe size={8} /> {c.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
+                      </a>
+                    )}
+                    {c.notes && (
+                      <p className="text-[10px] text-pw-muted line-clamp-1 mt-0.5 flex items-center gap-1">
+                        <FileText size={8} className="shrink-0" /> {c.notes}
+                      </p>
+                    )}
+                    {(c.tags || []).length > 0 && (
+                      <div className="flex gap-1 mt-1 flex-wrap">
+                        {c.tags.map((tag) => (
+                          <span key={tag} className="inline-block px-1.5 py-0.5 rounded text-[9px] font-medium bg-blue-50 text-pw-blue">{tag}</span>
+                        ))}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {c.contact_person ? (
+                      <div>
+                        <div className="font-medium text-pw-text">{c.contact_person}</div>
+                        <div className="text-[10px] text-pw-muted">{c.contact_role || ""}</div>
+                        {c.contact_email && <div className="text-[10px] text-pw-blue mt-0.5">{c.contact_email}</div>}
+                      </div>
+                    ) : <span className="text-pw-muted">—</span>}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-600">{TYPE_LABELS[c.type] || c.type}</span>
+                    {c.beat && <div className="text-[9px] text-purple-500 font-medium mt-0.5">{BEAT_LABELS[c.beat] || c.beat}</div>}
+                  </td>
+                  <td className="px-4 py-3 text-pw-muted">{c.city || "—"}</td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold ${statusStyle.bg} ${statusStyle.text}`}>{c.status}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {c.ai_research_summary ? (
+                      <div className="max-w-[250px] cursor-pointer" onClick={() => setExpandedResearch((prev) => { const n = new Set(prev); if (n.has(c.id)) n.delete(c.id); else n.add(c.id); return n; })}>
+                        <p className={`text-[10px] text-pw-text ${expandedResearch.has(c.id) ? "" : "line-clamp-2"}`}>{c.ai_research_summary}</p>
+                        <p className="text-[9px] text-pw-muted mt-0.5">
+                          {c.ai_researched_at ? new Date(c.ai_researched_at).toLocaleDateString("nl-NL") : ""}
+                          <span className="ml-1 text-pw-blue">{expandedResearch.has(c.id) ? "Show less" : "Show more"}</span>
+                        </p>
+                      </div>
+                    ) : (
+                      <button onClick={() => handleResearch(c.id)} disabled={researchingId === c.id}
+                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-purple-600 bg-purple-50 rounded hover:bg-purple-100 disabled:opacity-50">
+                        {researchingId === c.id ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />} Research
+                      </button>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button onClick={(e) => openDesktopMenu(e, c)} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                      <MoreHorizontal size={14} className="text-pw-muted" />
+                    </button>
+                  </td>
+                </tr>
               );
             })}
-          </div>
+          </tbody>
+        </table>
+      </div>
 
-          {/* ══════════ DESKTOP TABLE VIEW ══════════ */}
-          <div className="hidden md:block bg-white rounded-xl border border-pw-border overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-pw-border bg-gray-50/50">
-                  <th className="w-10 px-3 py-2.5">
-                    <input type="checkbox"
-                      checked={filteredContacts.length > 0 && selectedIds.size === filteredContacts.length}
-                      onChange={toggleSelectAll} className="rounded border-gray-300 accent-pw-blue" />
-                  </th>
-                  <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">Organization</th>
-                  <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">Contact</th>
-                  <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">Type</th>
-                  <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">City</th>
-                  <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">Status</th>
-                  <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">Notes</th>
-                  <th className="text-left px-4 py-2.5 font-semibold text-pw-muted">AI Research</th>
-                  <th className="text-right px-4 py-2.5 font-semibold text-pw-muted">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredContacts.map((c) => {
-                  const statusStyle = STATUS_COLORS[c.status] || STATUS_COLORS.new;
-                  return (
-                    <tr key={c.id} className={`border-b border-pw-border last:border-0 hover:bg-gray-50/50 transition-colors ${selectedIds.has(c.id) ? "bg-blue-50/40" : ""}`}>
-                      <td className="w-10 px-3 py-3">
-                        <input type="checkbox" checked={selectedIds.has(c.id)} onChange={() => toggleSelect(c.id)} className="rounded border-gray-300 accent-pw-blue" />
-                      </td>
-                      <td className="px-4 py-3">
-                        <Link href={`/outreach/contacts/${c.id}`} className="font-semibold text-pw-text hover:text-pw-blue transition-colors">{c.organization_name}</Link>
-                        {c.website && (
-                          <a href={c.website} target="_blank" rel="noopener noreferrer" className="text-[10px] text-pw-blue flex items-center gap-0.5 hover:underline mt-0.5">
-                            <Globe size={8} /> {c.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
-                          </a>
-                        )}
-                        {(c.tags || []).length > 0 && (
-                          <div className="flex gap-1 mt-1 flex-wrap">
-                            {c.tags.map((tag) => (
-                              <span key={tag} className="inline-block px-1.5 py-0.5 rounded text-[9px] font-medium bg-blue-50 text-pw-blue">{tag}</span>
-                            ))}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        {c.contact_person ? (
-                          <div>
-                            <div className="font-medium text-pw-text">{c.contact_person}</div>
-                            <div className="text-[10px] text-pw-muted">{c.contact_role || ""}</div>
-                            {c.contact_email && <div className="text-[10px] text-pw-blue mt-0.5">{c.contact_email}</div>}
-                          </div>
-                        ) : <span className="text-pw-muted">—</span>}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-600">{TYPE_LABELS[c.type] || c.type}</span>
-                        {c.beat && <div className="text-[9px] text-purple-500 font-medium mt-0.5">{BEAT_LABELS[c.beat] || c.beat}</div>}
-                      </td>
-                      <td className="px-4 py-3 text-pw-muted">{c.city || "—"}</td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold ${statusStyle.bg} ${statusStyle.text}`}>{c.status}</span>
-                      </td>
-                      <td className="px-4 py-3 max-w-[180px]">
-                        {c.notes ? <p className="text-[10px] text-pw-muted line-clamp-2">{c.notes}</p> : <span className="text-[10px] text-gray-300">—</span>}
-                      </td>
-                      <td className="px-4 py-3">
-                        {c.ai_research_summary ? (
-                          <div className="max-w-[250px] cursor-pointer" onClick={() => setExpandedResearch((prev) => { const n = new Set(prev); if (n.has(c.id)) n.delete(c.id); else n.add(c.id); return n; })}>
-                            <p className={`text-[10px] text-pw-text ${expandedResearch.has(c.id) ? "" : "line-clamp-2"}`}>{c.ai_research_summary}</p>
-                            <p className="text-[9px] text-pw-muted mt-0.5">
-                              {c.ai_researched_at ? new Date(c.ai_researched_at).toLocaleDateString("nl-NL") : ""}
-                              <span className="ml-1 text-pw-blue">{expandedResearch.has(c.id) ? "Show less" : "Show more"}</span>
-                            </p>
-                          </div>
-                        ) : (
-                          <button onClick={() => handleResearch(c.id)} disabled={researchingId === c.id}
-                            className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-purple-600 bg-purple-50 rounded hover:bg-purple-100 disabled:opacity-50">
-                            {researchingId === c.id ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />} Research
-                          </button>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <button onClick={(e) => openActionMenu(e, c)} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
-                          <MoreVertical size={14} className="text-pw-muted" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
-
-      {/* ── Desktop dropdown ── */}
+      {/* ━━━ DESKTOP: 3-dot dropdown portal ━━━ */}
       {actionContact && menuPos && (
-        <div className="hidden md:block fixed z-50 w-48 bg-white rounded-lg border border-pw-border shadow-lg py-1"
+        <div className="hidden md:block fixed z-50 w-44 bg-white rounded-lg border border-pw-border shadow-lg py-1"
           style={{ top: menuPos.top, right: menuPos.right }}
           onClick={(e) => e.stopPropagation()}>
-          <button onClick={() => { setEditingContact(actionContact); setActionContact(null); setMenuPos(null); }}
-            className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-xs text-pw-text hover:bg-gray-50 text-left">
-            <Pencil size={13} className="text-pw-blue" /> Edit Contact
+          <button onClick={() => { setEditingContact(actionContact); closeActionMenu(); }}
+            className="flex items-center gap-2 w-full px-3 py-2 text-[11px] text-pw-text hover:bg-gray-50 text-left">
+            <Pencil size={12} className="text-pw-blue" /> Edit Contact
           </button>
-          <button onClick={() => { handleResearch(actionContact.id); setActionContact(null); setMenuPos(null); }}
-            className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-xs text-pw-text hover:bg-gray-50 text-left">
-            <Sparkles size={13} className="text-purple-500" /> AI Research
+          <button onClick={() => { handleResearch(actionContact.id); closeActionMenu(); }}
+            className="flex items-center gap-2 w-full px-3 py-2 text-[11px] text-pw-text hover:bg-gray-50 text-left">
+            <Sparkles size={12} className="text-purple-500" /> AI Research
           </button>
-          <button onClick={() => { handleVerify(actionContact.id); setActionContact(null); setMenuPos(null); }}
+          <button onClick={() => { handleVerify(actionContact.id); closeActionMenu(); }}
             disabled={verifyingId === actionContact.id}
-            className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-xs text-pw-text hover:bg-gray-50 text-left disabled:opacity-50">
-            {verifyingId === actionContact.id ? <Loader2 size={13} className="animate-spin" /> : <ShieldCheck size={13} className="text-pw-green" />} Verify Email
+            className="flex items-center gap-2 w-full px-3 py-2 text-[11px] text-pw-text hover:bg-gray-50 text-left">
+            {verifyingId === actionContact.id ? <Loader2 size={12} className="animate-spin" /> : <ShieldCheck size={12} className="text-pw-green" />} Verify Email
           </button>
           <div className="border-t border-pw-border my-1" />
-          <button onClick={() => { setDeleteConfirmId(actionContact.id); setActionContact(null); setMenuPos(null); }}
-            className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-xs text-pw-red hover:bg-red-50 text-left">
-            <Trash2 size={13} /> Delete
+          <button onClick={() => { setDeleteConfirmId(actionContact.id); closeActionMenu(); }}
+            className="flex items-center gap-2 w-full px-3 py-2 text-[11px] text-pw-red hover:bg-red-50 text-left">
+            <Trash2 size={12} /> Delete
           </button>
         </div>
       )}
 
-      {/* ── Mobile bottom sheet ── */}
+      {/* ━━━ MOBILE: Bottom action sheet ━━━ */}
       {actionContact && !menuPos && (
-        <>
-          <div className="md:hidden fixed inset-0 bg-black/40 z-50" onClick={() => setActionContact(null)} />
-          <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-2xl animate-slide-up">
-            <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mt-3 mb-2" />
-            <div className="px-4 pb-2">
-              <p className="text-sm font-bold text-pw-navy truncate">{actionContact.organization_name}</p>
-              <p className="text-[11px] text-pw-muted">{TYPE_LABELS[actionContact.type] || actionContact.type}{actionContact.city ? ` · ${actionContact.city}` : ""}</p>
+        <div className="md:hidden fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/40" onClick={closeActionMenu} />
+          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl safe-area-bottom animate-slide-up">
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 bg-gray-300 rounded-full" />
             </div>
-            <div className="border-t border-pw-border">
-              <button onClick={() => { setEditingContact(actionContact); setActionContact(null); }}
-                className="flex items-center gap-3 w-full px-5 py-3.5 text-sm text-pw-text active:bg-gray-50 text-left">
+            <div className="px-4 pb-3 border-b border-pw-border">
+              <p className="text-sm font-bold text-pw-navy truncate">{actionContact.organization_name}</p>
+              {actionContact.contact_email && (
+                <p className="text-xs text-pw-muted mt-0.5">{actionContact.contact_email}</p>
+              )}
+            </div>
+            <div className="py-2">
+              <button onClick={() => { setEditingContact(actionContact); closeActionMenu(); }}
+                className="flex items-center gap-3 w-full px-4 py-3.5 text-sm text-pw-text active:bg-gray-50">
                 <Pencil size={18} className="text-pw-blue" /> Edit Contact
               </button>
-              <button onClick={() => { handleResearch(actionContact.id); setActionContact(null); }}
-                className="flex items-center gap-3 w-full px-5 py-3.5 text-sm text-pw-text active:bg-gray-50 text-left">
+              <button onClick={() => { handleResearch(actionContact.id); closeActionMenu(); }}
+                className="flex items-center gap-3 w-full px-4 py-3.5 text-sm text-pw-text active:bg-gray-50">
                 <Sparkles size={18} className="text-purple-500" /> AI Research
               </button>
-              <button onClick={() => { handleVerify(actionContact.id); setActionContact(null); }}
+              <button onClick={() => { handleVerify(actionContact.id); closeActionMenu(); }}
                 disabled={verifyingId === actionContact.id}
-                className="flex items-center gap-3 w-full px-5 py-3.5 text-sm text-pw-text active:bg-gray-50 text-left disabled:opacity-50">
+                className="flex items-center gap-3 w-full px-4 py-3.5 text-sm text-pw-text active:bg-gray-50 disabled:opacity-50">
                 {verifyingId === actionContact.id ? <Loader2 size={18} className="animate-spin" /> : <ShieldCheck size={18} className="text-pw-green" />} Verify Email
               </button>
-              <Link href={`/outreach/contacts/${actionContact.id}`} onClick={() => setActionContact(null)}
-                className="flex items-center gap-3 w-full px-5 py-3.5 text-sm text-pw-text active:bg-gray-50 text-left">
-                <ChevronRight size={18} className="text-pw-muted" /> View Details
-              </Link>
-              <div className="border-t border-pw-border" />
-              <button onClick={() => { setDeleteConfirmId(actionContact.id); setActionContact(null); }}
-                className="flex items-center gap-3 w-full px-5 py-3.5 text-sm text-pw-red active:bg-red-50 text-left">
+              <div className="border-t border-pw-border my-1" />
+              <button onClick={() => { setDeleteConfirmId(actionContact.id); closeActionMenu(); }}
+                className="flex items-center gap-3 w-full px-4 py-3.5 text-sm text-pw-red active:bg-red-50">
                 <Trash2 size={18} /> Delete
               </button>
             </div>
-            <div className="h-safe-b" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 12px)" }} />
+            <div className="px-4 pb-4 pt-1">
+              <button onClick={closeActionMenu}
+                className="w-full py-3 text-sm font-semibold text-pw-muted bg-gray-100 rounded-xl active:bg-gray-200">
+                Cancel
+              </button>
+            </div>
           </div>
-        </>
+        </div>
       )}
 
       {/* ── Bulk action bar ── */}
       {selectedIds.size > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 md:bottom-6 md:left-1/2 md:-translate-x-1/2 md:right-auto md:rounded-xl bg-pw-navy text-white shadow-2xl z-40
-          px-4 py-3 md:px-5 flex items-center gap-3 md:gap-4" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 12px)" }}>
+        <div className="fixed bottom-0 left-0 right-0 sm:bottom-6 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto bg-pw-navy text-white sm:rounded-xl shadow-2xl px-4 sm:px-5 py-3 flex items-center gap-2 sm:gap-4 z-40 safe-area-bottom sm:w-auto">
           <div className="flex items-center gap-2 shrink-0">
             <Users size={14} />
             <span className="text-xs font-semibold">{selectedIds.size}</span>
           </div>
-          <div className="w-px h-5 bg-white/20 shrink-0" />
-          {/* Add to list */}
+          <div className="w-px h-5 bg-white/20 hidden sm:block" />
+
+          {/* Add to List */}
           <div className="relative">
-            <button onClick={(e) => { e.stopPropagation(); setShowBulkListMenu(!showBulkListMenu); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/25 transition-colors">
-              <Tag size={11} /> <span className="hidden sm:inline">Add to</span> List <ChevronDown size={10} />
+            <button onClick={(e) => { e.stopPropagation(); setShowBulkListMenu(!showBulkListMenu); setShowBulkRemoveMenu(false); }}
+              className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 transition-colors">
+              <Tag size={11} /> <span className="hidden sm:inline">Add to List</span><span className="sm:hidden">List</span> <ChevronDown size={10} />
             </button>
             {showBulkListMenu && (
               <div className="absolute bottom-full mb-2 left-0 w-48 bg-white rounded-lg border border-pw-border shadow-lg py-1 text-pw-text"
@@ -776,84 +805,91 @@ export default function OutreachContacts() {
               </div>
             )}
           </div>
-          {/* Remove from list */}
-          {tagFilter && (
-            <button onClick={() => handleBulkRemoveTag(tagFilter)} disabled={bulkTagLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-red-500/20 hover:bg-red-500/30 transition-colors disabled:opacity-50">
-              <X size={11} /> <span className="hidden sm:inline">Remove</span>
-            </button>
+
+          {/* Remove from List */}
+          {selectedContactTags.size > 0 && (
+            <div className="relative">
+              <button onClick={(e) => { e.stopPropagation(); setShowBulkRemoveMenu(!showBulkRemoveMenu); setShowBulkListMenu(false); }}
+                className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-red-500/20 hover:bg-red-500/30 active:bg-red-500/40 transition-colors">
+                <X size={11} /> <span className="hidden sm:inline">Remove</span>
+              </button>
+              {showBulkRemoveMenu && (
+                <div className="absolute bottom-full mb-2 left-0 w-48 bg-white rounded-lg border border-pw-border shadow-lg py-1 text-pw-text"
+                  onClick={(e) => e.stopPropagation()}>
+                  {Array.from(selectedContactTags).map((tag) => (
+                    <button key={tag} onClick={() => handleBulkRemoveTag(tag)} disabled={bulkTagLoading}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-[11px] hover:bg-red-50 text-left disabled:opacity-50 text-pw-red">
+                      <X size={10} /> {tag}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
-          {/* Bulk delete */}
-          <button onClick={() => setBulkDeleteConfirm(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-red-500/20 hover:bg-red-500/30 transition-colors">
+
+          {/* Bulk Delete */}
+          <button onClick={() => setShowBulkDeleteConfirm(true)}
+            className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-red-500/30 hover:bg-red-500/40 active:bg-red-500/50 transition-colors">
             <Trash2 size={11} /> <span className="hidden sm:inline">Delete</span>
           </button>
-          <button onClick={() => setSelectedIds(new Set())} className="ml-auto p-1.5 rounded-lg hover:bg-white/10 transition-colors shrink-0">
+
+          {/* Close */}
+          <button onClick={() => setSelectedIds(new Set())} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors ml-auto sm:ml-0">
             <X size={14} />
           </button>
         </div>
       )}
 
-      {/* ── Bulk delete confirm ── */}
-      {bulkDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/40 flex items-end md:items-center justify-center z-50">
-          <div className="bg-white rounded-t-2xl md:rounded-2xl w-full md:max-w-sm p-6 shadow-xl text-center" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 24px)" }}>
-            <AlertTriangle size={28} className="mx-auto mb-3 text-pw-red" />
-            <h3 className="text-sm font-bold text-pw-navy mb-1">Delete {selectedIds.size} contacts?</h3>
-            <p className="text-xs text-pw-muted mb-5">This cannot be undone.</p>
-            <div className="flex gap-2">
-              <button onClick={() => setBulkDeleteConfirm(false)} className="flex-1 px-3 py-2.5 text-sm font-semibold rounded-lg border border-pw-border hover:bg-gray-50">Cancel</button>
-              <button onClick={handleBulkDelete} disabled={bulkDeleting}
-                className="flex-1 px-3 py-2.5 text-sm font-semibold rounded-lg bg-pw-red text-white hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-1.5">
-                {bulkDeleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Single delete confirm ── */}
+      {/* ── Modals ── */}
       {deleteConfirmId && (
-        <div className="fixed inset-0 bg-black/40 flex items-end md:items-center justify-center z-50">
-          <div className="bg-white rounded-t-2xl md:rounded-2xl w-full md:max-w-sm p-6 shadow-xl text-center" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 24px)" }}>
+        <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-sm p-6 shadow-xl text-center safe-area-bottom">
             <Trash2 size={24} className="mx-auto mb-3 text-pw-red" />
             <h3 className="text-sm font-bold text-pw-navy mb-1">Delete contact?</h3>
-            <p className="text-xs text-pw-muted mb-4">This cannot be undone.</p>
+            <p className="text-xs text-pw-muted mb-4">This action cannot be undone.</p>
             <div className="flex gap-2">
-              <button onClick={() => setDeleteConfirmId(null)} className="flex-1 px-3 py-2.5 text-sm font-semibold rounded-lg border border-pw-border hover:bg-gray-50">Cancel</button>
-              <button onClick={() => handleDelete(deleteConfirmId)} className="flex-1 px-3 py-2.5 text-sm font-semibold rounded-lg bg-pw-red text-white hover:bg-red-700 flex items-center justify-center gap-1.5">
-                <Trash2 size={14} /> Delete
+              <button onClick={() => setDeleteConfirmId(null)} className="flex-1 px-3 py-2.5 text-xs font-semibold rounded-lg border border-pw-border hover:bg-gray-50 active:bg-gray-100">Cancel</button>
+              <button onClick={() => handleDelete(deleteConfirmId)} className="flex-1 px-3 py-2.5 text-xs font-semibold rounded-lg bg-pw-red text-white hover:bg-red-700 active:bg-red-800">Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showBulkDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-sm p-6 shadow-xl text-center safe-area-bottom">
+            <Trash2 size={24} className="mx-auto mb-3 text-pw-red" />
+            <h3 className="text-sm font-bold text-pw-navy mb-1">Delete {selectedIds.size} contacts?</h3>
+            <p className="text-xs text-pw-muted mb-4">This will permanently delete all selected contacts.</p>
+            <div className="flex gap-2">
+              <button onClick={() => setShowBulkDeleteConfirm(false)} className="flex-1 px-3 py-2.5 text-xs font-semibold rounded-lg border border-pw-border hover:bg-gray-50 active:bg-gray-100">Cancel</button>
+              <button onClick={handleBulkDelete} disabled={bulkDeleting}
+                className="flex-1 px-3 py-2.5 text-xs font-semibold rounded-lg bg-pw-red text-white hover:bg-red-700 active:bg-red-800 disabled:opacity-50 flex items-center justify-center gap-1.5">
+                {bulkDeleting ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />} Delete All
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Modals ── */}
       {editingContact && <ContactFormModal mode="edit" contact={editingContact} onClose={() => setEditingContact(null)} onSave={handleEditSave} />}
       {showAddModal && <ContactFormModal mode="add" onClose={() => setShowAddModal(false)} onAdd={handleAddContact} />}
       {showImportModal && <ImportModal onClose={() => setShowImportModal(false)} onImport={handleImport} />}
 
       <style>{`
-        @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .animate-slide-up { animation: slide-up 0.25s ease-out; }
-        .scrollbar-none::-webkit-scrollbar { display: none; }
-        .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .animate-slide-up { animation: slideUp 0.2s ease-out; }
+        .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </div>
   );
 }
 
-/* ══════════════════════════════════════════════════════════════
-   Contact Form Modal — full-screen bottom sheet on mobile,
-   centered dialog on desktop
-   ══════════════════════════════════════════════════════════════ */
-function ContactFormModal({
-  mode, contact, onClose, onSave, onAdd,
-}: {
-  mode: "add" | "edit";
-  contact?: Contact;
-  onClose: () => void;
+/* ─── Contact Form Modal (Add + Edit) ─── */
+function ContactFormModal({ mode, contact, onClose, onSave, onAdd }: {
+  mode: "add" | "edit"; contact?: Contact; onClose: () => void;
   onSave?: (id: string, updates: Partial<Contact>) => Promise<void>;
   onAdd?: (data: Partial<Contact>) => Promise<void>;
 }) {
@@ -888,101 +924,73 @@ function ContactFormModal({
 
   async function handleSubmit() {
     if (!form.organization_name.trim()) { setError("Organization name is required"); return; }
-    setSaving(true);
-    setError(null);
+    setSaving(true); setError(null);
     try {
       const payload = {
-        organization_name: form.organization_name.trim(),
-        type: form.type,
-        website: form.website.trim() || null,
-        contact_person: form.contact_person.trim() || null,
-        contact_role: form.contact_role.trim() || null,
-        contact_email: form.contact_email.trim() || null,
-        first_name: form.first_name.trim() || null,
-        last_name: form.last_name.trim() || null,
-        general_email: form.general_email.trim() || null,
-        phone: form.phone.trim() || null,
-        city: form.city.trim() || null,
-        kvk_number: form.kvk_number.trim() || null,
+        organization_name: form.organization_name.trim(), type: form.type,
+        website: form.website.trim() || null, contact_person: form.contact_person.trim() || null,
+        contact_role: form.contact_role.trim() || null, contact_email: form.contact_email.trim() || null,
+        first_name: form.first_name.trim() || null, last_name: form.last_name.trim() || null,
+        general_email: form.general_email.trim() || null, phone: form.phone.trim() || null,
+        city: form.city.trim() || null, kvk_number: form.kvk_number.trim() || null,
         linkedin_url: form.linkedin_url.trim() || null,
         beat: form.type === "journalist" && form.beat.trim() ? form.beat.trim() : null,
-        notes: form.notes.trim() || null,
-        status: form.status,
+        notes: form.notes.trim() || null, status: form.status,
       };
-      if (mode === "edit" && contact && onSave) {
-        await onSave(contact.id, payload);
-      } else if (mode === "add" && onAdd) {
-        await onAdd(payload);
-      }
+      if (mode === "edit" && contact && onSave) await onSave(contact.id, payload);
+      else if (mode === "add" && onAdd) await onAdd(payload);
     } catch { setError("Failed to save. Try again."); }
     finally { setSaving(false); }
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-end md:items-center justify-center z-50">
-      <div className="bg-white rounded-t-2xl md:rounded-2xl w-full md:max-w-lg shadow-xl flex flex-col max-h-[95vh] md:max-h-[90vh]">
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-pw-border shrink-0">
+    <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg shadow-xl max-h-[95vh] sm:max-h-[90vh] flex flex-col safe-area-bottom">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-pw-border shrink-0">
           <div className="flex items-center gap-2">
             {mode === "edit" ? <Pencil size={16} className="text-pw-blue" /> : <UserPlus size={16} className="text-pw-blue" />}
             <h3 className="text-sm font-bold text-pw-navy">{mode === "edit" ? "Edit Contact" : "Add Contact"}</h3>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 active:bg-gray-200"><X size={18} className="text-pw-muted" /></button>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 active:bg-gray-200"><X size={16} className="text-pw-muted" /></button>
         </div>
-
-        {/* Body — single column on mobile */}
-        <div className="overflow-y-auto px-5 py-4 space-y-4 flex-1 overscroll-contain">
-          {error && <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2.5 text-xs text-pw-red"><X size={12} /> {error}</div>}
-
-          <div>
-            <label className={labelClass}>Organization Name *</label>
-            <input value={form.organization_name} onChange={(e) => update("organization_name", e.target.value)} className={inputClass} placeholder="e.g. Gemeente Rotterdam" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label className={labelClass}>Type *</label>
+        <div className="overflow-y-auto px-5 sm:px-6 py-4 space-y-4 flex-1">
+          {error && <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-pw-red"><X size={12} /> {error}</div>}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div><label className={labelClass}>Organization Name *</label><input value={form.organization_name} onChange={(e) => update("organization_name", e.target.value)} className={inputClass} placeholder="e.g. Gemeente Rotterdam" /></div>
+            <div><label className={labelClass}>Type *</label>
               <select value={form.type} onChange={(e) => update("type", e.target.value)} className={selectClass}>
                 {TYPE_OPTIONS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
             </div>
-            {form.type === "journalist" && (
-              <div>
-                <label className={labelClass}>Beat</label>
-                <select value={form.beat} onChange={(e) => update("beat", e.target.value)} className={selectClass}>
-                  {BEAT_OPTIONS.map((b) => <option key={b.value} value={b.value}>{b.label}</option>)}
-                </select>
-              </div>
-            )}
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div><label className={labelClass}>First Name</label><input value={form.first_name} onChange={(e) => update("first_name", e.target.value)} className={inputClass} placeholder="Jan" /></div>
-            <div><label className={labelClass}>Last Name</label><input value={form.last_name} onChange={(e) => update("last_name", e.target.value)} className={inputClass} placeholder="De Vries" /></div>
+          {form.type === "journalist" && (
+            <div><label className={labelClass}>Beat</label>
+              <select value={form.beat} onChange={(e) => update("beat", e.target.value)} className={selectClass}>
+                {BEAT_OPTIONS.map((b) => <option key={b.value} value={b.value}>{b.label}</option>)}
+              </select>
+            </div>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div><label className={labelClass}>First Name</label><input value={form.first_name} onChange={(e) => update("first_name", e.target.value)} className={inputClass} placeholder="e.g. Jan" /></div>
+            <div><label className={labelClass}>Last Name</label><input value={form.last_name} onChange={(e) => update("last_name", e.target.value)} className={inputClass} placeholder="e.g. De Vries" /></div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div><label className={labelClass}>Contact Person</label><input value={form.contact_person} onChange={(e) => update("contact_person", e.target.value)} className={inputClass} placeholder="Jan de Vries" /></div>
-            <div><label className={labelClass}>Role</label><input value={form.contact_role} onChange={(e) => update("contact_role", e.target.value)} className={inputClass} placeholder="Projectleider" /></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div><label className={labelClass}>Contact Person</label><input value={form.contact_person} onChange={(e) => update("contact_person", e.target.value)} className={inputClass} placeholder="e.g. Jan de Vries" /></div>
+            <div><label className={labelClass}>Role</label><input value={form.contact_role} onChange={(e) => update("contact_role", e.target.value)} className={inputClass} placeholder="e.g. Projectleider" /></div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><label className={labelClass}>Contact Email</label><input type="email" value={form.contact_email} onChange={(e) => update("contact_email", e.target.value)} className={inputClass} placeholder="jan@example.nl" /></div>
             <div><label className={labelClass}>General Email</label><input type="email" value={form.general_email} onChange={(e) => update("general_email", e.target.value)} className={inputClass} placeholder="info@example.nl" /></div>
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><label className={labelClass}>Phone</label><input value={form.phone} onChange={(e) => update("phone", e.target.value)} className={inputClass} placeholder="+31 6 12345678" /></div>
-            <div><label className={labelClass}>City</label><input value={form.city} onChange={(e) => update("city", e.target.value)} className={inputClass} placeholder="Rotterdam" /></div>
+            <div><label className={labelClass}>City</label><input value={form.city} onChange={(e) => update("city", e.target.value)} className={inputClass} placeholder="e.g. Rotterdam" /></div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><label className={labelClass}>Website</label><input value={form.website} onChange={(e) => update("website", e.target.value)} className={inputClass} placeholder="https://example.nl" /></div>
-            <div><label className={labelClass}>KvK Number</label><input value={form.kvk_number} onChange={(e) => update("kvk_number", e.target.value)} className={inputClass} placeholder="12345678" /></div>
+            <div><label className={labelClass}>KvK Number</label><input value={form.kvk_number} onChange={(e) => update("kvk_number", e.target.value)} className={inputClass} placeholder="e.g. 12345678" /></div>
           </div>
-
           <div><label className={labelClass}>LinkedIn URL</label><input value={form.linkedin_url} onChange={(e) => update("linkedin_url", e.target.value)} className={inputClass} placeholder="https://linkedin.com/in/..." /></div>
-
           {mode === "edit" && (
             <div><label className={labelClass}>Status</label>
               <select value={form.status} onChange={(e) => update("status", e.target.value)} className={selectClass}>
@@ -990,20 +998,14 @@ function ContactFormModal({
               </select>
             </div>
           )}
-
-          <div>
-            <label className={labelClass}>Description / Notes</label>
-            <textarea value={form.notes} onChange={(e) => update("notes", e.target.value)} rows={4} className={`${inputClass} resize-none`} placeholder="Syncs with ClickUp description..." />
-          </div>
+          <div><label className={labelClass}>Notes / Description</label><textarea value={form.notes} onChange={(e) => update("notes", e.target.value)} rows={4} className={`${inputClass} resize-none`} placeholder="Internal notes, ClickUp description..." /></div>
         </div>
-
-        {/* Footer */}
-        <div className="flex gap-2 px-5 py-4 border-t border-pw-border shrink-0" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 16px)" }}>
-          <button onClick={onClose} className="flex-1 px-3 py-2.5 text-sm font-semibold rounded-lg border border-pw-border hover:bg-gray-50 active:bg-gray-100">Cancel</button>
+        <div className="flex gap-2 px-5 sm:px-6 py-4 border-t border-pw-border shrink-0">
+          <button onClick={onClose} className="flex-1 px-3 py-2.5 text-xs font-semibold rounded-lg border border-pw-border hover:bg-gray-50 active:bg-gray-100">Cancel</button>
           <button onClick={handleSubmit} disabled={saving}
-            className="flex-1 px-3 py-2.5 text-sm font-semibold rounded-lg bg-pw-blue text-white hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-1.5">
-            {saving ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
-            {mode === "edit" ? "Save" : "Add Contact"}
+            className="flex-1 px-3 py-2.5 text-xs font-semibold rounded-lg bg-pw-blue text-white hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-1.5">
+            {saving ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
+            {mode === "edit" ? "Save Changes" : "Add Contact"}
           </button>
         </div>
       </div>
@@ -1024,14 +1026,14 @@ function ImportModal({ onClose, onImport }: { onClose: () => void; onImport: (fi
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-end md:items-center justify-center z-50">
-      <div className="bg-white rounded-t-2xl md:rounded-2xl w-full md:max-w-md p-5 md:p-6 shadow-xl" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 20px)" }}>
+    <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md p-5 sm:p-6 shadow-xl safe-area-bottom">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-bold text-pw-navy">Import Contacts</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100"><X size={18} className="text-pw-muted" /></button>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 active:bg-gray-200"><X size={16} className="text-pw-muted" /></button>
         </div>
         <div onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-xl p-6 md:p-8 text-center ${dragOver ? "border-pw-blue bg-blue-50" : "border-pw-border"}`}>
+          className={`border-2 border-dashed rounded-xl p-8 text-center ${dragOver ? "border-pw-blue bg-blue-50" : "border-pw-border"}`}>
           {file ? (
             <div>
               <CheckCircle2 size={24} className="mx-auto mb-2 text-pw-green" />
@@ -1042,7 +1044,7 @@ function ImportModal({ onClose, onImport }: { onClose: () => void; onImport: (fi
             <div>
               <Upload size={24} className="mx-auto mb-2 text-pw-muted" />
               <p className="text-xs text-pw-muted mb-2">Drag &amp; drop a CSV, or tap to browse</p>
-              <label className="inline-block px-4 py-2 text-xs font-semibold text-pw-blue bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 active:bg-blue-200">
+              <label className="inline-block px-3 py-1.5 text-[11px] font-semibold text-pw-blue bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 active:bg-blue-200">
                 Choose file
                 <input type="file" accept=".csv,.tsv" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) setFile(f); }} />
               </label>
@@ -1054,11 +1056,11 @@ function ImportModal({ onClose, onImport }: { onClose: () => void; onImport: (fi
           <p className="text-[10px] text-pw-muted font-mono break-all">organization_name, type, website, contact_person, contact_role, contact_email, city, beat</p>
         </div>
         <div className="flex gap-2 mt-4">
-          <button onClick={onClose} className="flex-1 px-3 py-2.5 text-sm font-semibold rounded-lg border border-pw-border hover:bg-gray-50">Cancel</button>
+          <button onClick={onClose} className="flex-1 px-3 py-2.5 text-xs font-semibold rounded-lg border border-pw-border hover:bg-gray-50 active:bg-gray-100">Cancel</button>
           <button onClick={async () => { if (!file) return; setUploading(true); await onImport(file); setUploading(false); }}
             disabled={!file || uploading}
-            className="flex-1 px-3 py-2.5 text-sm font-semibold rounded-lg bg-pw-blue text-white hover:bg-blue-600 disabled:opacity-50 flex items-center justify-center gap-1.5">
-            {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} Import
+            className="flex-1 px-3 py-2.5 text-xs font-semibold rounded-lg bg-pw-blue text-white hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-1.5">
+            {uploading ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />} Import
           </button>
         </div>
       </div>

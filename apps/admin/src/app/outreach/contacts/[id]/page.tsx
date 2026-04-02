@@ -50,6 +50,7 @@ type Contact = {
   source?: string;
   tags?: string[];
   beat?: string;
+  clickup_task_id?: string;
   created_at: string;
   updated_at?: string;
 };
@@ -128,6 +129,8 @@ export default function ContactDetailPage() {
   const [loading, setLoading] = useState(true);
   const [timelineLoading, setTimelineLoading] = useState(false);
   const [tab, setTab] = useState<"timeline" | "details">("timeline");
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -160,6 +163,27 @@ export default function ContactDetailPage() {
       setTimelineLoading(false);
     }
   }, [contactId]);
+
+  const syncFromClickUp = useCallback(async () => {
+    if (!contact?.clickup_task_id) return;
+    setSyncing(true);
+    setSyncResult(null);
+    try {
+      const res = await fetch(`/api/admin/outreach/sync-clickup?type=${contact.type}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSyncResult(`Synced ${data.synced} contact(s)`);
+        await fetchData();
+        setTimeout(() => setSyncResult(null), 4000);
+      } else {
+        setSyncResult("Sync failed");
+      }
+    } catch {
+      setSyncResult("Sync error");
+    } finally {
+      setSyncing(false);
+    }
+  }, [contact?.clickup_task_id, contact?.type, fetchData]);
 
   useEffect(() => {
     fetchData();
@@ -293,6 +317,22 @@ export default function ContactDetailPage() {
             <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400">Bounced</p>
           </div>
         </div>
+
+        {/* Sync from ClickUp */}
+        {contact.clickup_task_id && (
+          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+            <button
+              onClick={syncFromClickUp}
+              disabled={syncing}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 active:bg-slate-200 transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} /> Sync from ClickUp
+            </button>
+            {syncResult && (
+              <span className="text-xs text-emerald-600 font-medium">{syncResult}</span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── Tabs ── */}
