@@ -25,6 +25,7 @@ import {
   RefreshCw,
   Pencil,
   FileText,
+  X,
 } from "lucide-react";
 
 /* ── types ── */
@@ -131,6 +132,24 @@ export default function ContactDetailPage() {
   const [tab, setTab] = useState<"timeline" | "details">("timeline");
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+
+  async function handleEditSave(updates: Record<string, unknown>) {
+    setEditSaving(true);
+    try {
+      const res = await fetch("/api/admin/outreach/contacts", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: contactId, ...updates }),
+      });
+      if (res.ok) {
+        await fetchData();
+        setEditing(false);
+      }
+    } catch { console.error("Edit save error"); }
+    finally { setEditSaving(false); }
+  }
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -252,6 +271,12 @@ export default function ContactDetailPage() {
               <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
                 {contact.type}
               </span>
+              <button
+                onClick={() => setEditing(true)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 transition-colors dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50"
+              >
+                <Pencil className="w-3 h-3" /> Edit
+              </button>
             </div>
 
             {/* Quick info row */}
@@ -527,6 +552,200 @@ export default function ContactDetailPage() {
           )}
         </div>
       )}
+
+      {/* ── Edit Modal ── */}
+      {editing && contact && (
+        <EditContactModal
+          contact={contact}
+          saving={editSaving}
+          onClose={() => setEditing(false)}
+          onSave={handleEditSave}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ── Constants for Edit Modal ── */
+const TYPE_OPTIONS = [
+  { value: "incasso", label: "Incasso" },
+  { value: "aid_org", label: "Hulporganisatie" },
+  { value: "gemeente", label: "Gemeente" },
+  { value: "bewindvoerder", label: "Bewindvoerder" },
+  { value: "kredietbank", label: "Kredietbank" },
+  { value: "journalist", label: "Journalist" },
+];
+
+const EDIT_STATUS_OPTIONS = [
+  { value: "new", label: "New" },
+  { value: "researched", label: "Researched" },
+  { value: "queued", label: "Queued" },
+  { value: "contacted", label: "Contacted" },
+  { value: "replied", label: "Replied" },
+  { value: "meeting_booked", label: "Meeting Booked" },
+  { value: "not_interested", label: "Not Interested" },
+  { value: "bounced", label: "Bounced" },
+];
+
+const BEAT_OPTIONS = [
+  { value: "", label: "— None —" },
+  { value: "tech", label: "Tech" },
+  { value: "society", label: "Society" },
+  { value: "debt", label: "Debt" },
+  { value: "young_people", label: "Young People" },
+  { value: "finance", label: "Finance" },
+  { value: "politics", label: "Politics" },
+];
+
+const editInputClass = "w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 text-slate-900 dark:text-white";
+const editSelectClass = "w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 appearance-none text-slate-900 dark:text-white";
+const editLabelClass = "block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5";
+
+/* ── Edit Contact Modal ── */
+function EditContactModal({ contact, saving, onClose, onSave }: {
+  contact: Contact;
+  saving: boolean;
+  onClose: () => void;
+  onSave: (updates: Record<string, unknown>) => Promise<void>;
+}) {
+  const [form, setForm] = useState({
+    organization_name: contact.organization_name || "",
+    type: contact.type || "aid_org",
+    website: contact.website || "",
+    contact_person: contact.contact_person || "",
+    contact_role: contact.contact_role || "",
+    contact_email: contact.contact_email || "",
+    first_name: contact.first_name || "",
+    last_name: contact.last_name || "",
+    general_email: contact.general_email || "",
+    phone: contact.phone || "",
+    city: contact.city || "",
+    kvk_number: contact.kvk_number || "",
+    linkedin_url: contact.linkedin_url || "",
+    beat: contact.beat || "",
+    notes: contact.notes || "",
+    status: contact.status || "new",
+  });
+  const [error, setError] = useState<string | null>(null);
+
+  function update(field: string, value: string) {
+    if (field === "type" && value !== "journalist") {
+      setForm((prev) => ({ ...prev, [field]: value, beat: "" }));
+    } else {
+      setForm((prev) => ({ ...prev, [field]: value }));
+    }
+  }
+
+  async function handleSubmit() {
+    if (!form.organization_name.trim()) { setError("Organization name is required"); return; }
+    setError(null);
+    await onSave({
+      organization_name: form.organization_name.trim(),
+      type: form.type,
+      website: form.website.trim() || null,
+      contact_person: form.contact_person.trim() || null,
+      contact_role: form.contact_role.trim() || null,
+      contact_email: form.contact_email.trim() || null,
+      first_name: form.first_name.trim() || null,
+      last_name: form.last_name.trim() || null,
+      general_email: form.general_email.trim() || null,
+      phone: form.phone.trim() || null,
+      city: form.city.trim() || null,
+      kvk_number: form.kvk_number.trim() || null,
+      linkedin_url: form.linkedin_url.trim() || null,
+      beat: form.type === "journalist" && form.beat.trim() ? form.beat.trim() : null,
+      notes: form.notes.trim() || null,
+      status: form.status,
+    });
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg shadow-xl max-h-[95vh] sm:max-h-[90vh] flex flex-col" style={{ paddingBottom: "env(safe-area-inset-bottom, 0)" }}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-700 shrink-0">
+          <div className="flex items-center gap-2">
+            <Pencil className="w-4 h-4 text-blue-600" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Edit Contact</h3>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 active:bg-slate-200">
+            <X className="w-4 h-4 text-slate-400" />
+          </button>
+        </div>
+
+        {/* Form */}
+        <div className="overflow-y-auto px-5 sm:px-6 py-4 space-y-4 flex-1">
+          {error && (
+            <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2 text-xs text-red-600 dark:text-red-400">
+              <X className="w-3 h-3" /> {error}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div><label className={editLabelClass}>Organization Name *</label><input value={form.organization_name} onChange={(e) => update("organization_name", e.target.value)} className={editInputClass} /></div>
+            <div><label className={editLabelClass}>Type *</label>
+              <select value={form.type} onChange={(e) => update("type", e.target.value)} className={editSelectClass}>
+                {TYPE_OPTIONS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {form.type === "journalist" && (
+            <div><label className={editLabelClass}>Beat</label>
+              <select value={form.beat} onChange={(e) => update("beat", e.target.value)} className={editSelectClass}>
+                {BEAT_OPTIONS.map((b) => <option key={b.value} value={b.value}>{b.label}</option>)}
+              </select>
+            </div>
+          )}
+
+          <div><label className={editLabelClass}>Status</label>
+            <select value={form.status} onChange={(e) => update("status", e.target.value)} className={editSelectClass}>
+              {EDIT_STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div><label className={editLabelClass}>First Name</label><input value={form.first_name} onChange={(e) => update("first_name", e.target.value)} className={editInputClass} placeholder="e.g. Jan" /></div>
+            <div><label className={editLabelClass}>Last Name</label><input value={form.last_name} onChange={(e) => update("last_name", e.target.value)} className={editInputClass} placeholder="e.g. De Vries" /></div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div><label className={editLabelClass}>Contact Person</label><input value={form.contact_person} onChange={(e) => update("contact_person", e.target.value)} className={editInputClass} /></div>
+            <div><label className={editLabelClass}>Role</label><input value={form.contact_role} onChange={(e) => update("contact_role", e.target.value)} className={editInputClass} /></div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div><label className={editLabelClass}>Contact Email</label><input type="email" value={form.contact_email} onChange={(e) => update("contact_email", e.target.value)} className={editInputClass} /></div>
+            <div><label className={editLabelClass}>General Email</label><input type="email" value={form.general_email} onChange={(e) => update("general_email", e.target.value)} className={editInputClass} /></div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div><label className={editLabelClass}>Phone</label><input value={form.phone} onChange={(e) => update("phone", e.target.value)} className={editInputClass} /></div>
+            <div><label className={editLabelClass}>City</label><input value={form.city} onChange={(e) => update("city", e.target.value)} className={editInputClass} /></div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div><label className={editLabelClass}>Website</label><input value={form.website} onChange={(e) => update("website", e.target.value)} className={editInputClass} /></div>
+            <div><label className={editLabelClass}>KvK Number</label><input value={form.kvk_number} onChange={(e) => update("kvk_number", e.target.value)} className={editInputClass} /></div>
+          </div>
+
+          <div><label className={editLabelClass}>LinkedIn URL</label><input value={form.linkedin_url} onChange={(e) => update("linkedin_url", e.target.value)} className={editInputClass} /></div>
+
+          <div><label className={editLabelClass}>Notes / Description</label><textarea value={form.notes} onChange={(e) => update("notes", e.target.value)} rows={4} className={`${editInputClass} resize-none`} placeholder="Internal notes, ClickUp description..." /></div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex gap-2 px-5 sm:px-6 py-4 border-t border-slate-200 dark:border-slate-700 shrink-0">
+          <button onClick={onClose} className="flex-1 px-3 py-2.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 active:bg-slate-100 text-slate-700 dark:text-slate-300">
+            Cancel
+          </button>
+          <button onClick={handleSubmit} disabled={saving}
+            className="flex-1 px-3 py-2.5 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 flex items-center justify-center gap-1.5">
+            {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+            Save Changes
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
