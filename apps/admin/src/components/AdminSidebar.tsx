@@ -19,14 +19,30 @@ const NAV = [
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
-  useEffect(() => { setOpen(false); }, [pathname]);
+  // Restore collapsed state from localStorage
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    const saved = localStorage.getItem("pw-sidebar-collapsed");
+    if (saved === "true") setCollapsed(true);
+  }, []);
+
+  // Close mobile sidebar on route change
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
+
+  // Escape key closes mobile
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setMobileOpen(false); };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, []);
+
+  function toggleCollapse() {
+    const next = !collapsed;
+    setCollapsed(next);
+    localStorage.setItem("pw-sidebar-collapsed", String(next));
+  }
 
   async function handleLogout() {
     try {
@@ -37,50 +53,12 @@ export function AdminSidebar() {
     window.location.reload();
   }
 
-  const sidebarContent = (
-    <>
-      <div style={{ padding: "0 24px 32px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
-          </div>
-          <span style={{ fontSize: 16, fontWeight: 700, color: "#fff", letterSpacing: "-0.02em" }}>PayWatch</span>
-        </div>
-        <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", margin: "8px 0 0", fontWeight: 500 }}>Admin Dashboard</p>
-      </div>
-      <nav style={{ padding: "16px 12px", display: "flex", flexDirection: "column", gap: 2, flex: 1 }}>
-        {NAV.map((item) => {
-          const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
-          return (
-            <Link key={item.href} href={item.href} style={{
-              display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
-              borderRadius: 8, background: active ? "rgba(255,255,255,0.08)" : "transparent",
-              textDecoration: "none", transition: "background 0.15s",
-            }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                stroke={active ? "#fff" : "rgba(255,255,255,0.45)"}
-                strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d={item.icon} />
-              </svg>
-              <span style={{ fontSize: 13, fontWeight: active ? 600 : 400, color: active ? "#fff" : "rgba(255,255,255,0.55)" }}>{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
-      <div style={{ padding: "16px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-        <button onClick={handleLogout} style={{
-          width: "100%", padding: "8px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)",
-          background: "transparent", color: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 500,
-          cursor: "pointer", fontFamily: "'Plus Jakarta Sans', system-ui",
-        }}>Uitloggen</button>
-      </div>
-    </>
-  );
+  const sidebarW = collapsed ? 68 : 240;
 
   return (
     <>
-      {/* Mobile hamburger */}
-      <button onClick={() => setOpen(true)} aria-label="Open menu"
+      {/* ── Mobile hamburger ── */}
+      <button onClick={() => setMobileOpen(true)} aria-label="Open menu"
         className="pw-mobile-menu-btn"
         style={{ position: "fixed", top: 16, left: 16, zIndex: 60, width: 40, height: 40, borderRadius: 10,
           background: "#0A2540", border: "none", cursor: "pointer", display: "none",
@@ -88,23 +66,105 @@ export function AdminSidebar() {
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M3 12h18M3 6h18M3 18h18" /></svg>
       </button>
 
-      {/* Mobile overlay */}
-      {open && <div onClick={() => setOpen(false)} className="pw-mobile-overlay"
+      {/* ── Mobile overlay ── */}
+      {mobileOpen && <div onClick={() => setMobileOpen(false)} className="pw-mobile-overlay"
         style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 70, display: "none" }} />}
 
-      {/* Sidebar */}
-      <aside className={`pw-sidebar ${open ? "pw-sidebar-open" : ""}`}
-        style={{ width: 240, background: "#0A2540", padding: "24px 0", display: "flex",
+      {/* ── Sidebar ── */}
+      <aside className={`pw-sidebar ${mobileOpen ? "pw-sidebar-open" : ""}`}
+        style={{ width: sidebarW, background: "#0A2540", padding: "24px 0", display: "flex",
           flexDirection: "column", flexShrink: 0, position: "sticky", top: 0, height: "100vh",
-          transition: "transform 0.2s ease" }}>
+          transition: "width 0.2s ease, transform 0.2s ease", overflow: "hidden" }}>
+
         {/* Mobile close */}
-        <button onClick={() => setOpen(false)} className="pw-mobile-close"
+        <button onClick={() => setMobileOpen(false)} className="pw-mobile-close"
           style={{ position: "absolute", top: 16, right: 16, width: 32, height: 32, borderRadius: 8,
             background: "rgba(255,255,255,0.1)", border: "none", cursor: "pointer", display: "none",
             alignItems: "center", justifyContent: "center", zIndex: 1 }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
         </button>
-        {sidebarContent}
+
+        {/* ── Logo ── */}
+        <div style={{ padding: collapsed ? "0 0 20px" : "0 24px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "flex-start" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+            </div>
+            {!collapsed && (
+              <div>
+                <span style={{ fontSize: 16, fontWeight: 700, color: "#fff", letterSpacing: "-0.02em", whiteSpace: "nowrap" }}>PayWatch</span>
+                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", margin: "2px 0 0", fontWeight: 500 }}>Admin Dashboard</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Nav items ── */}
+        <nav style={{ padding: collapsed ? "16px 8px" : "16px 12px", display: "flex", flexDirection: "column", gap: 2, flex: 1, overflowY: "auto", overflowX: "hidden" }}>
+          {NAV.map((item) => {
+            const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+            return (
+              <Link key={item.href} href={item.href} title={collapsed ? item.label : undefined}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: collapsed ? "10px 0" : "10px 12px",
+                  justifyContent: collapsed ? "center" : "flex-start",
+                  borderRadius: 8, background: active ? "rgba(255,255,255,0.08)" : "transparent",
+                  textDecoration: "none", transition: "background 0.15s", position: "relative",
+                }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                  stroke={active ? "#fff" : "rgba(255,255,255,0.45)"}
+                  strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+                  style={{ flexShrink: 0 }}>
+                  <path d={item.icon} />
+                </svg>
+                {!collapsed && (
+                  <span style={{ fontSize: 13, fontWeight: active ? 600 : 400, color: active ? "#fff" : "rgba(255,255,255,0.55)", whiteSpace: "nowrap", overflow: "hidden" }}>
+                    {item.label}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* ── Collapse toggle (desktop only) ── */}
+        <div className="pw-collapse-toggle" style={{ padding: "8px 12px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+          <button onClick={toggleCollapse}
+            style={{
+              width: "100%", padding: collapsed ? "8px 0" : "8px 12px",
+              borderRadius: 8, border: "none",
+              background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 500,
+              cursor: "pointer", fontFamily: "'Plus Jakarta Sans', system-ui",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              transition: "background 0.15s",
+            }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {collapsed
+                ? <path d="M13 17l5-5-5-5M6 17l5-5-5-5" />
+                : <path d="M11 17l-5-5 5-5M18 17l-5-5 5-5" />
+              }
+            </svg>
+            {!collapsed && <span>{collapsed ? "Expand" : "Collapse"}</span>}
+          </button>
+        </div>
+
+        {/* ── Logout ── */}
+        <div style={{ padding: collapsed ? "8px" : "8px 16px" }}>
+          <button onClick={handleLogout} title={collapsed ? "Uitloggen" : undefined}
+            style={{
+              width: "100%", padding: collapsed ? "8px 0" : "8px 12px",
+              borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)",
+              background: "transparent", color: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 500,
+              cursor: "pointer", fontFamily: "'Plus Jakarta Sans', system-ui",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+            }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+            </svg>
+            {!collapsed && <span>Uitloggen</span>}
+          </button>
+        </div>
       </aside>
 
       <style>{`
@@ -112,10 +172,12 @@ export function AdminSidebar() {
           .pw-mobile-menu-btn { display: flex !important; }
           .pw-mobile-overlay { display: block !important; }
           .pw-mobile-close { display: flex !important; }
+          .pw-collapse-toggle { display: none !important; }
           .pw-sidebar {
             position: fixed !important;
             top: 0 !important; left: 0 !important; bottom: 0 !important;
             z-index: 80 !important;
+            width: 240px !important;
             transform: translateX(-100%);
           }
           .pw-sidebar.pw-sidebar-open { transform: translateX(0); }

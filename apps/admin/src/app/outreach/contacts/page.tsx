@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { useState, useEffect, useCallback } from "react";
 import {
@@ -114,6 +115,7 @@ const labelClass = "block text-xs font-semibold text-pw-muted mb-1.5";
 
 /* ─── Main ─── */
 export default function OutreachContacts() {
+  const router = useRouter();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState("all");
@@ -631,8 +633,8 @@ export default function OutreachContacts() {
             ) : filteredContacts.map((c) => {
               const statusStyle = STATUS_COLORS[c.status] || STATUS_COLORS.new;
               return (
-                <tr key={c.id} className={`border-b border-pw-border last:border-0 hover:bg-gray-50/50 transition-colors ${selectedIds.has(c.id) ? "bg-blue-50/40" : ""}`}>
-                  <td className="w-10 px-3 py-3">
+                <tr key={c.id} onClick={() => router.push(`/outreach/contacts/${c.id}`)} className={`border-b border-pw-border last:border-0 hover:bg-gray-50/50 transition-colors cursor-pointer ${selectedIds.has(c.id) ? "bg-blue-50/40" : ""}`}>
+                  <td className="w-10 px-3 py-3" onClick={(e) => e.stopPropagation()}>
                     <input type="checkbox" checked={selectedIds.has(c.id)} onChange={() => toggleSelect(c.id)} className="rounded border-gray-300 accent-pw-blue" />
                   </td>
                   <td className="px-4 py-3">
@@ -672,7 +674,7 @@ export default function OutreachContacts() {
                   <td className="px-4 py-3">
                     <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold ${statusStyle.bg} ${statusStyle.text}`}>{c.status}</span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     {c.ai_research_summary ? (
                       <div className="max-w-[250px] cursor-pointer" onClick={() => setExpandedResearch((prev) => { const n = new Set(prev); if (n.has(c.id)) n.delete(c.id); else n.add(c.id); return n; })}>
                         <p className={`text-[10px] text-pw-text ${expandedResearch.has(c.id) ? "" : "line-clamp-2"}`}>{c.ai_research_summary}</p>
@@ -688,7 +690,7 @@ export default function OutreachContacts() {
                       </button>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                     <button onClick={(e) => openDesktopMenu(e, c)} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
                       <MoreHorizontal size={14} className="text-pw-muted" />
                     </button>
