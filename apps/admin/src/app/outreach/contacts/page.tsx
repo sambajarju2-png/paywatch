@@ -47,6 +47,7 @@ interface Contact {
   status: string;
   ai_research_summary: string | null;
   ai_researched_at: string | null;
+  email_verify_result: string | null;
   tags: string[];
   created_at: string;
 }
@@ -111,6 +112,24 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
 const inputClass = "w-full px-3 py-2.5 text-sm rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue focus:ring-1 focus:ring-pw-blue/20";
 const selectClass = "w-full px-3 py-2.5 text-sm rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue focus:ring-1 focus:ring-pw-blue/20 appearance-none";
 const labelClass = "block text-xs font-semibold text-pw-muted mb-1.5";
+
+/* ─── Verify Badge ─── */
+function VerifyBadge({ result }: { result: string }) {
+  const config: Record<string, { bg: string; text: string; label: string }> = {
+    "Safe to Send": { bg: "bg-green-100", text: "text-green-700", label: "Verified" },
+    "Role": { bg: "bg-blue-100", text: "text-blue-700", label: "Role email" },
+    "Invalid": { bg: "bg-red-100", text: "text-red-700", label: "Invalid" },
+    "Disposable": { bg: "bg-red-100", text: "text-red-700", label: "Disposable" },
+    "Unknown": { bg: "bg-amber-100", text: "text-amber-700", label: "Unknown" },
+    "Accept All": { bg: "bg-amber-100", text: "text-amber-700", label: "Accept all" },
+  };
+  const c = config[result] || { bg: "bg-gray-100", text: "text-gray-600", label: result };
+  return (
+    <span className={`inline-block ml-1 px-1.5 py-0.5 rounded text-[9px] font-semibold ${c.bg} ${c.text}`}>
+      {c.label}
+    </span>
+  );
+}
 
 /* ─── Main ─── */
 export default function OutreachContacts() {
@@ -584,6 +603,7 @@ export default function OutreachContacts() {
                       <div className="flex items-center gap-1.5 text-xs text-pw-blue">
                         <Mail size={10} className="shrink-0" />
                         <span className="truncate">{c.contact_email || c.general_email}</span>
+                        {c.email_verify_result && <VerifyBadge result={c.email_verify_result} />}
                       </div>
                     )}
                     {c.city && (
@@ -736,7 +756,7 @@ export default function OutreachContacts() {
                         {c.last_name && <div><span className="text-pw-muted">Last Name</span><p className="font-medium text-pw-text mt-0.5">{c.last_name}</p></div>}
                         {c.contact_person && <div><span className="text-pw-muted">Contact Person</span><p className="font-medium text-pw-text mt-0.5">{c.contact_person}</p></div>}
                         {c.contact_role && <div><span className="text-pw-muted">Role</span><p className="font-medium text-pw-text mt-0.5">{c.contact_role}</p></div>}
-                        {c.contact_email && <div><span className="text-pw-muted">Contact Email</span><p className="font-medium text-pw-blue mt-0.5">{c.contact_email}</p></div>}
+                        {c.contact_email && <div><span className="text-pw-muted">Contact Email</span><p className="font-medium text-pw-blue mt-0.5">{c.contact_email} {c.email_verify_result && <VerifyBadge result={c.email_verify_result} />}</p></div>}
                         {c.general_email && <div><span className="text-pw-muted">General Email</span><p className="font-medium text-pw-blue mt-0.5">{c.general_email}</p></div>}
                         {c.phone && <div><span className="text-pw-muted">Phone</span><p className="font-medium text-pw-text mt-0.5">{c.phone}</p></div>}
                         {c.kvk_number && <div><span className="text-pw-muted">KvK</span><p className="font-medium text-pw-text mt-0.5">{c.kvk_number}</p></div>}

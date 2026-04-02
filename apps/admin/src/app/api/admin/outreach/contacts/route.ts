@@ -131,6 +131,19 @@ export async function PATCH(req: NextRequest) {
       console.error("[Outreach Contacts PATCH]", error);
       return NextResponse.json({ error: "Failed to update contact" }, { status: 500 });
     }
+
+    // Auto-push to ClickUp if the contact has a task ID (fire-and-forget)
+    if (data?.clickup_task_id) {
+      const baseUrl = process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : process.env.NEXT_PUBLIC_SITE_URL || "https://admin.paywatch.app";
+      fetch(`${baseUrl}/api/admin/outreach/sync-clickup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "push", contact_id: id }),
+      }).catch((err) => console.error("[Auto-push ClickUp]", err));
+    }
+
     return NextResponse.json({ contact: data });
   } catch (err) {
     console.error("[Outreach Contacts PATCH]", err);

@@ -72,16 +72,20 @@ export async function POST(req: NextRequest) {
         const isValid =
           resultStr === "Safe to Send" || resultStr === "Role";
 
+        // Always store the verification result
+        const updateFields: Record<string, string> = {
+          email_verify_result: resultStr,
+        };
+
         // Mark invalid/disposable contacts as bounced
-        if (
-          resultStr === "Invalid" ||
-          resultStr === "Disposable"
-        ) {
-          await supabase
-            .from("b2b_contacts")
-            .update({ status: "bounced" })
-            .eq("id", contact.id);
+        if (resultStr === "Invalid" || resultStr === "Disposable") {
+          updateFields.status = "bounced";
         }
+
+        await supabase
+          .from("b2b_contacts")
+          .update(updateFields)
+          .eq("id", contact.id);
 
         results.push({
           id: contact.id,
