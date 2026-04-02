@@ -16,10 +16,15 @@ export async function GET(req: NextRequest) {
     const type = searchParams.get("type");
     const search = searchParams.get("search");
     const status = searchParams.get("status");
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const perPage = Math.min(200, Math.max(1, parseInt(searchParams.get("per_page") || "100", 10)));
+
+    const from = (page - 1) * perPage;
+    const to = from + perPage - 1;
 
     let query = supabase
       .from("b2b_contacts")
-      .select("*")
+      .select("*", { count: "exact" })
       .order("created_at", { ascending: false });
 
     if (type && type !== "all") query = query.eq("type", type);
@@ -30,12 +35,18 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const { data, error } = await query.limit(200);
+    const { data, error, count } = await query.range(from, to);
     if (error) {
       console.error("[Outreach Contacts]", error);
       return NextResponse.json({ error: "Failed to fetch contacts" }, { status: 500 });
     }
-    return NextResponse.json({ contacts: data || [] });
+    return NextResponse.json({
+      contacts: data || [],
+      total: count || 0,
+      page,
+      per_page: perPage,
+      total_pages: Math.ceil((count || 0) / perPage),
+    });
   } catch (err) {
     console.error("[Outreach Contacts]", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

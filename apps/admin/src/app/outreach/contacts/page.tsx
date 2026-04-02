@@ -1,8 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Search,
   Upload,
@@ -115,7 +114,6 @@ const labelClass = "block text-xs font-semibold text-pw-muted mb-1.5";
 
 /* ─── Main ─── */
 export default function OutreachContacts() {
-  const router = useRouter();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState("all");
@@ -148,21 +146,37 @@ export default function OutreachContacts() {
   const [bulkTagLoading, setBulkTagLoading] = useState(false);
   const [showBulkRemoveMenu, setShowBulkRemoveMenu] = useState(false);
 
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const perPage = 100;
+
+  // Expanded row (inline card instead of navigation)
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // Bulk verify
+  const [bulkVerifying, setBulkVerifying] = useState(false);
+
   /* ─── Fetching ─── */
   const fetchContacts = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
+      params.set("page", String(page));
+      params.set("per_page", String(perPage));
       if (typeFilter !== "all") params.set("type", typeFilter);
       if (searchQuery) params.set("search", searchQuery);
       const res = await fetch(`/api/admin/outreach/contacts?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setContacts(data.contacts);
+        setTotal(data.total || 0);
+        setTotalPages(data.total_pages || 1);
       }
     } catch { console.error("Failed to load contacts"); }
     finally { setLoading(false); }
-  }, [typeFilter, searchQuery]);
+  }, [typeFilter, searchQuery, page]);
 
   const fetchLists = useCallback(async () => {
     try {
@@ -191,7 +205,7 @@ export default function OutreachContacts() {
   }, [actionContact, menuPos]);
 
   useEffect(() => { if (typeFilter !== "journalist") setBeatFilter(null); }, [typeFilter]);
-  useEffect(() => { setSelectedIds(new Set()); }, [typeFilter, beatFilter, tagFilter, searchQuery]);
+  useEffect(() => { setSelectedIds(new Set()); setPage(1); setExpandedId(null); }, [typeFilter, beatFilter, tagFilter, searchQuery]);
 
   /* ─── Derived data ─── */
   const tagCounts = contacts.reduce((acc, c) => {
@@ -286,6 +300,22 @@ export default function OutreachContacts() {
       setSelectedIds(new Set());
     } catch { console.error("Bulk delete error"); }
     finally { setBulkDeleting(false); setShowBulkDeleteConfirm(false); }
+  }
+
+  async function handleBulkVerify() {
+    if (selectedIds.size === 0) return;
+    setBulkVerifying(true);
+    try {
+      const res = await fetch("/api/admin/outreach/verify", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contactIds: Array.from(selectedIds) }),
+      });
+      if (res.ok) {
+        await fetchContacts();
+        setSelectedIds(new Set());
+      }
+    } catch { console.error("Bulk verify error"); }
+    finally { setBulkVerifying(false); }
   }
 
   async function handleEditSave(contactId: string, updates: Partial<Contact>) {
@@ -633,7 +663,8 @@ export default function OutreachContacts() {
             ) : filteredContacts.map((c) => {
               const statusStyle = STATUS_COLORS[c.status] || STATUS_COLORS.new;
               return (
-                <tr key={c.id} onClick={() => router.push(`/outreach/contacts/${c.id}`)} className={`border-b border-pw-border last:border-0 hover:bg-gray-50/50 transition-colors cursor-pointer ${selectedIds.has(c.id) ? "bg-blue-50/40" : ""}`}>
+                <React.Fragment key={c.id}>
+                <tr onClick={() => setExpandedId(expandedId === c.id ? null : c.id)} className={`border-b border-pw-border last:border-0 hover:bg-gray-50/50 transition-colors cursor-pointer ${selectedIds.has(c.id) ? "bg-blue-50/40" : ""} ${expandedId === c.id ? "bg-blue-50/30" : ""}`}>
                   <td className="w-10 px-3 py-3" onClick={(e) => e.stopPropagation()}>
                     <input type="checkbox" checked={selectedIds.has(c.id)} onChange={() => toggleSelect(c.id)} className="rounded border-gray-300 accent-pw-blue" />
                   </td>
@@ -696,11 +727,105 @@ export default function OutreachContacts() {
                     </button>
                   </td>
                 </tr>
+                {/* ── Expanded inline card ── */}
+                {expandedId === c.id && (
+                  <tr className="border-b border-pw-border bg-blue-50/20">
+                    <td colSpan={8} className="px-4 py-4">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                        {c.first_name && <div><span className="text-pw-muted">First Name</span><p className="font-medium text-pw-text mt-0.5">{c.first_name}</p></div>}
+                        {c.last_name && <div><span className="text-pw-muted">Last Name</span><p className="font-medium text-pw-text mt-0.5">{c.last_name}</p></div>}
+                        {c.contact_person && <div><span className="text-pw-muted">Contact Person</span><p className="font-medium text-pw-text mt-0.5">{c.contact_person}</p></div>}
+                        {c.contact_role && <div><span className="text-pw-muted">Role</span><p className="font-medium text-pw-text mt-0.5">{c.contact_role}</p></div>}
+                        {c.contact_email && <div><span className="text-pw-muted">Contact Email</span><p className="font-medium text-pw-blue mt-0.5">{c.contact_email}</p></div>}
+                        {c.general_email && <div><span className="text-pw-muted">General Email</span><p className="font-medium text-pw-blue mt-0.5">{c.general_email}</p></div>}
+                        {c.phone && <div><span className="text-pw-muted">Phone</span><p className="font-medium text-pw-text mt-0.5">{c.phone}</p></div>}
+                        {c.kvk_number && <div><span className="text-pw-muted">KvK</span><p className="font-medium text-pw-text mt-0.5">{c.kvk_number}</p></div>}
+                        {c.linkedin_url && <div><span className="text-pw-muted">LinkedIn</span><a href={c.linkedin_url} target="_blank" rel="noopener noreferrer" className="font-medium text-pw-blue mt-0.5 block truncate hover:underline">{c.linkedin_url.replace(/^https?:\/\/(www\.)?/, "")}</a></div>}
+                      </div>
+                      {c.notes && (
+                        <div className="mt-3 p-2.5 bg-white rounded-lg border border-pw-border">
+                          <p className="text-[10px] font-semibold text-pw-muted mb-1">Notes / Description</p>
+                          <p className="text-xs text-pw-text whitespace-pre-wrap">{c.notes}</p>
+                        </div>
+                      )}
+                      {c.ai_research_summary && (
+                        <div className="mt-2 p-2.5 bg-purple-50/60 rounded-lg">
+                          <p className="text-[10px] font-semibold text-purple-600 mb-1">AI Research</p>
+                          <p className="text-xs text-pw-text whitespace-pre-wrap">{c.ai_research_summary}</p>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2 mt-3">
+                        <button onClick={(e) => { e.stopPropagation(); setEditingContact(c); }}
+                          className="flex items-center gap-1 px-3 py-1.5 text-[11px] font-semibold text-pw-blue bg-blue-50 rounded-lg hover:bg-blue-100">
+                          <Pencil size={10} /> Edit
+                        </button>
+                        <Link href={`/outreach/contacts/${c.id}`} onClick={(e) => e.stopPropagation()}
+                          className="flex items-center gap-1 px-3 py-1.5 text-[11px] font-semibold text-pw-muted bg-gray-100 rounded-lg hover:bg-gray-200">
+                          Full Profile →
+                        </Link>
+                        <button onClick={(e) => { e.stopPropagation(); handleVerify(c.id); }}
+                          disabled={verifyingId === c.id}
+                          className="flex items-center gap-1 px-3 py-1.5 text-[11px] font-semibold text-pw-green bg-green-50 rounded-lg hover:bg-green-100 disabled:opacity-50">
+                          {verifyingId === c.id ? <Loader2 size={10} className="animate-spin" /> : <ShieldCheck size={10} />} Verify
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); handleResearch(c.id); }}
+                          disabled={researchingId === c.id}
+                          className="flex items-center gap-1 px-3 py-1.5 text-[11px] font-semibold text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-100 disabled:opacity-50">
+                          {researchingId === c.id ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />} Research
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                </React.Fragment>
               );
             })}
           </tbody>
         </table>
       </div>
+
+      {/* ── Pagination ── */}
+      {totalPages > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 py-3">
+          <p className="text-xs text-pw-muted">
+            Showing {((page - 1) * perPage) + 1}–{Math.min(page * perPage, total)} of <span className="font-semibold text-pw-text">{total}</span> contacts
+          </p>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setPage(1)} disabled={page <= 1}
+              className="px-2.5 py-1.5 text-[11px] font-semibold rounded-lg border border-pw-border bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">
+              First
+            </button>
+            <button onClick={() => setPage(page - 1)} disabled={page <= 1}
+              className="px-3 py-1.5 text-[11px] font-semibold rounded-lg border border-pw-border bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">
+              ← Prev
+            </button>
+            {/* Page numbers */}
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let p: number;
+              if (totalPages <= 5) { p = i + 1; }
+              else if (page <= 3) { p = i + 1; }
+              else if (page >= totalPages - 2) { p = totalPages - 4 + i; }
+              else { p = page - 2 + i; }
+              return (
+                <button key={p} onClick={() => setPage(p)}
+                  className={`px-3 py-1.5 text-[11px] font-semibold rounded-lg transition-colors ${
+                    p === page ? "bg-pw-blue text-white" : "border border-pw-border bg-white hover:bg-gray-50 text-pw-muted"
+                  }`}>
+                  {p}
+                </button>
+              );
+            })}
+            <button onClick={() => setPage(page + 1)} disabled={page >= totalPages}
+              className="px-3 py-1.5 text-[11px] font-semibold rounded-lg border border-pw-border bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">
+              Next →
+            </button>
+            <button onClick={() => setPage(totalPages)} disabled={page >= totalPages}
+              className="px-2.5 py-1.5 text-[11px] font-semibold rounded-lg border border-pw-border bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">
+              Last
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ━━━ DESKTOP: 3-dot dropdown portal ━━━ */}
       {actionContact && menuPos && (
@@ -828,6 +953,12 @@ export default function OutreachContacts() {
               )}
             </div>
           )}
+
+          {/* Bulk Verify */}
+          <button onClick={handleBulkVerify} disabled={bulkVerifying}
+            className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-green-500/20 hover:bg-green-500/30 active:bg-green-500/40 transition-colors disabled:opacity-50">
+            {bulkVerifying ? <Loader2 size={11} className="animate-spin" /> : <ShieldCheck size={11} />} <span className="hidden sm:inline">Verify</span>
+          </button>
 
           {/* Bulk Delete */}
           <button onClick={() => setShowBulkDeleteConfirm(true)}

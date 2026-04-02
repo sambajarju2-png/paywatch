@@ -134,6 +134,7 @@ export default function ContactDetailPage() {
   const [syncResult, setSyncResult] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
+  const [showEmailCompose, setShowEmailCompose] = useState(false);
 
   async function handleEditSave(updates: Record<string, unknown>) {
     setEditSaving(true);
@@ -277,6 +278,14 @@ export default function ContactDetailPage() {
               >
                 <Pencil className="w-3 h-3" /> Edit
               </button>
+              {(contact.contact_email || contact.general_email) && (
+                <button
+                  onClick={() => setShowEmailCompose(true)}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 transition-colors dark:bg-emerald-900/30 dark:text-emerald-300"
+                >
+                  <Send className="w-3 h-3" /> Email
+                </button>
+              )}
             </div>
 
             {/* Quick info row */}
@@ -562,6 +571,15 @@ export default function ContactDetailPage() {
           onSave={handleEditSave}
         />
       )}
+
+      {/* ── Email Compose Modal ── */}
+      {showEmailCompose && contact && (
+        <EmailComposeModal
+          contact={contact}
+          onClose={() => setShowEmailCompose(false)}
+          onSent={() => { setShowEmailCompose(false); fetchData(); }}
+        />
+      )}
     </div>
   );
 }
@@ -745,6 +763,189 @@ function EditContactModal({ contact, saving, onClose, onSave }: {
             Save Changes
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Email Compose Modal ── */
+const EMAIL_SENDERS = [
+  { email: "samba@paywatch.nl", name: "Samba Jarju", role: "Co-founder & CTO" },
+  { email: "mariama@paywatch.nl", name: "Mariama Sesay", role: "Co-founder & CMO" },
+  { email: "info@paywatch.nl", name: "PayWatch", role: "General" },
+];
+
+function EmailComposeModal({ contact, onClose, onSent }: {
+  contact: Contact;
+  onClose: () => void;
+  onSent: () => void;
+}) {
+  const toEmail = contact.contact_email || contact.general_email || "";
+  const toName = contact.contact_person || contact.organization_name;
+
+  const [sender, setSender] = useState("samba@paywatch.nl");
+  const [subject, setSubject] = useState("");
+  const [bodyHtml, setBodyHtml] = useState("");
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const selectedSender = EMAIL_SENDERS.find((s) => s.email === sender);
+
+  async function handleSend() {
+    if (!subject.trim() || !bodyHtml.trim()) {
+      setError("Subject and message are required");
+      return;
+    }
+    setSending(true);
+    setError(null);
+    try {
+      // Convert plain text newlines to HTML
+      const html = bodyHtml.replace(/\n/g, "<br/>");
+      const res = await fetch("/api/admin/outreach/quick-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sender,
+          to_email: toEmail,
+          to_name: toName,
+          subject: subject.trim(),
+          body_html: html,
+          contact_id: contact.id,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Send failed");
+        return;
+      }
+      setSuccess(true);
+      setTimeout(() => onSent(), 1500);
+    } catch {
+      setError("Failed to send email");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  if (!toEmail) {
+    return (
+      <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+        <div className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md p-6 shadow-xl text-center" style={{ paddingBottom: "env(safe-area-inset-bottom, 0)" }}>
+          <Mail className="w-8 h-8 mx-auto mb-3 text-slate-300" />
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">No email address</p>
+          <p className="text-xs text-slate-500 mb-4">Add a contact or general email first.</p>
+          <button onClick={onClose} className="px-4 py-2 text-xs font-semibold rounded-lg border border-slate-200 hover:bg-slate-50">Close</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg shadow-xl max-h-[95vh] sm:max-h-[90vh] flex flex-col" style={{ paddingBottom: "env(safe-area-inset-bottom, 0)" }}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-700 shrink-0">
+          <div className="flex items-center gap-2">
+            <Send className="w-4 h-4 text-emerald-600" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Send Email</h3>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
+            <X className="w-4 h-4 text-slate-400" />
+          </button>
+        </div>
+
+        {success ? (
+          <div className="px-6 py-12 text-center">
+            <CheckCircle2 className="w-10 h-10 mx-auto mb-3 text-emerald-500" />
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">Email sent!</p>
+            <p className="text-xs text-slate-500 mt-1">To {toEmail}</p>
+          </div>
+        ) : (
+          <>
+            <div className="overflow-y-auto px-5 sm:px-6 py-4 space-y-4 flex-1">
+              {error && (
+                <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-red-600">
+                  <X className="w-3 h-3" /> {error}
+                </div>
+              )}
+
+              {/* To */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1.5">To</label>
+                <div className="px-3 py-2.5 text-sm rounded-lg border border-slate-200 bg-slate-50 text-slate-700">
+                  {toName} &lt;{toEmail}&gt;
+                </div>
+              </div>
+
+              {/* From (sender selection) */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1.5">From</label>
+                <div className="space-y-1.5">
+                  {EMAIL_SENDERS.map((s) => (
+                    <label key={s.email}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border cursor-pointer transition-colors ${
+                        sender === s.email
+                          ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/20"
+                          : "border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                      }`}>
+                      <input type="radio" name="sender" value={s.email}
+                        checked={sender === s.email}
+                        onChange={() => setSender(s.email)}
+                        className="accent-blue-600" />
+                      <div>
+                        <p className="text-sm font-medium text-slate-900 dark:text-white">{s.name}</p>
+                        <p className="text-[11px] text-slate-500">{s.email} · {s.role}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Subject */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1.5">Subject</label>
+                <input value={subject} onChange={(e) => setSubject(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:outline-none focus:border-blue-500 text-slate-900 dark:text-white"
+                  placeholder="e.g. Partnership mogelijkheden" />
+              </div>
+
+              {/* Body */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1.5">Message</label>
+                <textarea value={bodyHtml} onChange={(e) => setBodyHtml(e.target.value)}
+                  rows={8}
+                  className="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:outline-none focus:border-blue-500 resize-none text-slate-900 dark:text-white"
+                  placeholder="Write your message..." />
+              </div>
+
+              {/* Signature preview */}
+              {selectedSender && (
+                <div className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                  <p className="text-[10px] font-semibold text-slate-400 mb-1.5">Signature (auto-appended)</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300">
+                    <strong>{selectedSender.name}</strong><br />
+                    {selectedSender.role} · PayWatch<br />
+                    <span className="text-blue-600">paywatch.app</span>
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex gap-2 px-5 sm:px-6 py-4 border-t border-slate-200 dark:border-slate-700 shrink-0">
+              <button onClick={onClose}
+                className="flex-1 px-3 py-2.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 text-slate-700 dark:text-slate-300">
+                Cancel
+              </button>
+              <button onClick={handleSend} disabled={sending || !subject.trim() || !bodyHtml.trim()}
+                className="flex-1 px-3 py-2.5 text-xs font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-50 flex items-center justify-center gap-1.5">
+                {sending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                Send Email
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
