@@ -23,6 +23,8 @@ import {
   ExternalLink,
   Loader2,
   RefreshCw,
+  Pencil,
+  FileText,
 } from "lucide-react";
 
 /* ── types ── */
@@ -199,27 +201,27 @@ export default function ContactDetailPage() {
   const emailsBounced = timeline?.events.filter((e) => e.type === "email_bounced").length || 0;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
+    <div className="max-w-4xl mx-auto px-4 py-4 md:py-6">
       {/* ── Back button ── */}
       <button
         onClick={() => router.push("/outreach/contacts")}
-        className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 mb-6 transition-colors"
+        className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 mb-4 md:mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" /> Back to contacts
       </button>
 
       {/* ── Header card ── */}
-      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-          {/* Avatar */}
-          <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-xl font-bold">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 md:p-5 mb-4 md:mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-3 md:gap-4">
+          {/* Avatar — smaller on mobile */}
+          <div className="flex-shrink-0 w-11 h-11 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-lg md:text-xl font-bold">
             {contact.organization_name.charAt(0).toUpperCase()}
           </div>
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-xl font-bold text-slate-900 dark:text-white truncate">{contact.organization_name}</h1>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white truncate">{contact.organization_name}</h1>
               <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${STATUS_COLORS[contact.status] || "bg-slate-100 text-slate-600"}`}>
                 {contact.status}
               </span>
@@ -229,7 +231,7 @@ export default function ContactDetailPage() {
             </div>
 
             {/* Quick info row */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-slate-500 dark:text-slate-400">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-sm text-slate-500 dark:text-slate-400">
               {contact.contact_person && (
                 <span className="flex items-center gap-1"><UserCircle className="w-3.5 h-3.5" /> {contact.contact_person}{contact.contact_role ? ` · ${contact.contact_role}` : ""}</span>
               )}
@@ -238,7 +240,7 @@ export default function ContactDetailPage() {
               )}
               {(contact.contact_email || contact.general_email) && (
                 <a href={`mailto:${contact.contact_email || contact.general_email}`} className="flex items-center gap-1 hover:text-blue-600 transition-colors">
-                  <Mail className="w-3.5 h-3.5" /> {contact.contact_email || contact.general_email}
+                  <Mail className="w-3.5 h-3.5" /> <span className="truncate max-w-[200px]">{contact.contact_email || contact.general_email}</span>
                 </a>
               )}
               {contact.phone && (
@@ -250,6 +252,14 @@ export default function ContactDetailPage() {
                 </a>
               )}
             </div>
+
+            {/* Description / Notes preview in header */}
+            {contact.notes && (
+              <div className="flex items-start gap-2 mt-3 p-2.5 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                <FileText className="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" />
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3">{contact.notes}</p>
+              </div>
+            )}
 
             {/* Tags */}
             {contact.tags && contact.tags.length > 0 && (
@@ -265,22 +275,22 @@ export default function ContactDetailPage() {
         </div>
 
         {/* Quick stats bar */}
-        <div className="grid grid-cols-4 gap-3 mt-5 pt-5 border-t border-slate-100 dark:border-slate-700">
+        <div className="grid grid-cols-4 gap-2 md:gap-3 mt-4 md:mt-5 pt-4 md:pt-5 border-t border-slate-100 dark:border-slate-700">
           <div className="text-center">
-            <p className="text-lg font-bold text-slate-900 dark:text-white">{emailsSent}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Sent</p>
+            <p className="text-base md:text-lg font-bold text-slate-900 dark:text-white">{emailsSent}</p>
+            <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400">Sent</p>
           </div>
           <div className="text-center">
-            <p className="text-lg font-bold text-slate-900 dark:text-white">{emailsOpened}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Opened</p>
+            <p className="text-base md:text-lg font-bold text-slate-900 dark:text-white">{emailsOpened}</p>
+            <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400">Opened</p>
           </div>
           <div className="text-center">
-            <p className="text-lg font-bold text-emerald-600">{emailsReplied}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Replied</p>
+            <p className="text-base md:text-lg font-bold text-emerald-600">{emailsReplied}</p>
+            <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400">Replied</p>
           </div>
           <div className="text-center">
-            <p className="text-lg font-bold text-red-500">{emailsBounced}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Bounced</p>
+            <p className="text-base md:text-lg font-bold text-red-500">{emailsBounced}</p>
+            <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400">Bounced</p>
           </div>
         </div>
       </div>
@@ -427,19 +437,19 @@ export default function ContactDetailPage() {
               ]
                 .filter((row) => row.value)
                 .map((row) => (
-                  <div key={row.label} className="flex items-start px-5 py-3">
-                    <span className="text-xs text-slate-500 dark:text-slate-400 w-32 flex-shrink-0 pt-0.5">{row.label}</span>
+                  <div key={row.label} className="flex items-start px-4 md:px-5 py-3">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 w-24 md:w-32 flex-shrink-0 pt-0.5">{row.label}</span>
                     {row.link ? (
                       <a
                         href={(row.value as string).startsWith("http") ? row.value as string : `https://${row.value}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-blue-600 hover:underline flex items-center gap-1"
+                        className="text-sm text-blue-600 hover:underline flex items-center gap-1 break-all"
                       >
-                        {row.value} <ExternalLink className="w-3 h-3" />
+                        {row.value} <ExternalLink className="w-3 h-3 shrink-0" />
                       </a>
                     ) : (
-                      <span className="text-sm text-slate-900 dark:text-white">{row.value}</span>
+                      <span className="text-sm text-slate-900 dark:text-white break-all">{row.value}</span>
                     )}
                   </div>
                 ))}
@@ -462,11 +472,13 @@ export default function ContactDetailPage() {
             </div>
           )}
 
-          {/* Notes */}
+          {/* Description / Notes (synced with ClickUp description) */}
           {contact.notes && (
             <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
-              <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-700">
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Notes</h3>
+              <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-700 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-blue-500" />
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Description / Notes</h3>
+                <span className="text-[10px] text-slate-400 ml-auto">Syncs with ClickUp</span>
               </div>
               <div className="px-5 py-4">
                 <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{contact.notes}</p>
