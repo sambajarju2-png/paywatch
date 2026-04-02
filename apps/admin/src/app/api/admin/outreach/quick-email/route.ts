@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
 
     // Log in b2b_email_log if contact_id is provided
     if (contact_id) {
-      await supabase.from("b2b_email_log").insert({
+      const { error: logError } = await supabase.from("b2b_email_log").insert({
         contact_id,
         direction: "outbound",
         to_email,
@@ -127,6 +127,9 @@ export async function POST(req: NextRequest) {
         mailtrap_message_id: data.id || null,
         sequence_step: 0,
       });
+      if (logError) {
+        console.error("[Quick Email] Failed to log email:", logError.message);
+      }
     }
 
     // Update daily sends
