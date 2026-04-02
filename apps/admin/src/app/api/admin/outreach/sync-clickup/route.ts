@@ -94,7 +94,7 @@ export async function GET(req: NextRequest) {
     // Get all contacts with clickup_task_id
     let query = supabase
       .from("b2b_contacts")
-      .select("id, organization_name, type, status, clickup_task_id, website, linkedin_url, city, contact_email, first_name, last_name, beat")
+      .select("id, organization_name, type, status, clickup_task_id, website, linkedin_url, city, contact_email, first_name, last_name, beat, notes")
       .not("clickup_task_id", "is", null);
 
     if (typeFilter) query = query.eq("type", typeFilter);
@@ -146,6 +146,14 @@ export async function GET(req: NextRequest) {
             updates[column] = clickUpValue;
             changes.push({ org: contact.organization_name, field: column, from: supabaseValue, to: clickUpValue });
           }
+        }
+
+        // Check description → notes
+        const clickUpDesc = task.description || task.text_content || null;
+        const supabaseNotes = (contact as Record<string, unknown>).notes as string | null;
+        if (clickUpDesc && clickUpDesc !== supabaseNotes) {
+          updates.notes = clickUpDesc;
+          changes.push({ org: contact.organization_name, field: "notes", from: supabaseNotes, to: clickUpDesc.substring(0, 80) + "..." });
         }
 
         if (Object.keys(updates).length > 0) {
@@ -243,6 +251,7 @@ async function pushContact(contactId: string) {
       body: JSON.stringify({
         name: contact.organization_name,
         status: contact.status,
+        description: contact.notes || contact.ai_research_summary || "",
         custom_fields: customFields,
       }),
     });
@@ -261,6 +270,7 @@ async function pushContact(contactId: string) {
       body: JSON.stringify({
         name: contact.organization_name,
         status: contact.status || "new",
+        description: contact.notes || contact.ai_research_summary || "",
         custom_fields: customFields,
       }),
     });
@@ -339,6 +349,7 @@ async function pushAll(type: string) {
         body: JSON.stringify({
           name: contact.organization_name,
           status: contact.status || "new",
+          description: contact.notes || contact.ai_research_summary || "",
           custom_fields: customFields,
         }),
       });

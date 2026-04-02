@@ -159,7 +159,7 @@ export default function OutreachOverview() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-5 gap-3">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
         {statCards.map((card) => (
           <div
             key={card.label}
@@ -182,9 +182,9 @@ export default function OutreachOverview() {
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Active Campaigns */}
-        <div className="col-span-2 bg-white rounded-xl border border-pw-border p-5">
+        <div className="md:col-span-2 bg-white rounded-xl border border-pw-border p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-bold text-pw-navy">
               Active Campaigns
@@ -297,7 +297,7 @@ export default function OutreachOverview() {
             Manage <ArrowUpRight size={10} />
           </a>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {s.accounts.map((acc) => {
             const warmupDay = Math.max(
               1,

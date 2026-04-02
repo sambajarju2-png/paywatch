@@ -168,15 +168,19 @@ export default function OutreachContacts() {
 
   useEffect(() => { fetchContacts(); fetchLists(); }, [fetchContacts, fetchLists]);
 
-  // Close 3-dot menu on outside click (NOT the bulk list menu — that has its own toggle)
+  // Close 3-dot menu on next click anywhere (delayed to skip the opening click)
   useEffect(() => {
-    function handleClick() {
-      setOpenMenuId(null);
-      setMenuPos(null);
-    }
-    document.addEventListener("click", handleClick);
-    return () => document.removeEventListener("click", handleClick);
-  }, []);
+    if (!openMenuId) return;
+    let handler: (() => void) | null = null;
+    const id = setTimeout(() => {
+      handler = () => { setOpenMenuId(null); setMenuPos(null); };
+      document.addEventListener("click", handler, { once: true });
+    }, 0);
+    return () => {
+      clearTimeout(id);
+      if (handler) document.removeEventListener("click", handler);
+    };
+  }, [openMenuId]);
 
   useEffect(() => { if (typeFilter !== "journalist") setBeatFilter(null); }, [typeFilter]);
   useEffect(() => { setSelectedIds(new Set()); }, [typeFilter, beatFilter, tagFilter, searchQuery]);
@@ -347,8 +351,8 @@ export default function OutreachContacts() {
       )}
 
       {/* Top bar */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="relative flex-1 min-w-[180px] max-w-sm">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-pw-muted" />
           <input type="text" placeholder="Search contacts..." value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -448,7 +452,7 @@ export default function OutreachContacts() {
       </div>
 
       {/* Contacts table */}
-      <div className="bg-white rounded-xl border border-pw-border overflow-hidden">
+      <div className="bg-white rounded-xl border border-pw-border overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-pw-border bg-gray-50/50">
