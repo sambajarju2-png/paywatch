@@ -95,6 +95,7 @@ export async function PATCH(req: NextRequest) {
       "organization_name", "type", "website", "contact_person", "contact_role",
       "contact_email", "general_email", "phone", "city", "kvk_number",
       "linkedin_url", "beat", "notes", "status", "tags",
+      "first_name", "last_name",
     ];
 
     const updates: Record<string, unknown> = {};

@@ -20,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SessionSync />
           <div style={{ display: "flex", minHeight: "100vh" }}>
             <AdminSidebar />
-            <main style={{ flex: 1, padding: "32px 40px", maxWidth: 1200, overflowX: "hidden" }}>
+            <main style={{ flex: 1, maxWidth: 1200, overflowX: "hidden" }} className="pw-main-content">
               {children}
             </main>
           </div>

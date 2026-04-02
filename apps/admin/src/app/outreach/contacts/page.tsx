@@ -32,6 +32,8 @@ interface Contact {
   contact_person: string | null;
   contact_role: string | null;
   contact_email: string | null;
+  first_name: string | null;
+  last_name: string | null;
   general_email: string | null;
   phone: string | null;
   city: string | null;
@@ -648,6 +650,8 @@ function ContactFormModal({
     contact_person: contact?.contact_person || "",
     contact_role: contact?.contact_role || "",
     contact_email: contact?.contact_email || "",
+    first_name: contact?.first_name || "",
+    last_name: contact?.last_name || "",
     general_email: contact?.general_email || "",
     phone: contact?.phone || "",
     city: contact?.city || "",
@@ -680,6 +684,8 @@ function ContactFormModal({
         contact_person: form.contact_person.trim() || null,
         contact_role: form.contact_role.trim() || null,
         contact_email: form.contact_email.trim() || null,
+        first_name: form.first_name.trim() || null,
+        last_name: form.last_name.trim() || null,
         general_email: form.general_email.trim() || null,
         phone: form.phone.trim() || null,
         city: form.city.trim() || null,
@@ -727,6 +733,11 @@ function ContactFormModal({
               </select>
             </div>
           )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className={labelClass}>First Name</label><input value={form.first_name} onChange={(e) => update("first_name", e.target.value)} className={inputClass} placeholder="e.g. Jan" /></div>
+            <div><label className={labelClass}>Last Name</label><input value={form.last_name} onChange={(e) => update("last_name", e.target.value)} className={inputClass} placeholder="e.g. De Vries" /></div>
+          </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div><label className={labelClass}>Contact Person</label><input value={form.contact_person} onChange={(e) => update("contact_person", e.target.value)} className={inputClass} placeholder="e.g. Jan de Vries" /></div>

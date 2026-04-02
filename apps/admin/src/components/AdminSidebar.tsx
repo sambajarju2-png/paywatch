@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -18,25 +19,26 @@ const NAV = [
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => { setOpen(false); }, [pathname]);
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
 
   async function handleLogout() {
     try {
       const { createClient } = await import("@supabase/supabase-js");
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
       await supabase.auth.signOut();
     } catch {}
     window.location.reload();
   }
 
-  return (
-    <aside style={{
-      width: 240, background: "#0A2540", padding: "24px 0",
-      display: "flex", flexDirection: "column", flexShrink: 0,
-      position: "sticky", top: 0, height: "100vh",
-    }}>
+  const sidebarContent = (
+    <>
       <div style={{ padding: "0 24px 32px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 32, height: 32, borderRadius: 8, background: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -46,7 +48,6 @@ export function AdminSidebar() {
         </div>
         <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", margin: "8px 0 0", fontWeight: 500 }}>Admin Dashboard</p>
       </div>
-
       <nav style={{ padding: "16px 12px", display: "flex", flexDirection: "column", gap: 2, flex: 1 }}>
         {NAV.map((item) => {
           const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
@@ -66,7 +67,6 @@ export function AdminSidebar() {
           );
         })}
       </nav>
-
       <div style={{ padding: "16px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
         <button onClick={handleLogout} style={{
           width: "100%", padding: "8px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)",
@@ -74,6 +74,53 @@ export function AdminSidebar() {
           cursor: "pointer", fontFamily: "'Plus Jakarta Sans', system-ui",
         }}>Uitloggen</button>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile hamburger */}
+      <button onClick={() => setOpen(true)} aria-label="Open menu"
+        className="pw-mobile-menu-btn"
+        style={{ position: "fixed", top: 16, left: 16, zIndex: 60, width: 40, height: 40, borderRadius: 10,
+          background: "#0A2540", border: "none", cursor: "pointer", display: "none",
+          alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M3 12h18M3 6h18M3 18h18" /></svg>
+      </button>
+
+      {/* Mobile overlay */}
+      {open && <div onClick={() => setOpen(false)} className="pw-mobile-overlay"
+        style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 70, display: "none" }} />}
+
+      {/* Sidebar */}
+      <aside className={`pw-sidebar ${open ? "pw-sidebar-open" : ""}`}
+        style={{ width: 240, background: "#0A2540", padding: "24px 0", display: "flex",
+          flexDirection: "column", flexShrink: 0, position: "sticky", top: 0, height: "100vh",
+          transition: "transform 0.2s ease" }}>
+        {/* Mobile close */}
+        <button onClick={() => setOpen(false)} className="pw-mobile-close"
+          style={{ position: "absolute", top: 16, right: 16, width: 32, height: 32, borderRadius: 8,
+            background: "rgba(255,255,255,0.1)", border: "none", cursor: "pointer", display: "none",
+            alignItems: "center", justifyContent: "center", zIndex: 1 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+        </button>
+        {sidebarContent}
+      </aside>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .pw-mobile-menu-btn { display: flex !important; }
+          .pw-mobile-overlay { display: block !important; }
+          .pw-mobile-close { display: flex !important; }
+          .pw-sidebar {
+            position: fixed !important;
+            top: 0 !important; left: 0 !important; bottom: 0 !important;
+            z-index: 80 !important;
+            transform: translateX(-100%);
+          }
+          .pw-sidebar.pw-sidebar-open { transform: translateX(0); }
+        }
+      `}</style>
+    </>
   );
 }
