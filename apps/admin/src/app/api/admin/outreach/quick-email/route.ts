@@ -115,6 +115,7 @@ export async function POST(req: NextRequest) {
     if (contact_id) {
       await supabase.from("b2b_email_log").insert({
         contact_id,
+        direction: "outbound",
         to_email,
         to_name: to_name || null,
         from_email: account.email,

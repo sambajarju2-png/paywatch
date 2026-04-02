@@ -129,12 +129,42 @@ export default function ContactDetailPage() {
   const [timeline, setTimeline] = useState<TimelineResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [timelineLoading, setTimelineLoading] = useState(false);
-  const [tab, setTab] = useState<"timeline" | "details">("timeline");
+  const [tab, setTab] = useState<"timeline" | "details" | "emails">("timeline");
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
   const [showEmailCompose, setShowEmailCompose] = useState(false);
+
+  // Emails tab
+  type EmailEntry = {
+    id: string; direction: string; from_email: string; from_name: string;
+    to_email: string; to_name: string; subject: string; body_html: string;
+    status: string; sent_at: string; delivered_at?: string; opened_at?: string;
+    clicked_at?: string; replied_at?: string; reply_body?: string;
+    reply_from?: string; reply_subject?: string;
+  };
+  const [emails, setEmails] = useState<EmailEntry[]>([]);
+  const [emailsLoading, setEmailsLoading] = useState(false);
+  const [emailsFetched, setEmailsFetched] = useState(false);
+
+  const fetchEmails = useCallback(async () => {
+    setEmailsLoading(true);
+    try {
+      const res = await fetch(`/api/admin/outreach/contacts/${contactId}/emails`);
+      if (res.ok) {
+        const data = await res.json();
+        setEmails(data.emails || []);
+        setEmailsFetched(true);
+      }
+    } catch { console.error("Failed to fetch emails"); }
+    finally { setEmailsLoading(false); }
+  }, [contactId]);
+
+  // Fetch emails when tab is first opened
+  useEffect(() => {
+    if (tab === "emails" && !emailsFetched) fetchEmails();
+  }, [tab, emailsFetched, fetchEmails]);
 
   async function handleEditSave(updates: Record<string, unknown>) {
     setEditSaving(true);
@@ -371,7 +401,7 @@ export default function ContactDetailPage() {
 
       {/* ── Tabs ── */}
       <div className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-700 mb-6">
-        {(["timeline", "details"] as const).map((t) => (
+        {(["timeline", "emails", "details"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -381,7 +411,7 @@ export default function ContactDetailPage() {
                 : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
             }`}
           >
-            {t === "timeline" ? "Timeline" : "Details"}
+            {t === "timeline" ? "Timeline" : t === "emails" ? "Emails" : "Details"}
           </button>
         ))}
         <div className="flex-1" />
@@ -477,6 +507,97 @@ export default function ContactDetailPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Emails Tab ── */}
+      {tab === "emails" && (
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-xs text-slate-500">{emails.length} email{emails.length !== 1 ? "s" : ""}</p>
+            <div className="flex gap-2">
+              <button onClick={fetchEmails} disabled={emailsLoading}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-500 hover:text-slate-700 transition-colors">
+                <RefreshCw className={`w-3.5 h-3.5 ${emailsLoading ? "animate-spin" : ""}`} /> Refresh
+              </button>
+              {(contact.contact_email || contact.general_email) && (
+                <button onClick={() => setShowEmailCompose(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 rounded-lg hover:bg-emerald-100">
+                  <Send className="w-3 h-3" /> Compose
+                </button>
+              )}
+            </div>
+          </div>
+
+          {emailsLoading && emails.length === 0 ? (
+            <div className="flex justify-center py-16"><Loader2 className="w-5 h-5 animate-spin text-blue-600" /></div>
+          ) : emails.length === 0 ? (
+            <div className="text-center py-16">
+              <Mail className="w-10 h-10 mx-auto text-slate-300 mb-3" />
+              <p className="text-sm text-slate-500">No emails yet.</p>
+              <p className="text-xs text-slate-400 mt-1">Send an email to start the conversation.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {emails.map((email) => {
+                const isInbound = email.direction === "inbound";
+                return (
+                  <div key={email.id} className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+                    {/* Email header */}
+                    <div className={`px-4 py-3 border-b border-slate-100 dark:border-slate-700 flex items-start gap-3 ${isInbound ? "bg-emerald-50/50 dark:bg-emerald-900/10" : "bg-slate-50/50"}`}>
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${isInbound ? "bg-emerald-100 dark:bg-emerald-900/40" : "bg-blue-100 dark:bg-blue-900/40"}`}>
+                        {isInbound
+                          ? <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                          : <Send className="w-3.5 h-3.5 text-blue-600" />
+                        }
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`text-xs font-semibold ${isInbound ? "text-emerald-700" : "text-blue-700"}`}>
+                            {isInbound ? "Received" : "Sent"}
+                          </span>
+                          <span className="text-[10px] text-slate-400">
+                            {email.sent_at ? new Date(email.sent_at).toLocaleString("nl-NL", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : ""}
+                          </span>
+                          {email.status === "opened" && <span className="text-[10px] text-amber-600 font-medium">Opened</span>}
+                          {email.status === "clicked" && <span className="text-[10px] text-orange-600 font-medium">Clicked</span>}
+                          {email.status === "delivered" && <span className="text-[10px] text-green-600 font-medium">Delivered</span>}
+                          {email.status === "bounced" && <span className="text-[10px] text-red-600 font-medium">Bounced</span>}
+                        </div>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          {isInbound ? "From" : "From"}: <span className="font-medium text-slate-700">{email.from_email}</span>
+                          {" → "}
+                          <span className="font-medium text-slate-700">{email.to_email}</span>
+                        </p>
+                        <p className="text-sm font-medium text-slate-900 dark:text-white mt-1">{email.subject}</p>
+                      </div>
+                    </div>
+                    {/* Email body */}
+                    <div className="px-4 py-3">
+                      <div className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: email.body_html || "<em>No content</em>" }} />
+                    </div>
+                    {/* Reply inline (if outbound email has a reply) */}
+                    {email.reply_body && (
+                      <div className="px-4 py-3 border-t border-slate-100 dark:border-slate-700 bg-emerald-50/30 dark:bg-emerald-900/10">
+                        <div className="flex items-center gap-2 mb-2">
+                          <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="text-xs font-semibold text-emerald-700">Reply from {email.reply_from}</span>
+                          {email.replied_at && (
+                            <span className="text-[10px] text-slate-400">
+                              {new Date(email.replied_at).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed prose prose-sm max-w-none"
+                          dangerouslySetInnerHTML={{ __html: email.reply_body }} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
