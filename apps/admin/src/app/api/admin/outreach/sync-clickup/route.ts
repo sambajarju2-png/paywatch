@@ -39,7 +39,35 @@ const CF_TO_COLUMN: Record<string, string> = {
   [CF.category]: "beat",
 };
 
-/* ── Extract custom field value from ClickUp task ── */
+/* ── Status mapping: ClickUp → Supabase ── */
+const CLICKUP_TO_SUPABASE_STATUS: Record<string, string> = {
+  "new": "new",
+  "researched": "researched",
+  "contacted": "contacted",
+  "replied": "replied",
+  "meeting": "meeting_booked",
+  "complete": "won",
+  "won": "won",
+  "lost": "lost",
+  "not interested": "not_interested",
+  "bounced": "bounced",
+  "queued": "queued",
+};
+
+/* ── Status mapping: Supabase → ClickUp ── */
+const SUPABASE_TO_CLICKUP_STATUS: Record<string, string> = {
+  "new": "new",
+  "researched": "researched",
+  "queued": "contacted",
+  "contacted": "contacted",
+  "replied": "replied",
+  "meeting_booked": "meeting",
+  "won": "won",
+  "lost": "lost",
+  "not_interested": "lost",
+  "bounced": "lost",
+};
+
 function extractFieldValue(
   task: { custom_fields?: Array<{ id: string; value?: unknown; type?: string }> },
   fieldId: string
@@ -131,9 +159,12 @@ export async function GET(req: NextRequest) {
         // Check status
         const clickUpStatus = task.status?.status?.toLowerCase();
         if (clickUpStatus && clickUpStatus !== contact.status) {
-          const mapped = clickUpStatus === "complete" ? "won" : clickUpStatus;
-          updates.status = mapped;
-          changes.push({ org: contact.organization_name, field: "status", from: contact.status, to: mapped });
+          const mapped = CLICKUP_TO_SUPABASE_STATUS[clickUpStatus] || clickUpStatus;
+          // Only update if mapped status is different from current AND is a valid Supabase status
+          if (mapped !== contact.status && CLICKUP_TO_SUPABASE_STATUS[clickUpStatus]) {
+            updates.status = mapped;
+            changes.push({ org: contact.organization_name, field: "status", from: contact.status, to: mapped });
+          }
         }
 
         // Check each custom field
@@ -250,7 +281,7 @@ async function pushContact(contactId: string) {
       headers: { Authorization: CLICKUP_API_KEY, "Content-Type": "application/json" },
       body: JSON.stringify({
         name: contact.organization_name,
-        status: contact.status,
+        status: SUPABASE_TO_CLICKUP_STATUS[contact.status] || contact.status,
         description: contact.notes || contact.ai_research_summary || "",
         custom_fields: customFields,
       }),
@@ -269,7 +300,7 @@ async function pushContact(contactId: string) {
       headers: { Authorization: CLICKUP_API_KEY, "Content-Type": "application/json" },
       body: JSON.stringify({
         name: contact.organization_name,
-        status: contact.status || "new",
+        status: SUPABASE_TO_CLICKUP_STATUS[contact.status] || contact.status || "new",
         description: contact.notes || contact.ai_research_summary || "",
         custom_fields: customFields,
       }),
@@ -309,7 +340,7 @@ async function pushStatus(contactId: string, status: string) {
   const res = await fetch(`https://api.clickup.com/api/v2/task/${contact.clickup_task_id}`, {
     method: "PUT",
     headers: { Authorization: CLICKUP_API_KEY, "Content-Type": "application/json" },
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status: SUPABASE_TO_CLICKUP_STATUS[status] || status }),
   });
 
   if (!res.ok) {
@@ -348,7 +379,7 @@ async function pushAll(type: string) {
         headers: { Authorization: CLICKUP_API_KEY, "Content-Type": "application/json" },
         body: JSON.stringify({
           name: contact.organization_name,
-          status: contact.status || "new",
+          status: SUPABASE_TO_CLICKUP_STATUS[contact.status] || contact.status || "new",
           description: contact.notes || contact.ai_research_summary || "",
           custom_fields: customFields,
         }),
