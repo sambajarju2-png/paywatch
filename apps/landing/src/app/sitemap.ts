@@ -27,6 +27,15 @@ const FEATURE_SLUGS = [
   "schuldvrij-countdown",
 ];
 
+/* ── Schuldhulp city page slugs ── */
+const SCHULDHULP_CITY_SLUGS = [
+  "rotterdam",
+  "amsterdam",
+  "den-haag",
+  "utrecht",
+  "eindhoven",
+];
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date().toISOString();
 
@@ -38,6 +47,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE_URL}/resources`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     { url: `${BASE_URL}/blog`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
+    { url: `${BASE_URL}/schuldhulp`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: `${BASE_URL}/jobs`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     { url: `${BASE_URL}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE_URL}/support`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
@@ -56,7 +66,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  /* ── 3. Blog posts from Sanity ── */
+  /* ── 3. Schuldhulp city pages ── */
+  const schuldhulpPages: MetadataRoute.Sitemap = SCHULDHULP_CITY_SLUGS.map((slug) => ({
+    url: `${BASE_URL}/schuldhulp/${slug}`,
+    lastModified: now,
+    changeFrequency: "monthly" as const,
+    priority: 0.85,
+  }));
+
+  /* ── 4. Blog posts from Sanity ── */
   let blogPages: MetadataRoute.Sitemap = [];
   try {
     const posts = await client.fetch<Array<{ slug: string; publishedAt: string }>>(
@@ -75,7 +93,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("[Sitemap] Blog posts fetch failed:", e);
   }
 
-  /* ── 4. Job listings from Sanity ── */
+  /* ── 5. Job listings from Sanity ── */
   let jobPages: MetadataRoute.Sitemap = [];
   try {
     const jobs = await client.fetch<Array<{ id: string; _updatedAt: string }>>(
@@ -94,5 +112,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("[Sitemap] Job listings fetch failed:", e);
   }
 
-  return [...staticPages, ...featurePages, ...blogPages, ...jobPages];
+  return [...staticPages, ...featurePages, ...schuldhulpPages, ...blogPages, ...jobPages];
 }
