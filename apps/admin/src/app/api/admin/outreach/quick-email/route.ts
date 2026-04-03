@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
     form.append("to", to_name ? `${to_name} <${to_email}>` : to_email);
     form.append("subject", subject);
     form.append("html", fullHtml);
-    form.append("h:Reply-To", `${account.display_name} <reply+${emailLogId}@reply.paywatch.nl>`);
+    form.append("h:Reply-To", `${account.display_name} <${account.email}>`);
     form.append("o:tracking-opens", "yes");
     form.append("o:tracking-clicks", "htmlonly");
     form.append("o:tag", "quick-email");
