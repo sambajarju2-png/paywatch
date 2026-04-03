@@ -493,7 +493,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     organizations: [
       {
         name: "Schuldhulpverlening Eindhoven (gemeente)",
-        url: "https://www.eindhoven.nl/schulden",
+        url: "https://www.eindhoven.nl/",
         type: "Gemeentelijke schuldhulp",
         description: "De gemeente Eindhoven biedt volledige schuldhulpverlening: van intake en budgetcoaching tot schuldregelingen en doorverwijzing naar WSNP. Aanmelden via WIJeindhoven of telefonisch.",
         phone: "14 040",
@@ -567,7 +567,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
       },
     ],
     ctaText: "Begin vandaag met overzicht in je rekeningen",
-    gemeenteUrl: "https://www.eindhoven.nl/schulden",
+    gemeenteUrl: "https://www.eindhoven.nl/",
     coordinates: { lat: 51.4416, lng: 5.4697 },
     logoDomain: "eindhoven.nl",
   },
@@ -593,7 +593,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     statsHighlight: "In Paddepoel en Vinkhuizen heeft meer dan 18% van de huishoudens problematische schulden",
     organizations: [
       { name: "WIJ Groningen", url: "https://wij.groningen.nl", type: "Sociaal wijkteam", description: "In elk stadsdeel van Groningen is WIJ aanwezig. Ze helpen gratis met geldzorgen, administratie en verwijzen door naar schuldhulpverlening.", phone: "050 367 4200" },
-      { name: "Schuldhulpverlening gemeente Groningen", url: "https://gemeente.groningen.nl/schulden", type: "Gemeentelijke schuldhulp", description: "De gemeente biedt volledige schuldhulpverlening: van intake tot schuldregeling. Aanmelden via WIJ of telefonisch via 14 050.", phone: "14 050" },
+      { name: "Schuldhulpverlening gemeente Groningen", url: "https://gemeente.groningen.nl/", type: "Gemeentelijke schuldhulp", description: "De gemeente biedt volledige schuldhulpverlening: van intake tot schuldregeling. Aanmelden via WIJ of telefonisch via 14 050.", phone: "14 050" },
       { name: "Humanitas Groningen", url: "https://www.humanitasgroningen.nl", type: "Vrijwillige ondersteuning", description: "Thuisadministratie en budgetmaatjes. Vrijwilligers die je helpen met je post, administratie en betalingen." },
     ],
     faq: [
@@ -609,7 +609,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
       { title: "Gratis energieadvies", description: "Buurtwarmte Groningen biedt gratis energieadvies aan huis. Zo bespaar je op je energierekening.", icon: "Zap" },
     ],
     ctaText: "Krijg grip op je rekeningen in Groningen",
-    gemeenteUrl: "https://gemeente.groningen.nl/schulden",
+    gemeenteUrl: "https://gemeente.groningen.nl/",
     coordinates: { lat: 53.2194, lng: 6.5665 },
     logoDomain: "groningen.nl",
   },
@@ -650,7 +650,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
       { title: "Meedoen Tilburg", description: "Vergoedingen voor sport- en cultuuractiviteiten voor kinderen uit gezinnen met een laag inkomen.", icon: "Trophy" },
     ],
     ctaText: "Krijg grip op je rekeningen in Tilburg",
-    gemeenteUrl: "https://www.tilburg.nl/schulden",
+    gemeenteUrl: "https://www.tilburg.nl/",
     coordinates: { lat: 51.5555, lng: 5.0913 },
     logoDomain: "tilburg.nl",
   },
@@ -757,8 +757,8 @@ export const cityPages: Record<CitySlug, CityPage> = {
     localSituation: "Nijmegen werkt met Stips (Sociale Teams in de Praktijk) als eerste aanspreekpunt. De GKB Nijmegen voert de formele schuldhulpverlening uit. De stad staat bekend om haar ruimhartige armoedebeleid.",
     statsHighlight: "In Hatert en Neerbosch-Oost heeft meer dan 20% van de huishoudens een betalingsachterstand",
     organizations: [
-      { name: "GKB Nijmegen", url: "https://www.nijmegen.nl/schulden", type: "Gemeentelijke kredietbank", description: "De GKB voert schuldhulpverlening uit in Nijmegen: schuldregelingen, budgetbeheer en sociale kredieten.", phone: "14 024" },
-      { name: "STIP (sociaal wijkteam)", url: "https://www.nijmegen.nl/stip", type: "Sociaal wijkteam", description: "Stips zijn er in elke wijk. Ze helpen met geldzorgen en verwijzen door naar schuldhulpverlening." },
+      { name: "GKB Nijmegen", url: "https://www.nijmegen.nl/", type: "Gemeentelijke kredietbank", description: "De GKB voert schuldhulpverlening uit in Nijmegen: schuldregelingen, budgetbeheer en sociale kredieten.", phone: "14 024" },
+      { name: "STIP (sociaal wijkteam)", url: "https://www.nijmegen.nl/", type: "Sociaal wijkteam", description: "Stips zijn er in elke wijk. Ze helpen met geldzorgen en verwijzen door naar schuldhulpverlening." },
       { name: "SchuldHulpMaatje Nijmegen", url: "https://schuldhulpmaatje.nl/nijmegen/", type: "Vrijwillige schuldhulp", description: "Vrijwilligers die naast je staan bij het ordenen van je financien." },
     ],
     faq: [
@@ -773,7 +773,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
       { title: "Kwijtschelding", description: "Vraag kwijtschelding aan voor gemeentelijke belastingen als je een laag inkomen hebt.", icon: "BadgePercent" },
     ],
     ctaText: "Krijg grip op je rekeningen in Nijmegen",
-    gemeenteUrl: "https://www.nijmegen.nl/schulden",
+    gemeenteUrl: "https://www.nijmegen.nl/",
     coordinates: { lat: 51.8126, lng: 5.8372 },
     logoDomain: "nijmegen.nl",
   },
@@ -840,7 +840,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     statsHighlight: "In Schalkwijk heeft meer dan 1 op de 6 huishoudens geregistreerde betalingsachterstanden",
     organizations: [
       { name: "IASZ Haarlem", url: "https://www.iasz.nl/hulp-bij-schulden/hulp-bij-schulden-voor-inwoners", type: "Intergemeentelijke sociale dienst", description: "Het IASZ voert schuldhulpverlening uit voor Haarlem en omliggende gemeenten.", phone: "14 023" },
-      { name: "Sociaal wijkteam Haarlem", url: "https://www.haarlem.nl/sociaal-wijkteam", type: "Wijkteam", description: "Je eerste aanspreekpunt voor geldzorgen. In elke wijk aanwezig." },
+      { name: "Sociaal wijkteam Haarlem", url: "https://www.haarlem.nl/", type: "Wijkteam", description: "Je eerste aanspreekpunt voor geldzorgen. In elke wijk aanwezig." },
       { name: "Humanitas Haarlem", url: "https://www.humanitas.nl/haarlem", type: "Vrijwillige ondersteuning", description: "Thuisadministratie en budgetmaatjes." },
     ],
     faq: [
@@ -855,7 +855,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
       { title: "Kwijtschelding", description: "Jaarlijks kwijtschelding aanvragen voor gemeentelijke belastingen bij laag inkomen.", icon: "BadgePercent" },
     ],
     ctaText: "Krijg grip op je rekeningen in Haarlem",
-    gemeenteUrl: "https://www.haarlem.nl/schulden",
+    gemeenteUrl: "https://www.haarlem.nl/",
     coordinates: { lat: 52.3874, lng: 4.6462 },
     logoDomain: "haarlem.nl",
   },
@@ -881,7 +881,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     statsHighlight: "Enschede heeft een van de hoogste armoedecijfers van Oost-Nederland",
     organizations: [
       { name: "Stadsbank Oost Nederland", url: "https://son.nl", type: "Stadsbank", description: "Formele schuldhulpverlening voor Enschede en regio: schuldregelingen, budgetbeheer en kredieten.", phone: "053 480 5800" },
-      { name: "Wijkcoaches Enschede", url: "https://www.enschede.nl/wijkcoaches", type: "Gemeentelijk wijkteam", description: "Wijkcoaches zijn je eerste aanspreekpunt voor geldzorgen in Enschede." },
+      { name: "Wijkcoaches Enschede", url: "https://www.enschede.nl/", type: "Gemeentelijk wijkteam", description: "Wijkcoaches zijn je eerste aanspreekpunt voor geldzorgen in Enschede." },
       { name: "Humanitas Twente", url: "https://www.humanitas.nl/twente", type: "Vrijwillige ondersteuning", description: "Thuisadministratie en budgetcoaching door getrainde vrijwilligers." },
     ],
     faq: [
@@ -896,7 +896,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
       { title: "Voedselbank Enschede", description: "Gratis boodschappen via de Voedselbank. Aanmelden via de wijkcoach.", icon: "ShoppingCart" },
     ],
     ctaText: "Krijg grip op je rekeningen in Enschede",
-    gemeenteUrl: "https://www.enschede.nl/schuldhulpverlening",
+    gemeenteUrl: "https://www.enschede.nl/",
     coordinates: { lat: 52.2215, lng: 6.8937 },
     logoDomain: "enschede.nl",
   },
@@ -921,8 +921,8 @@ export const cityPages: Record<CitySlug, CityPage> = {
     localSituation: "Zaanstad werkt met sociale wijkteams en het Sociaal Wijkteam Zaanstad als coorderend orgaan. Er is aandacht voor preventie en vroegsignalering via samenwerkingen met woningcorporaties en nutsbedrijven.",
     statsHighlight: "Zaanstad telt naar schatting 8.000 huishoudens met risicovolle schulden",
     organizations: [
-      { name: "Schuldhulpverlening gemeente Zaanstad", url: "https://www.zaanstad.nl/schulden", type: "Gemeentelijke schuldhulp", description: "De gemeente Zaanstad biedt volledige schuldhulpverlening. Aanmelden via het sociaal wijkteam of telefonisch.", phone: "14 075" },
-      { name: "Sociaal Wijkteam Zaanstad", url: "https://www.zaanstad.nl/sociaal-wijkteam", type: "Wijkteam", description: "Eerste aanspreekpunt voor geldzorgen in je buurt." },
+      { name: "Schuldhulpverlening gemeente Zaanstad", url: "https://www.zaanstad.nl/", type: "Gemeentelijke schuldhulp", description: "De gemeente Zaanstad biedt volledige schuldhulpverlening. Aanmelden via het sociaal wijkteam of telefonisch.", phone: "14 075" },
+      { name: "Sociaal Wijkteam Zaanstad", url: "https://www.zaanstad.nl/", type: "Wijkteam", description: "Eerste aanspreekpunt voor geldzorgen in je buurt." },
       { name: "Humanitas Zaanstreek", url: "https://www.humanitas.nl/zaanstreek", type: "Vrijwillige ondersteuning", description: "Thuisadministratie en budgetmaatjes door vrijwilligers." },
     ],
     faq: [
@@ -937,7 +937,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
       { title: "Kindregelingen", description: "Vergoedingen voor schoolkosten, sport en cultuur voor kinderen.", icon: "Baby" },
     ],
     ctaText: "Krijg grip op je rekeningen in Zaanstad",
-    gemeenteUrl: "https://www.zaanstad.nl/schulden",
+    gemeenteUrl: "https://www.zaanstad.nl/",
     coordinates: { lat: 52.4388, lng: 4.8267 },
     logoDomain: "zaanstad.nl",
   },
@@ -963,7 +963,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     statsHighlight: "Amersfoort telt naar schatting 6.000 huishoudens met problematische schulden",
     organizations: [
       { name: "Stadsring", url: "https://stadsring.nl/", type: "Regionale schuldhulporganisatie", description: "Stadsring voert schuldhulpverlening uit voor Amersfoort en regio: intake, schuldregelingen, budgetbeheer en nazorg.", phone: "033 460 8260" },
-      { name: "Sociaal wijkteam Amersfoort", url: "https://www.amersfoort.nl/sociaal-wijkteam", type: "Wijkteam", description: "Eerste aanspreekpunt voor geldzorgen in je buurt." },
+      { name: "Sociaal wijkteam Amersfoort", url: "https://www.amersfoort.nl/", type: "Wijkteam", description: "Eerste aanspreekpunt voor geldzorgen in je buurt." },
       { name: "SchuldHulpMaatje Amersfoort", url: "https://schuldhulpmaatje.nl/amersfoort/", type: "Vrijwillige schuldhulp", description: "Persoonlijke begeleiding door vrijwilligers bij het ordenen van je financien." },
     ],
     faq: [

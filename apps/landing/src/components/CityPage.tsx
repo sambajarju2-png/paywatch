@@ -147,6 +147,28 @@ export default function CityPageComponent({ city }: { city: CityPageType }) {
               {city.organizations.length} {isNl ? "hulporganisaties" : "help organizations"}
             </span>
           </div>
+
+          {/* Stats highlight bar */}
+          <div className="mt-5 flex flex-wrap gap-3">
+            <div className="flex items-center gap-2.5 bg-white/10 backdrop-blur-md rounded-xl px-4 py-3 border border-white/10">
+              <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center flex-shrink-0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" /></svg>
+              </div>
+              <div>
+                <p className="text-[11px] font-medium text-white/50 uppercase tracking-wider">{isNl ? "Lokaal" : "Local"}</p>
+                <p className="text-sm font-bold text-white leading-tight">{city.statsHighlight}</p>
+              </div>
+            </div>
+            <div className="hidden sm:flex items-center gap-2.5 bg-white/10 backdrop-blur-md rounded-xl px-4 py-3 border border-white/10">
+              <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center flex-shrink-0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+              </div>
+              <div>
+                <p className="text-[11px] font-medium text-white/50 uppercase tracking-wider">{isNl ? "Nationaal" : "National"}</p>
+                <p className="text-sm font-bold text-white leading-tight">{isNl ? "724.110 huishoudens met schulden (CBS, 2025)" : "724,110 households with debt (CBS, 2025)"}</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Photo credit */}
