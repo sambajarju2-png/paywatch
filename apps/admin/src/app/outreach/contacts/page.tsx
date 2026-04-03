@@ -171,6 +171,9 @@ export default function OutreachContacts() {
   const [totalPages, setTotalPages] = useState(1);
   const perPage = 100;
 
+  // Total counts per type (separate from current page)
+  const [totalTypeCounts, setTotalTypeCounts] = useState<Record<string, number>>({});
+
   // Expanded row (inline card instead of navigation)
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -207,7 +210,17 @@ export default function OutreachContacts() {
     } catch { console.error("Failed to load lists"); }
   }, []);
 
-  useEffect(() => { fetchContacts(); fetchLists(); }, [fetchContacts, fetchLists]);
+  const fetchCounts = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/outreach/contacts/counts");
+      if (res.ok) {
+        const data = await res.json();
+        setTotalTypeCounts(data.counts || {});
+      }
+    } catch { console.error("Failed to load counts"); }
+  }, []);
+
+  useEffect(() => { fetchContacts(); fetchLists(); fetchCounts(); }, [fetchContacts, fetchLists, fetchCounts]);
 
   // Close desktop dropdown on click outside
   useEffect(() => {
@@ -462,8 +475,8 @@ export default function OutreachContacts() {
               typeFilter === key ? "bg-pw-blue text-white" : "bg-white text-pw-muted border border-pw-border hover:bg-gray-50 active:bg-gray-100"
             }`}>
             {label}
-            {typeCounts[key] !== undefined && (
-              <span className={`ml-1 ${typeFilter === key ? "text-blue-200" : "text-gray-400"}`}>{typeCounts[key] || 0}</span>
+            {totalTypeCounts[key] !== undefined && (
+              <span className={`ml-1 ${typeFilter === key ? "text-blue-200" : "text-gray-400"}`}>{totalTypeCounts[key] || 0}</span>
             )}
           </button>
         ))}

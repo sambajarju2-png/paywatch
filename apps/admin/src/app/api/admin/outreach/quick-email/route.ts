@@ -83,15 +83,20 @@ export async function POST(req: NextRequest) {
     const signature = SIGNATURES[sender] || "";
     const fullHtml = `<div style="font-family: 'Plus Jakarta Sans', Arial, sans-serif; font-size: 14px; color: #0F172A; line-height: 1.6;">${body_html}${signature}</div>`;
 
+    // Pre-generate email log ID for reply tracking
+    const emailLogId = crypto.randomUUID();
+
     // Send via Mailgun EU
     const form = new FormData();
     form.append("from", `${account.display_name} <${account.email}>`);
     form.append("to", to_name ? `${to_name} <${to_email}>` : to_email);
     form.append("subject", subject);
     form.append("html", fullHtml);
+    form.append("h:Reply-To", `${account.display_name} <reply+${emailLogId}@reply.paywatch.nl>`);
     form.append("o:tracking-opens", "yes");
     form.append("o:tracking-clicks", "htmlonly");
     form.append("o:tag", "quick-email");
+    form.append("v:email_log_id", emailLogId);
 
     const res = await fetch(
       `https://api.eu.mailgun.net/v3/${account.domain}/messages`,
@@ -114,6 +119,7 @@ export async function POST(req: NextRequest) {
     // Log in b2b_email_log if contact_id is provided
     if (contact_id) {
       const { error: logError } = await supabase.from("b2b_email_log").insert({
+        id: emailLogId,
         contact_id,
         direction: "outbound",
         to_email,
