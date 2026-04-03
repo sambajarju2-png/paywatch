@@ -64,9 +64,22 @@ export async function POST(req: NextRequest) {
     // Use the stripped version (without quoted text) if available, fall back to full body
     const replyContent = strippedHtml || strippedText || bodyHtml || bodyPlain;
 
-    // Strategy 1: Match by In-Reply-To header (most reliable)
+    // Strategy 0: Parse reply+{emailLogId}@reply.paywatch.nl from recipient (most reliable)
     let matchedEmail = null;
-    if (inReplyTo) {
+    const replyMatch = recipient.match(/reply\+([a-f0-9-]+)@/i);
+    if (replyMatch) {
+      const emailLogId = replyMatch[1];
+      console.log(`[Inbound] Matched reply+ pattern, emailLogId: ${emailLogId}`);
+      const { data } = await supabase
+        .from("b2b_email_log")
+        .select("id, contact_id, campaign_id")
+        .eq("id", emailLogId)
+        .single();
+      matchedEmail = data;
+    }
+
+    // Strategy 1: Match by In-Reply-To header
+    if (!matchedEmail && inReplyTo) {
       const cleanId = inReplyTo.trim().replace(/^<|>$/g, "");
       const { data } = await supabase
         .from("b2b_email_log")

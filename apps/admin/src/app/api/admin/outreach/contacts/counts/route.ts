@@ -13,18 +13,28 @@ export async function GET() {
   try {
     const supabase = createServiceRoleClient();
 
-    const { data, error } = await supabase
+    const types = ["incasso", "aid_org", "gemeente", "bewindvoerder", "kredietbank", "journalist", "billing_vendor"];
+
+    // Fetch total count
+    const { count: allCount } = await supabase
       .from("b2b_contacts")
-      .select("type", { count: "exact", head: false });
+      .select("id", { count: "exact", head: true });
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    const counts: Record<string, number> = { all: allCount || 0 };
 
-    const counts: Record<string, number> = { all: 0 };
-    for (const row of data || []) {
-      counts[row.type] = (counts[row.type] || 0) + 1;
-      counts.all++;
+    // Fetch count per type in parallel
+    const results = await Promise.all(
+      types.map(async (type) => {
+        const { count } = await supabase
+          .from("b2b_contacts")
+          .select("id", { count: "exact", head: true })
+          .eq("type", type);
+        return { type, count: count || 0 };
+      })
+    );
+
+    for (const r of results) {
+      if (r.count > 0) counts[r.type] = r.count;
     }
 
     return NextResponse.json({ counts });
