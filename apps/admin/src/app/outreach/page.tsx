@@ -44,6 +44,10 @@ interface Reply {
   subject: string;
   replied_at: string;
   campaign_name: string;
+  contact_id?: string;
+  contact_name?: string;
+  reply_from?: string;
+  from_email?: string;
 }
 
 interface Account {
@@ -260,23 +264,32 @@ export default function OutreachOverview() {
                 >
                   <div className="flex items-center gap-1.5 mb-1">
                     <MessageSquare size={10} className="text-pw-green" />
-                    <span className="text-[11px] font-semibold text-pw-text truncate">
-                      {r.to_name || r.to_email}
-                    </span>
+                    {r.contact_id ? (
+                      <a href={`/outreach/contacts/${r.contact_id}`} className="text-[11px] font-semibold text-pw-blue hover:underline truncate">
+                        {r.contact_name || r.to_name || r.to_email}
+                      </a>
+                    ) : (
+                      <span className="text-[11px] font-semibold text-pw-text truncate">
+                        {r.contact_name || r.to_name || r.to_email}
+                      </span>
+                    )}
                   </div>
                   <p className="text-[10px] text-pw-muted truncate">
-                    {r.subject}
+                    Re: {r.subject}
                   </p>
-                  <p className="text-[10px] text-pw-muted mt-0.5">
-                    {r.replied_at
-                      ? new Date(r.replied_at).toLocaleDateString("nl-NL", {
-                          day: "numeric",
-                          month: "short",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
-                      : ""}
-                  </p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <p className="text-[10px] text-pw-muted">
+                      {r.replied_at
+                        ? new Date(r.replied_at).toLocaleDateString("nl-NL", {
+                            day: "numeric",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : ""}
+                    </p>
+                    {r.from_email && <span className="text-[10px] text-pw-muted">via {r.from_email}</span>}
+                  </div>
                 </div>
               ))}
             </div>

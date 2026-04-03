@@ -8,10 +8,12 @@ import {
   Mail,
   Shield,
   Kanban,
+  Inbox,
 } from "lucide-react";
 const TABS = [
   { href: "/outreach", label: "Overview", icon: BarChart3, exact: true },
   { href: "/outreach/contacts", label: "Contacts", icon: Users },
+  { href: "/outreach/inbox", label: "Inbox", icon: Inbox },
   { href: "/outreach/pipeline", label: "Pipeline", icon: Kanban },
   { href: "/outreach/campaigns", label: "Campaigns", icon: Send },
   { href: "/outreach/queue", label: "Queue", icon: Mail },

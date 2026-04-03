@@ -59,29 +59,45 @@ export async function GET() {
     const { data: recentReplies } = await supabase
       .from("b2b_email_log")
       .select(
-        "id, to_name, to_email, subject, replied_at, campaign_id"
+        "id, to_name, to_email, subject, replied_at, campaign_id, contact_id, reply_from, from_email"
       )
       .eq("status", "replied")
       .order("replied_at", { ascending: false })
       .limit(5);
 
-    // Enrich replies with campaign name
+    // Enrich replies with campaign + contact name
     const enrichedReplies = [];
     if (recentReplies && recentReplies.length > 0) {
       const campaignIds = [
         ...new Set(recentReplies.map((r) => r.campaign_id).filter(Boolean)),
       ];
-      const { data: campaigns } = await supabase
-        .from("b2b_campaigns")
-        .select("id, name")
-        .in("id", campaignIds);
-      const campaignMap = new Map(
-        campaigns?.map((c) => [c.id, c.name]) || []
-      );
+      const contactIds = [
+        ...new Set(recentReplies.map((r) => r.contact_id).filter(Boolean)),
+      ];
+
+      let campaignMap = new Map<string, string>();
+      if (campaignIds.length > 0) {
+        const { data: campaigns } = await supabase
+          .from("b2b_campaigns")
+          .select("id, name")
+          .in("id", campaignIds);
+        campaignMap = new Map(campaigns?.map((c) => [c.id, c.name]) || []);
+      }
+
+      let contactMap = new Map<string, string>();
+      if (contactIds.length > 0) {
+        const { data: contacts } = await supabase
+          .from("b2b_contacts")
+          .select("id, organization_name")
+          .in("id", contactIds);
+        contactMap = new Map(contacts?.map((c) => [c.id, c.organization_name]) || []);
+      }
+
       for (const r of recentReplies) {
         enrichedReplies.push({
           ...r,
-          campaign_name: campaignMap.get(r.campaign_id) || "Unknown",
+          campaign_name: campaignMap.get(r.campaign_id) || "Manual",
+          contact_name: contactMap.get(r.contact_id) || r.to_name || r.to_email,
         });
       }
     }
