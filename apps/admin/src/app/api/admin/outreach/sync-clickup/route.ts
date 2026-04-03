@@ -249,7 +249,7 @@ export async function POST(req: NextRequest) {
       case "push_all":
         return pushAll(body.type);
       case "update_all":
-        return updateAll(body.type);
+        return updateAll(body.type, body.offset || 0);
       default:
         return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
     }
@@ -413,16 +413,19 @@ async function pushAll(type: string) {
   return NextResponse.json({ ok: true, type, created, errors, total: contacts.length });
 }
 
-/* ── Update all existing tasks of a type ── */
-async function updateAll(type: string) {
+/* ── Update all existing tasks of a type (batched, 150 per call) ── */
+async function updateAll(type: string, offset = 0) {
   if (!type) return NextResponse.json({ error: "type required" }, { status: 400 });
 
-  const { data: contacts, error } = await supabase
+  const batchSize = 150;
+
+  const { data: contacts, error, count } = await supabase
     .from("b2b_contacts")
-    .select("*")
+    .select("*", { count: "exact" })
     .eq("type", type)
     .not("clickup_task_id", "is", null)
-    .order("organization_name");
+    .order("organization_name")
+    .range(offset, offset + batchSize - 1);
 
   if (error || !contacts) return NextResponse.json({ error: error?.message || "No contacts" }, { status: 500 });
 
@@ -445,18 +448,24 @@ async function updateAll(type: string) {
       });
 
       if (!res.ok) {
-        console.error(`[Sync] Failed to update task for ${contact.organization_name}: ${res.status}`);
         errors++;
         continue;
       }
 
       updated++;
-      await new Promise((r) => setTimeout(r, 200));
-    } catch (err) {
-      console.error(`[Sync] Error updating task for ${contact.organization_name}:`, err);
+      await new Promise((r) => setTimeout(r, 80));
+    } catch {
       errors++;
     }
   }
 
-  return NextResponse.json({ ok: true, type, updated, errors, total: contacts.length });
+  const totalCount = count || 0;
+  const nextOffset = offset + batchSize;
+  const hasMore = nextOffset < totalCount;
+
+  return NextResponse.json({
+    ok: true, type, updated, errors,
+    batch_offset: offset, batch_size: contacts.length,
+    total: totalCount, has_more: hasMore, next_offset: hasMore ? nextOffset : null,
+  });
 }
