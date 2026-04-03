@@ -15,21 +15,23 @@ const SIGNATURES: Record<string, string> = {
 <br/><br/>
 <div style="font-family: 'Plus Jakarta Sans', Arial, sans-serif; font-size: 13px; color: #64748B; border-top: 1px solid #E2E8F0; padding-top: 16px; margin-top: 16px;">
   <strong style="color: #0A2540;">Samba Jarju</strong><br/>
-  Co-founder &amp; CTO · PayWatch<br/>
-  <a href="https://paywatch.app" style="color: #2563EB; text-decoration: none;">paywatch.app</a>
+  Co-founder · PayWatch<br/>
+  <em style="font-size: 12px; color: #94A3B8;">PayWatch: De slimme buffer tussen jou en incassokosten.</em><br/>
+  <a href="https://paywatch.app" style="color: #2563EB; text-decoration: none;">paywatch.app</a> · <a href="https://www.linkedin.com/in/sambajarju/" style="color: #2563EB; text-decoration: none;">LinkedIn</a>
 </div>`,
   "mariama@paywatch.nl": `
 <br/><br/>
 <div style="font-family: 'Plus Jakarta Sans', Arial, sans-serif; font-size: 13px; color: #64748B; border-top: 1px solid #E2E8F0; padding-top: 16px; margin-top: 16px;">
   <strong style="color: #0A2540;">Mariama Sesay</strong><br/>
-  Co-founder &amp; CMO · PayWatch<br/>
-  <a href="https://paywatch.app" style="color: #2563EB; text-decoration: none;">paywatch.app</a>
+  Co-founder · PayWatch<br/>
+  <em style="font-size: 12px; color: #94A3B8;">PayWatch: De slimme buffer tussen jou en incassokosten.</em><br/>
+  <a href="https://paywatch.app" style="color: #2563EB; text-decoration: none;">paywatch.app</a> · <a href="https://www.linkedin.com/in/hadja-mariama-sesay-3a5392228/" style="color: #2563EB; text-decoration: none;">LinkedIn</a>
 </div>`,
   "info@paywatch.nl": `
 <br/><br/>
 <div style="font-family: 'Plus Jakarta Sans', Arial, sans-serif; font-size: 13px; color: #64748B; border-top: 1px solid #E2E8F0; padding-top: 16px; margin-top: 16px;">
   <strong style="color: #0A2540;">PayWatch</strong><br/>
-  Grip op je rekeningen<br/>
+  <em style="font-size: 12px; color: #94A3B8;">De slimme buffer tussen jou en incassokosten.</em><br/>
   <a href="https://paywatch.app" style="color: #2563EB; text-decoration: none;">paywatch.app</a>
 </div>`,
 };
@@ -39,8 +41,8 @@ const SIGNATURES: Record<string, string> = {
  */
 export async function GET() {
   const senders = [
-    { email: "samba@paywatch.nl", name: "Samba Jarju", role: "Co-founder & CTO" },
-    { email: "mariama@paywatch.nl", name: "Mariama Sesay", role: "Co-founder & CMO" },
+    { email: "samba@paywatch.nl", name: "Samba Jarju", role: "Co-founder" },
+    { email: "mariama@paywatch.nl", name: "Mariama Sesay", role: "Co-founder" },
     { email: "info@paywatch.nl", name: "PayWatch", role: "General" },
   ];
   return NextResponse.json({ senders });
@@ -135,6 +137,25 @@ export async function POST(req: NextRequest) {
       });
       if (logError) {
         console.error("[Quick Email] Failed to log email:", logError.message);
+      }
+
+      // Post activity to ClickUp (fire-and-forget)
+      const CLICKUP_API_KEY = process.env.CLICKUP_API_KEY;
+      if (CLICKUP_API_KEY) {
+        const { data: contactData } = await supabase
+          .from("b2b_contacts")
+          .select("clickup_task_id")
+          .eq("id", contact_id)
+          .single();
+        if (contactData?.clickup_task_id) {
+          fetch(`https://api.clickup.com/api/v2/task/${contactData.clickup_task_id}/comment`, {
+            method: "POST",
+            headers: { Authorization: CLICKUP_API_KEY, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              comment_text: `📧 ${account.email} emailed on ${new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} — Subject: "${subject}"`,
+            }),
+          }).catch((err) => console.error("[ClickUp Comment]", err));
+        }
       }
     }
 

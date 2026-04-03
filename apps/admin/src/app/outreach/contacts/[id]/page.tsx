@@ -891,8 +891,8 @@ function EditContactModal({ contact, saving, onClose, onSave }: {
 
 /* ── Email Compose Modal ── */
 const EMAIL_SENDERS = [
-  { email: "samba@paywatch.nl", name: "Samba Jarju", role: "Co-founder & CTO" },
-  { email: "mariama@paywatch.nl", name: "Mariama Sesay", role: "Co-founder & CMO" },
+  { email: "samba@paywatch.nl", name: "Samba Jarju", role: "Co-founder" },
+  { email: "mariama@paywatch.nl", name: "Mariama Sesay", role: "Co-founder" },
   { email: "info@paywatch.nl", name: "PayWatch", role: "General" },
 ];
 
@@ -1047,7 +1047,9 @@ function EmailComposeModal({ contact, onClose, onSent }: {
                   <p className="text-xs text-slate-600 dark:text-slate-300">
                     <strong>{selectedSender.name}</strong><br />
                     {selectedSender.role} · PayWatch<br />
+                    <em className="text-[11px] text-slate-400">PayWatch: De slimme buffer tussen jou en incassokosten.</em><br />
                     <span className="text-blue-600">paywatch.app</span>
+                    {selectedSender.email !== "info@paywatch.nl" && <> · <span className="text-blue-600">LinkedIn</span></>}
                   </p>
                 </div>
               )}

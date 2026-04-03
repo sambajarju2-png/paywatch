@@ -74,6 +74,39 @@ export default function InboxPage() {
   const [direction, setDirection] = useState("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // Reply
+  const [replyingToId, setReplyingToId] = useState<string | null>(null);
+  const [replySender, setReplySender] = useState("samba@paywatch.nl");
+  const [replyBody, setReplyBody] = useState("");
+  const [replySending, setReplySending] = useState(false);
+
+  async function handleSendReply(email: InboxEmail) {
+    if (!replyBody.trim()) return;
+    setReplySending(true);
+    try {
+      const toEmail = email.direction === "inbound" ? email.from_email : email.to_email;
+      const toName = email.contact_name || email.to_name || "";
+      const res = await fetch("/api/admin/outreach/quick-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sender: replySender,
+          to_email: toEmail,
+          to_name: toName,
+          subject: email.subject?.startsWith("Re:") ? email.subject : `Re: ${email.subject}`,
+          body_html: replyBody.replace(/\n/g, "<br/>"),
+          contact_id: email.contact_id || null,
+        }),
+      });
+      if (res.ok) {
+        setReplyingToId(null);
+        setReplyBody("");
+        await fetchEmails();
+      }
+    } catch { console.error("Reply failed"); }
+    finally { setReplySending(false); }
+  }
+
   const fetchEmails = useCallback(async () => {
     setLoading(true);
     try {
@@ -252,6 +285,42 @@ export default function InboxPage() {
                           </div>
                           <div className="text-sm text-pw-text leading-relaxed prose prose-sm max-w-none"
                             dangerouslySetInnerHTML={{ __html: email.reply_body }} />
+                        </div>
+                      )}
+
+                      {/* Reply action bar */}
+                      {replyingToId !== email.id ? (
+                        <div className="mt-3 flex gap-2">
+                          <button onClick={(e) => { e.stopPropagation(); setReplyingToId(email.id); setReplySender(email.direction === "inbound" ? email.to_email : email.from_email); }}
+                            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-pw-blue bg-blue-50 rounded-lg hover:bg-blue-100 active:bg-blue-200 transition-colors">
+                            <MessageSquare className="w-3.5 h-3.5" /> Reply
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="mt-3 bg-white rounded-lg border border-pw-border p-3" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-[11px] text-pw-muted">From:</span>
+                            <select value={replySender} onChange={(e) => setReplySender(e.target.value)}
+                              className="text-[11px] px-2 py-1 rounded border border-pw-border bg-white">
+                              <option value="samba@paywatch.nl">Samba Jarju · samba@paywatch.nl</option>
+                              <option value="mariama@paywatch.nl">Mariama Sesay · mariama@paywatch.nl</option>
+                              <option value="info@paywatch.nl">PayWatch · info@paywatch.nl</option>
+                            </select>
+                            <span className="text-[11px] text-pw-muted ml-2">→ {email.direction === "inbound" ? email.from_email : email.to_email}</span>
+                          </div>
+                          <textarea value={replyBody} onChange={(e) => setReplyBody(e.target.value)}
+                            rows={4} autoFocus placeholder="Write your reply..."
+                            className="w-full px-3 py-2 text-sm rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue resize-none" />
+                          <div className="flex gap-2 mt-2">
+                            <button onClick={() => handleSendReply(email)} disabled={replySending || !replyBody.trim()}
+                              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-pw-blue rounded-lg hover:bg-blue-600 disabled:opacity-50">
+                              {replySending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />} Send Reply
+                            </button>
+                            <button onClick={() => { setReplyingToId(null); setReplyBody(""); }}
+                              className="px-3 py-1.5 text-xs font-semibold text-pw-muted hover:bg-gray-100 rounded-lg">
+                              Cancel
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>

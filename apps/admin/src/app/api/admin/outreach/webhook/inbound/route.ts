@@ -167,6 +167,33 @@ export async function POST(req: NextRequest) {
         .from("b2b_contacts")
         .update({ status: "replied", updated_at: now })
         .eq("id", matchedEmail.contact_id);
+
+      // Post reply activity to ClickUp (fire-and-forget)
+      const CLICKUP_API_KEY = process.env.CLICKUP_API_KEY;
+      if (CLICKUP_API_KEY) {
+        const { data: contactData } = await supabase
+          .from("b2b_contacts")
+          .select("clickup_task_id, organization_name")
+          .eq("id", matchedEmail.contact_id)
+          .single();
+        if (contactData?.clickup_task_id) {
+          const stripped = replyContent.replace(/<[^>]+>/g, "").slice(0, 200);
+          fetch(`https://api.clickup.com/api/v2/task/${contactData.clickup_task_id}/comment`, {
+            method: "POST",
+            headers: { Authorization: CLICKUP_API_KEY, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              comment_text: `💬 Reply received from ${sender} on ${new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} — "${stripped}"`,
+            }),
+          }).catch((err) => console.error("[ClickUp Reply Comment]", err));
+
+          // Also update ClickUp task status to replied
+          fetch(`https://api.clickup.com/api/v2/task/${contactData.clickup_task_id}`, {
+            method: "PUT",
+            headers: { Authorization: CLICKUP_API_KEY, "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "replied" }),
+          }).catch((err) => console.error("[ClickUp Status Update]", err));
+        }
+      }
     }
 
     console.log(`[Inbound] Reply matched to email ${matchedEmail.id}, contact ${matchedEmail.contact_id}`);
