@@ -81,7 +81,7 @@ const translations = {
       button: "Start nu gratis",
     },
     footer: {
-      product: "Product",
+      product: "Steden",
       company: "Bedrijf",
       legal: "Juridisch",
       support: "Hulp",
@@ -252,7 +252,7 @@ const translations = {
       button: "Start free now",
     },
     footer: {
-      product: "Product",
+      product: "Cities",
       company: "Company",
       legal: "Legal",
       support: "Support",

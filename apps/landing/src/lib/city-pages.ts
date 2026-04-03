@@ -45,6 +45,7 @@ export interface CityPage {
   ctaText: string;
   gemeenteUrl: string;       // Official gemeente schuldhulp page
   coordinates: { lat: number; lng: number };
+  logoDomain: string;  // e.g. "amsterdam.nl" for logo.dev
 }
 
 export const CITY_SLUGS = [
@@ -166,6 +167,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     ctaText: "Begin vandaag met overzicht in je rekeningen",
     gemeenteUrl: "https://www.rotterdam.nl/schuldhulpverlening",
     coordinates: { lat: 51.9244, lng: 4.4777 },
+    logoDomain: "rotterdam.nl",
   },
 
   amsterdam: {
@@ -265,6 +267,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     ctaText: "Krijg overzicht in je Amsterdamse rekeningen",
     gemeenteUrl: "https://www.amsterdam.nl/werk-en-inkomen/regelingen-bij-laag-inkomen-pak-je-kans/schuldhulpverlening/",
     coordinates: { lat: 52.3676, lng: 4.9041 },
+    logoDomain: "amsterdam.nl",
   },
 
   "den-haag": {
@@ -365,6 +368,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     ctaText: "Krijg grip op je rekeningen in Den Haag",
     gemeenteUrl: "https://www.denhaag.nl/nl/schulden.htm",
     coordinates: { lat: 52.0705, lng: 4.3007 },
+    logoDomain: "denhaag.nl",
   },
 
   utrecht: {
@@ -464,6 +468,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     ctaText: "Krijg grip op je rekeningen in Utrecht",
     gemeenteUrl: "https://www.utrecht.nl/zorg-en-onderwijs/hulp-bij-schulden/",
     coordinates: { lat: 52.0907, lng: 5.1214 },
+    logoDomain: "utrecht.nl",
   },
 
   eindhoven: {
@@ -564,6 +569,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     ctaText: "Begin vandaag met overzicht in je rekeningen",
     gemeenteUrl: "https://www.eindhoven.nl/schulden",
     coordinates: { lat: 51.4416, lng: 5.4697 },
+    logoDomain: "eindhoven.nl",
   },
 
   groningen: {
@@ -605,6 +611,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     ctaText: "Krijg grip op je rekeningen in Groningen",
     gemeenteUrl: "https://gemeente.groningen.nl/schulden",
     coordinates: { lat: 53.2194, lng: 6.5665 },
+    logoDomain: "groningen.nl",
   },
 
   tilburg: {
@@ -645,6 +652,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     ctaText: "Krijg grip op je rekeningen in Tilburg",
     gemeenteUrl: "https://www.tilburg.nl/schulden",
     coordinates: { lat: 51.5555, lng: 5.0913 },
+    logoDomain: "tilburg.nl",
   },
 
   almere: {
@@ -685,6 +693,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     ctaText: "Begin met overzicht in je rekeningen",
     gemeenteUrl: "https://www.almere.nl/werk-en-inkomen/schulden",
     coordinates: { lat: 52.3508, lng: 5.2647 },
+    logoDomain: "almere.nl",
   },
 
   breda: {
@@ -725,6 +734,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     ctaText: "Krijg grip op je rekeningen in Breda",
     gemeenteUrl: "https://www.breda.nl/hulp-bij-geldzorgen-schulden",
     coordinates: { lat: 51.5719, lng: 4.7683 },
+    logoDomain: "breda.nl",
   },
 
   nijmegen: {
@@ -765,6 +775,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     ctaText: "Krijg grip op je rekeningen in Nijmegen",
     gemeenteUrl: "https://www.nijmegen.nl/schulden",
     coordinates: { lat: 51.8126, lng: 5.8372 },
+    logoDomain: "nijmegen.nl",
   },
 
   arnhem: {
@@ -805,6 +816,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     ctaText: "Krijg grip op je rekeningen in Arnhem",
     gemeenteUrl: "https://www.arnhem.nl/product/hulp-bij-geldzorgen/",
     coordinates: { lat: 51.9851, lng: 5.8987 },
+    logoDomain: "arnhem.nl",
   },
 
   haarlem: {
@@ -845,6 +857,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     ctaText: "Krijg grip op je rekeningen in Haarlem",
     gemeenteUrl: "https://www.haarlem.nl/schulden",
     coordinates: { lat: 52.3874, lng: 4.6462 },
+    logoDomain: "haarlem.nl",
   },
 
   enschede: {
@@ -885,6 +898,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     ctaText: "Krijg grip op je rekeningen in Enschede",
     gemeenteUrl: "https://www.enschede.nl/schuldhulpverlening",
     coordinates: { lat: 52.2215, lng: 6.8937 },
+    logoDomain: "enschede.nl",
   },
 
   zaanstad: {
@@ -925,6 +939,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     ctaText: "Krijg grip op je rekeningen in Zaanstad",
     gemeenteUrl: "https://www.zaanstad.nl/schulden",
     coordinates: { lat: 52.4388, lng: 4.8267 },
+    logoDomain: "zaanstad.nl",
   },
 
   amersfoort: {
@@ -965,6 +980,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     ctaText: "Krijg grip op je rekeningen in Amersfoort",
     gemeenteUrl: "https://www.amersfoort.nl/hulp-bij-schulden-en-geldzaken",
     coordinates: { lat: 52.1561, lng: 5.3878 },
+    logoDomain: "amersfoort.nl",
   },
 };
 

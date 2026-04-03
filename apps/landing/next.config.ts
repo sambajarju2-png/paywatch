@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        protocol: "https",
+        hostname: "img.logo.dev",
+      },
     ],
   },
   async headers() {
@@ -32,7 +36,7 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https://cdn.sanity.io https://images.unsplash.com https://cdn.jsdelivr.net https://cdn.simpleicons.org",
+              "img-src 'self' data: blob: https://cdn.sanity.io https://images.unsplash.com https://img.logo.dev https://cdn.jsdelivr.net https://cdn.simpleicons.org",
               "connect-src 'self' https://ectcwerjdpiurubdpxcp.supabase.co https://cdn.sanity.io https://api.unsplash.com",
               "font-src 'self'",
               "frame-src 'none'",

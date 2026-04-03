@@ -31,9 +31,12 @@ export const navItems = [
 /* ─── Footer Columns ─── */
 export const footerColumns = {
   product: [
-    { labelNl: "Functies", labelEn: "Features", href: "/features" },
-    { labelNl: "Prijzen", labelEn: "Pricing", href: "/pricing" },
-    { labelNl: "Hoe het werkt", labelEn: "How it works", href: "/#how-it-works" },
+    { labelNl: "Rotterdam", labelEn: "Rotterdam", href: "/schuldhulp/rotterdam" },
+    { labelNl: "Amsterdam", labelEn: "Amsterdam", href: "/schuldhulp/amsterdam" },
+    { labelNl: "Den Haag", labelEn: "The Hague", href: "/schuldhulp/den-haag" },
+    { labelNl: "Utrecht", labelEn: "Utrecht", href: "/schuldhulp/utrecht" },
+    { labelNl: "Eindhoven", labelEn: "Eindhoven", href: "/schuldhulp/eindhoven" },
+    { labelNl: "Groningen", labelEn: "Groningen", href: "/schuldhulp/groningen" },
   ],
   company: [
     { labelNl: "Over ons", labelEn: "About", href: "/about" },

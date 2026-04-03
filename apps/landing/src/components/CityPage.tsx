@@ -64,7 +64,7 @@ export default function CityPageComponent({ city }: { city: CityPageType }) {
   return (
     <div className="bg-[var(--bg)] min-h-screen">
       {/* ── Hero Section ── */}
-      <section className="relative overflow-hidden" style={{ minHeight: 380 }}>
+      <section className="relative overflow-hidden" style={{ minHeight: 400 }}>
         {/* Background: City image or gradient fallback */}
         {heroPhoto ? (
           <Image
@@ -83,40 +83,68 @@ export default function CityPageComponent({ city }: { city: CityPageType }) {
             }}
           />
         )}
-        {/* Dark overlay for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/65 via-black/45 to-black/75" />
 
-        <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 pt-16 pb-12 sm:pt-24 sm:pb-16">
-          {/* Breadcrumb */}
-          <nav className="mb-6 flex items-center gap-2 text-sm text-white/70" aria-label="Breadcrumb">
-            <Link href="/" className="hover:text-white transition">PayWatch</Link>
-            <span>/</span>
-            <Link href="/schuldhulp" className="hover:text-white transition">
-              {isNl ? "Schuldhulp per stad" : "Debt help by city"}
-            </Link>
-            <span>/</span>
-            <span className="text-white font-medium">{city.name}</span>
-          </nav>
+        <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 pt-14 pb-10 sm:pt-20 sm:pb-14">
+          {/* Top row: breadcrumb + municipality logo */}
+          <div className="flex items-start justify-between mb-8">
+            <nav className="flex items-center gap-2 text-sm text-white/60" aria-label="Breadcrumb">
+              <Link href="/" className="hover:text-white transition">PayWatch</Link>
+              <span className="text-white/30">/</span>
+              <Link href="/schuldhulp" className="hover:text-white transition">
+                {isNl ? "Schuldhulp per stad" : "Debt help by city"}
+              </Link>
+              <span className="text-white/30">/</span>
+              <span className="text-white font-medium">{city.name}</span>
+            </nav>
+            {/* Municipality logo */}
+            <div className="hidden sm:flex items-center gap-3 bg-white/10 backdrop-blur-md rounded-xl px-4 py-2.5 border border-white/10">
+              <Image
+                src={`https://img.logo.dev/${city.logoDomain}?token=pk_RLZzD1KxRrCpEywuCrIRRw&size=60&format=png`}
+                alt={`Logo gemeente ${city.name}`}
+                width={28}
+                height={28}
+                className="rounded-sm"
+                unoptimized
+              />
+              <span className="text-xs font-semibold text-white/80">Gemeente {city.name}</span>
+            </div>
+          </div>
 
-          <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
+          {/* Title */}
+          <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-[1.1]">
             {city.heroTitle}
           </h1>
-          <p className="mt-3 text-lg sm:text-xl text-white/85 max-w-2xl">
+          <p className="mt-3 text-base sm:text-lg text-white/75 max-w-2xl leading-relaxed">
             {city.heroSubtitle}
           </p>
 
-          {/* City badge */}
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <span
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold text-white"
-              style={{ backgroundColor: city.accentColor }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
-              {city.name}, {city.province}
+          {/* Badges row */}
+          <div className="mt-6 flex flex-wrap items-center gap-2.5">
+            {/* Mobile logo */}
+            <span className="sm:hidden inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/10">
+              <Image
+                src={`https://img.logo.dev/${city.logoDomain}?token=pk_RLZzD1KxRrCpEywuCrIRRw&size=40&format=png`}
+                alt={`Logo gemeente ${city.name}`}
+                width={18}
+                height={18}
+                className="rounded-sm"
+                unoptimized
+              />
+              <span className="text-xs font-medium text-white/80">Gemeente {city.name}</span>
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 text-sm text-white backdrop-blur-sm">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm text-xs font-medium text-white/80 border border-white/10">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+              {city.province}
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm text-xs font-medium text-white/80 border border-white/10">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>
               {city.population} {isNl ? "inwoners" : "residents"}
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm text-xs font-medium text-white/80 border border-white/10">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+              {city.organizations.length} {isNl ? "hulporganisaties" : "help organizations"}
             </span>
           </div>
         </div>
