@@ -248,6 +248,8 @@ export async function POST(req: NextRequest) {
         return pushStatus(body.contact_id, body.status);
       case "push_all":
         return pushAll(body.type);
+      case "update_all":
+        return updateAll(body.type);
       default:
         return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
     }
@@ -409,4 +411,52 @@ async function pushAll(type: string) {
   }
 
   return NextResponse.json({ ok: true, type, created, errors, total: contacts.length });
+}
+
+/* ── Update all existing tasks of a type ── */
+async function updateAll(type: string) {
+  if (!type) return NextResponse.json({ error: "type required" }, { status: 400 });
+
+  const { data: contacts, error } = await supabase
+    .from("b2b_contacts")
+    .select("*")
+    .eq("type", type)
+    .not("clickup_task_id", "is", null)
+    .order("organization_name");
+
+  if (error || !contacts) return NextResponse.json({ error: error?.message || "No contacts" }, { status: 500 });
+
+  let updated = 0;
+  let errors = 0;
+
+  for (const contact of contacts) {
+    try {
+      const customFields = buildCustomFields(contact);
+
+      const res = await fetch(`https://api.clickup.com/api/v2/task/${contact.clickup_task_id}`, {
+        method: "PUT",
+        headers: { Authorization: CLICKUP_API_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: contact.organization_name,
+          status: SUPABASE_TO_CLICKUP_STATUS[contact.status] || contact.status,
+          description: contact.notes || contact.ai_research_summary || "",
+          custom_fields: customFields,
+        }),
+      });
+
+      if (!res.ok) {
+        console.error(`[Sync] Failed to update task for ${contact.organization_name}: ${res.status}`);
+        errors++;
+        continue;
+      }
+
+      updated++;
+      await new Promise((r) => setTimeout(r, 200));
+    } catch (err) {
+      console.error(`[Sync] Error updating task for ${contact.organization_name}:`, err);
+      errors++;
+    }
+  }
+
+  return NextResponse.json({ ok: true, type, updated, errors, total: contacts.length });
 }
