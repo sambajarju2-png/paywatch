@@ -34,6 +34,16 @@ const SCHULDHULP_CITY_SLUGS = [
   "den-haag",
   "utrecht",
   "eindhoven",
+  "groningen",
+  "tilburg",
+  "almere",
+  "breda",
+  "nijmegen",
+  "arnhem",
+  "haarlem",
+  "enschede",
+  "zaanstad",
+  "amersfoort",
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

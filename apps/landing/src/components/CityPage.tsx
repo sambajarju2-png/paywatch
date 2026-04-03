@@ -175,8 +175,8 @@ export default function CityPageComponent({ city }: { city: CityPageType }) {
             {/* Stat highlight card */}
             <ScrollReveal delay={100}>
               <div
-                className="rounded-xl p-6 sm:p-8 border-l-4"
-                style={{ backgroundColor: city.accentColorLight, borderColor: city.accentColor }}
+                className="rounded-xl p-6 sm:p-8 border-l-4 bg-[var(--surface)] border border-[var(--border)]"
+                style={{ borderLeftColor: city.accentColor }}
               >
                 <div className="flex items-start gap-4">
                   <div
@@ -397,8 +397,7 @@ export default function CityPageComponent({ city }: { city: CityPageType }) {
             {/* CTA after FAQ */}
             <ScrollReveal delay={500}>
               <div
-                className="rounded-xl p-6 text-center mt-8"
-                style={{ backgroundColor: city.accentColorLight }}
+                className="rounded-xl p-6 text-center mt-8 bg-[var(--surface)] border border-[var(--border)]"
               >
                 <p className="text-base font-bold text-[var(--navy)]">
                   {isNl ? "Heb je een andere vraag?" : "Have another question?"}
@@ -449,8 +448,7 @@ export default function CityPageComponent({ city }: { city: CityPageType }) {
                 <ScrollReveal key={tip.title} delay={i * 80}>
                   <div className="h-full rounded-xl bg-[var(--surface)] border border-[var(--border)] p-5 sm:p-6">
                     <div
-                      className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
-                      style={{ backgroundColor: city.accentColorLight }}
+                      className="w-10 h-10 rounded-lg flex items-center justify-center mb-4 border border-[var(--border)] bg-[var(--bg)]"
                     >
                       <TipIcon name={tip.icon} color={city.accentColor} />
                     </div>
@@ -490,8 +488,7 @@ export default function CityPageComponent({ city }: { city: CityPageType }) {
             {/* PayWatch CTA */}
             <ScrollReveal delay={500}>
               <div
-                className="rounded-xl p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center gap-5"
-                style={{ backgroundColor: city.accentColorLight }}
+                className="rounded-xl p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center gap-5 bg-[var(--surface)] border border-[var(--border)]"
               >
                 <div className="flex-1">
                   <h3 className="text-lg font-bold text-[var(--navy)]">
