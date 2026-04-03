@@ -259,6 +259,21 @@ export async function POST(req: NextRequest) {
   }
 }
 
+/* ── Push custom fields via dedicated endpoint ── */
+async function pushCustomFields(taskId: string, fields: { id: string; value: unknown }[]) {
+  for (const field of fields) {
+    try {
+      await fetch(`https://api.clickup.com/api/v2/task/${taskId}/field/${field.id}`, {
+        method: "POST",
+        headers: { Authorization: CLICKUP_API_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({ value: field.value }),
+      });
+    } catch (err) {
+      console.error(`[Sync] Failed to set field ${field.id} on task ${taskId}:`, err);
+    }
+  }
+}
+
 /* ── Push single contact (create or update in ClickUp) ── */
 async function pushContact(contactId: string) {
   if (!contactId) return NextResponse.json({ error: "contact_id required" }, { status: 400 });
@@ -285,7 +300,6 @@ async function pushContact(contactId: string) {
         name: contact.organization_name,
         status: SUPABASE_TO_CLICKUP_STATUS[contact.status] || contact.status,
         description: contact.notes || contact.ai_research_summary || "",
-        custom_fields: customFields,
       }),
     });
 
@@ -293,6 +307,9 @@ async function pushContact(contactId: string) {
       const errText = await res.text();
       return NextResponse.json({ error: errText }, { status: 500 });
     }
+
+    // Set custom fields via dedicated endpoint (PUT /task doesn't support custom_fields)
+    await pushCustomFields(contact.clickup_task_id, customFields);
 
     return NextResponse.json({ ok: true, action: "updated", task_id: contact.clickup_task_id });
   } else {
@@ -443,7 +460,6 @@ async function updateAll(type: string, offset = 0) {
           name: contact.organization_name,
           status: SUPABASE_TO_CLICKUP_STATUS[contact.status] || contact.status,
           description: contact.notes || contact.ai_research_summary || "",
-          custom_fields: customFields,
         }),
       });
 
@@ -451,6 +467,9 @@ async function updateAll(type: string, offset = 0) {
         errors++;
         continue;
       }
+
+      // Set custom fields via dedicated endpoint
+      await pushCustomFields(contact.clickup_task_id, customFields);
 
       updated++;
       await new Promise((r) => setTimeout(r, 80));
