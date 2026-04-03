@@ -420,20 +420,31 @@ function NewCampaignModal({
     ],
   });
 
-  /* ── Live contact count ── */
-  const matchingContacts = useMemo(() => {
-    return allContacts.filter((c) => {
-      // Filter by type
-      if (form.target_type && c.type !== form.target_type) return false;
-      // Filter by tags (any match)
-      if (form.target_tags.length > 0) {
-        const contactTags = c.tags || [];
-        const hasMatch = form.target_tags.some((t) => contactTags.includes(t));
-        if (!hasMatch) return false;
-      }
-      return true;
-    });
-  }, [allContacts, form.target_type, form.target_tags]);
+  /* ── Live contact count (server-side) ── */
+  const [matchCount, setMatchCount] = useState<number | null>(null);
+  const [matchLoading, setMatchLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      setMatchLoading(true);
+      try {
+        const res = await fetch("/api/admin/outreach/contacts/match", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: form.target_type || null,
+            tags: form.target_tags.length > 0 ? form.target_tags : null,
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setMatchCount(data.count);
+        }
+      } catch { console.error("Match count failed"); }
+      finally { setMatchLoading(false); }
+    };
+    fetchCount();
+  }, [form.target_type, form.target_tags]);
 
   function toggleAccount(email: string) {
     setForm((prev) => {
@@ -524,9 +535,9 @@ function NewCampaignModal({
             <h3 className="text-sm font-bold text-pw-navy">New Campaign</h3>
             {/* Live contact count */}
             <p className="text-[10px] text-pw-muted mt-0.5 flex items-center gap-1">
-              <Users size={10} className={matchingContacts.length > 0 ? "text-pw-green" : "text-pw-muted"} />
-              <span className={matchingContacts.length > 0 ? "text-pw-green font-semibold" : ""}>
-                {matchingContacts.length} contact{matchingContacts.length !== 1 ? "s" : ""} match
+              <Users size={10} className={(matchCount ?? 0) > 0 ? "text-pw-green" : "text-pw-muted"} />
+              <span className={(matchCount ?? 0) > 0 ? "text-pw-green font-semibold" : ""}>
+                {matchCount ?? 0} contact{(matchCount ?? 0) !== 1 ? "s" : ""} match
               </span>
               {form.target_type && (
                 <span>
@@ -609,13 +620,13 @@ function NewCampaignModal({
 
           {/* Matching contacts indicator below segment */}
           <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
-            matchingContacts.length > 0
+            (matchCount ?? 0) > 0
               ? "bg-green-50 border-green-200"
               : "bg-amber-50 border-amber-200"
           }`}>
-            <Users size={12} className={matchingContacts.length > 0 ? "text-pw-green" : "text-amber-500"} />
-            <span className={`text-[11px] font-semibold ${matchingContacts.length > 0 ? "text-green-700" : "text-amber-700"}`}>
-              {matchingContacts.length} contact{matchingContacts.length !== 1 ? "s" : ""} will receive this campaign
+            <Users size={12} className={(matchCount ?? 0) > 0 ? "text-pw-green" : "text-amber-500"} />
+            <span className={`text-[11px] font-semibold ${(matchCount ?? 0) > 0 ? "text-green-700" : "text-amber-700"}`}>
+              {matchCount ?? 0} contact{(matchCount ?? 0) !== 1 ? "s" : ""} will receive this campaign
             </span>
           </div>
 
