@@ -160,14 +160,17 @@ export async function GET() {
     const supabase = createServiceRoleClient();
     const today = new Date().toISOString().split("T")[0];
 
-    // 2. Get active sending accounts
-    const { data: accounts, error: accErr } = await supabase
+    // 2. Get active sending accounts (only warm up paywatch.nl accounts)
+    const WARMUP_ACCOUNTS = ["samba@paywatch.nl", "info@paywatch.nl", "mariama@paywatch.nl"];
+    const { data: allAccounts, error: accErr } = await supabase
       .from("b2b_sending_accounts")
       .select("*")
       .eq("is_active", true);
 
-    if (accErr || !accounts?.length) {
-      return NextResponse.json({ error: "No active accounts", detail: accErr?.message }, { status: 500 });
+    const accounts = (allAccounts || []).filter((a) => WARMUP_ACCOUNTS.includes(a.email));
+
+    if (accErr || !accounts.length) {
+      return NextResponse.json({ error: "No warmup accounts found", detail: accErr?.message }, { status: 500 });
     }
 
     // 3. Get active warmup recipients

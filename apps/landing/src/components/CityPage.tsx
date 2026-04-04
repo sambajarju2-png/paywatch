@@ -155,7 +155,7 @@ export default function CityPageComponent({ city }: { city: CityPageType }) {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" /></svg>
               </div>
               <div>
-                <p className="text-[11px] font-medium text-white/50 uppercase tracking-wider">{isNl ? "Lokaal" : "Local"}</p>
+                <p className="text-[11px] font-medium text-white/50 uppercase tracking-wider">{isNl ? `Data over ${city.name}` : `${city.name} data`}</p>
                 <p className="text-sm font-bold text-white leading-tight">{city.statsHighlight}</p>
               </div>
             </div>
@@ -237,7 +237,7 @@ export default function CityPageComponent({ city }: { city: CityPageType }) {
                   </div>
                   <div>
                     <p className="text-sm font-semibold uppercase tracking-wide" style={{ color: city.accentColor }}>
-                      {isNl ? "Lokaal gegeven" : "Local data"}
+                      {isNl ? `Data over ${city.name}` : `${city.name} data`}
                     </p>
                     <p className="mt-1 text-lg font-bold text-[var(--navy)]">{city.statsHighlight}</p>
                   </div>
