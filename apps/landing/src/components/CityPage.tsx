@@ -183,6 +183,28 @@ export default function CityPageComponent({ city }: { city: CityPageType }) {
             </a>
           </div>
         )}
+
+        {/* Branded diagonal stripes decoration */}
+        <div className="absolute top-0 right-0 w-32 h-full sm:w-48 z-[5] pointer-events-none overflow-hidden">
+          <div
+            className="absolute -top-10 -right-10 w-[200%] h-[200%] origin-top-right"
+            style={{
+              background: `repeating-linear-gradient(
+                -55deg,
+                transparent,
+                transparent 18px,
+                ${city.accentColor}40 18px,
+                ${city.accentColor}40 28px,
+                transparent 28px,
+                transparent 38px,
+                white 38px,
+                white 42px,
+                transparent 42px,
+                transparent 60px
+              )`,
+            }}
+          />
+        </div>
       </section>
 
       {/* ── Tab Navigation ── */}
@@ -224,24 +246,35 @@ export default function CityPageComponent({ city }: { city: CityPageType }) {
 
             {/* Stat highlight card */}
             <ScrollReveal delay={100}>
-              <div
-                className="rounded-xl p-6 sm:p-8 border-l-4 bg-[var(--surface)] border border-[var(--border)]"
-                style={{ borderLeftColor: city.accentColor }}
-              >
-                <div className="flex items-start gap-4">
-                  <div
-                    className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: city.accentColor }}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" /></svg>
+              <div className="rounded-xl p-6 sm:p-8 bg-[var(--surface)] border border-[var(--border)]">
+                <p className="text-sm font-semibold text-[var(--navy)] mb-4">
+                  {isNl ? `Data over ${city.name}` : `${city.name} data`}
+                </p>
+                {/* Comparison bar: City vs National */}
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-semibold text-[var(--text)]">{city.name}</span>
+                      <span className="text-sm font-bold" style={{ color: city.accentColor }}>{city.debtPercentage}%</span>
+                    </div>
+                    <div className="h-3 rounded-full bg-[var(--bg)] overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-1000 ease-out"
+                        style={{ width: `${Math.min(city.debtPercentage * 4, 100)}%`, backgroundColor: city.accentColor }}
+                      />
+                    </div>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-wide" style={{ color: city.accentColor }}>
-                      {isNl ? `Data over ${city.name}` : `${city.name} data`}
-                    </p>
-                    <p className="mt-1 text-lg font-bold text-[var(--navy)]">{city.statsHighlight}</p>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-semibold text-[var(--muted)]">{isNl ? "Landelijk gemiddelde" : "National average"}</span>
+                      <span className="text-sm font-bold text-[var(--muted)]">8,6%</span>
+                    </div>
+                    <div className="h-3 rounded-full bg-[var(--bg)] overflow-hidden">
+                      <div className="h-full rounded-full bg-[var(--muted)]/30 transition-all duration-1000 ease-out" style={{ width: `${8.6 * 4}%` }} />
+                    </div>
                   </div>
                 </div>
+                <p className="mt-3 text-[11px] text-[var(--muted)]">{isNl ? "Bron: CBS Schuldenproblematiek in beeld, januari 2025. Percentage huishoudens met geregistreerde problematische schulden." : "Source: CBS Debt Statistics, January 2025."}</p>
               </div>
             </ScrollReveal>
 
@@ -496,14 +529,31 @@ export default function CityPageComponent({ city }: { city: CityPageType }) {
             <div className="grid gap-5 sm:grid-cols-2">
               {city.tips.map((tip, i) => (
                 <ScrollReveal key={tip.title} delay={i * 80}>
-                  <div className="h-full rounded-xl bg-[var(--surface)] border border-[var(--border)] p-5 sm:p-6">
-                    <div
-                      className="w-10 h-10 rounded-lg flex items-center justify-center mb-4 border border-[var(--border)] bg-[var(--bg)]"
-                    >
-                      <TipIcon name={tip.icon} color={city.accentColor} />
+                  <div className="h-full rounded-xl bg-[var(--surface)] border border-[var(--border)] p-5 sm:p-6 flex flex-col">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div
+                        className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 border border-[var(--border)] bg-[var(--bg)]"
+                      >
+                        <TipIcon name={tip.icon} color={city.accentColor} />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">
+                          {isNl ? `Tip ${i + 1}` : `Tip ${i + 1}`}
+                        </span>
+                        <h3 className="text-sm font-bold text-[var(--navy)] leading-snug">{tip.title}</h3>
+                      </div>
                     </div>
-                    <h3 className="text-base font-bold text-[var(--navy)] mb-2">{tip.title}</h3>
-                    <p className="text-sm text-[var(--text)] leading-relaxed">{tip.description}</p>
+                    <p className="text-[13px] text-[var(--text)] leading-relaxed flex-1">{tip.description}</p>
+                    <a
+                      href={city.gemeenteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 inline-flex items-center gap-1 text-xs font-semibold transition hover:underline"
+                      style={{ color: city.accentColor }}
+                    >
+                      {isNl ? `Meer info via ${city.name.toLowerCase()}.nl` : `More info`}
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m9 18 6-6-6-6" /></svg>
+                    </a>
                   </div>
                 </ScrollReveal>
               ))}

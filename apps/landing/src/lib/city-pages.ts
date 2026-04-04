@@ -46,6 +46,7 @@ export interface CityPage {
   gemeenteUrl: string;       // Official gemeente schuldhulp page
   coordinates: { lat: number; lng: number };
   logoDomain: string;  // e.g. "amsterdam.nl" for logo.dev
+  debtPercentage: number; // Percentage of households with problematic debt (for comparison chart)
 }
 
 export const CITY_SLUGS = [
@@ -168,6 +169,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     gemeenteUrl: "https://www.rotterdam.nl/schuldhulpverlening",
     coordinates: { lat: 51.9244, lng: 4.4777 },
     logoDomain: "rotterdam.nl",
+    debtPercentage: 20,
   },
 
   amsterdam: {
@@ -268,6 +270,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     gemeenteUrl: "https://www.amsterdam.nl/werk-en-inkomen/regelingen-bij-laag-inkomen-pak-je-kans/schuldhulpverlening/",
     coordinates: { lat: 52.3676, lng: 4.9041 },
     logoDomain: "amsterdam.nl",
+    debtPercentage: 13,
   },
 
   "den-haag": {
@@ -369,6 +372,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     gemeenteUrl: "https://www.denhaag.nl/nl/schulden.htm",
     coordinates: { lat: 52.0705, lng: 4.3007 },
     logoDomain: "denhaag.nl",
+    debtPercentage: 14,
   },
 
   utrecht: {
@@ -469,6 +473,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     gemeenteUrl: "https://www.utrecht.nl/zorg-en-onderwijs/hulp-bij-schulden/",
     coordinates: { lat: 52.0907, lng: 5.1214 },
     logoDomain: "utrecht.nl",
+    debtPercentage: 11,
   },
 
   eindhoven: {
@@ -570,6 +575,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     gemeenteUrl: "https://www.eindhoven.nl/",
     coordinates: { lat: 51.4416, lng: 5.4697 },
     logoDomain: "eindhoven.nl",
+    debtPercentage: 12,
   },
 
   groningen: {
@@ -612,6 +618,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     gemeenteUrl: "https://gemeente.groningen.nl/",
     coordinates: { lat: 53.2194, lng: 6.5665 },
     logoDomain: "groningen.nl",
+    debtPercentage: 15,
   },
 
   tilburg: {
@@ -653,6 +660,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     gemeenteUrl: "https://www.tilburg.nl/",
     coordinates: { lat: 51.5555, lng: 5.0913 },
     logoDomain: "tilburg.nl",
+    debtPercentage: 13,
   },
 
   almere: {
@@ -694,6 +702,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     gemeenteUrl: "https://www.almere.nl/werk-en-inkomen/schulden",
     coordinates: { lat: 52.3508, lng: 5.2647 },
     logoDomain: "almere.nl",
+    debtPercentage: 10,
   },
 
   breda: {
@@ -735,6 +744,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     gemeenteUrl: "https://www.breda.nl/hulp-bij-geldzorgen-schulden",
     coordinates: { lat: 51.5719, lng: 4.7683 },
     logoDomain: "breda.nl",
+    debtPercentage: 11,
   },
 
   nijmegen: {
@@ -776,6 +786,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     gemeenteUrl: "https://www.nijmegen.nl/",
     coordinates: { lat: 51.8126, lng: 5.8372 },
     logoDomain: "nijmegen.nl",
+    debtPercentage: 14,
   },
 
   arnhem: {
@@ -817,6 +828,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     gemeenteUrl: "https://www.arnhem.nl/product/hulp-bij-geldzorgen/",
     coordinates: { lat: 51.9851, lng: 5.8987 },
     logoDomain: "arnhem.nl",
+    debtPercentage: 15,
   },
 
   haarlem: {
@@ -858,6 +870,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     gemeenteUrl: "https://www.haarlem.nl/",
     coordinates: { lat: 52.3874, lng: 4.6462 },
     logoDomain: "haarlem.nl",
+    debtPercentage: 12,
   },
 
   enschede: {
@@ -899,6 +912,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     gemeenteUrl: "https://www.enschede.nl/",
     coordinates: { lat: 52.2215, lng: 6.8937 },
     logoDomain: "enschede.nl",
+    debtPercentage: 14,
   },
 
   zaanstad: {
@@ -940,6 +954,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     gemeenteUrl: "https://www.zaanstad.nl/",
     coordinates: { lat: 52.4388, lng: 4.8267 },
     logoDomain: "zaanstad.nl",
+    debtPercentage: 11,
   },
 
   amersfoort: {
@@ -981,6 +996,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     gemeenteUrl: "https://www.amersfoort.nl/hulp-bij-schulden-en-geldzaken",
     coordinates: { lat: 52.1561, lng: 5.3878 },
     logoDomain: "amersfoort.nl",
+    debtPercentage: 9,
   },
 };
 
