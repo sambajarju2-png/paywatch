@@ -106,6 +106,9 @@ importers:
       '@vercel/analytics':
         specifier: ^2.0.1
         version: 2.0.1(next@16.2.1(@babel/core@7.29.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
+      colorthief:
+        specifier: ^3.3.1
+        version: 3.3.1(sharp@0.34.5)
       lucide-react:
         specifier: ^0.383.0
         version: 0.383.0(react@19.2.4)
@@ -3243,6 +3246,15 @@ packages:
 
   color2k@2.0.3:
     resolution: {integrity: sha512-zW190nQTIoXcGCaU08DvVNFTmQhUpnJfVuAKfWqUQkflXKpaDdpaYoM0iluLS9lgJNHyBF58KKA2FBEwkD7wog==}
+
+  colorthief@3.3.1:
+    resolution: {integrity: sha512-a3qzYXy51h6p3725pV8rnJwUBGTtvYQge2pVhKJwL+vETUD5pCi6VKmQyu51pBHdUbu/BPEXbwFLS0GnxXNhGA==}
+    hasBin: true
+    peerDependencies:
+      sharp: '>=0.33.0'
+    peerDependenciesMeta:
+      sharp:
+        optional: true
 
   combined-stream@1.0.8:
     resolution: {integrity: sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==}
@@ -9202,6 +9214,10 @@ snapshots:
   color-name@1.1.4: {}
 
   color2k@2.0.3: {}
+
+  colorthief@3.3.1(sharp@0.34.5):
+    optionalDependencies:
+      sharp: 0.34.5
 
   combined-stream@1.0.8:
     dependencies:
