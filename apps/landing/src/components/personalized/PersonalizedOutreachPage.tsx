@@ -258,8 +258,10 @@ export default function PersonalizedOutreachPage({ audience }: { audience: Audie
           <div className="max-w-lg mx-auto">
             <PartnerContactForm
               companyName={brandData?.companyName}
+              companyDomain={brandData?.domain}
               audience={audience}
               accentColor={accent}
+              logoUrl={brandData?.logo}
             />
           </div>
         </div>

@@ -3,9 +3,16 @@ import { Suspense } from "react";
 import PersonalizedOutreachPage from "@/components/personalized/PersonalizedOutreachPage";
 
 export const metadata: Metadata = {
-  title: "PayWatch voor bedrijven — Klanten die op tijd betalen",
-  description: "Ontdek hoe PayWatch uw klanten helpt rekeningen op tijd te betalen. Minder betalingsachterstanden, minder incassokosten.",
-  robots: { index: false, follow: false },
+  title: "PayWatch voor bedrijven — Klanten die op tijd betalen | PayWatch",
+  description: "78% van consumenten betaalt na herinnering, mits op tijd. PayWatch helpt uw klanten rekeningen bij te houden. Minder betalingsachterstanden, minder incassokosten.",
+  keywords: "betalingsachterstand voorkomen, klanten op tijd betalen, PayWatch bedrijven, incassokosten verlagen, facturatie verbeteren",
+  openGraph: {
+    title: "PayWatch voor bedrijven — Klanten die op tijd betalen",
+    description: "PayWatch helpt uw klanten rekeningen bij te houden. Minder betalingsachterstanden, minder incassokosten.",
+    url: "https://paywatch.app/zakelijk-contact",
+    type: "website",
+  },
+  alternates: { canonical: "https://paywatch.app/zakelijk-contact" },
 };
 
 export default function ZakelijkContactPage() {

@@ -122,5 +122,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("[Sitemap] Job listings fetch failed:", e);
   }
 
-  return [...staticPages, ...featurePages, ...schuldhulpPages, ...blogPages, ...jobPages];
+  /* ── B2B partnership pages ── */
+  const partnerPages: MetadataRoute.Sitemap = [
+    { url: `${BASE_URL}/gemeente-contact`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.7 },
+    { url: `${BASE_URL}/incasso-contact`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.7 },
+    { url: `${BASE_URL}/hulporg-contact`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.7 },
+    { url: `${BASE_URL}/zakelijk-contact`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.7 },
+  ];
+
+  return [...staticPages, ...featurePages, ...schuldhulpPages, ...partnerPages, ...blogPages, ...jobPages];
 }
