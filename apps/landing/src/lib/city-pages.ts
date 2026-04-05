@@ -18,6 +18,7 @@ export interface CityTip {
   title: string;
   description: string;
   icon: string; // Lucide icon name
+  url?: string; // Direct link for this specific tip
 }
 
 export interface CityPage {
@@ -92,7 +93,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     organizations: [
       {
         name: "Kredietbank Rotterdam",
-        url: "https://www.rotterdam.nl/schuldhulpverlening",
+        url: "https://www.rotterdam.nl/schuldhulpverlening-aanvragen",
         type: "Gemeentelijke kredietbank",
         description: "De Kredietbank Rotterdam is onderdeel van de gemeente en biedt gratis schuldhulpverlening. Ze helpen met budgetcoaching, schuldregelingen en schuldsanering. Aanmelden kan via de wijkteams of direct bij de gemeente.",
         phone: "14 010",
@@ -112,7 +113,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
       },
       {
         name: "Humanitas Rotterdam",
-        url: "https://www.humanitas.nl/rotterdam",
+        url: "https://www.stichtinghumanitas.nl/",
         type: "Maatschappelijke ondersteuning",
         description: "Biedt thuisadministratie, budgetmaatjes en ondersteuning bij het ordenen van je papierwerk. Vooral geschikt als je moeite hebt met de administratieve kant van je financien.",
       },
@@ -120,7 +121,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     faq: [
       {
         question: "Hoe vraag ik schuldhulpverlening aan in Rotterdam?",
-        answer: "Je kunt schuldhulpverlening aanvragen door te bellen naar 14 010 of door langs te gaan bij je wijkteam. Je kunt ook online een aanvraag doen via rotterdam.nl/schuldhulpverlening. Er wordt dan een intakegesprek gepland waarin je situatie in kaart wordt gebracht.",
+        answer: "Je kunt schuldhulpverlening aanvragen door te bellen naar 14 010 of door langs te gaan bij je wijkteam. Je kunt ook online een aanvraag doen via rotterdam.nl/schuldhulpverlening-aanvragen. Er wordt dan een intakegesprek gepland waarin je situatie in kaart wordt gebracht.",
       },
       {
         question: "Is schuldhulpverlening in Rotterdam gratis?",
@@ -148,25 +149,29 @@ export const cityPages: Record<CitySlug, CityPage> = {
         title: "Kwijtschelding gemeentelijke belastingen",
         description: "Als je een laag inkomen hebt, kun je in Rotterdam kwijtschelding aanvragen voor gemeentelijke belastingen en de waterschapsbelasting. Dit kan je honderden euros per jaar schelen.",
         icon: "BadgePercent",
+        url: "https://www.rotterdam.nl/kwijtschelding-afvalstoffenheffing-aanvragen",
       },
       {
         title: "Rotterdampas",
         description: "Met de Rotterdampas (gratis bij laag inkomen) krijg je korting op sport, cultuur en uitjes. Het bespaart je geld op activiteiten die anders duur zouden zijn.",
         icon: "Ticket",
+        url: "https://www.rotterdampas.nl/",
       },
       {
         title: "Energietoeslag aanvragen",
         description: "Rotterdammers met een inkomen tot 130% van het sociaal minimum komen in aanmerking voor de energietoeslag. Check op rotterdam.nl of je hiervoor in aanmerking komt.",
         icon: "Zap",
+        url: "https://www.rotterdam.nl/bijzondere-bijstand-energiekosten-aanvragen",
       },
       {
         title: "Voedselbank Rotterdam",
         description: "Heb je moeite om rond te komen? De Voedselbank Rotterdam heeft meerdere uitgiftepunten in de stad. Aanmelden kan via het wijkteam of maatschappelijk werk.",
         icon: "ShoppingCart",
+        url: "https://voedselbank.nl/",
       },
     ],
     ctaText: "Begin vandaag met overzicht in je rekeningen",
-    gemeenteUrl: "https://www.rotterdam.nl/schuldhulpverlening",
+    gemeenteUrl: "https://www.rotterdam.nl/",
     coordinates: { lat: 51.9244, lng: 4.4777 },
     logoDomain: "rotterdam.nl",
     debtPercentage: 20,
@@ -194,7 +199,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     organizations: [
       {
         name: "Kredietbank Amsterdam",
-        url: "https://www.amsterdam.nl/schuldhulp",
+        url: "https://www.amsterdam.nl/werk-en-inkomen/regelingen-bij-laag-inkomen-pak-je-kans/kredietbank-amsterdam/",
         type: "Gemeentelijke kredietbank",
         description: "De Kredietbank Amsterdam helpt met budgetbeheer, schuldregelingen en sociale kredieten. Ze werken samen met de buurtteams en je kunt je ook rechtstreeks aanmelden via amsterdam.nl/schuldhulp.",
         phone: "14 020",
@@ -207,7 +212,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
       },
       {
         name: "Grip op Geld (Gemeente Amsterdam)",
-        url: "https://www.amsterdam.nl/werk-en-inkomen/pak-je-kans/grip-op-geld/",
+        url: "https://www.buurtteamamsterdam.nl/activiteiten/grip-op-je-geld/2030-01-23/",
         type: "Gemeentelijk preventieprogramma",
         description: "Online tools en workshops van de gemeente Amsterdam om grip te krijgen op je geldzaken. Inclusief huishoudboekje, budgetcoach en financiele check-ups. Volledig gratis.",
       },
@@ -221,7 +226,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     faq: [
       {
         question: "Hoe meld ik me aan voor schuldhulpverlening in Amsterdam?",
-        answer: "Je kunt je aanmelden door te bellen naar 14 020, online via amsterdam.nl/schuldhulp, of door langs te gaan bij je buurtteam. Je kunt ook naar een Stadsloket. Binnen twee weken heb je een eerste gesprek.",
+        answer: "Je kunt je aanmelden door te bellen naar 14 020, online via amsterdam.nl/schuldhulpverlening, of door langs te gaan bij je buurtteam. Je kunt ook naar een Stadsloket. Binnen twee weken heb je een eerste gesprek.",
       },
       {
         question: "Wat is het verschil tussen een buurtteam en de Kredietbank?",
@@ -249,11 +254,13 @@ export const cityPages: Record<CitySlug, CityPage> = {
         title: "Stadspas Amsterdam",
         description: "De Stadspas geeft korting op sport, cultuur en vervoer. Bij een laag inkomen is de pas gratis en krijg je extra tegoed voor activiteiten.",
         icon: "Ticket",
+        url: "https://www.amsterdam.nl/stadspas/",
       },
       {
         title: "Collectieve zorgverzekering",
         description: "Als Amsterdammer met een laag inkomen kun je meedoen aan de collectieve zorgverzekering van de gemeente. Dit is vaak goedkoper dan een individuele polis en biedt goede dekking.",
         icon: "Heart",
+        url: "https://www.amsterdam.nl/werk-en-inkomen/regelingen-bij-laag-inkomen-pak-je-kans/regelingen-alfabet/collectieve-zorgverzekering/",
       },
       {
         title: "Schulden bij de gemeente? Vraag om pauze",
@@ -264,6 +271,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
         title: "Gratis juridisch advies",
         description: "Via het Juridisch Loket Amsterdam kun je gratis advies krijgen over je rechten als schuldenaar. Handig als je te maken hebt met incassobureaus of deurwaarders.",
         icon: "Scale",
+        url: "https://www.juridischloket.nl/contact/amsterdam/",
       },
     ],
     ctaText: "Krijg overzicht in je Amsterdamse rekeningen",
@@ -295,14 +303,14 @@ export const cityPages: Record<CitySlug, CityPage> = {
     organizations: [
       {
         name: "Kredietbank Den Haag",
-        url: "https://www.denhaag.nl/nl/schulden.htm",
+        url: "https://www.denhaag.nl/nl/geld-en-schulden/geld-lenen-bij-de-gemeentelijke-kredietbank/",
         type: "Gemeentelijke kredietbank",
         description: "De Kredietbank Den Haag biedt schuldhulpverlening, budgetbeheer en sociale kredieten. Aanmelden kan telefonisch via 14 070 of online. Je wordt dan uitgenodigd voor een intakegesprek.",
         phone: "14 070",
       },
       {
         name: "Sociale Wijkteams Den Haag",
-        url: "https://www.denhaag.nl/nl/in-de-stad/sociale-wijkteams.htm",
+        url: "https://socialekaartdenhaag.nl/ak-organisation/wijkteam-haaglanden/",
         type: "Wijkteam / eerste aanspreekpunt",
         description: "In elk stadsdeel van Den Haag is een sociaal wijkteam actief. Ze helpen met geldzorgen, maar ook met andere problemen die daarmee samenhangen, zoals wonen, werk en gezondheid.",
         phone: "14 070",
@@ -323,7 +331,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
     faq: [
       {
         question: "Hoe kan ik schuldhulpverlening aanvragen in Den Haag?",
-        answer: "Bel 14 070 of ga naar denhaag.nl/schulden. Je kunt ook langsgaan bij een sociaal wijkteam in je buurt. Na aanmelding volgt een intakegesprek waarin je situatie wordt beoordeeld en een plan wordt gemaakt.",
+        answer: "Bel 14 070 of ga naar denhaag.nl/geld-en-schulden. Je kunt ook langsgaan bij een sociaal wijkteam in je buurt. Na aanmelding volgt een intakegesprek waarin je situatie wordt beoordeeld en een plan wordt gemaakt.",
       },
       {
         question: "Is er schuldhulp beschikbaar in andere talen?",
@@ -351,25 +359,29 @@ export const cityPages: Record<CitySlug, CityPage> = {
         title: "Ooievaarspas",
         description: "De Ooievaarspas geeft Hagenaars met een laag inkomen korting op sport, cultuur en openbaar vervoer. Aanvragen kan via denhaag.nl.",
         icon: "Ticket",
+        url: "https://www.denhaag.nl/nl/geld-en-schulden/ooievaarspas-aanvragen/",
       },
       {
         title: "Gratis budgetcoaching",
         description: "Via het programma 'Financieel Fit' kun je gratis budgetcoaching volgen. Je leert omgaan met je geld en voorkomt dat kleine problemen uitgroeien tot grote schulden.",
         icon: "GraduationCap",
+        url: "https://www.denhaag.nl/nl/geld-en-schulden/hulp-bij-geldzaken/",
       },
       {
         title: "Kindpakket Den Haag",
         description: "Gezinnen met een laag inkomen kunnen aanspraak maken op het Kindpakket: een vergoeding voor schoolspullen, sportcontributies en andere kosten voor kinderen.",
         icon: "Baby",
+        url: "https://www.denhaag.nl/nl/onderwijs-en-studeren/fondsen-voor-schoolkosten/",
       },
       {
         title: "Gratis belastingaangifte",
         description: "Via diverse Haagse organisaties kun je gratis hulp krijgen bij je belastingaangifte. Dit voorkomt boetes en zorgt ervoor dat je alle toeslagen krijgt waar je recht op hebt.",
         icon: "FileText",
+        url: "https://socialekaartdenhaag.nl/ak-subject/belastingaangifte/",
       },
     ],
     ctaText: "Krijg grip op je rekeningen in Den Haag",
-    gemeenteUrl: "https://www.denhaag.nl/nl/schulden.htm",
+    gemeenteUrl: "https://www.denhaag.nl/nl/geld-en-schulden/",
     coordinates: { lat: 52.0705, lng: 4.3007 },
     logoDomain: "denhaag.nl",
     debtPercentage: 14,
@@ -564,6 +576,7 @@ export const cityPages: Record<CitySlug, CityPage> = {
         title: "Kwijtschelding gemeentelijke belastingen",
         description: "Eindhovenaren met een laag inkomen kunnen kwijtschelding aanvragen voor gemeentelijke belastingen en afvalstoffenheffing. Doe dit elk jaar opnieuw via eindhoven.nl.",
         icon: "BadgePercent",
+        url: "https://www.rotterdam.nl/kwijtschelding-afvalstoffenheffing-aanvragen",
       },
       {
         title: "Samen rond de tafel met schuldeisers",

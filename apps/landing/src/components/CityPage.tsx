@@ -270,7 +270,7 @@ export default function CityPageComponent({ city }: { city: CityPageType }) {
                       <span className="text-sm font-bold text-[var(--muted)]">8,6%</span>
                     </div>
                     <div className="h-3 rounded-full bg-[var(--bg)] overflow-hidden">
-                      <div className="h-full rounded-full bg-[var(--muted)]/30 transition-all duration-1000 ease-out" style={{ width: `${8.6 * 4}%` }} />
+                      <div className="h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${8.6 * 4}%`, backgroundColor: "var(--muted)", opacity: 0.35 }} />
                     </div>
                   </div>
                 </div>
@@ -545,13 +545,13 @@ export default function CityPageComponent({ city }: { city: CityPageType }) {
                     </div>
                     <p className="text-[13px] text-[var(--text)] leading-relaxed flex-1">{tip.description}</p>
                     <a
-                      href={city.gemeenteUrl}
+                      href={tip.url || city.gemeenteUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-3 inline-flex items-center gap-1 text-xs font-semibold transition hover:underline"
                       style={{ color: city.accentColor }}
                     >
-                      {isNl ? `Meer info via ${city.name.toLowerCase()}.nl` : `More info`}
+                      {isNl ? "Bekijk regeling" : "View details"}
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m9 18 6-6-6-6" /></svg>
                     </a>
                   </div>
