@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import { getVisitorName } from "./useEngagement";
 
 export interface PersonalizeData {
   companyName: string;
@@ -247,6 +248,16 @@ export default function PersonalizedBanner({
               <p className="text-[10px] text-white/50">{data.domain}</p>
             </div>
           </div>
+
+          {/* Welcome back greeting */}
+          {(() => {
+            const visitorName = getVisitorName(audience);
+            return visitorName ? (
+              <p className="text-sm font-semibold text-white/80 mb-4">
+                Welkom terug, {visitorName} 👋
+              </p>
+            ) : null;
+          })()}
 
           {/* Tagline */}
           <p className="text-sm font-medium text-white/60 mb-3">{data.tagline}</p>

@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import PersonalizedBanner, { type PersonalizeData } from "./PersonalizedBanner";
 import PartnerContactForm from "./PartnerContactForm";
+import { useEngagement, hasSubmittedForm, getVisitCountValue } from "./useEngagement";
 
 type AudienceType = "gemeente" | "incasso" | "hulporg" | "zakelijk";
 
@@ -154,6 +155,18 @@ export default function PersonalizedOutreachPage({ audience }: { audience: Audie
   const c = CONTENT[audience];
   const accent = brandData?.primaryColor || "#2563EB";
 
+  // Engagement tracking
+  const { trackCtaClick } = useEngagement({
+    audience,
+    companyDomain: brandData?.domain,
+    companyName: brandData?.companyName,
+  });
+
+  // Return visitor detection
+  const alreadySubmitted = typeof window !== "undefined" ? hasSubmittedForm(audience) : false;
+  const visits = typeof window !== "undefined" ? getVisitCountValue(audience) : 1;
+  const isReturnVisitor = visits > 1 && !alreadySubmitted;
+
   return (
     <div className="bg-[var(--bg)] min-h-screen">
       <PersonalizedBanner
@@ -165,15 +178,51 @@ export default function PersonalizedOutreachPage({ audience }: { audience: Audie
       >
         <p className="mt-5 text-base text-slate-300 max-w-2xl leading-relaxed">{c.subtitle}</p>
         <div className="mt-6 flex flex-wrap gap-3">
-          <a href="#contact" className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-bold bg-white text-[#0A2540] transition hover:bg-white/90">
-            {audience === "gemeente" ? "Plan een kennismaking" : audience === "hulporg" ? "Laten we samenwerken" : "Neem contact op"}
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6" /></svg>
-          </a>
-          <a href="#journey" className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white/70 border border-white/15 hover:bg-white/[0.05] transition">
-            Hoe werkt het?
-          </a>
+          {alreadySubmitted ? (
+            /* Already submitted: show gentle acknowledgment */
+            <span className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold bg-white/10 text-white/80 border border-white/10">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
+              Je bericht is ontvangen, we nemen contact op
+            </span>
+          ) : (
+            /* CTA button - softer on return visits */
+            <a
+              href="#contact"
+              onClick={trackCtaClick}
+              className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-bold bg-white text-[#0A2540] transition hover:bg-white/90"
+            >
+              {isReturnVisitor
+                ? "Toch even kennismaken?"
+                : audience === "gemeente" ? "Plan een kennismaking" : audience === "hulporg" ? "Laten we samenwerken" : "Neem contact op"
+              }
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6" /></svg>
+            </a>
+          )}
+          {!alreadySubmitted && (
+            <a href="#journey" onClick={trackCtaClick} className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white/70 border border-white/15 hover:bg-white/[0.05] transition">
+              Hoe werkt het?
+            </a>
+          )}
         </div>
       </PersonalizedBanner>
+
+      {/* ── Softer return visitor nudge ── */}
+      {isReturnVisitor && (
+        <section className="mx-auto max-w-5xl px-4 sm:px-6 pt-10">
+          <div className="rounded-xl border border-[var(--blue)]/20 bg-[var(--blue)]/5 p-5 flex items-start gap-4">
+            <div className="w-9 h-9 rounded-lg bg-[var(--blue)]/10 flex items-center justify-center flex-shrink-0">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" strokeWidth="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+            </div>
+            <div>
+              <p className="text-sm font-bold text-[var(--navy)]">Leuk dat je terug bent</p>
+              <p className="text-sm text-[var(--muted)] mt-0.5">
+                We zien dat je al eerder hebt gekeken. Heb je vragen? We helpen je graag verder.{" "}
+                <a href="#contact" className="font-semibold text-[var(--blue)] hover:underline">Stel ze hier</a>
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── Stats ── */}
       <section className="mx-auto max-w-5xl px-4 sm:px-6 py-14">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { markFormSubmitted } from "./useEngagement";
 
 interface Props {
   companyName?: string;
@@ -43,6 +44,7 @@ export default function PartnerContactForm({ companyName, companyDomain, audienc
       });
 
       if (res.ok) {
+        markFormSubmitted(audience, form.firstName);
         setSent(true);
       } else {
         const data = await res.json().catch(() => ({}));
