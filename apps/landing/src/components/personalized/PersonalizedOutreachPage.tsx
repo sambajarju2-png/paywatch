@@ -190,14 +190,31 @@ export default function PersonalizedOutreachPage({ audience }: { audience: Audie
         </div>
       </section>
 
-      {/* ── Collaboration Journey ── */}
-      <section id="journey" className="border-t border-[var(--border)] bg-[var(--surface)]">
+      {/* ── Value props (moved above journey) ── */}
+      <section className="border-t border-[var(--border)] bg-[var(--surface)]">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 py-14">
+          <h2 className="text-xl font-bold text-[var(--navy)] mb-8">{c.propsTitle}</h2>
+          <div className={`grid gap-6 ${c.props.length === 4 ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
+            {c.props.map((item, i) => (
+              <div key={i} className="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-6">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3" style={{ backgroundColor: `${accent}15` }}>
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: accent }} />
+                </div>
+                <h3 className="text-sm font-bold text-[var(--navy)] mb-1.5">{item.title}</h3>
+                <p className="text-sm text-[var(--muted)] leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Collaboration Journey ── */}
+      <section id="journey" className="mx-auto max-w-5xl px-4 sm:px-6 py-14">
           <h2 className="text-2xl font-bold text-[var(--navy)] mb-2">{c.journeyTitle}</h2>
           <p className="text-[var(--muted)] mb-8 max-w-2xl">{c.journeyDesc}</p>
           <div className="space-y-4">
             {c.journey.map((item, i) => (
-              <div key={i} className="flex gap-4 items-start rounded-xl border border-[var(--border)] p-5 bg-[var(--bg)]">
+              <div key={i} className="flex gap-4 items-start rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
                 <div className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: accent }}>
                   {item.step}
                 </div>
@@ -208,23 +225,6 @@ export default function PersonalizedOutreachPage({ audience }: { audience: Audie
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* ── Value props ── */}
-      <section className="mx-auto max-w-5xl px-4 sm:px-6 py-14">
-        <h2 className="text-xl font-bold text-[var(--navy)] mb-8">{c.propsTitle}</h2>
-        <div className={`grid gap-6 ${c.props.length === 4 ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
-          {c.props.map((item, i) => (
-            <div key={i} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3" style={{ backgroundColor: `${accent}15` }}>
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: accent }} />
-              </div>
-              <h3 className="text-sm font-bold text-[var(--navy)] mb-1.5">{item.title}</h3>
-              <p className="text-sm text-[var(--muted)] leading-relaxed">{item.desc}</p>
-            </div>
-          ))}
-        </div>
       </section>
 
       {/* ── Extra section (escalation stages or WIK) ── */}

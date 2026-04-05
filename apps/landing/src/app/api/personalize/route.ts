@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       if (imgRes.ok) {
         const buffer = Buffer.from(await imgRes.arrayBuffer());
         const { getPalette } = await import("colorthief");
-        const palette = await getPalette(buffer, { colorCount: 6 });
+        const palette = await getPalette(buffer, { colorCount: 8 });
         if (palette) {
           colors = palette.map((c) => c.hex());
         }
@@ -33,8 +33,33 @@ export async function POST(request: NextRequest) {
       console.error("[Personalize] Color:", e);
     }
 
-    const primaryColor = colors[0] || "#0A2540";
-    const secondaryColor = colors[1] || colors[0] || "#2563EB";
+    // Pick the most vibrant/saturated color, skipping grays, blacks, whites
+    function colorSaturation(hex: string): number {
+      const r = parseInt(hex.slice(1, 3), 16) / 255;
+      const g = parseInt(hex.slice(3, 5), 16) / 255;
+      const b = parseInt(hex.slice(5, 7), 16) / 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      const l = (max + min) / 2;
+      if (max === min) return 0; // gray
+      const d = max - min;
+      const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      // Penalize very dark or very light colors
+      if (l < 0.12 || l > 0.88) return s * 0.2;
+      return s;
+    }
+
+    let primaryColor = "#0A2540";
+    let secondaryColor = "#2563EB";
+    if (colors.length > 0) {
+      // Sort by saturation, pick the most vibrant
+      const sorted = [...colors].sort((a, b) => colorSaturation(b) - colorSaturation(a));
+      primaryColor = sorted[0];
+      secondaryColor = sorted[1] || sorted[0];
+      // If the best color is still very unsaturated (gray logo), fall back
+      if (colorSaturation(primaryColor) < 0.15) {
+        primaryColor = colors[0]; // use dominant anyway
+      }
+    }
 
     /* ── Step 2: Claude Haiku — punchy headline ── */
     let greeting = "Samen werken aan financieel overzicht";
