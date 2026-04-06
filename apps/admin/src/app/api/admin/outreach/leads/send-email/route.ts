@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY!;
-
 function createServiceRoleClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,8 +9,19 @@ function createServiceRoleClient() {
   );
 }
 
+const SENDER_NAMES: Record<string, string> = {
+  "samba@paywatch.nl": "Samba Jarju",
+  "mariama@paywatch.nl": "Mariama Sesay",
+  "info@paywatch.nl": "PayWatch",
+};
+
 export async function POST(req: NextRequest) {
   try {
+    const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY;
+    if (!MAILGUN_API_KEY) {
+      return NextResponse.json({ error: "MAILGUN_API_KEY not set" }, { status: 500 });
+    }
+
     const { leadId, to, subject, body, from } = await req.json();
 
     if (!to || !subject || !body) {
@@ -22,35 +31,30 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const senderEmail = from || "business@paywatch.nl";
-    const senderName =
-      senderEmail.startsWith("mariama") || senderEmail.startsWith("sesay")
-        ? "Mariama Sesay"
-        : "Samba Jarju";
+    const senderEmail = from || "samba@paywatch.nl";
+    const senderName = SENDER_NAMES[senderEmail] || "Samba Jarju";
 
-    // Send via Resend
-    const res = await fetch("https://api.resend.com/emails", {
+    const form = new FormData();
+    form.append("from", `${senderName} <${senderEmail}>`);
+    form.append("to", to);
+    form.append("subject", subject);
+    form.append(
+      "html",
+      `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6; color: #1a1a2e;">${body.replace(/\n/g, "<br/>")}</div>`
+    );
+
+    const res = await fetch("https://api.eu.mailgun.net/v3/paywatch.nl/messages", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        "Content-Type": "application/json",
+        Authorization: `Basic ${Buffer.from(`api:${MAILGUN_API_KEY}`).toString("base64")}`,
       },
-      body: JSON.stringify({
-        from: `${senderName} <${senderEmail}>`,
-        to: [to],
-        subject,
-        html: `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6; color: #1a1a2e;">${body.replace(/\n/g, "<br/>")}</div>`,
-        reply_to: senderEmail,
-      }),
+      body: form,
     });
 
     if (!res.ok) {
-      const err = await res.json();
+      const err = await res.text();
       console.error("[Send Email]", err);
-      return NextResponse.json(
-        { error: err.message || "Failed to send" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to send email" }, { status: 500 });
     }
 
     // Update lead status to "contacted" if it was "new"
@@ -66,9 +70,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("[Send Email]", err);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

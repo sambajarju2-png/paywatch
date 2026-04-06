@@ -154,9 +154,9 @@ export default function LeadsPage() {
 
   function openEmailCompose(lead: Lead) {
     setEmailingId(lead.id);
-    setEmailSubject(`PayWatch — samenwerking met ${lead.company_name || "uw organisatie"}`);
+    setEmailSubject(`PayWatch - samenwerking met ${lead.company_name || "uw organisatie"}`);
     setEmailBody(`Beste ${lead.first_name},\n\nBedankt voor uw interesse in PayWatch.\n\n\n\nMet vriendelijke groet,\nSamba Jarju\nCo-founder, PayWatch`);
-    setEmailFrom("business@paywatch.nl");
+    setEmailFrom("samba@paywatch.nl");
     setEmailSent(null);
   }
 
@@ -525,10 +525,9 @@ export default function LeadsPage() {
                               onChange={(e) => setEmailFrom(e.target.value)}
                               className="flex-1 text-xs border border-pw-border rounded-lg px-3 py-1.5 focus:outline-none focus:border-pw-blue bg-white"
                             >
-                              <option value="business@paywatch.nl">business@paywatch.nl (Samba)</option>
                               <option value="samba@paywatch.nl">samba@paywatch.nl (Samba)</option>
                               <option value="mariama@paywatch.nl">mariama@paywatch.nl (Mariama)</option>
-                              <option value="info@paywatch.nl">info@paywatch.nl (Samba)</option>
+                              <option value="info@paywatch.nl">info@paywatch.nl (PayWatch)</option>
                             </select>
                           </div>
 
