@@ -62,9 +62,12 @@ export function useEngagement(config: EngagementConfig) {
 
   const sendEngagement = useCallback(() => {
     if (sentRef.current) return;
+    // Don't send if company data hasn't loaded yet
+    if (!config.companyDomain) return;
     sentRef.current = true;
 
     const timeOnPage = Math.round((Date.now() - startTime.current) / 1000);
+    if (timeOnPage < 2) return; // Skip very short visits
     const submitted = hasSubmittedForm(config.audience);
 
     // Use sendBeacon for reliability on page unload
