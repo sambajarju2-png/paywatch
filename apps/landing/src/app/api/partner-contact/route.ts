@@ -38,10 +38,14 @@ function buildThankYouEmail(data: {
   audience: string;
   brandColor: string;
   logoUrl?: string;
+  companyDomain?: string;
 }): string {
   const label = AUDIENCE_LABELS[data.audience] || "Partner";
   const nextSteps = AUDIENCE_NEXT_STEPS[data.audience] || "We nemen zo snel mogelijk contact op.";
   const accent = data.brandColor || "#2563EB";
+  const proxyLogo = data.companyDomain
+    ? `https://paywatch.app/api/logo-proxy?domain=${encodeURIComponent(data.companyDomain)}`
+    : data.logoUrl;
 
   return `
 <!DOCTYPE html>
@@ -62,10 +66,10 @@ function buildThankYouEmail(data: {
                     <img src="https://paywatch.app/icon-192.png" alt="PayWatch" width="28" height="28" style="display:block;border-radius:6px;" />
                   </td>
                   <td style="padding-left:10px;color:rgba(255,255,255,0.7);font-size:13px;font-weight:600;">PayWatch</td>
-                  ${data.logoUrl ? `
+                  ${proxyLogo ? `
                   <td style="padding-left:8px;color:rgba(255,255,255,0.4);font-size:14px;">&times;</td>
                   <td style="padding-left:8px;">
-                    <img src="${data.logoUrl}" alt="" width="28" height="28" style="display:block;border-radius:6px;background:rgba(255,255,255,0.15);" />
+                    <img src="${proxyLogo}" alt="" width="28" height="28" style="display:block;border-radius:6px;background:rgba(255,255,255,0.15);" />
                   </td>
                   <td style="padding-left:8px;color:white;font-size:13px;font-weight:700;">${data.companyName || ""}</td>
                   ` : ""}
@@ -166,13 +170,14 @@ export async function POST(request: NextRequest) {
           from: "PayWatch <noreply@paywatch.app>",
           reply_to: "business@paywatch.nl",
           to: email,
-          subject: `Bedankt ${firstName} — we nemen snel contact op`,
+          subject: `Bedankt ${firstName} - we nemen snel contact op`,
           html: buildThankYouEmail({
             firstName,
             companyName,
             audience,
             brandColor: brandColor || "#2563EB",
             logoUrl,
+            companyDomain,
           }),
         });
       } catch (e) {
