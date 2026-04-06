@@ -81,6 +81,8 @@ export function useEngagement(config: EngagementConfig) {
       clickedCta: clickedCta.current,
       submittedForm: submitted,
       visitCount,
+      referrer: document.referrer || null,
+      pagePath: window.location.pathname + window.location.search,
     });
 
     if (navigator.sendBeacon) {

@@ -86,8 +86,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               description: "Dutch household bill tracker that scans emails, tracks escalation stages, and helps users avoid unnecessary collection costs.",
               foundingDate: "2025",
               founders: [
-                { "@type": "Person", name: "Samba", jobTitle: "Co-founder & CTO", url: "https://www.linkedin.com/in/sambajarju/" },
-                { "@type": "Person", name: "Mariama", jobTitle: "Co-founder & CMO", url: "https://www.linkedin.com/in/hadja-mariama-sesay-3a5392228/" },
+                { "@type": "Person", name: "Samba Jarju", jobTitle: "Co-founder & CTO", url: "https://www.linkedin.com/in/sambajarju/" },
+                { "@type": "Person", name: "Mariama Sesay", jobTitle: "Co-founder & CMO", url: "https://www.linkedin.com/in/hadja-mariama-sesay-3a5392228/" },
               ],
               address: { "@type": "PostalAddress", addressLocality: "Rotterdam", addressCountry: "NL" },
               contactPoint: { "@type": "ContactPoint", email: "info@paywatch.nl", contactType: "customer service", availableLanguage: ["Dutch", "English"] },

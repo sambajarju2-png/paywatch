@@ -26,6 +26,8 @@ interface Engagement {
   clicked_cta: boolean;
   submitted_form: boolean;
   visit_count: number;
+  referrer: string | null;
+  page_path: string | null;
 }
 
 interface Lead {
@@ -445,6 +447,16 @@ export default function LeadsPage() {
                                 </div>
                               </div>
                             </div>
+                            {lead.engagement.page_path && (
+                              <div className="text-xs text-pw-muted mt-2">
+                                <span className="font-semibold">Pagina:</span> {lead.engagement.page_path}
+                              </div>
+                            )}
+                            {lead.engagement.referrer && (
+                              <div className="text-xs text-pw-muted">
+                                <span className="font-semibold">Referrer:</span> {lead.engagement.referrer}
+                              </div>
+                            )}
                           </div>
                         )}
 

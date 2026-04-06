@@ -1,0 +1,50 @@
+# PayWatch
+
+> PayWatch is a Dutch fintech app that helps households track bills, detect debt escalation stages (factuur, herinnering, aanmaning, incasso, deurwaarder), and avoid unnecessary collection costs under Dutch WIK law. Based in Rotterdam, Netherlands.
+
+## About
+
+PayWatch scans email inboxes (Gmail, Outlook) to automatically detect and extract bill data. It tracks payment deadlines, warns users before bills escalate to collection agencies, and provides a clear overview of all household financial obligations. The app serves Dutch-speaking households dealing with debt prevention and financial administration.
+
+## Key Features
+
+- Automatic bill detection from email (Gmail and Outlook scanning)
+- Debt escalation stage tracking (invoice → reminder → formal notice → collection → bailiff)
+- Payment deadline warnings and push notifications
+- Cash flow forecasting for households
+- Payment plan (betalingsregeling) tracking with installment overview
+- Community features for peer support
+- Available as a Progressive Web App (PWA) in Dutch and English
+
+## Who It Helps
+
+- Dutch households managing bills and avoiding debt escalation
+- People in early stages of debt who want to prevent collection costs
+- Municipalities (gemeenten) looking for early warning tools (vroegsignalering)
+- Debt counseling organizations (schuldhulpverlening) seeking client support tools
+- Incasso bureaus wanting to reduce unnecessary collection proceedings
+
+## Important Pages
+
+- Homepage: https://paywatch.app
+- Features: https://paywatch.app/features
+- Resources: https://paywatch.app/resources
+- Blog: https://paywatch.app/blog
+- Schuldhulp per stad: https://paywatch.app/schuldhulp
+- Rotterdam: https://paywatch.app/schuldhulp/rotterdam
+- Amsterdam: https://paywatch.app/schuldhulp/amsterdam
+- Den Haag: https://paywatch.app/schuldhulp/den-haag
+- Utrecht: https://paywatch.app/schuldhulp/utrecht
+- App: https://app.paywatch.app
+
+## Company
+
+- Founded: 2025
+- Location: Rotterdam, Netherlands
+- Co-founders: Samba Jarju (CTO) and Mariama Sesay (CMO)
+- Website: https://paywatch.app
+- Contact: info@paywatch.nl
+
+## Context
+
+PayWatch operates under Dutch consumer protection law, specifically the WIK (Wet Incassokosten) which regulates collection costs. The app helps users understand their rights and avoid paying unnecessary fees during the debt escalation process. According to CBS (Centraal Bureau voor de Statistiek), approximately 724,110 Dutch households have problematic debt.

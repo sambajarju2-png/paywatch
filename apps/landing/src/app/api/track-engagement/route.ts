@@ -12,7 +12,7 @@ function getSupabase() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { sessionId, companyDomain, companyName, audience, timeOnPage, maxScrollDepth, clickedCta, submittedForm, visitCount } = body;
+    const { sessionId, companyDomain, companyName, audience, timeOnPage, maxScrollDepth, clickedCta, submittedForm, visitCount, referrer, pagePath } = body;
 
     if (!sessionId || !audience) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -34,6 +34,8 @@ export async function POST(request: NextRequest) {
           clicked_cta: clickedCta || false,
           submitted_form: submittedForm || false,
           visit_count: visitCount || 1,
+          referrer: referrer || null,
+          page_path: pagePath || null,
           updated_at: new Date().toISOString(),
         },
         { onConflict: "session_id" }

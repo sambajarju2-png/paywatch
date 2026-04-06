@@ -10,6 +10,7 @@ import {
   Kanban,
   Inbox,
   Briefcase,
+  Sparkles,
 } from "lucide-react";
 const TABS = [
   { href: "/outreach", label: "Overview", icon: BarChart3, exact: true },
@@ -17,6 +18,7 @@ const TABS = [
   { href: "/outreach/inbox", label: "Inbox", icon: Inbox },
   { href: "/outreach/pipeline", label: "Pipeline", icon: Kanban },
   { href: "/outreach/leads", label: "B2B Leads", icon: Briefcase },
+  { href: "/outreach/ai-mentions", label: "AI Mentions", icon: Sparkles },
   { href: "/outreach/campaigns", label: "Campaigns", icon: Send },
   { href: "/outreach/queue", label: "Queue", icon: Mail },
   { href: "/outreach/accounts", label: "Accounts", icon: Shield },

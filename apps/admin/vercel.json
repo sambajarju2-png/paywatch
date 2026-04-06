@@ -7,6 +7,10 @@
     {
       "path": "/api/admin/outreach/warmup/cron",
       "schedule": "0 7,9,11,13,15 * * *"
+    },
+    {
+      "path": "/api/admin/ai-mentions/cron",
+      "schedule": "0 10 * * *"
     }
   ]
 }
