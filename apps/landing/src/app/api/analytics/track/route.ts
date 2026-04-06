@@ -36,8 +36,12 @@ export async function POST(req: NextRequest) {
 
     const ua = req.headers.get("user-agent") || "";
 
-    // Skip bots
-    if (/bot|crawl|spider|slurp|googlebot|bingbot|yandex/i.test(ua)) {
+    // Skip bots and crawlers
+    if (
+      !ua ||
+      ua.length < 20 ||
+      /bot|crawl|spider|slurp|googlebot|bingbot|yandex|baidu|duckduck|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|discordbot|applebot|petalbot|semrush|ahrefs|mj12bot|dotbot|bytespider|gptbot|chatgpt-user|claudebot|anthropic|perplexity|cohere-ai|meta-externalagent|headlesschrome|phantomjs|selenium|puppeteer|playwright|wget|curl|python-requests|go-http-client|java\/|axios|node-fetch|undici|httpx/i.test(ua)
+    ) {
       return NextResponse.json({ ok: true });
     }
 
