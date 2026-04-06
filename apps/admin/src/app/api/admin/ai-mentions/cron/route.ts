@@ -93,7 +93,7 @@ async function queryClaude(prompt: string): Promise<string | null> {
 }
 
 async function queryGemini(prompt: string): Promise<string | null> {
-  const key = process.env.GOOGLE_GENERATIVE_AI_KEY;
+  const key = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_KEY;
   if (!key) return null;
 
   try {
@@ -194,7 +194,7 @@ export async function GET() {
       mentioned,
       models: models.map((m) => m.name).filter((name) => {
         if (name === "claude") return !!process.env.ANTHROPIC_API_KEY;
-        if (name === "gemini") return !!process.env.GOOGLE_GENERATIVE_AI_KEY;
+        if (name === "gemini") return !!process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_KEY;
         if (name === "chatgpt") return !!process.env.OPENAI_API_KEY;
         return false;
       }),
