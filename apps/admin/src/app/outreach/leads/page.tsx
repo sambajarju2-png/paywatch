@@ -15,6 +15,9 @@ import {
   Mail,
   Building2,
   UserCircle,
+  Send,
+  X,
+  Check,
 } from "lucide-react";
 
 interface Engagement {
@@ -99,6 +102,12 @@ export default function LeadsPage() {
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [emailingId, setEmailingId] = useState<string | null>(null);
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
+  const [emailFrom, setEmailFrom] = useState("business@paywatch.nl");
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailSent, setEmailSent] = useState<string | null>(null);
 
   const fetchLeads = useCallback(async () => {
     try {
@@ -140,6 +149,46 @@ export default function LeadsPage() {
       alert("Status update failed");
     } finally {
       setUpdatingId(null);
+    }
+  }
+
+  function openEmailCompose(lead: Lead) {
+    setEmailingId(lead.id);
+    setEmailSubject(`PayWatch — samenwerking met ${lead.company_name || "uw organisatie"}`);
+    setEmailBody(`Beste ${lead.first_name},\n\nBedankt voor uw interesse in PayWatch.\n\n\n\nMet vriendelijke groet,\nSamba Jarju\nCo-founder, PayWatch`);
+    setEmailFrom("business@paywatch.nl");
+    setEmailSent(null);
+  }
+
+  async function sendEmail(lead: Lead) {
+    setEmailSending(true);
+    try {
+      const res = await fetch("/api/admin/outreach/leads/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          leadId: lead.id,
+          to: lead.email,
+          subject: emailSubject,
+          body: emailBody,
+          from: emailFrom,
+        }),
+      });
+      if (!res.ok) throw new Error("Send failed");
+      setEmailSent(lead.id);
+      setEmailingId(null);
+      // Update local status
+      setLeads((prev) =>
+        prev.map((l) =>
+          l.id === lead.id && l.status === "new"
+            ? { ...l, status: "contacted" }
+            : l
+        )
+      );
+    } catch {
+      alert("Email verzenden mislukt");
+    } finally {
+      setEmailSending(false);
     }
   }
 
@@ -434,8 +483,103 @@ export default function LeadsPage() {
                             ))}
                           </div>
                         </div>
+
+                        {/* Email button */}
+                        {emailSent === lead.id ? (
+                          <div className="flex items-center gap-2 text-xs text-green-600 font-semibold mt-1">
+                            <Check size={14} />
+                            Email verzonden
+                          </div>
+                        ) : emailingId !== lead.id ? (
+                          <button
+                            onClick={() => openEmailCompose(lead)}
+                            className="flex items-center gap-1.5 text-xs font-semibold text-pw-blue hover:text-pw-navy transition-colors mt-1"
+                          >
+                            <Send size={12} />
+                            Stuur email
+                          </button>
+                        ) : null}
                       </div>
                     </div>
+
+                    {/* Email compose form */}
+                    {emailingId === lead.id && (
+                      <div className="mt-4 border border-pw-border rounded-lg p-4 bg-gray-50">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="text-[11px] font-bold text-pw-muted uppercase tracking-wider">
+                            Email opstellen
+                          </h4>
+                          <button
+                            onClick={() => setEmailingId(null)}
+                            className="text-pw-muted hover:text-pw-navy"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+
+                        <div className="space-y-2.5">
+                          <div className="flex items-center gap-2">
+                            <label className="text-[11px] font-semibold text-pw-muted w-16 shrink-0">Van</label>
+                            <select
+                              value={emailFrom}
+                              onChange={(e) => setEmailFrom(e.target.value)}
+                              className="flex-1 text-xs border border-pw-border rounded-lg px-3 py-1.5 focus:outline-none focus:border-pw-blue bg-white"
+                            >
+                              <option value="business@paywatch.nl">business@paywatch.nl (Samba)</option>
+                              <option value="samba@paywatch.nl">samba@paywatch.nl (Samba)</option>
+                              <option value="mariama@paywatch.nl">mariama@paywatch.nl (Mariama)</option>
+                              <option value="info@paywatch.nl">info@paywatch.nl (Samba)</option>
+                            </select>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <label className="text-[11px] font-semibold text-pw-muted w-16 shrink-0">Aan</label>
+                            <div className="flex-1 text-xs text-pw-text bg-white border border-pw-border rounded-lg px-3 py-1.5">
+                              {lead.email}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <label className="text-[11px] font-semibold text-pw-muted w-16 shrink-0">Onderwerp</label>
+                            <input
+                              type="text"
+                              value={emailSubject}
+                              onChange={(e) => setEmailSubject(e.target.value)}
+                              className="flex-1 text-xs border border-pw-border rounded-lg px-3 py-1.5 focus:outline-none focus:border-pw-blue"
+                            />
+                          </div>
+
+                          <textarea
+                            value={emailBody}
+                            onChange={(e) => setEmailBody(e.target.value)}
+                            rows={8}
+                            className="w-full text-xs border border-pw-border rounded-lg px-3 py-2 focus:outline-none focus:border-pw-blue resize-y leading-relaxed"
+                          />
+
+                          <div className="flex justify-end gap-2">
+                            <button
+                              onClick={() => setEmailingId(null)}
+                              className="text-xs font-semibold text-pw-muted hover:text-pw-navy px-4 py-2 rounded-lg transition-colors"
+                            >
+                              Annuleren
+                            </button>
+                            <button
+                              onClick={() => sendEmail(lead)}
+                              disabled={emailSending || !emailSubject.trim() || !emailBody.trim()}
+                              className="flex items-center gap-1.5 text-xs font-semibold text-white bg-pw-blue hover:bg-pw-navy px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                            >
+                              {emailSending ? (
+                                <Loader2 size={12} className="animate-spin" />
+                              ) : (
+                                <Send size={12} />
+                              )}
+                              Versturen
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                   </div>
                 )}
               </div>
