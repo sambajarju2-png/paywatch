@@ -49,39 +49,52 @@ const SCHULDHULP_CITY_SLUGS = [
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date().toISOString();
 
+  /* ── Helper: add hreflang for nl (primary) and en (secondary) ── */
+  function withLang(url: string) {
+    return {
+      languages: {
+        nl: url,
+        en: url,
+        "x-default": url,
+      },
+    };
+  }
+
   /* ── 1. Static pages ── */
   const staticPages: MetadataRoute.Sitemap = [
-    { url: BASE_URL, lastModified: now, changeFrequency: "weekly", priority: 1.0 },
-    { url: `${BASE_URL}/features`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
-    { url: `${BASE_URL}/pricing`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
-    { url: `${BASE_URL}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${BASE_URL}/resources`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
-    { url: `${BASE_URL}/blog`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
-    { url: `${BASE_URL}/schuldhulp`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
-    { url: `${BASE_URL}/jobs`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
-    { url: `${BASE_URL}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${BASE_URL}/support`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${BASE_URL}/roadmap`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${BASE_URL}/tech-stack`, lastModified: now, changeFrequency: "monthly", priority: 0.4 },
-    { url: `${BASE_URL}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
-    { url: `${BASE_URL}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
-    { url: `${BASE_URL}/data-processing`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
+    { url: BASE_URL, lastModified: "2026-04-06", changeFrequency: "weekly", priority: 1.0, alternates: withLang(BASE_URL) },
+    { url: `${BASE_URL}/features`, lastModified: "2026-03-15", changeFrequency: "monthly", priority: 0.9, alternates: withLang(`${BASE_URL}/features`) },
+    { url: `${BASE_URL}/pricing`, lastModified: "2026-03-01", changeFrequency: "monthly", priority: 0.9, alternates: withLang(`${BASE_URL}/pricing`) },
+    { url: `${BASE_URL}/about`, lastModified: "2026-02-15", changeFrequency: "monthly", priority: 0.7, alternates: withLang(`${BASE_URL}/about`) },
+    { url: `${BASE_URL}/resources`, lastModified: "2026-03-20", changeFrequency: "weekly", priority: 0.8, alternates: withLang(`${BASE_URL}/resources`) },
+    { url: `${BASE_URL}/blog`, lastModified: now, changeFrequency: "daily", priority: 0.8, alternates: withLang(`${BASE_URL}/blog`) },
+    { url: `${BASE_URL}/schuldhulp`, lastModified: "2026-04-05", changeFrequency: "weekly", priority: 0.9, alternates: withLang(`${BASE_URL}/schuldhulp`) },
+    { url: `${BASE_URL}/jobs`, lastModified: now, changeFrequency: "weekly", priority: 0.7, alternates: withLang(`${BASE_URL}/jobs`) },
+    { url: `${BASE_URL}/contact`, lastModified: "2026-02-01", changeFrequency: "monthly", priority: 0.6, alternates: withLang(`${BASE_URL}/contact`) },
+    { url: `${BASE_URL}/support`, lastModified: "2026-03-01", changeFrequency: "monthly", priority: 0.6, alternates: withLang(`${BASE_URL}/support`) },
+    { url: `${BASE_URL}/roadmap`, lastModified: "2026-03-01", changeFrequency: "monthly", priority: 0.5, alternates: withLang(`${BASE_URL}/roadmap`) },
+    { url: `${BASE_URL}/tech-stack`, lastModified: "2026-02-01", changeFrequency: "monthly", priority: 0.4, alternates: withLang(`${BASE_URL}/tech-stack`) },
+    { url: `${BASE_URL}/privacy`, lastModified: "2026-01-15", changeFrequency: "yearly", priority: 0.3, alternates: withLang(`${BASE_URL}/privacy`) },
+    { url: `${BASE_URL}/terms`, lastModified: "2026-01-15", changeFrequency: "yearly", priority: 0.3, alternates: withLang(`${BASE_URL}/terms`) },
+    { url: `${BASE_URL}/data-processing`, lastModified: "2026-01-15", changeFrequency: "yearly", priority: 0.3, alternates: withLang(`${BASE_URL}/data-processing`) },
   ];
 
   /* ── 2. Feature pages ── */
   const featurePages: MetadataRoute.Sitemap = FEATURE_SLUGS.map((slug) => ({
     url: `${BASE_URL}/features/${slug}`,
-    lastModified: now,
+    lastModified: "2026-03-15",
     changeFrequency: "monthly" as const,
     priority: 0.7,
+    alternates: withLang(`${BASE_URL}/features/${slug}`),
   }));
 
   /* ── 3. Schuldhulp city pages ── */
   const schuldhulpPages: MetadataRoute.Sitemap = SCHULDHULP_CITY_SLUGS.map((slug) => ({
     url: `${BASE_URL}/schuldhulp/${slug}`,
-    lastModified: now,
+    lastModified: "2026-04-05",
     changeFrequency: "monthly" as const,
     priority: 0.85,
+    alternates: withLang(`${BASE_URL}/schuldhulp/${slug}`),
   }));
 
   /* ── 4. Blog posts from Sanity ── */
@@ -129,10 +142,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   /* ── B2B partnership pages ── */
   const partnerPages: MetadataRoute.Sitemap = [
-    { url: `${BASE_URL}/gemeente-contact`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.7 },
-    { url: `${BASE_URL}/incasso-contact`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.7 },
-    { url: `${BASE_URL}/hulporg-contact`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.7 },
-    { url: `${BASE_URL}/zakelijk-contact`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.7 },
+    { url: `${BASE_URL}/gemeente-contact`, lastModified: "2026-04-05", changeFrequency: "monthly" as const, priority: 0.7, alternates: withLang(`${BASE_URL}/gemeente-contact`) },
+    { url: `${BASE_URL}/incasso-contact`, lastModified: "2026-04-05", changeFrequency: "monthly" as const, priority: 0.7, alternates: withLang(`${BASE_URL}/incasso-contact`) },
+    { url: `${BASE_URL}/hulporg-contact`, lastModified: "2026-04-05", changeFrequency: "monthly" as const, priority: 0.7, alternates: withLang(`${BASE_URL}/hulporg-contact`) },
+    { url: `${BASE_URL}/zakelijk-contact`, lastModified: "2026-04-05", changeFrequency: "monthly" as const, priority: 0.7, alternates: withLang(`${BASE_URL}/zakelijk-contact`) },
   ];
 
   return [...staticPages, ...featurePages, ...schuldhulpPages, ...partnerPages, ...blogPages, ...jobPages];

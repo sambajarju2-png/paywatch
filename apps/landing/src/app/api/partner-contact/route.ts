@@ -128,6 +128,12 @@ function buildThankYouEmail(data: {
 
 export async function POST(request: NextRequest) {
   try {
+    // Only allow requests from paywatch.app
+    const origin = request.headers.get("origin") || "";
+    const referer = request.headers.get("referer") || "";
+    if (!origin.includes("paywatch.app") && !referer.includes("paywatch.app")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const body = await request.json();
     const { firstName, lastName, email, message, companyName, companyDomain, audience, brandColor, logoUrl } = body;
 
@@ -191,7 +197,7 @@ export async function POST(request: NextRequest) {
         await resend.emails.send({
           from: "PayWatch <noreply@paywatch.app>",
           to: ["samba@paywatch.nl", "mariama@paywatch.nl"],
-          subject: `Nieuwe ${label} lead: ${companyName || "Onbekend"} — ${firstName} ${lastName}`,
+          subject: `Nieuwe ${label} lead: ${companyName || "Onbekend"}, ${firstName} ${lastName}`,
           html: `
             <h2>Nieuwe B2B lead via ${label} pagina</h2>
             <table style="font-size:14px;line-height:1.6;">

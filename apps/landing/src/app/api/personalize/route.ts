@@ -4,6 +4,13 @@ export const maxDuration = 25;
 
 export async function POST(request: NextRequest) {
   try {
+    // Only allow requests from paywatch.app
+    const origin = request.headers.get("origin") || "";
+    const referer = request.headers.get("referer") || "";
+    if (!origin.includes("paywatch.app") && !referer.includes("paywatch.app")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const { company, audience } = await request.json();
 
     if (!company || typeof company !== "string" || company.length > 100) {
