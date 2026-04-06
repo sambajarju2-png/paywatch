@@ -3,11 +3,11 @@ import { Suspense } from "react";
 import PersonalizedOutreachPage from "@/components/personalized/PersonalizedOutreachPage";
 
 export const metadata: Metadata = {
-  title: "PayWatch voor bedrijven — Klanten die op tijd betalen | PayWatch",
+  title: "PayWatch voor bedrijven - Klanten die op tijd betalen",
   description: "78% van consumenten betaalt na herinnering, mits op tijd. PayWatch helpt uw klanten rekeningen bij te houden. Minder betalingsachterstanden, minder incassokosten.",
   keywords: "betalingsachterstand voorkomen, klanten op tijd betalen, PayWatch bedrijven, incassokosten verlagen, facturatie verbeteren",
   openGraph: {
-    title: "PayWatch voor bedrijven — Klanten die op tijd betalen",
+    title: "PayWatch voor bedrijven - Klanten die op tijd betalen",
     description: "PayWatch helpt uw klanten rekeningen bij te houden. Minder betalingsachterstanden, minder incassokosten.",
     url: "https://paywatch.app/zakelijk-contact",
     type: "website",

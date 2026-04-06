@@ -5,13 +5,13 @@ export const metadata: Metadata = {
   description:
     "Leer hoe PayWatch werkt. Stap-voor-stap uitleg over e-mail koppelen, rekeningen scannen, betalingsregelingen en meer. Plus veelgestelde vragen.",
   alternates: {
-    canonical: "https://www.paywatch.app/support",
+    canonical: "https://paywatch.app/support",
   },
   openGraph: {
     title: "Hulp & uitleg | PayWatch",
     description:
       "Leer hoe PayWatch werkt. Stap-voor-stap uitleg en veelgestelde vragen.",
-    url: "https://www.paywatch.app/support",
+    url: "https://paywatch.app/support",
     siteName: "PayWatch",
     type: "website",
   },

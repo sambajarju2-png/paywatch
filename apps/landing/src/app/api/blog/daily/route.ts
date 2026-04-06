@@ -127,7 +127,7 @@ The JSON must have this exact structure:
   "body": [
     {"bold": true, "text": "Bold heading text"},
     {"bold": false, "text": "Paragraph text here with [Humanitas](https://www.humanitas.nl/) for help.", "links": [{"text": "Humanitas", "href": "https://www.humanitas.nl/"}]},
-    {"bold": false, "text": "Check je [betaalfases](https://www.paywatch.app/features/betaalfases) in de app.", "links": [{"text": "betaalfases", "href": "https://www.paywatch.app/features/betaalfases"}]}
+    {"bold": false, "text": "Check je [betaalfases](https://paywatch.app/features/betaalfases) in de app.", "links": [{"text": "betaalfases", "href": "https://paywatch.app/features/betaalfases"}]}
   ]
 }
 
@@ -147,17 +147,17 @@ WRITING RULES:
 - Also list them in the "links" array for each block that has links
 - External links: link to organizations, government sites, or news sources mentioned in the text
 - Internal links: link to relevant PayWatch feature pages when mentioning features:
-  - Escalation/incasso/deurwaarder → https://www.paywatch.app/features/betaalfases
-  - Payment plans/betalingsregeling → https://www.paywatch.app/features/betalingen
-  - Buddy system → https://www.paywatch.app/features/buddy
-  - Community → https://www.paywatch.app/features/community
-  - Draft letters/bezwaar → https://www.paywatch.app/features/conceptbrieven
-  - Support organizations → https://www.paywatch.app/features/hulpverleners
-  - Email scanning → https://www.paywatch.app/features/email-scanner
-  - Cash flow → https://www.paywatch.app/features/cashflow
-  - Monthly budget → https://www.paywatch.app/features/maandbudget
-  - FAQ/how it works → https://www.paywatch.app/support
-  - PayWatch general → https://www.paywatch.app/
+  - Escalation/incasso/deurwaarder → https://paywatch.app/features/betaalfases
+  - Payment plans/betalingsregeling → https://paywatch.app/features/betalingen
+  - Buddy system → https://paywatch.app/features/buddy
+  - Community → https://paywatch.app/features/community
+  - Draft letters/bezwaar → https://paywatch.app/features/conceptbrieven
+  - Support organizations → https://paywatch.app/features/hulpverleners
+  - Email scanning → https://paywatch.app/features/email-scanner
+  - Cash flow → https://paywatch.app/features/cashflow
+  - Monthly budget → https://paywatch.app/features/maandbudget
+  - FAQ/how it works → https://paywatch.app/support
+  - PayWatch general → https://paywatch.app/
 
 TOPIC ROTATION (based on day of week):
 - Monday: Schulden & Incasso
@@ -416,7 +416,7 @@ export async function POST(request: Request) {
       linksAdded: linkCount,
       newsUsed: newsHeadlines !== 'No news API configured.' && newsHeadlines !== 'No recent Dutch finance news found.',
       image: unsplashImage ? { photographer: unsplashImage.photographer, source: unsplashImage.unsplashUrl } : null,
-      url: `https://www.paywatch.app/blog/${blogData.slug}`,
+      url: `https://paywatch.app/blog/${blogData.slug}`,
     });
   } catch (error) {
     console.error('Daily blog error:', error);

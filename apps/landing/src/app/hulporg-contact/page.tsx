@@ -3,11 +3,11 @@ import { Suspense } from "react";
 import PersonalizedOutreachPage from "@/components/personalized/PersonalizedOutreachPage";
 
 export const metadata: Metadata = {
-  title: "PayWatch voor hulporganisaties — Clienten beter voorbereid | PayWatch",
+  title: "PayWatch voor hulporganisaties - Clienten beter voorbereid",
   description: "86% van mensen met schulden wordt niet bereikt door hulpverlening. PayWatch geeft clienten overzicht zodat intake sneller verloopt en terugval wordt voorkomen.",
   keywords: "schuldhulpverlening tool, clienten ondersteunen schulden, PayWatch hulporganisatie, financieel overzicht clienten, NVVK samenwerking",
   openGraph: {
-    title: "PayWatch voor hulporganisaties — Clienten beter voorbereid",
+    title: "PayWatch voor hulporganisaties - Clienten beter voorbereid",
     description: "86% van mensen met schulden wordt niet bereikt. PayWatch geeft clienten overzicht voor snellere intake.",
     url: "https://paywatch.app/hulporg-contact",
     type: "website",

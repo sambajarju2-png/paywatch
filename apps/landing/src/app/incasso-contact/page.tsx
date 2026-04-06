@@ -3,11 +3,11 @@ import { Suspense } from "react";
 import PersonalizedOutreachPage from "@/components/personalized/PersonalizedOutreachPage";
 
 export const metadata: Metadata = {
-  title: "PayWatch voor incassobureaus — Minder vermijdbare dossiers | PayWatch",
+  title: "PayWatch voor incassobureaus - Minder vermijdbare dossiers",
   description: "35% van incassozaken is vermijdbaar. PayWatch helpt consumenten rekeningen op tijd te betalen. Minder escalatie, lagere kosten, betere betalingsmoraal.",
   keywords: "incasso preventie, betalingsmoraal verbeteren, incassokosten verlagen, PayWatch incasso, WIK wet incassokosten, schuldenpreventie",
   openGraph: {
-    title: "PayWatch voor incassobureaus — Minder vermijdbare dossiers",
+    title: "PayWatch voor incassobureaus - Minder vermijdbare dossiers",
     description: "35% van incassozaken is vermijdbaar. PayWatch helpt consumenten rekeningen op tijd te betalen.",
     url: "https://paywatch.app/incasso-contact",
     type: "website",

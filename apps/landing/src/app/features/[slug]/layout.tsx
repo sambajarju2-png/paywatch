@@ -18,12 +18,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${feature.overview.title.nl} | PayWatch`,
     description: feature.overview.desc.nl,
     alternates: {
-      canonical: `https://www.paywatch.app/features/${slug}`,
+      canonical: `https://paywatch.app/features/${slug}`,
     },
     openGraph: {
       title: `${feature.overview.title.nl} | PayWatch`,
       description: feature.overview.desc.nl,
-      url: `https://www.paywatch.app/features/${slug}`,
+      url: `https://paywatch.app/features/${slug}`,
       siteName: "PayWatch",
       type: "website",
     },

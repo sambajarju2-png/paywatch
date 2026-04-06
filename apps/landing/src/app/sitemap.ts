@@ -93,12 +93,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         publishedAt
       }`
     );
-    blogPages = (posts || []).map((post) => ({
-      url: `${BASE_URL}/blog/${post.slug}`,
-      lastModified: post.publishedAt || now,
-      changeFrequency: "monthly" as const,
-      priority: 0.7,
-    }));
+    blogPages = (posts || []).reduce<MetadataRoute.Sitemap>((acc, post) => {
+      if (!acc.find((p) => p.url === `${BASE_URL}/blog/${post.slug}`)) {
+        acc.push({
+          url: `${BASE_URL}/blog/${post.slug}`,
+          lastModified: post.publishedAt || now,
+          changeFrequency: "monthly" as const,
+          priority: 0.7,
+        });
+      }
+      return acc;
+    }, []);
   } catch (e) {
     console.error("[Sitemap] Blog posts fetch failed:", e);
   }
