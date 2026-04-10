@@ -31,8 +31,8 @@ export default function Header() {
     <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[#0A2540] dark:bg-[#060D1B]">
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
         {/* Logo */}
-        <Link href="/" className="text-lg font-bold text-white tracking-tight">
-          {siteConfig.name}
+        <Link href="/" className="flex items-center">
+          <img src="/logo-dark.svg" alt="PayWatch" className="h-6" />
         </Link>
 
         {/* Desktop nav */}
