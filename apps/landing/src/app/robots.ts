@@ -7,10 +7,6 @@ export default function robots() {
         disallow: ["/api/", "/admin/"],
       },
     ],
-    sitemap: [
-      "https://paywatch.app/sitemap.xml",
-      "https://paywatch.app/sitemap-blog.xml",
-      "https://paywatch.app/sitemap-pages.xml",
-    ],
+    sitemap: "https://paywatch.app/sitemap.xml",
   };
 }

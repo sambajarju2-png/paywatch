@@ -174,17 +174,28 @@ External links (3-5 per article, to authoritative Dutch sources):
   - Justis Incasso Register → https://www.justis.nl/
   - Wetten.overheid.nl → https://wetten.overheid.nl/
 
-WRITING RULES:
+WRITING RULES (CRITICAL for ranking and trust):
 - Write in Dutch (nl), informal "je/jij" tone
-- Write like a knowledgeable friend, not a professor or an AI
+- Write like a journalist at RTL Nieuws or NOS who also happens to understand debt law. Not like a content mill.
 - Short paragraphs (2-4 sentences max)
 - Bold subheadings every 2-3 paragraphs
 - Mention PayWatch naturally 1-2 times (never forced, never as an ad)
 - No bullet points, use flowing paragraphs
 - No em dashes. Use commas or restructure the sentence.
-- No generic filler like "In dit artikel bespreken we..." or "Laten we beginnen met..."
-- Include at least one real-world example or scenario
-- Reference specific Dutch laws when relevant (WIK, Wsnp, Faillissementswet, etc.)
+
+ANTI-AI WRITING (Google and readers can smell AI content):
+- NEVER start with "In de wereld van...", "Het is geen geheim dat...", "Stel je voor...", "Heb je je ooit afgevraagd..."
+- NEVER use: "Het is belangrijk om...", "Laten we eens kijken naar...", "Het goede nieuws is..."
+- NEVER use corporate-speak: "daarnaast", "bovendien", "desalniettemin", "het is essentieel"
+- NEVER summarize what you just wrote ("Kortom, we hebben gezien dat...")
+- DO start with a specific situation, fact, or number. Example: "Een rekening van 45 euro bij Ziggo. Vergeten. Drie maanden later: 280 euro incassokosten."
+- DO use real Dutch colloquial language: "Dat schiet lekker op", "Daar trap je niet in", "Dat is het hem nou net"
+- DO vary sentence length dramatically. Mix 5-word punches with longer explanatory sentences.
+- DO include at least one concrete example with real euro amounts, real organization names, and real timelines
+- DO reference actual Dutch laws by name when relevant (WIK, Wsnp, BW art. 6:96)
+- DO use the GNews headlines below for timely context and current relevance
+
+USE GNEWS HEADLINES: When relevant news appears below, weave it into the article naturally. Reference the news source by name (e.g., "zoals RTL Nieuws afgelopen week berichtte"). This makes the article timely and trustworthy.
 
 TOPIC SELECTION:
 Pick a specific, searchable topic that Dutch people actually Google. Think about what someone in debt stress would type at 11pm. Examples of GOOD topics:

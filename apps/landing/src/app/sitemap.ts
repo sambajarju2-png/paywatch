@@ -67,7 +67,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/pricing`, lastModified: "2026-03-01", changeFrequency: "monthly", priority: 0.9, alternates: withLang(`${BASE_URL}/pricing`) },
     { url: `${BASE_URL}/about`, lastModified: "2026-02-15", changeFrequency: "monthly", priority: 0.7, alternates: withLang(`${BASE_URL}/about`) },
     { url: `${BASE_URL}/resources`, lastModified: "2026-03-20", changeFrequency: "weekly", priority: 0.8, alternates: withLang(`${BASE_URL}/resources`) },
-    { url: `${BASE_URL}/blog`, lastModified: now, changeFrequency: "daily", priority: 0.8, alternates: withLang(`${BASE_URL}/blog`) },
+    { url: `${BASE_URL}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.8, alternates: withLang(`${BASE_URL}/blog`) },
     { url: `${BASE_URL}/schuldhulp`, lastModified: "2026-04-05", changeFrequency: "weekly", priority: 0.9, alternates: withLang(`${BASE_URL}/schuldhulp`) },
     { url: `${BASE_URL}/jobs`, lastModified: now, changeFrequency: "weekly", priority: 0.7, alternates: withLang(`${BASE_URL}/jobs`) },
     { url: `${BASE_URL}/contact`, lastModified: "2026-02-01", changeFrequency: "monthly", priority: 0.6, alternates: withLang(`${BASE_URL}/contact`) },
@@ -113,6 +113,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           lastModified: post.publishedAt || now,
           changeFrequency: "monthly" as const,
           priority: 0.7,
+          alternates: withLang(`${BASE_URL}/blog/${post.slug}`),
         });
       }
       return acc;
