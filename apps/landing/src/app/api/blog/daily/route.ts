@@ -107,22 +107,22 @@ async function uploadImageToSanity(imageUrl: string, filename: string) {
 }
 
 // ─── System Prompt ────────────────────────────────────────────────
-const SYSTEM_PROMPT = `You are the autonomous content engine for PayWatch (paywatch.app), a Dutch household bill tracking app. You write ONE blog post per day in Dutch, targeting SEO keywords around schulden, incasso, deurwaarders, besparen, and personal finance in the Netherlands.
+const SYSTEM_PROMPT = `You are the content engine for PayWatch (paywatch.app), a Dutch household bill tracking app based in Rotterdam. You write ONE high-quality blog post per week in Dutch, targeting SEO keywords around schulden, incasso, deurwaarders, besparen, and personal finance in the Netherlands.
 
 IMPORTANT: You must respond with ONLY a valid JSON object. No markdown, no backticks, no explanation. Just the JSON.
 
 The JSON must have this exact structure:
 {
-  "title_nl": "Dutch title (max 60 chars, include primary keyword)",
+  "title_nl": "Dutch title (max 60 chars, include primary keyword, no em dashes)",
   "title_en": "English title",
   "slug": "url-friendly-slug-no-special-chars",
-  "excerpt_nl": "Dutch excerpt 1-2 sentences",
+  "excerpt_nl": "Dutch excerpt 2-3 sentences, compelling, includes keyword",
   "excerpt_en": "English excerpt",
-  "meta_nl": "SEO meta description Dutch (max 155 chars)",
+  "meta_nl": "SEO meta description Dutch (max 155 chars, action-oriented)",
   "meta_en": "English meta",
   "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
   "readTime": "X min",
-  "category": "one of: schulden-incasso, besparen-budget, overheid-belasting, juridisch, hulp-organisaties, nieuws-trends, persoonlijk-verhalen",
+  "category": "one of: schulden-incasso, besparen-budget, overheid-belasting, juridisch, hulp-organisaties, nieuws-trends, persoonlijk-verhalen, educatie",
   "image_query": "2-3 English words for Unsplash image search",
   "body": [
     {"bold": true, "text": "Bold heading text"},
@@ -131,22 +131,19 @@ The JSON must have this exact structure:
   ]
 }
 
-WRITING RULES:
-- Write in Dutch (nl), informal "je/jij" tone
-- Write like a knowledgeable friend, not a professor
-- Short paragraphs (2-4 sentences)
-- Bold subheadings every 2-3 paragraphs
-- Include specific amounts, organizations, phone numbers, websites
-- Mention PayWatch 1-2 times naturally (not forced)
-- 600-1000 words in body
-- Start with a hook, not a generic intro
-- End with a concrete action step
-- No bullet points — use flowing paragraphs
-- Don't sound like AI
-- Include 2-4 links per post using markdown-style [text](url) in the text
-- Also list them in the "links" array for each block that has links
-- External links: link to organizations, government sites, or news sources mentioned in the text
-- Internal links: link to relevant PayWatch feature pages when mentioning features:
+QUALITY STANDARDS (this is a weekly piece, not daily filler):
+- 1500-2200 words in body. This must be a thorough, authoritative article.
+- Write as a genuine expert, not a content mill. Show deep understanding of Dutch debt law and financial systems.
+- Include specific data: CBS statistics, actual euro amounts from WIK law, real percentages.
+- Name real organizations with correct details (phone numbers, websites, eligibility).
+- Each claim should be verifiable. Cite sources where possible.
+- Structure with clear H2-style bold headings (6-8 per article).
+- Start with a strong hook that addresses a real pain point.
+- End with 2-3 concrete action steps the reader can take today.
+- Every article must answer a question someone would actually type into Google or ask ChatGPT.
+
+LINKING RULES (critical for SEO):
+Internal links (3-5 per article, to PayWatch pages):
   - Escalation/incasso/deurwaarder → https://paywatch.app/features/betaalfases
   - Payment plans/betalingsregeling → https://paywatch.app/features/betalingen
   - Buddy system → https://paywatch.app/features/buddy
@@ -157,27 +154,59 @@ WRITING RULES:
   - Cash flow → https://paywatch.app/features/cashflow
   - Monthly budget → https://paywatch.app/features/maandbudget
   - FAQ/how it works → https://paywatch.app/support
+  - Schuldhulp overview → https://paywatch.app/schuldhulp
   - PayWatch general → https://paywatch.app/
 
-TOPIC ROTATION (based on day of week):
-- Monday: Schulden & Incasso
-- Tuesday: Overheid & Belasting
-- Wednesday: Besparen & Budget
-- Thursday: Juridisch
-- Friday: Nieuws & Trends (USE THE NEWS HEADLINES BELOW to write about something timely)
-- Saturday: Hulp & Organisaties
-- Sunday: Persoonlijk & Verhalen
+Internal links to EXISTING blog posts (1-3 per article, link to related posts):
+{EXISTING_POSTS_FOR_LINKING}
 
-RECENT DUTCH NEWS HEADLINES (use these for inspiration, especially on Fridays):
+External links (3-5 per article, to authoritative Dutch sources):
+  - CBS/statistics → https://www.cbs.nl/
+  - Rijksoverheid → https://www.rijksoverheid.nl/
+  - Nibud → https://www.nibud.nl/
+  - Juridisch Loket → https://www.juridischloket.nl/
+  - NVVK → https://www.nvvk.nl/
+  - Schuldhulpmaatje → https://www.schuldhulpmaatje.nl/
+  - Humanitas → https://www.humanitas.nl/
+  - Belastingdienst → https://www.belastingdienst.nl/
+  - DUO → https://duo.nl/
+  - CAK → https://www.hetcak.nl/
+  - Justis Incasso Register → https://www.justis.nl/
+  - Wetten.overheid.nl → https://wetten.overheid.nl/
+
+WRITING RULES:
+- Write in Dutch (nl), informal "je/jij" tone
+- Write like a knowledgeable friend, not a professor or an AI
+- Short paragraphs (2-4 sentences max)
+- Bold subheadings every 2-3 paragraphs
+- Mention PayWatch naturally 1-2 times (never forced, never as an ad)
+- No bullet points, use flowing paragraphs
+- No em dashes. Use commas or restructure the sentence.
+- No generic filler like "In dit artikel bespreken we..." or "Laten we beginnen met..."
+- Include at least one real-world example or scenario
+- Reference specific Dutch laws when relevant (WIK, Wsnp, Faillissementswet, etc.)
+
+TOPIC SELECTION:
+Pick a specific, searchable topic that Dutch people actually Google. Think about what someone in debt stress would type at 11pm. Examples of GOOD topics:
+- "Wat gebeurt er als je je zorgverzekering niet betaalt?"
+- "Hoeveel mag een deurwaarder in rekening brengen?"
+- "Betalingsregeling CJIB aanvragen, hoe werkt dat?"
+
+Examples of BAD topics (too generic):
+- "Tips voor beter budgetteren"
+- "Het belang van financieel bewustzijn"
+
+RECENT DUTCH NEWS HEADLINES (use for inspiration):
 {NEWS_HEADLINES}
 
-EXISTING POSTS (avoid duplicates):
+EXISTING POSTS (avoid duplicates, but link to related ones):
 {EXISTING_SLUGS}
 
 TODAY'S DATE: {TODAY}
-DAY OF WEEK: {DAY_OF_WEEK}
 
-Write a blog post following the rotation schedule. Pick a specific, searchable topic that Dutch people actually Google. On Fridays, write about something from the news headlines. Be creative — don't repeat topics from existing posts.`;
+Write a high-quality weekly blog post. Pick a topic you haven't covered yet that real Dutch people search for.`;
+
+
 
 // ─── Body Builder (with link support) ─────────────────────────────
 function buildPortableTextBody(
@@ -283,29 +312,34 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get existing posts to avoid duplicates
+    // Get existing posts to avoid duplicates + for internal linking
     const existingPosts = await sanity.fetch(
-      `*[_type == "blogPost"]{"slug": slug.current, "title": title.nl}`
+      `*[_type == "blogPost"] | order(publishedAt desc) {"slug": slug.current, "title": title.nl, "category": category->slug.current}`
     );
     const existingSlugs = existingPosts
       .map((p: { slug: string; title: string }) => `- ${p.slug} (${p.title})`)
+      .join('\n');
+
+    // Build linkable posts list (last 20 posts with URLs for AI to reference)
+    const linkablePosts = existingPosts
+      .slice(0, 20)
+      .map((p: { slug: string; title: string; category: string }) =>
+        `- "${p.title}" → https://paywatch.app/blog/${p.slug}`
+      )
       .join('\n');
 
     // Fetch Dutch news
     const newsHeadlines = await fetchDutchNews();
 
     // Date info
-    const now = new Date();
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const today = now.toISOString().split('T')[0];
-    const dayOfWeek = days[now.getUTCDay()];
+    const today = new Date().toISOString().split('T')[0];
 
     // Build prompt
     const prompt = SYSTEM_PROMPT
       .replace('{EXISTING_SLUGS}', existingSlugs)
+      .replace('{EXISTING_POSTS_FOR_LINKING}', linkablePosts || 'No existing posts yet.')
       .replace('{NEWS_HEADLINES}', newsHeadlines)
-      .replace('{TODAY}', today)
-      .replace('{DAY_OF_WEEK}', dayOfWeek);
+      .replace('{TODAY}', today);
 
     // Call Claude
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -317,8 +351,8 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 4096,
-        messages: [{ role: 'user', content: 'Write today\'s blog post. Respond with ONLY the JSON object, nothing else.' }],
+        max_tokens: 8192,
+        messages: [{ role: 'user', content: 'Write this week\'s blog post. This is a weekly publication so make it thorough, well-researched, and authoritative. Respond with ONLY the JSON object, nothing else.' }],
         system: prompt,
       }),
     });
@@ -405,21 +439,35 @@ export async function POST(request: Request) {
     await sanity.mutate([{ createOrReplace: { ...doc, _id: publishId } }]);
     try { if (doc._id.startsWith('drafts.')) await sanity.delete(doc._id); } catch { /* ok */ }
 
+    // Ping search engines for faster indexing
+    const blogUrl = `https://paywatch.app/blog/${blogData.slug}`;
+    const sitemapUrl = 'https://paywatch.app/sitemap.xml';
+    try {
+      // Google sitemap ping
+      await fetch(`https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`).catch(() => {});
+      // Bing/IndexNow ping
+      await fetch(`https://www.bing.com/indexnow?url=${encodeURIComponent(blogUrl)}&key=paywatch`).catch(() => {});
+      console.log(`[Blog] Pinged search engines for ${blogUrl}`);
+    } catch { /* non-critical */ }
+
     // Count links in generated post
     const linkCount = blogData.body.reduce((acc, b) => acc + (b.links?.length || 0), 0);
+    const internalLinks = blogData.body.reduce((acc, b) => acc + (b.links?.filter(l => l.href.includes('paywatch.app'))?.length || 0), 0);
+    const externalLinks = linkCount - internalLinks;
 
     return NextResponse.json({
       success: true,
       title: blogData.title_nl,
       slug: blogData.slug,
       category: blogData.category,
-      linksAdded: linkCount,
+      links: { total: linkCount, internal: internalLinks, external: externalLinks },
       newsUsed: newsHeadlines !== 'No news API configured.' && newsHeadlines !== 'No recent Dutch finance news found.',
       image: unsplashImage ? { photographer: unsplashImage.photographer, source: unsplashImage.unsplashUrl } : null,
-      url: `https://paywatch.app/blog/${blogData.slug}`,
+      url: blogUrl,
+      indexed: true,
     });
   } catch (error) {
-    console.error('Daily blog error:', error);
+    console.error('Weekly blog error:', error);
     return NextResponse.json({ error: 'Internal error', details: String(error) }, { status: 500 });
   }
 }
