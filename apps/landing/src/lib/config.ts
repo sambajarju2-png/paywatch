@@ -57,6 +57,7 @@ export const footerColumns = {
     { labelNl: "Hulp & uitleg", labelEn: "Help & guides", href: "/support" },
     { labelNl: "Hulporganisaties", labelEn: "Aid Organizations", href: "/resources#aid" },
     { labelNl: "Gemeente zoeken", labelEn: "Find municipality", href: "/resources#gemeente" },
+    { labelNl: "Directory", labelEn: "Directory", href: "/directory" },
   ],
 };
 

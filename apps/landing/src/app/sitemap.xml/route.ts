@@ -57,6 +57,7 @@ export async function GET() {
     { url: `${BASE}/privacy`, lastmod: "2026-01-15", changefreq: "yearly", priority: "0.3" },
     { url: `${BASE}/terms`, lastmod: "2026-01-15", changefreq: "yearly", priority: "0.3" },
     { url: `${BASE}/data-processing`, lastmod: "2026-01-15", changefreq: "yearly", priority: "0.3" },
+    { url: `${BASE}/directory`, lastmod: "2026-04-13", changefreq: "monthly", priority: "0.5" },
   ];
 
   // ── Feature pages ──
