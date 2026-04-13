@@ -143,21 +143,41 @@ QUALITY STANDARDS (this is a weekly piece, not daily filler):
 - Every article must answer a question someone would actually type into Google or ask ChatGPT.
 
 LINKING RULES (critical for SEO):
-Internal links (3-5 per article, to PayWatch pages):
-  - Escalation/incasso/deurwaarder → https://paywatch.app/features/betaalfases
-  - Payment plans/betalingsregeling → https://paywatch.app/features/betalingen
-  - Buddy system → https://paywatch.app/features/buddy
-  - Community → https://paywatch.app/features/community
-  - Draft letters/bezwaar → https://paywatch.app/features/conceptbrieven
-  - Support organizations → https://paywatch.app/features/hulpverleners
-  - Email scanning → https://paywatch.app/features/email-scanner
-  - Cash flow → https://paywatch.app/features/cashflow
-  - Monthly budget → https://paywatch.app/features/maandbudget
-  - FAQ/how it works → https://paywatch.app/support
-  - Schuldhulp overview → https://paywatch.app/schuldhulp
-  - PayWatch general → https://paywatch.app/
 
-Internal links to EXISTING blog posts (1-3 per article, link to related posts):
+KEYWORD-TO-URL MAP (when these words appear naturally in the text, link them):
+  incasso/incassobureau/incassokosten → https://paywatch.app/features/betaalfases
+  deurwaarder/gerechtsdeurwaarder/dagvaarding → https://paywatch.app/features/betaalfases
+  aanmaning/laatste waarschuwing → https://paywatch.app/features/betaalfases
+  herinnering/betalingsherinnering → https://paywatch.app/features/betaalfases
+  WIK/Wet Incassokosten/buitengerechtelijke kosten → https://paywatch.app/features/betaalfases
+  betalingsregeling/afbetalingsregeling/termijnen → https://paywatch.app/features/betalingen
+  bezwaarbrief/conceptbrief/uitstelbrief → https://paywatch.app/features/conceptbrieven
+  buddy/veiligheidsnetwerk/hulpmaatje → https://paywatch.app/features/buddy
+  community/ervaringen delen → https://paywatch.app/features/community
+  hulpverlener/schuldhulpverlener/maatschappelijk werk → https://paywatch.app/features/hulpverleners
+  gmail scannen/inbox scannen/e-mail koppelen → https://paywatch.app/features/email-scanner
+  cashflow/geldstroom/inkomsten en uitgaven → https://paywatch.app/features/cashflow
+  budget/maandbudget/huishoudboekje → https://paywatch.app/features/maandbudget
+  schuldhulpverlening/schuldhulp → https://paywatch.app/schuldhulp
+  Rotterdam/schulden Rotterdam → https://paywatch.app/schuldhulp/rotterdam
+  Amsterdam/schulden Amsterdam → https://paywatch.app/schuldhulp/amsterdam
+  Den Haag/schulden Den Haag → https://paywatch.app/schuldhulp/den-haag
+  Utrecht/schulden Utrecht → https://paywatch.app/schuldhulp/utrecht
+  Eindhoven/schulden Eindhoven → https://paywatch.app/schuldhulp/eindhoven
+  Groningen/schulden Groningen → https://paywatch.app/schuldhulp/groningen
+  Leiden/schulden Leiden → https://paywatch.app/schuldhulp/leiden
+  Maastricht/schulden Maastricht → https://paywatch.app/schuldhulp/maastricht
+  Dordrecht/schulden Dordrecht → https://paywatch.app/schuldhulp/dordrecht
+  Apeldoorn/schulden Apeldoorn → https://paywatch.app/schuldhulp/apeldoorn
+
+LINKING TARGETS PER ARTICLE (aim for this mix):
+  - 2 links to feature pages (from keyword map above)
+  - 1-2 links to city pages (when mentioning a city)
+  - 1-2 links to existing blog posts (from list below)
+  - 3-5 links to external authoritative sources (from list below)
+  Never force links. Only add them when the keyword appears organically in the text.
+
+Internal links to EXISTING blog posts (1-2 per article, link to related posts):
 {EXISTING_POSTS_FOR_LINKING}
 
 External links (3-5 per article, to authoritative Dutch sources):
