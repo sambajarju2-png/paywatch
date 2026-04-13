@@ -9,6 +9,7 @@ import ScrollReveal from "@/components/ScrollReveal";
 import SanityImage from "@/components/SanityImage";
 import { siteConfig } from "@/lib/config";
 import FeatureRoadmap from "@/components/FeatureRoadmap";
+import EscalationCalculator from "@/components/EscalationCalculator";
 
 export default function HomePage() {
   const { lang, t } = useApp();
@@ -43,6 +44,8 @@ export default function HomePage() {
       </section>
 
       <TrustBar />
+
+      <EscalationCalculator />
 
       {/* ─── How it Works ─── */}
       <section id="how-it-works" className="bg-[var(--bg)]">
