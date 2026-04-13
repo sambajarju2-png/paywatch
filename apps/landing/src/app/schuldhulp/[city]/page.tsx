@@ -61,7 +61,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "article",
       images: [
         {
-          url: "/og-image.png",
+          url: `/api/og?type=schuldhulp&city=${encodeURIComponent(city.name)}`,
           width: 1200,
           height: 630,
           alt: city.metaTitle,
@@ -72,7 +72,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: "summary_large_image",
       title: city.metaTitle,
       description: city.metaDescription,
-      images: ["/og-image.png"],
+      images: [`/api/og?type=schuldhulp&city=${encodeURIComponent(city.name)}`],
     },
   };
 }

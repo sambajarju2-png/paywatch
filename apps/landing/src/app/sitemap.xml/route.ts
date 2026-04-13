@@ -77,6 +77,7 @@ export async function GET() {
     "rotterdam", "amsterdam", "den-haag", "utrecht", "eindhoven",
     "groningen", "tilburg", "almere", "breda", "nijmegen",
     "arnhem", "haarlem", "enschede", "zaanstad", "amersfoort",
+    "apeldoorn", "leiden", "dordrecht", "maastricht", "s-hertogenbosch",
   ];
   const cityPages: SitemapEntry[] = citySlugs.map((s) => ({
     url: `${BASE}/schuldhulp/${s}`,

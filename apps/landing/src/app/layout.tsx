@@ -107,11 +107,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               "@type": "SoftwareApplication",
               name: "PayWatch",
               applicationCategory: "FinanceApplication",
-              operatingSystem: "Web",
-              offers: { "@type": "Offer", price: "0", priceCurrency: "EUR", description: "Free in beta" },
-              description: "AI-powered household bill tracker for the Netherlands. Scans Gmail for invoices, tracks escalation stages, and helps avoid collection costs.",
-              availableLanguage: ["nl", "en"],
-              featureList: "Gmail scanning, Escalation tracking, AI draft letters, Cashflow forecast, Financial health score, Payment links",
+              operatingSystem: "Android, iOS, Windows, macOS",
+              offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
+              description: "Huishoudelijke rekeningen tracker die je inbox scant, escalatiefases toont en je helpt incassokosten te voorkomen. Gratis beschikbaar in 335+ Nederlandse gemeenten.",
+              inLanguage: ["nl", "en"],
+              featureList: "Gmail scanning, Outlook scanning, Escalation tracking, AI draft letters, Cashflow forecast, Financial health score, Payment plans, Camera bill scan, Community feed",
+              provider: { "@type": "Organization", name: "PayWatch", url: "https://paywatch.app" },
             }),
           }}
         />

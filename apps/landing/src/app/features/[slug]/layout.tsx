@@ -14,18 +14,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "Feature niet gevonden | PayWatch" };
   }
 
+  const featureTitle = feature.overview.title.nl;
+
   return {
-    title: `${feature.overview.title.nl} | PayWatch`,
+    title: `${featureTitle} | PayWatch`,
     description: feature.overview.desc.nl,
     alternates: {
       canonical: `https://paywatch.app/features/${slug}`,
     },
     openGraph: {
-      title: `${feature.overview.title.nl} | PayWatch`,
+      title: `${featureTitle} | PayWatch`,
       description: feature.overview.desc.nl,
       url: `https://paywatch.app/features/${slug}`,
       siteName: "PayWatch",
       type: "website",
+      images: [{ url: `/api/og?type=feature&title=${encodeURIComponent(featureTitle)}`, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${featureTitle} | PayWatch`,
+      description: feature.overview.desc.nl,
+      images: [`/api/og?type=feature&title=${encodeURIComponent(featureTitle)}`],
     },
   };
 }

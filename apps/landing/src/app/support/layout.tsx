@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { faqItems } from "@/lib/support-content";
 
 export const metadata: Metadata = {
   title: "Hulp & uitleg | PayWatch",
@@ -22,5 +23,26 @@ export default function SupportLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqItems.map((faq) => ({
+      "@type": "Question",
+      name: faq.question.nl,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.answer.nl,
+      },
+    })),
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+      {children}
+    </>
+  );
 }

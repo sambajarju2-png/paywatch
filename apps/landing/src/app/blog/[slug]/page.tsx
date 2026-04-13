@@ -52,6 +52,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "article",
       publishedTime: post.publishedAt || post.date,
       authors: ["PayWatch"],
+      images: [{ url: `/api/og?type=blog&title=${encodeURIComponent(title)}`, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: desc,
+      images: [`/api/og?type=blog&title=${encodeURIComponent(title)}`],
     },
   };
 }
