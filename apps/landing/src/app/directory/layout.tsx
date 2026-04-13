@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Sitemap & Directory | PayWatch",
+  title: "Sitemap & Directory",
   description:
     "Navigeer eenvoudig door alle pagina's van PayWatch. Overzicht van functies, schuldhulp per stad, blog, hulpbronnen en meer.",
   alternates: { canonical: "https://paywatch.app/directory" },
