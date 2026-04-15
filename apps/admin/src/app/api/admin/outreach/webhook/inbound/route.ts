@@ -61,6 +61,47 @@ export async function POST(req: NextRequest) {
     const supabase = createServiceRoleClient();
     const now = new Date().toISOString();
 
+    // ── Extract attachments ──
+    const attachmentCount = parseInt(formData.get("attachment-count") as string || "0", 10);
+    const attachments: Array<{ name: string; size: number; type: string; path: string; url: string }> = [];
+
+    for (let i = 1; i <= attachmentCount; i++) {
+      const file = formData.get(`attachment-${i}`) as File | null;
+      if (!file) continue;
+      try {
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const storagePath = `inbound/${Date.now()}-${safeName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("email-attachments")
+          .upload(storagePath, buffer, {
+            contentType: file.type || "application/octet-stream",
+            upsert: false,
+          });
+
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage
+            .from("email-attachments")
+            .getPublicUrl(storagePath);
+
+          attachments.push({
+            name: file.name,
+            size: file.size,
+            type: file.type || "application/octet-stream",
+            path: storagePath,
+            url: urlData?.publicUrl || "",
+          });
+          console.log(`[Inbound] Saved attachment: ${file.name} (${file.size} bytes)`);
+        } else {
+          console.error(`[Inbound] Attachment upload failed:`, uploadError);
+        }
+      } catch (err) {
+        console.error(`[Inbound] Attachment ${i} processing failed:`, err);
+      }
+    }
+
     // Use the stripped version (without quoted text) if available, fall back to full body
     const replyContent = strippedHtml || strippedText || bodyHtml || bodyPlain;
 
@@ -129,6 +170,7 @@ export async function POST(req: NextRequest) {
         status: "received",
         sent_at: now,
         sequence_step: 0,
+        attachments: attachments.length > 0 ? attachments : [],
       });
       return NextResponse.json({ received: true, matched: false });
     }
@@ -159,6 +201,7 @@ export async function POST(req: NextRequest) {
       sent_at: now,
       mailtrap_message_id: messageId || null,
       sequence_step: 0,
+      attachments: attachments.length > 0 ? attachments : [],
     });
 
     // Update contact status to replied

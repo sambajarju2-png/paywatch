@@ -36,7 +36,8 @@ export async function GET(req: NextRequest) {
         id, direction, from_email, from_name, to_email, to_name,
         subject, body_html, status, sent_at, delivered_at, opened_at,
         clicked_at, replied_at, reply_body, reply_from, reply_subject,
-        contact_id, campaign_id, sequence_step, created_at
+        contact_id, campaign_id, sequence_step, created_at,
+        attachments
       `, { count: "exact" })
       .order("sent_at", { ascending: false, nullsFirst: false });
 

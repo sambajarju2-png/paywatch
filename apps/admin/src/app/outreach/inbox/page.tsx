@@ -39,6 +39,7 @@ type InboxEmail = {
   contact_id?: string;
   contact_name?: string;
   contact_type?: string;
+  attachments?: Array<{ name: string; size: number; type: string; path: string; url: string }>;
 };
 
 const STATUS_ICON: Record<string, { icon: typeof Send; color: string }> = {
@@ -218,6 +219,9 @@ export default function InboxPage() {
                     {/* Subject + preview */}
                     <div className="flex-1 min-w-0 hidden sm:block">
                       <span className="text-xs font-medium text-pw-text">{email.subject || "(no subject)"}</span>
+                      {email.attachments && email.attachments.length > 0 && (
+                        <span className="text-xs text-pw-muted ml-1">📎</span>
+                      )}
                       {email.body_html && (
                         <span className="text-xs text-pw-muted ml-2">
                           — {email.body_html.replace(/<[^>]+>/g, "").slice(0, 80)}
@@ -270,6 +274,33 @@ export default function InboxPage() {
                         <div className="text-sm text-pw-text leading-relaxed prose prose-sm max-w-none"
                           dangerouslySetInnerHTML={{ __html: email.body_html || "<em>No content</em>" }} />
                       </div>
+
+                      {/* Attachments */}
+                      {email.attachments && email.attachments.length > 0 && (
+                        <div className="mt-2 bg-slate-50 rounded-lg border border-pw-border p-3">
+                          <p className="text-xs font-semibold text-pw-navy mb-2">
+                            📎 {email.attachments.length} bijlage{email.attachments.length > 1 ? "n" : ""}
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {email.attachments.map((att, idx) => (
+                              <a
+                                key={idx}
+                                href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/email-attachments/${att.path}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-pw-border hover:border-pw-blue transition-colors text-xs"
+                              >
+                                <span className="text-pw-blue font-semibold">{att.name}</span>
+                                <span className="text-pw-muted">
+                                  ({att.size > 1024 * 1024
+                                    ? `${(att.size / 1024 / 1024).toFixed(1)} MB`
+                                    : `${Math.round(att.size / 1024)} KB`})
+                                </span>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Reply (if outbound email has a reply) */}
                       {email.reply_body && (
