@@ -45,10 +45,47 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, email, type, companyName, subject, message, lang, subscribeNewsletter } = body;
+    const { name, email, type, companyName, subject, message, lang, subscribeNewsletter, website, _t } = body;
 
     if (!name || !email || !message) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    // ── Anti-bot checks ──────────────────────────────────────
+    // 1. Honeypot: if filled, it's a bot (hidden field)
+    if (website) {
+      return NextResponse.json({ ok: true }); // Fake success
+    }
+
+    // 2. Time check: form submitted in under 3 seconds = bot
+    if (_t && Date.now() - Number(_t) < 3000) {
+      return NextResponse.json({ ok: true }); // Fake success
+    }
+
+    // 3. Gibberish detection: random consonant strings with no vowels
+    const isGibberish = (text: string) => {
+      if (!text || text.length < 3) return false;
+      // High ratio of uppercase in middle of word
+      const upperInMiddle = (text.match(/[a-z][A-Z]/g) || []).length;
+      if (upperInMiddle >= 3) return true;
+      // No spaces in a "name" longer than 15 chars
+      if (text.length > 15 && !text.includes(" ")) return true;
+      // Consonant clusters: 5+ consonants in a row
+      if (/[bcdfghjklmnpqrstvwxyz]{5}/i.test(text)) return true;
+      // Random mixed case pattern (e.g. "oQAelzGqyTzsyftFjOr")
+      const caseChanges = (text.match(/[a-z][A-Z]|[A-Z][a-z]/g) || []).length;
+      if (caseChanges > text.length * 0.4 && text.length > 8) return true;
+      return false;
+    };
+
+    if (isGibberish(name) || isGibberish(message)) {
+      return NextResponse.json({ ok: true }); // Fake success
+    }
+
+    // 4. Message too short or no real words
+    const wordCount = message.trim().split(/\s+/).length;
+    if (wordCount < 3) {
+      return NextResponse.json({ error: "Bericht te kort" }, { status: 400 });
     }
 
     const isNl = (lang || "nl") === "nl";
