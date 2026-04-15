@@ -17,6 +17,48 @@ function verifyMailgun(timestamp: string, token: string, signature: string): boo
   return hmac === signature;
 }
 
+/** Forward inbound email to personal inboxes based on recipient */
+function forwardToPersonalInbox(recipient: string, sender: string, subject: string, bodyHtml: string) {
+  const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY;
+  if (!MAILGUN_API_KEY) return;
+
+  const FORWARD_MAP: Record<string, string[]> = {
+    "samba@paywatch.nl": ["sambajarju2@gmail.com"],
+    "mariama@paywatch.nl": ["mariama_kl@hotmail.com"],
+    "info@paywatch.nl": ["sambajarju2@gmail.com", "mariama_kl@hotmail.com"],
+  };
+
+  // Find which addresses to forward to
+  const targets = new Set<string>();
+  const recipientLower = recipient.toLowerCase();
+  for (const [addr, forwards] of Object.entries(FORWARD_MAP)) {
+    if (recipientLower.includes(addr)) {
+      forwards.forEach((f) => targets.add(f));
+    }
+  }
+
+  if (targets.size === 0) return;
+
+  const auth = Buffer.from(`api:${MAILGUN_API_KEY}`).toString("base64");
+
+  for (const target of targets) {
+    const form = new URLSearchParams();
+    form.append("from", `PayWatch Inbox <noreply@paywatch.nl>`);
+    form.append("to", target);
+    form.append("subject", `[Fwd] ${subject}`);
+    form.append("html", `<div style="font-family:system-ui;padding:12px;border-left:3px solid #2563EB;margin-bottom:16px;font-size:13px;color:#64748B">Van: ${sender}<br>Aan: ${recipient}<br>Onderwerp: ${subject}</div>${bodyHtml}`);
+    form.append("h:Reply-To", sender);
+
+    fetch("https://api.eu.mailgun.net/v3/paywatch.nl/messages", {
+      method: "POST",
+      headers: { Authorization: `Basic ${auth}` },
+      body: form,
+    }).catch((err) => console.error(`[Forward] Failed to forward to ${target}:`, err));
+  }
+
+  console.log(`[Inbound] Forwarding to personal inbox: ${[...targets].join(", ")}`);
+}
+
 /**
  * POST — Mailgun inbound email webhook (for reply tracking)
  * 
@@ -172,6 +214,10 @@ export async function POST(req: NextRequest) {
         sequence_step: 0,
         attachments: attachments.length > 0 ? attachments : [],
       });
+
+      // Forward to personal inbox (fire-and-forget)
+      forwardToPersonalInbox(recipient, sender, subject, replyContent);
+
       return NextResponse.json({ received: true, matched: false });
     }
 
@@ -240,6 +286,9 @@ export async function POST(req: NextRequest) {
     }
 
     console.log(`[Inbound] Reply matched to email ${matchedEmail.id}, contact ${matchedEmail.contact_id}`);
+
+    // Forward to personal inbox (fire-and-forget)
+    forwardToPersonalInbox(recipient, sender, subject, replyContent);
 
     return NextResponse.json({ received: true, matched: true, emailLogId: matchedEmail.id });
   } catch (err) {
