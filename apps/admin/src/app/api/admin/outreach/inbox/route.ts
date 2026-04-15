@@ -42,6 +42,13 @@ export async function GET(req: NextRequest) {
       .order("sent_at", { ascending: false, nullsFirst: false });
 
     if (direction !== "all") query = query.eq("direction", direction);
+    
+    const mailbox = searchParams.get("mailbox");
+    if (mailbox && mailbox !== "all") {
+      const addr = `${mailbox}@paywatch.nl`;
+      query = query.or(`from_email.ilike.%${addr}%,to_email.ilike.%${addr}%`);
+    }
+
     if (search) {
       query = query.or(`subject.ilike.%${search}%,to_email.ilike.%${search}%,from_email.ilike.%${search}%`);
     }

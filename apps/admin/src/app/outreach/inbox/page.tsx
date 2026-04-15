@@ -73,6 +73,7 @@ export default function InboxPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
   const [direction, setDirection] = useState("all");
+  const [mailbox, setMailbox] = useState("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Reply
@@ -115,6 +116,7 @@ export default function InboxPage() {
       params.set("page", String(page));
       params.set("per_page", "50");
       if (direction !== "all") params.set("direction", direction);
+      if (mailbox !== "all") params.set("mailbox", mailbox);
       if (search) params.set("search", search);
       const res = await fetch(`/api/admin/outreach/inbox?${params}`);
       if (res.ok) {
@@ -125,10 +127,10 @@ export default function InboxPage() {
       }
     } catch { console.error("Inbox fetch failed"); }
     finally { setLoading(false); }
-  }, [page, direction, search]);
+  }, [page, direction, mailbox, search]);
 
   useEffect(() => { fetchEmails(); }, [fetchEmails]);
-  useEffect(() => { setPage(1); }, [direction, search]);
+  useEffect(() => { setPage(1); }, [direction, mailbox, search]);
 
   return (
     <div className="space-y-4">
@@ -161,6 +163,20 @@ export default function InboxPage() {
             <button key={f.value} onClick={() => setDirection(f.value)}
               className={`px-3 py-2 text-xs font-semibold rounded-lg transition-colors ${
                 direction === f.value ? "bg-pw-blue text-white" : "bg-white text-pw-muted border border-pw-border hover:bg-gray-50"
+              }`}>
+              {f.label}
+            </button>
+          ))}
+          <div className="w-px bg-pw-border mx-1" />
+          {[
+            { value: "all", label: "All accounts" },
+            { value: "samba", label: "samba@" },
+            { value: "mariama", label: "mariama@" },
+            { value: "info", label: "info@" },
+          ].map((f) => (
+            <button key={f.value} onClick={() => setMailbox(f.value)}
+              className={`px-3 py-2 text-xs font-semibold rounded-lg transition-colors ${
+                mailbox === f.value ? "bg-pw-navy text-white" : "bg-white text-pw-muted border border-pw-border hover:bg-gray-50"
               }`}>
               {f.label}
             </button>
