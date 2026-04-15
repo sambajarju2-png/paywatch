@@ -285,7 +285,7 @@ export default function InboxPage() {
                             {email.attachments.map((att, idx) => (
                               <a
                                 key={idx}
-                                href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/email-attachments/${att.path}`}
+                                href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/email-attachments/${att.path}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-pw-border hover:border-pw-blue transition-colors text-xs"
