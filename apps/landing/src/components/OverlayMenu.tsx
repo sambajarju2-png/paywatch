@@ -225,13 +225,13 @@ export default function OverlayMenu({ isOpen, onClose }: OverlayMenuProps) {
 
               {/* Right: preview image (desktop only) */}
               <div className="hidden lg:flex lg:col-span-5 items-center justify-center">
-                <div className="relative w-full max-w-md aspect-[4/5] rounded-2xl overflow-hidden">
+                <div className="relative w-full max-w-md aspect-[4/5] rounded-[28px] overflow-hidden bg-white/5 backdrop-blur-sm shadow-2xl ring-1 ring-white/10">
                   <AnimatePresence mode="sync">
                     <motion.img
                       key={hoveredIndex !== null ? menuLinks[hoveredIndex].image : "default"}
                       src={hoveredIndex !== null ? menuLinks[hoveredIndex].image : menuLinks[0].image}
                       alt=""
-                      className="absolute inset-0 w-full h-full object-contain"
+                      className="absolute inset-0 w-full h-full object-contain rounded-[28px]"
                       initial={{ opacity: 0, scale: 1.03 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0 }}
