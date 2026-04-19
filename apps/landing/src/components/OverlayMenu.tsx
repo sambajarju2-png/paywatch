@@ -146,11 +146,11 @@ export default function OverlayMenu({ isOpen, onClose }: OverlayMenuProps) {
           </div>
 
           {/* ─── Main content ─── */}
-          <div className="relative z-10 flex flex-1 items-center px-6 sm:px-8 lg:px-16">
+          <div className="relative z-10 flex flex-1 items-start pt-8 sm:pt-12 lg:items-center lg:pt-0 px-6 sm:px-8 lg:px-16">
             <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
               {/* Left: menu items */}
               <motion.nav
-                className="lg:col-span-7 flex flex-col gap-1 sm:gap-2"
+                className="lg:col-span-7 flex flex-col gap-2 sm:gap-3"
                 variants={staggerContainer}
                 initial="closed"
                 animate="open"
@@ -167,7 +167,7 @@ export default function OverlayMenu({ isOpen, onClose }: OverlayMenuProps) {
                         href={item.href}
                         onClick={onClose}
                         onMouseEnter={() => setHoveredIndex(i)}
-                        className="group flex items-center gap-4 py-2 sm:py-3 transition-all duration-300"
+                        className="group flex items-center gap-4 py-1 sm:py-2 transition-all duration-300"
                         style={{
                           transform: isHovered ? "translateX(8px)" : "translateX(0)",
                           transition: "transform 0.3s ease, opacity 0.3s ease",
@@ -190,7 +190,7 @@ export default function OverlayMenu({ isOpen, onClose }: OverlayMenuProps) {
                         <span
                           className="font-extrabold tracking-tighter leading-[0.85] transition-all duration-300"
                           style={{
-                            fontSize: "clamp(2rem, 5vw, 5.5rem)",
+                            fontSize: "clamp(2.8rem, 9vw, 5.5rem)",
                             color: isHovered
                               ? "#ffffff"
                               : somethingHovered
@@ -222,6 +222,39 @@ export default function OverlayMenu({ isOpen, onClose }: OverlayMenuProps) {
                     </motion.div>
                   );
                 })}
+
+                {/* Tagline — mobile only */}
+                <motion.p
+                  className="lg:hidden mt-6 text-base sm:text-lg text-white/30 font-medium leading-relaxed max-w-sm"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1, transition: { delay: 0.5, duration: 0.5 } }}
+                >
+                  {lang === "nl"
+                    ? "Niemand verdient het om wakker te liggen van rekeningen."
+                    : "Nobody deserves to lose sleep over bills."}
+                </motion.p>
+
+                {/* CTA buttons — mobile only, inline with content */}
+                <motion.div
+                  className="lg:hidden flex items-center gap-3 mt-6"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0, transition: { delay: 0.55, duration: 0.4 } }}
+                >
+                  <Link
+                    href={`https://${siteConfig.appDomain}`}
+                    onClick={onClose}
+                    className="rounded border border-white/20 px-5 py-2.5 text-sm font-medium text-white/80 hover:text-white hover:border-white/40 transition-all"
+                  >
+                    {lang === "nl" ? "Inloggen" : "Log in"}
+                  </Link>
+                  <Link
+                    href={`https://${siteConfig.appDomain}`}
+                    onClick={onClose}
+                    className="rounded bg-[#2563EB] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#1d4ed8] transition-all"
+                  >
+                    {lang === "nl" ? "Start gratis" : "Start free"}
+                  </Link>
+                </motion.div>
               </motion.nav>
 
               {/* Right: preview image (desktop only) */}
@@ -244,9 +277,9 @@ export default function OverlayMenu({ isOpen, onClose }: OverlayMenuProps) {
             </div>
           </div>
 
-          {/* ─── CTA buttons ─── */}
+          {/* ─── CTA buttons — desktop only ─── */}
           <motion.div
-            className="relative z-10 flex items-center justify-center gap-4 px-6 sm:px-8 pb-4"
+            className="relative z-10 hidden lg:flex items-center justify-center gap-4 px-6 sm:px-8 pb-4"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0, transition: { delay: 0.4, duration: 0.4 } }}
           >
