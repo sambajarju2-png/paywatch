@@ -11,7 +11,6 @@ import OverlayMenu from "./OverlayMenu";
 export default function Header() {
   const { lang, setLang, theme, setTheme, t } = useApp();
   const { getNav } = useSanityContent();
-  const [menuOpen, setMenuOpen] = useState(false);
   const [overlayOpen, setOverlayOpen] = useState(false);
 
   /* Use Sanity nav if available, otherwise hardcoded */
@@ -85,60 +84,22 @@ export default function Header() {
               )}
             </button>
 
-            {/* Login link */}
+            {/* Login link — desktop only */}
             <Link href={`https://${siteConfig.appDomain}`}
               className="hidden sm:inline-flex text-sm font-medium text-slate-300 hover:text-white transition-colors">
               {t.nav.login}
             </Link>
 
-            {/* CTA button */}
+            {/* CTA button — desktop only */}
             <Link href={`https://${siteConfig.appDomain}`}
               className="hidden sm:inline-flex items-center rounded bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity">
               {t.nav.cta}
             </Link>
 
-            {/* Overlay hamburger — visible on ALL screen sizes */}
+            {/* Single hamburger — opens full-page overlay on all screen sizes */}
             <HamburgerIcon onClick={() => setOverlayOpen(true)} />
-
-            {/* Mobile hamburger (existing dropdown) */}
-            <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden flex flex-col gap-1.5 p-1" aria-label="Toggle menu">
-              <span className={`block h-0.5 w-5 bg-slate-300 transition-transform ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
-              <span className={`block h-0.5 w-5 bg-slate-300 transition-opacity ${menuOpen ? "opacity-0" : ""}`} />
-              <span className={`block h-0.5 w-5 bg-slate-300 transition-transform ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
-            </button>
           </div>
         </nav>
-
-        {/* Mobile menu */}
-        {menuOpen && (
-          <div className="md:hidden border-t border-slate-700 bg-[#0A2540] dark:bg-[#060D1B] px-4 pb-4">
-            {headerItems.map((item) =>
-              item.isExternal ? (
-                <a key={item.key} href={item.href} target="_blank" rel="noopener noreferrer"
-                  onClick={() => setMenuOpen(false)}
-                  className="block py-3 text-sm font-medium text-slate-300 hover:text-white border-b border-slate-700/50">
-                  {item.label}
-                </a>
-              ) : (
-                <Link key={item.key} href={item.href}
-                  onClick={() => setMenuOpen(false)}
-                  className="block py-3 text-sm font-medium text-slate-300 hover:text-white border-b border-slate-700/50">
-                  {item.label}
-                </Link>
-              )
-            )}
-            <div className="flex gap-3 mt-4">
-              <Link href={`https://${siteConfig.appDomain}`}
-                className="flex-1 text-center rounded border border-slate-600 px-4 py-2 text-sm font-medium text-slate-300 hover:text-white">
-                {t.nav.login}
-              </Link>
-              <Link href={`https://${siteConfig.appDomain}`}
-                className="flex-1 text-center rounded bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white">
-                {t.nav.cta}
-              </Link>
-            </div>
-          </div>
-        )}
       </header>
 
       {/* Full-page overlay menu */}

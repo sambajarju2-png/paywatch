@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { X, ArrowRight, Linkedin, Twitter, Instagram } from "lucide-react";
 import { useApp } from "./AppProvider";
+import { siteConfig } from "@/lib/config";
 
 /* ─── Menu items ─── */
 const menuLinks = [
@@ -242,6 +243,28 @@ export default function OverlayMenu({ isOpen, onClose }: OverlayMenuProps) {
               </div>
             </div>
           </div>
+
+          {/* ─── CTA buttons ─── */}
+          <motion.div
+            className="relative z-10 flex items-center justify-center gap-4 px-6 sm:px-8 pb-4"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0, transition: { delay: 0.4, duration: 0.4 } }}
+          >
+            <Link
+              href={`https://${siteConfig.appDomain}`}
+              onClick={onClose}
+              className="rounded border border-white/20 px-6 py-2.5 text-sm font-medium text-white/80 hover:text-white hover:border-white/40 transition-all"
+            >
+              {lang === "nl" ? "Inloggen" : "Log in"}
+            </Link>
+            <Link
+              href={`https://${siteConfig.appDomain}`}
+              onClick={onClose}
+              className="rounded bg-[#2563EB] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#1d4ed8] transition-all"
+            >
+              {lang === "nl" ? "Start gratis" : "Start free"}
+            </Link>
+          </motion.div>
 
           {/* ─── Bottom bar ─── */}
           <motion.div
