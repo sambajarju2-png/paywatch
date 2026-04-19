@@ -12,22 +12,27 @@ const menuLinks = [
   {
     href: "/blog",
     label: { nl: "Blog", en: "Blog" },
+    image: "/menu/blog.png",
   },
   {
     href: "/about",
     label: { nl: "Over ons", en: "About" },
+    image: "/menu/about.png",
   },
   {
     href: "/support",
     label: { nl: "Support", en: "Support" },
+    image: "/menu/support.png",
   },
   {
     href: "/schuldhulp",
     label: { nl: "Schuldhulp", en: "Debt Help" },
+    image: "/menu/schuldhulp.png",
   },
   {
     href: "/roadmap",
     label: { nl: "Roadmap", en: "Roadmap" },
+    image: "/menu/roadmap.png",
   },
 ];
 
@@ -218,29 +223,21 @@ export default function OverlayMenu({ isOpen, onClose }: OverlayMenuProps) {
                 })}
               </motion.nav>
 
-              {/* Right: decorative gradient orb (desktop only) */}
+              {/* Right: preview image (desktop only) */}
               <div className="hidden lg:flex lg:col-span-5 items-center justify-center">
-                <div className="relative w-72 h-72">
-                  {/* Glowing orb */}
-                  <div
-                    className="absolute inset-0 rounded-full opacity-30 blur-3xl"
-                    style={{
-                      background:
-                        "radial-gradient(circle, #2563EB 0%, #059669 50%, transparent 70%)",
-                    }}
-                  />
-                  {/* Inner orb */}
-                  <div
-                    className="absolute inset-8 rounded-full opacity-20 blur-xl"
-                    style={{
-                      background:
-                        "radial-gradient(circle, #2563EB 0%, transparent 70%)",
-                    }}
-                  />
-                  {/* Center dot */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-3 h-3 rounded-full bg-[#2563EB] opacity-60" />
-                  </div>
+                <div className="relative w-full max-w-md aspect-[4/5] rounded-2xl overflow-hidden">
+                  <AnimatePresence mode="sync">
+                    <motion.img
+                      key={hoveredIndex !== null ? menuLinks[hoveredIndex].image : "default"}
+                      src={hoveredIndex !== null ? menuLinks[hoveredIndex].image : menuLinks[0].image}
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-contain"
+                      initial={{ opacity: 0, scale: 1.03 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.4, ease: "easeInOut" }}
+                    />
+                  </AnimatePresence>
                 </div>
               </div>
             </div>
