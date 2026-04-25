@@ -19,6 +19,9 @@ export interface ComparisonData {
   tagline: { nl: string; en: string };
   heroTitle: { nl: string; en: string };
   heroSubtitle: { nl: string; en: string };
+  about: { nl: string; en: string }; /* informational section about the competitor for SEO */
+  founded: string;
+  headquarters: string;
   focus: { nl: string; en: string };
   pricing: { nl: string; en: string };
   market: string;
@@ -50,6 +53,12 @@ export const comparisons: ComparisonData[] = [
       nl: "Dyme geeft je inzicht in je abonnementen en vaste lasten. PayWatch gaat een stap verder: we scannen je inbox op rekeningen en waarschuwen je voordat een factuur een aanmaning wordt.",
       en: "Dyme gives you insight into your subscriptions and fixed costs. PayWatch goes further: we scan your inbox for bills and warn you before an invoice becomes a formal notice.",
     },
+    about: {
+      nl: "Dyme is een Nederlandse fintech-app die in 2018 werd gelanceerd door Wouter de Vries. De app richt zich op het inzichtelijk maken van je vaste lasten en abonnementen door je bankrekening te koppelen via een PSD2-vergunning van De Nederlandsche Bank. Dyme categoriseert automatisch je transacties en detecteert lopende abonnementen. Een unieke functie is de mogelijkheid om met één druk op de knop abonnementen op te zeggen en via de app over te stappen naar goedkopere contracten voor energie, verzekeringen en telecom. Volgens Dyme besparen gebruikers gemiddeld €800 per jaar. De app heeft een gratis basisversie en een Premium-versie voor budgettering en geavanceerde categorieën. Dyme staat onder toezicht van De Nederlandsche Bank, de AFM en de Autoriteit Persoonsgegevens, en was finalist bij de Accenture Innovation Awards in 2019. De app is momenteel alleen beschikbaar in Nederland, met een geplande uitbreiding naar België.",
+      en: "Dyme is a Dutch fintech app launched in 2018 by Wouter de Vries. The app focuses on giving you insight into your fixed costs and subscriptions by connecting your bank account via a PSD2 license from the Dutch Central Bank. Dyme automatically categorizes your transactions and detects active subscriptions. A unique feature is the ability to cancel subscriptions with one tap and switch to cheaper contracts for energy, insurance, and telecom through the app. According to Dyme, users save an average of €800 per year. The app has a free basic version and a Premium version for budgeting and advanced categories. Dyme is supervised by the Dutch Central Bank, the AFM, and the Dutch Data Protection Authority, and was a finalist at the Accenture Innovation Awards in 2019. The app is currently only available in the Netherlands, with a planned expansion to Belgium.",
+    },
+    founded: "2018",
+    headquarters: "Amsterdam, Nederland",
     focus: {
       nl: "Abonnementen beheren, contracten vergelijken, bespaardeals",
       en: "Subscription management, contract comparison, savings deals",
@@ -60,7 +69,7 @@ export const comparisons: ComparisonData[] = [
     },
     market: "NL",
     features: [
-      { label: { nl: "Bankkoppeling", en: "Bank sync" }, paywatch: false, competitor: true },
+      { label: { nl: "Bankkoppeling", en: "Bank sync" }, paywatch: true, competitor: true },
       { label: { nl: "Abonnementen opzeggen", en: "Cancel subscriptions" }, paywatch: false, competitor: true },
       { label: { nl: "Contract vergelijking", en: "Contract comparison" }, paywatch: false, competitor: true },
       { label: { nl: "E-mail inbox scanning", en: "Email inbox scanning" }, paywatch: true, competitor: false },
@@ -143,6 +152,12 @@ export const comparisons: ComparisonData[] = [
       nl: "fiKks koppelt je aan een vrijwilliger als je al schulden hebt. PayWatch vangt het eerder op: we detecteren rekeningen die dreigen te escaleren en helpen je op tijd actie te ondernemen.",
       en: "fiKks connects you with a volunteer when you already have debts. PayWatch catches it earlier: we detect bills that are about to escalate and help you take action in time.",
     },
+    about: {
+      nl: "fiKks is een gratis app van Stichting Nederland Geldzorgenvrij, oorspronkelijk ontwikkeld door ADG Dienstengroep in 2018. De app koppelt mensen met geldproblemen anoniem aan een vrijwillige buddy die is getraind op basis van Nibud-content. Samen werken ze aan een financieel overzicht en een actieplan om schulden aan te pakken. fiKks kreeg landelijke aandacht toen oud-minister van Financiën Jeroen Dijsselbloem zich aanmeldde als eerste buddy, en koningin Máxima het SchuldenLab070 bezocht waar fiKks werd gepresenteerd. De app is onderdeel van de Nederlandse Schuldhulproute en werkt samen met incassobureau GGN. Ongeveer 20% van de Nederlandse huishoudens heeft problematische schulden — fiKks richt zich op deze groep met een laagdrempelige, anonieme aanpak. De app is volledig gratis en beschikbaar voor iOS en Android.",
+      en: "fiKks is a free app from Stichting Nederland Geldzorgenvrij, originally developed by ADG Dienstengroep in 2018. The app anonymously connects people with money problems to a volunteer buddy trained on Nibud content. Together they work on a financial overview and action plan to tackle debts. fiKks gained national attention when former Minister of Finance Jeroen Dijsselbloem signed up as the first buddy, and Queen Máxima visited SchuldenLab070 where fiKks was presented. The app is part of the Nederlandse Schuldhulproute and collaborates with collection agency GGN. About 20% of Dutch households have problematic debts — fiKks targets this group with a low-threshold, anonymous approach. The app is completely free and available for iOS and Android.",
+    },
+    founded: "2018",
+    headquarters: "Nederland (Stichting)",
     focus: {
       nl: "Anonieme buddy-coaching bij bestaande schulden, actieplannen",
       en: "Anonymous buddy coaching for existing debts, action plans",
@@ -233,6 +248,12 @@ export const comparisons: ComparisonData[] = [
       nl: "Grassfeld helpt je bijhouden wat je uitgeeft. PayWatch helpt je voorkomen dat je rekeningen escaleren naar aanmaningen, incasso's en deurwaarders.",
       en: "Grassfeld helps you track what you spend. PayWatch helps you prevent bills from escalating into formal notices, collections, and bailiffs.",
     },
+    about: {
+      nl: "Grassfeld (voorheen iBilly) is een Nederlandse budget-app die zich richt op persoonlijke financiën en huishoudboekjes. De app koppelt met meer dan 45.000 banken wereldwijd via een PSD2-integratie en categoriseert transacties automatisch. Grassfeld biedt uitgebreide budgettering per categorie, spaardoelen, en een webdashboard (Navigator) voor Premium+-gebruikers. De app is beschikbaar in meerdere talen en wordt gebruikt in Nederland, België en internationaal. Grassfeld onderscheidt zich door de combinatie van gebruiksvriendelijkheid en diepgang: je kunt budgetten delen met je partner, klantenkaarten opslaan, en financiële documenten koppelen aan transacties. De app is gebouwd op het principe van privacy en security by design en wordt juridisch begeleid door ICTRecht. In meerdere reviews wordt Grassfeld aangemerkt als een van de beste budgetapps van 2025 voor de Nederlandse markt.",
+      en: "Grassfeld (formerly iBilly) is a Dutch budget app focused on personal finance and household bookkeeping. The app connects with over 45,000 banks worldwide via PSD2 integration and automatically categorizes transactions. Grassfeld offers detailed category-based budgeting, savings goals, and a web dashboard (Navigator) for Premium+ users. The app is available in multiple languages and used in the Netherlands, Belgium, and internationally. Grassfeld stands out through its combination of user-friendliness and depth: you can share budgets with your partner, store loyalty cards, and link financial documents to transactions. The app is built on privacy and security by design principles and is legally supervised by ICTRecht. In multiple reviews, Grassfeld is identified as one of the best budget apps of 2025 for the Dutch market.",
+    },
+    founded: "2020",
+    headquarters: "Nederland",
     focus: {
       nl: "Budgetteren, spaardoelen, bankkoppeling, rapportages",
       en: "Budgeting, savings goals, bank sync, reports",
@@ -243,7 +264,7 @@ export const comparisons: ComparisonData[] = [
     },
     market: "NL + BE + Global",
     features: [
-      { label: { nl: "Bankkoppeling", en: "Bank sync" }, paywatch: false, competitor: true },
+      { label: { nl: "Bankkoppeling", en: "Bank sync" }, paywatch: true, competitor: true },
       { label: { nl: "Budgetteren per categorie", en: "Category budgets" }, paywatch: true, competitor: true },
       { label: { nl: "Spaardoelen", en: "Savings goals" }, paywatch: false, competitor: true },
       { label: { nl: "Webdashboard", en: "Web dashboard" }, paywatch: false, competitor: "Premium+" },
@@ -326,6 +347,12 @@ export const comparisons: ComparisonData[] = [
       nl: "Cleo is een slimme budgetbot uit de VS met cash advance en credit builder. PayWatch is gebouwd voor de Nederlandse markt: inbox scanning, escalatie tracking, en schuldhulp bij jou in de buurt.",
       en: "Cleo is a smart budget bot from the US with cash advance and credit builder. PayWatch is built for the Dutch market: inbox scanning, escalation tracking, and debt help near you.",
     },
+    about: {
+      nl: "Cleo is een AI-gestuurde budgetapp die in 2016 werd gelanceerd in het Verenigd Koninkrijk en inmiddels meer dan 4 miljoen gebruikers heeft, voornamelijk in de VS en het VK. De app staat bekend om zijn 'sassy' AI-chatbot die je op humoristische wijze wijst op je uitgavenpatronen — inclusief een 'Roast Mode' die je uitdaagt over je financiële keuzes. Cleo koppelt via Plaid met je bankrekening en biedt budgettering, spaardoelen, cash advances tot $250, en een credit builder card. De app richt zich vooral op millennials en Gen Z die een informele, speelse benadering van financiën waarderen. Cleo is echter niet beschikbaar in Nederland of België: de app werkt alleen met Amerikaanse en Britse bankrekeningen. Er is geen Nederlandse taalondersteuning, en functies zoals cash advance en credit building zijn niet relevant voor het Nederlandse financiële systeem.",
+      en: "Cleo is an AI-powered budgeting app launched in 2016 in the United Kingdom, now with over 4 million users primarily in the US and UK. The app is known for its 'sassy' AI chatbot that humorously points out your spending patterns — including a 'Roast Mode' that challenges you about your financial choices. Cleo connects to your bank account via Plaid and offers budgeting, savings goals, cash advances up to $250, and a credit builder card. The app primarily targets millennials and Gen Z who appreciate an informal, playful approach to finances. However, Cleo is not available in the Netherlands or Belgium: the app only works with US and UK bank accounts. There is no Dutch language support, and features like cash advance and credit building are not relevant to the Dutch financial system.",
+    },
+    founded: "2016",
+    headquarters: "London, Verenigd Koninkrijk",
     focus: {
       nl: "AI budgetcoach, cash advance, credit builder (VS/VK)",
       en: "AI budget coach, cash advance, credit builder (US/UK)",

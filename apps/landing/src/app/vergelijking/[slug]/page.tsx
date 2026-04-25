@@ -196,6 +196,51 @@ export default function ComparisonPage() {
         </ScrollReveal>
       </section>
 
+      {/* ─── About the Software (SEO/informational section) ─── */}
+      <section className="mx-auto max-w-4xl px-4 pb-12 sm:px-6">
+        <ScrollReveal>
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
+            {/* Header bar */}
+            <div className="flex items-center gap-3 px-6 py-4 border-b border-[var(--border)] bg-[var(--bg)]">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-base font-extrabold text-white shrink-0"
+                style={{ background: data.color }}
+              >
+                {data.name.charAt(0)}
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-[var(--navy)]">
+                  {lang === "nl" ? `Wat is ${data.name}?` : `What is ${data.name}?`}
+                </h2>
+                <p className="text-xs text-[var(--muted)]">
+                  {data.url} · {lang === "nl" ? "Opgericht" : "Founded"} {data.founded} · {data.headquarters}
+                </p>
+              </div>
+            </div>
+            {/* Body */}
+            <div className="px-6 py-5">
+              <p className="text-sm text-[var(--text)] leading-relaxed mb-5">
+                {data.about[lang]}
+              </p>
+              {/* Quick facts grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: lang === "nl" ? "Opgericht" : "Founded", value: data.founded },
+                  { label: lang === "nl" ? "Locatie" : "Location", value: data.headquarters },
+                  { label: lang === "nl" ? "Markt" : "Market", value: data.market },
+                  { label: lang === "nl" ? "Prijs" : "Pricing", value: data.pricing[lang] },
+                ].map((f) => (
+                  <div key={f.label} className="rounded-xl bg-[var(--bg)] p-3">
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-[var(--muted)] mb-0.5">{f.label}</p>
+                    <p className="text-xs font-semibold text-[var(--text)] truncate">{f.value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </ScrollReveal>
+      </section>
+
       {/* ─── Feature Comparison Table ─── */}
       <section className="mx-auto max-w-4xl px-4 pb-12 sm:px-6">
         <ScrollReveal>
