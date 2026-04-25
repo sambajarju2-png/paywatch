@@ -10,6 +10,11 @@ const PAGES = [
   { path: "/contact", hreflang: true },
   { path: "/blog", hreflang: true },
   { path: "/vacatures", hreflang: true },
+  { path: "/vergelijking", hreflang: true },
+  { path: "/vergelijking/dyme-alternatief", hreflang: true },
+  { path: "/vergelijking/fikks-alternatief", hreflang: true },
+  { path: "/vergelijking/grassfeld-alternatief", hreflang: true },
+  { path: "/vergelijking/cleo-alternatief", hreflang: true },
   { path: "/privacy", hreflang: false },
   { path: "/terms", hreflang: false },
 ];
