@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "next-sanity";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 3600; // 1 hour
+export const revalidate = 3600;
 
 const BASE = "https://paywatch.app";
 
@@ -40,35 +40,50 @@ function entry(e: SitemapEntry): string {
 export async function GET() {
   const now = new Date().toISOString().split("T")[0];
 
-  // ── Static pages ──
-  const staticPages: SitemapEntry[] = [
-    { url: BASE, lastmod: "2026-04-06", changefreq: "weekly", priority: "1.0" },
-    { url: `${BASE}/features`, lastmod: "2026-03-15", changefreq: "monthly", priority: "0.9" },
-    { url: `${BASE}/pricing`, lastmod: "2026-03-01", changefreq: "monthly", priority: "0.9" },
-    { url: `${BASE}/schuldhulp`, lastmod: "2026-04-05", changefreq: "weekly", priority: "0.9" },
-    { url: `${BASE}/blog`, lastmod: now, changefreq: "weekly", priority: "0.8" },
-    { url: `${BASE}/resources`, lastmod: "2026-03-20", changefreq: "weekly", priority: "0.8" },
-    { url: `${BASE}/about`, lastmod: "2026-02-15", changefreq: "monthly", priority: "0.7" },
-    { url: `${BASE}/jobs`, lastmod: now, changefreq: "weekly", priority: "0.7" },
-    { url: `${BASE}/contact`, lastmod: "2026-02-01", changefreq: "monthly", priority: "0.6" },
-    { url: `${BASE}/support`, lastmod: "2026-03-01", changefreq: "monthly", priority: "0.6" },
-    { url: `${BASE}/roadmap`, lastmod: "2026-03-01", changefreq: "monthly", priority: "0.5" },
-    { url: `${BASE}/tech-stack`, lastmod: "2026-02-01", changefreq: "monthly", priority: "0.4" },
-    { url: `${BASE}/privacy`, lastmod: "2026-01-15", changefreq: "yearly", priority: "0.3" },
-    { url: `${BASE}/terms`, lastmod: "2026-01-15", changefreq: "yearly", priority: "0.3" },
-    { url: `${BASE}/data-processing`, lastmod: "2026-01-15", changefreq: "yearly", priority: "0.3" },
-    { url: `${BASE}/directory`, lastmod: "2026-04-13", changefreq: "monthly", priority: "0.5" },
+  // ── Core pages (highest priority) ──
+  const corePages: SitemapEntry[] = [
+    { url: BASE, lastmod: now, changefreq: "weekly", priority: "1.0" },
+    { url: `${BASE}/features`, lastmod: now, changefreq: "weekly", priority: "0.9" },
+    { url: `${BASE}/pricing`, lastmod: now, changefreq: "monthly", priority: "0.9" },
+    { url: `${BASE}/schuldhulp`, lastmod: now, changefreq: "weekly", priority: "0.9" },
+    { url: `${BASE}/app-voor-schulden-voorkomen`, lastmod: now, changefreq: "weekly", priority: "0.9" },
+    { url: `${BASE}/blog`, lastmod: now, changefreq: "daily", priority: "0.8" },
+    { url: `${BASE}/about`, lastmod: now, changefreq: "monthly", priority: "0.7" },
+    { url: `${BASE}/support`, lastmod: now, changefreq: "monthly", priority: "0.7" },
+    { url: `${BASE}/resources`, lastmod: now, changefreq: "weekly", priority: "0.7" },
+    { url: `${BASE}/contact`, lastmod: now, changefreq: "monthly", priority: "0.6" },
+    { url: `${BASE}/directory`, lastmod: now, changefreq: "monthly", priority: "0.6" },
+    { url: `${BASE}/jobs`, lastmod: now, changefreq: "weekly", priority: "0.5" },
+    { url: `${BASE}/roadmap`, lastmod: now, changefreq: "monthly", priority: "0.5" },
   ];
 
-  // ── Feature pages ──
+  // ── Comparison pages (high SEO value) ──
+  const comparisonSlugs = [
+    "dyme-alternatief", "fikks-alternatief", "grassfeld-alternatief",
+    "cleo-alternatief", "monefy-alternatief", "ynab-alternatief",
+    "buddy-alternatief", "mijngeldzaken-alternatief",
+  ];
+  const comparisonPages: SitemapEntry[] = [
+    { url: `${BASE}/vergelijking`, lastmod: now, changefreq: "weekly", priority: "0.85" },
+    { url: `${BASE}/vergelijking/schuldhulpmaatje`, lastmod: now, changefreq: "monthly", priority: "0.85" },
+    ...comparisonSlugs.map((s) => ({
+      url: `${BASE}/vergelijking/${s}`,
+      lastmod: now,
+      changefreq: "monthly" as const,
+      priority: "0.8",
+    })),
+  ];
+
+  // ── Feature detail pages ──
   const featureSlugs = [
-    "agenda", "betaalfases", "betalingen", "buddy", "camera-scanner",
-    "cashflow", "community", "conceptbrieven", "email-scanner",
-    "hulpverleners", "inzichten", "maandbudget", "schuldvrij-countdown",
+    "email-scanner", "camera-scanner", "betaalfases", "buddy",
+    "cashflow", "maandbudget", "conceptbrieven", "inzichten",
+    "hulpverleners", "community", "agenda", "betalingen",
+    "schuldvrij-countdown",
   ];
   const featurePages: SitemapEntry[] = featureSlugs.map((s) => ({
     url: `${BASE}/features/${s}`,
-    lastmod: "2026-03-15",
+    lastmod: now,
     changefreq: "monthly",
     priority: "0.7",
   }));
@@ -82,19 +97,19 @@ export async function GET() {
   ];
   const cityPages: SitemapEntry[] = citySlugs.map((s) => ({
     url: `${BASE}/schuldhulp/${s}`,
-    lastmod: "2026-04-05",
+    lastmod: now,
     changefreq: "monthly",
-    priority: "0.85",
+    priority: "0.75",
   }));
 
-  // ── B2B pages ──
+  // ── B2B contact pages ──
   const b2bPages: SitemapEntry[] = [
     "gemeente-contact", "incasso-contact", "hulporg-contact", "zakelijk-contact",
   ].map((s) => ({
     url: `${BASE}/${s}`,
-    lastmod: "2026-04-05",
+    lastmod: now,
     changefreq: "monthly",
-    priority: "0.7",
+    priority: "0.6",
   }));
 
   // ── Blog posts from Sanity ──
@@ -131,14 +146,25 @@ export async function GET() {
       url: `${BASE}/jobs/${j.id}`,
       lastmod: j._updatedAt?.split("T")[0] || now,
       changefreq: "weekly",
-      priority: "0.6",
+      priority: "0.5",
     }));
   } catch (e) {
     console.error("[Sitemap] Jobs fetch failed:", e);
   }
 
+  // ── Legal pages (lowest priority) ──
+  const legalPages: SitemapEntry[] = [
+    { url: `${BASE}/privacy`, lastmod: now, changefreq: "yearly", priority: "0.3", hreflang: false },
+    { url: `${BASE}/terms`, lastmod: now, changefreq: "yearly", priority: "0.3", hreflang: false },
+    { url: `${BASE}/data-processing`, lastmod: now, changefreq: "yearly", priority: "0.3", hreflang: false },
+  ];
+
   // ── Build XML ──
-  const all = [...staticPages, ...featurePages, ...cityPages, ...b2bPages, ...blogPages, ...jobPages];
+  const all = [
+    ...corePages, ...comparisonPages, ...featurePages,
+    ...cityPages, ...b2bPages, ...blogPages, ...jobPages,
+    ...legalPages,
+  ];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset
