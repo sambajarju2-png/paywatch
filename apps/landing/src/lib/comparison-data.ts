@@ -446,6 +446,12 @@ export const comparisons: ComparisonData[] = [
       nl: "Monefy laat je handmatig je uitgaven invoeren. PayWatch scant automatisch je inbox en camera, vindt je rekeningen, en waarschuwt je voordat ze escaleren.",
       en: "Monefy lets you manually enter your expenses. PayWatch automatically scans your inbox and camera, finds your bills, and warns you before they escalate.",
     },
+    about: {
+      nl: "Monefy is een eenvoudige app voor het handmatig bijhouden van uitgaven. Je tikt op een categorie, voert een bedrag in, en ziet direct een grafiek van je uitgavenpatroon. Geen bankkoppeling, geen automatische imports — alles is handmatig. De app is ideaal voor mensen die privacy belangrijk vinden of geen bankgegevens willen delen. Monefy is beschikbaar in meer dan 30 talen en wordt wereldwijd gebruikt.",
+      en: "Monefy is a simple app for manually tracking expenses. You tap a category, enter an amount, and immediately see a chart of your spending pattern. No bank sync, no automatic imports — everything is manual. The app is ideal for people who value privacy or don't want to share bank data. Monefy is available in more than 30 languages and used worldwide.",
+    },
+    founded: "2014",
+    headquarters: "Global",
     focus: {
       nl: "Handmatig uitgaven bijhouden, categorieën, eenvoudige grafieken",
       en: "Manual expense tracking, categories, simple charts",
@@ -537,6 +543,12 @@ export const comparisons: ComparisonData[] = [
       nl: "YNAB is een krachtige budgettool uit Amerika voor $14,99/maand. PayWatch is gratis, Nederlandstalig, en focust op wat YNAB mist: voorkomen dat rekeningen escaleren naar incasso.",
       en: "YNAB is a powerful budgeting tool from the US at $14.99/month. PayWatch is free, Dutch-language, and focuses on what YNAB misses: preventing bills from escalating to collections.",
     },
+    about: {
+      nl: "YNAB (You Need A Budget) is een Amerikaanse budgetmethode en app opgericht in 2004. Het kernprincipe is 'zero-based budgeting': je geeft elke euro een taak vóórdat je hem uitgeeft. YNAB heeft een trouwe gebruikersschare maar kost $14,99/maand en is niet beschikbaar in het Nederlands. Er is beperkte bankondersteuning voor Nederlandse banken.",
+      en: "YNAB (You Need A Budget) is an American budgeting method and app founded in 2004. Its core principle is zero-based budgeting: you give every dollar a job before you spend it. YNAB has a loyal user base but costs $14.99/month and is not available in Dutch. There is limited bank support for Dutch banks.",
+    },
+    founded: "2004",
+    headquarters: "Lehi, Utah, VS",
     focus: {
       nl: "Zero-based budgetteren, elke euro een taak geven",
       en: "Zero-based budgeting, give every dollar a job",
@@ -630,6 +642,12 @@ export const comparisons: ComparisonData[] = [
       nl: "Buddy helpt je samen met je partner of gezin budgetteren. PayWatch gaat verder: we scannen je rekeningen, detecteren escalaties, en helpen je voorkomen dat facturen boetes worden.",
       en: "Buddy helps you budget together with your partner or family. PayWatch goes further: we scan your bills, detect escalations, and help you prevent invoices from becoming penalties.",
     },
+    about: {
+      nl: "Buddy is een Nederlandse budgetapp die speciaal is ontworpen voor stellen en gezinnen die hun financiën samen willen beheren. Je stelt budgetten in per categorie en volgt gezamenlijk je uitgaven. De app biedt voorspellingen en gedragsanalyse om je te helpen bewuster met geld om te gaan.",
+      en: "Buddy is a Dutch budget app specifically designed for couples and families who want to manage their finances together. You set budgets per category and track expenses jointly. The app offers predictions and behavior analysis to help you spend more consciously.",
+    },
+    founded: "2019",
+    headquarters: "Nederland",
     focus: {
       nl: "Gezamenlijk budgetteren, gedeelde rekeningen, gezinsfinanciën",
       en: "Shared budgeting, shared expenses, family finances",
@@ -719,6 +737,12 @@ export const comparisons: ComparisonData[] = [
       nl: "MijnGeldzaken is een betrouwbaar Nederlands huishoudboekje met Nibud-vergelijking. PayWatch bouwt hierop voort met inbox scanning, escalatie detectie, en AI-hulp bij schulden.",
       en: "MijnGeldzaken is a reliable Dutch household book with Nibud comparison. PayWatch builds on this with inbox scanning, escalation detection, and AI-powered debt help.",
     },
+    about: {
+      nl: "MijnGeldzaken (voorheen AFAS Personal) is een van de langstlopende Nederlandse huishoudboekje-apps. De app koppelt met bijna alle Nederlandse banken en categoriseert transacties automatisch in 90% van de gevallen. Een unieke functie is de Nibud-vergelijking waarmee je ziet hoe jouw uitgaven zich verhouden tot het gemiddelde. De app berekent ook je financiële toekomst.",
+      en: "MijnGeldzaken (formerly AFAS Personal) is one of the longest-running Dutch household bookkeeping apps. The app connects with almost all Dutch banks and automatically categorizes transactions in 90% of cases. A unique feature is the Nibud comparison showing how your expenses compare to the average. The app also calculates your financial future.",
+    },
+    founded: "2015",
+    headquarters: "Nederland",
     focus: {
       nl: "Digitaal huishoudboekje, bankkoppeling, Nibud-vergelijking",
       en: "Digital household book, bank sync, Nibud comparison",
@@ -729,7 +753,7 @@ export const comparisons: ComparisonData[] = [
     },
     market: "NL",
     features: [
-      { label: { nl: "Bankkoppeling", en: "Bank sync" }, paywatch: false, competitor: true },
+      { label: { nl: "Bankkoppeling", en: "Bank sync" }, paywatch: true, competitor: true },
       { label: { nl: "Nibud vergelijking", en: "Nibud comparison" }, paywatch: true, competitor: true },
       { label: { nl: "Automatische categorisatie", en: "Auto-categorization" }, paywatch: true, competitor: true },
       { label: { nl: "Bonnetjes scannen", en: "Receipt scanning" }, paywatch: false, competitor: true },
