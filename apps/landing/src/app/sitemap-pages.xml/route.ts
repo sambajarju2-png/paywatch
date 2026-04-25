@@ -15,6 +15,8 @@ const PAGES = [
   { path: "/vergelijking/fikks-alternatief", hreflang: true },
   { path: "/vergelijking/grassfeld-alternatief", hreflang: true },
   { path: "/vergelijking/cleo-alternatief", hreflang: true },
+  { path: "/vergelijking/schuldhulpmaatje", hreflang: true },
+  { path: "/app-voor-schulden-voorkomen", hreflang: true },
   { path: "/vergelijking/monefy-alternatief", hreflang: true },
   { path: "/vergelijking/ynab-alternatief", hreflang: true },
   { path: "/vergelijking/buddy-alternatief", hreflang: true },
