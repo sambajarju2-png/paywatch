@@ -400,6 +400,372 @@ export const comparisons: ComparisonData[] = [
       en: "Cleo is not available in the Netherlands. PayWatch is the Dutch alternative: inbox scanning, escalation tracking, and debt help near you.",
     },
   },
+
+  /* ── Monefy ── */
+  {
+    slug: "monefy-alternatief",
+    name: "Monefy",
+    url: "monefy.me",
+    color: "#00B894",
+    tagline: {
+      nl: "Handmatig huishoudboekje",
+      en: "Manual expense tracker",
+    },
+    heroTitle: {
+      nl: "Monefy alternatief: automatisch rekeningen bijhouden",
+      en: "Monefy alternative: automatic bill tracking",
+    },
+    heroSubtitle: {
+      nl: "Monefy laat je handmatig je uitgaven invoeren. PayWatch scant automatisch je inbox en camera, vindt je rekeningen, en waarschuwt je voordat ze escaleren.",
+      en: "Monefy lets you manually enter your expenses. PayWatch automatically scans your inbox and camera, finds your bills, and warns you before they escalate.",
+    },
+    focus: {
+      nl: "Handmatig uitgaven bijhouden, categorieën, eenvoudige grafieken",
+      en: "Manual expense tracking, categories, simple charts",
+    },
+    pricing: {
+      nl: "Gratis basis, Pro €2,49 eenmalig",
+      en: "Free basic, Pro €2.49 one-time",
+    },
+    market: "Global",
+    features: [
+      { label: { nl: "Handmatig invoeren", en: "Manual entry" }, paywatch: true, competitor: true },
+      { label: { nl: "Categorieën", en: "Categories" }, paywatch: true, competitor: true },
+      { label: { nl: "Uitgavengrafieken", en: "Spending charts" }, paywatch: true, competitor: true },
+      { label: { nl: "Offline gebruik", en: "Offline usage" }, paywatch: false, competitor: true },
+      { label: { nl: "E-mail inbox scanning", en: "Email inbox scanning" }, paywatch: true, competitor: false },
+      { label: { nl: "Camera & QR scanning", en: "Camera & QR scanning" }, paywatch: true, competitor: false },
+      { label: { nl: "Escalatie detectie", en: "Escalation detection" }, paywatch: true, competitor: false },
+      { label: { nl: "Herinneringen vóór boetes", en: "Reminders before penalties" }, paywatch: true, competitor: false },
+      { label: { nl: "Buddy systeem", en: "Buddy system" }, paywatch: true, competitor: false },
+      { label: { nl: "Toeslagen berekenen", en: "Benefits calculator" }, paywatch: true, competitor: false },
+      { label: { nl: "AI voice assistent", en: "AI voice assistant" }, paywatch: true, competitor: false },
+      { label: { nl: "Nederlands recht & wet", en: "Dutch law & regulations" }, paywatch: true, competitor: false },
+    ],
+    whenCompetitor: {
+      nl: [
+        "Je wilt een simpel kasboekje zonder registratie",
+        "Je geeft de voorkeur aan handmatig alles zelf invoeren",
+        "Je wilt ook offline je uitgaven bijhouden",
+      ],
+      en: [
+        "You want a simple expense book without registration",
+        "You prefer entering everything manually",
+        "You want to track expenses offline too",
+      ],
+    },
+    whenPayWatch: {
+      nl: [
+        "Je wilt automatisch je rekeningen uit je inbox halen",
+        "Je vergeet weleens een factuur te betalen",
+        "Je wilt voorkomen dat rekeningen aanmaningen worden",
+        "Je zoekt specifiek Nederlandse schuldhulp en toeslagen",
+      ],
+      en: [
+        "You want to automatically pull bills from your inbox",
+        "You sometimes forget to pay an invoice",
+        "You want to prevent bills from becoming formal notices",
+        "You're looking for Dutch-specific debt help and benefits",
+      ],
+    },
+    scenario: {
+      title: {
+        nl: "Je vergeet een zorgverzekering factuur van €130",
+        en: "You forget a health insurance bill of €130",
+      },
+      without: {
+        nl: "In Monefy registreer je de betaling pas als je hem doet. De factuur zelf, de vervaldatum, of dat je al te laat bent — dat weet Monefy niet. Na 14 dagen krijg je een herinnering van de verzekeraar (+€15). Na een maand een aanmaning (+€40).",
+        en: "In Monefy you only register the payment when you make it. The invoice itself, the due date, or whether you're already late — Monefy doesn't know. After 14 days you get a reminder from the insurer (+€15). After a month a formal notice (+€40).",
+      },
+      with: {
+        nl: "PayWatch vindt de factuur automatisch in je inbox, toont hem op je dashboard met vervaldatum, en stuurt je 3 dagen van tevoren een herinnering. Je betaalt €130 — niet €185.",
+        en: "PayWatch finds the invoice automatically in your inbox, shows it on your dashboard with the due date, and sends you a reminder 3 days in advance. You pay €130 — not €185.",
+      },
+    },
+    seoTitle: {
+      nl: "Monefy alternatief: PayWatch scant automatisch je rekeningen",
+      en: "Monefy alternative: PayWatch automatically scans your bills",
+    },
+    seoDesc: {
+      nl: "Zoek je een Monefy alternatief dat automatisch je rekeningen vindt? PayWatch scant je inbox, detecteert escalaties en voorkomt boetes. Vergelijk nu.",
+      en: "Looking for a Monefy alternative that automatically finds your bills? PayWatch scans your inbox, detects escalations and prevents penalties. Compare now.",
+    },
+  },
+
+  /* ── YNAB ── */
+  {
+    slug: "ynab-alternatief",
+    name: "YNAB",
+    url: "ynab.com",
+    color: "#85C1E9",
+    tagline: {
+      nl: "Zero-based budgetteren (VS)",
+      en: "Zero-based budgeting (US)",
+    },
+    heroTitle: {
+      nl: "YNAB alternatief: betaalbaar en gebouwd voor Nederland",
+      en: "YNAB alternative: affordable and built for the Netherlands",
+    },
+    heroSubtitle: {
+      nl: "YNAB is een krachtige budgettool uit Amerika voor $14,99/maand. PayWatch is gratis, Nederlandstalig, en focust op wat YNAB mist: voorkomen dat rekeningen escaleren naar incasso.",
+      en: "YNAB is a powerful budgeting tool from the US at $14.99/month. PayWatch is free, Dutch-language, and focuses on what YNAB misses: preventing bills from escalating to collections.",
+    },
+    focus: {
+      nl: "Zero-based budgetteren, elke euro een taak geven",
+      en: "Zero-based budgeting, give every dollar a job",
+    },
+    pricing: {
+      nl: "$14,99/maand (~€14) of $109/jaar",
+      en: "$14.99/month or $109/year",
+    },
+    market: "US / Global",
+    features: [
+      { label: { nl: "Zero-based budgetteren", en: "Zero-based budgeting" }, paywatch: false, competitor: true },
+      { label: { nl: "Spaardoelen", en: "Savings goals" }, paywatch: false, competitor: true },
+      { label: { nl: "Bankkoppeling", en: "Bank sync" }, paywatch: false, competitor: "VS/VK" },
+      { label: { nl: "Nederlandse taal", en: "Dutch language" }, paywatch: true, competitor: false },
+      { label: { nl: "Gratis te gebruiken", en: "Free to use" }, paywatch: true, competitor: false },
+      { label: { nl: "E-mail inbox scanning", en: "Email inbox scanning" }, paywatch: true, competitor: false },
+      { label: { nl: "Camera & QR scanning", en: "Camera & QR scanning" }, paywatch: true, competitor: false },
+      { label: { nl: "Escalatie detectie", en: "Escalation detection" }, paywatch: true, competitor: false },
+      { label: { nl: "Herinneringen vóór boetes", en: "Reminders before penalties" }, paywatch: true, competitor: false },
+      { label: { nl: "Buddy systeem", en: "Buddy system" }, paywatch: true, competitor: false },
+      { label: { nl: "Toeslagen berekenen", en: "Benefits calculator" }, paywatch: true, competitor: false },
+      { label: { nl: "Schuldhulp zoeker", en: "Debt help finder" }, paywatch: true, competitor: false },
+      { label: { nl: "Nederlands recht & wet", en: "Dutch law & regulations" }, paywatch: true, competitor: false },
+      { label: { nl: "AI voice assistent", en: "AI voice assistant" }, paywatch: true, competitor: false },
+    ],
+    whenCompetitor: {
+      nl: [
+        "Je wilt diepgaand budgetteren met de envelope-methode",
+        "Je bent comfortabel met een Engelstalige app",
+        "Je wilt spaardoelen en financiële planning op lange termijn",
+      ],
+      en: [
+        "You want deep budgeting with the envelope method",
+        "You're comfortable with an English-language app",
+        "You want savings goals and long-term financial planning",
+      ],
+    },
+    whenPayWatch: {
+      nl: [
+        "Je zoekt een gratis app in het Nederlands",
+        "Je wilt automatisch rekeningen uit je inbox halen",
+        "Je wilt voorkomen dat facturen escaleren naar incasso",
+        "Je hebt hulp nodig bij het Nederlandse schuldsysteem",
+      ],
+      en: [
+        "You're looking for a free app in Dutch",
+        "You want to automatically pull bills from your inbox",
+        "You want to prevent invoices from escalating to collections",
+        "You need help with the Dutch debt system",
+      ],
+    },
+    scenario: {
+      title: {
+        nl: "Je bent de energierekening vergeten en krijgt een aanmaning",
+        en: "You forgot the energy bill and receive a formal notice",
+      },
+      without: {
+        nl: "In YNAB budget je per categorie en zie je dat je energiebudget op is. Maar YNAB weet niet welke facturen je hebt ontvangen, wat de vervaldatums zijn, of dat je al te laat bent. De aanmaning kost je €40 extra — YNAB had dit niet kunnen voorkomen.",
+        en: "In YNAB you budget per category and see your energy budget is depleted. But YNAB doesn't know which invoices you've received, what the due dates are, or that you're already late. The formal notice costs you €40 extra — YNAB couldn't have prevented this.",
+      },
+      with: {
+        nl: "PayWatch scant je inbox, vindt de energiefactuur, toont de vervaldatum, en stuurt je een push-notificatie 3 dagen van tevoren. Betaald op tijd, geen extra kosten, geen stress.",
+        en: "PayWatch scans your inbox, finds the energy invoice, shows the due date, and sends you a push notification 3 days in advance. Paid on time, no extra costs, no stress.",
+      },
+    },
+    seoTitle: {
+      nl: "YNAB alternatief Nederland: PayWatch is gratis en Nederlandstalig",
+      en: "YNAB alternative Netherlands: PayWatch is free and Dutch-language",
+    },
+    seoDesc: {
+      nl: "Zoek je een YNAB alternatief in Nederland? PayWatch is gratis, Nederlandstalig, en voorkomt dat rekeningen escaleren. Vergelijk de functies.",
+      en: "Looking for a YNAB alternative in the Netherlands? PayWatch is free, Dutch-language, and prevents bill escalation. Compare features.",
+    },
+  },
+
+  /* ── Buddy ── */
+  {
+    slug: "buddy-alternatief",
+    name: "Buddy",
+    url: "buddyapp.com",
+    color: "#F59E0B",
+    tagline: {
+      nl: "Gezinsbudget & samenwerken",
+      en: "Family budget & collaboration",
+    },
+    heroTitle: {
+      nl: "Buddy alternatief: van budgetteren naar schuldpreventie",
+      en: "Buddy alternative: from budgeting to debt prevention",
+    },
+    heroSubtitle: {
+      nl: "Buddy helpt je samen met je partner of gezin budgetteren. PayWatch gaat verder: we scannen je rekeningen, detecteren escalaties, en helpen je voorkomen dat facturen boetes worden.",
+      en: "Buddy helps you budget together with your partner or family. PayWatch goes further: we scan your bills, detect escalations, and help you prevent invoices from becoming penalties.",
+    },
+    focus: {
+      nl: "Gezamenlijk budgetteren, gedeelde rekeningen, gezinsfinanciën",
+      en: "Shared budgeting, shared expenses, family finances",
+    },
+    pricing: { nl: "Gratis basis, Premium beschikbaar", en: "Free basic, Premium available" },
+    market: "NL",
+    features: [
+      { label: { nl: "Gedeeld budget met partner", en: "Shared budget with partner" }, paywatch: false, competitor: true },
+      { label: { nl: "Gezinsfinanciën", en: "Family finances" }, paywatch: false, competitor: true },
+      { label: { nl: "Uitgavenvoorspelling", en: "Spending prediction" }, paywatch: true, competitor: true },
+      { label: { nl: "Categoriebudgetten", en: "Category budgets" }, paywatch: true, competitor: true },
+      { label: { nl: "E-mail inbox scanning", en: "Email inbox scanning" }, paywatch: true, competitor: false },
+      { label: { nl: "Camera & QR scanning", en: "Camera & QR scanning" }, paywatch: true, competitor: false },
+      { label: { nl: "Escalatie detectie", en: "Escalation detection" }, paywatch: true, competitor: false },
+      { label: { nl: "Herinneringen vóór boetes", en: "Reminders before penalties" }, paywatch: true, competitor: false },
+      { label: { nl: "Buddy/vangnet systeem", en: "Buddy/safety net system" }, paywatch: true, competitor: false },
+      { label: { nl: "Toeslagen berekenen", en: "Benefits calculator" }, paywatch: true, competitor: false },
+      { label: { nl: "Schuldhulp zoeker", en: "Debt help finder" }, paywatch: true, competitor: false },
+      { label: { nl: "AI voice assistent", en: "AI voice assistant" }, paywatch: true, competitor: false },
+      { label: { nl: "Nederlands recht & wet", en: "Dutch law & regulations" }, paywatch: true, competitor: false },
+    ],
+    whenCompetitor: {
+      nl: [
+        "Je wilt budgetteren samen met je partner",
+        "Je zoekt een app voor gezamenlijke huishoudfinanciën",
+        "Je wilt uitgavenpatronen voorspellen",
+      ],
+      en: [
+        "You want to budget together with your partner",
+        "You're looking for an app for shared household finances",
+        "You want to predict spending patterns",
+      ],
+    },
+    whenPayWatch: {
+      nl: [
+        "Je wilt dat iemand meekijkt als vangnet (niet alleen je partner)",
+        "Je wilt automatisch rekeningen uit je inbox halen",
+        "Je hebt betalingsachterstanden of dreigt die te krijgen",
+        "Je wilt hulp bij het Nederlandse incassoproces",
+      ],
+      en: [
+        "You want a safety net person watching (not just your partner)",
+        "You want to automatically pull bills from your inbox",
+        "You have payment arrears or risk getting them",
+        "You need help with the Dutch collection process",
+      ],
+    },
+    scenario: {
+      title: {
+        nl: "Jij en je partner missen allebei de waterschapsbelasting",
+        en: "You and your partner both miss the water authority tax",
+      },
+      without: {
+        nl: "In Buddy zie je dat je waterschapsbudget op is, maar de factuur zelf met vervaldatum wordt niet getoond. Jullie vergeten allebei te betalen. Na 30 dagen krijg je een aanmaning met €40 extra kosten.",
+        en: "In Buddy you see your water budget is depleted, but the actual invoice with due date isn't shown. You both forget to pay. After 30 days you receive a formal notice with €40 extra costs.",
+      },
+      with: {
+        nl: "PayWatch scant je inbox en toont de waterschapsfactuur op je dashboard. Je buddy (partner, ouder, of hulpverlener) ziet dezelfde rekening en kan je herinneren. Jullie betalen op tijd — €0 extra kosten.",
+        en: "PayWatch scans your inbox and shows the water authority invoice on your dashboard. Your buddy (partner, parent, or social worker) sees the same bill and can remind you. You pay on time — €0 extra costs.",
+      },
+    },
+    seoTitle: {
+      nl: "Buddy alternatief: PayWatch scant je rekeningen en voorkomt boetes",
+      en: "Buddy alternative: PayWatch scans your bills and prevents penalties",
+    },
+    seoDesc: {
+      nl: "Zoek je een Buddy alternatief? PayWatch scant je inbox, detecteert escalaties en voorkomt dat rekeningen incassozaken worden. Vergelijk nu.",
+      en: "Looking for a Buddy alternative? PayWatch scans your inbox, detects escalations and prevents bills from becoming collections. Compare now.",
+    },
+  },
+
+  /* ── MijnGeldzaken ── */
+  {
+    slug: "mijngeldzaken-alternatief",
+    name: "MijnGeldzaken",
+    url: "mijngeldzaken.nl",
+    color: "#1E40AF",
+    tagline: {
+      nl: "Klassiek huishoudboekje (ex-AFAS)",
+      en: "Classic household book (ex-AFAS)",
+    },
+    heroTitle: {
+      nl: "MijnGeldzaken alternatief: moderner en met schuldpreventie",
+      en: "MijnGeldzaken alternative: modern with debt prevention",
+    },
+    heroSubtitle: {
+      nl: "MijnGeldzaken is een betrouwbaar Nederlands huishoudboekje met Nibud-vergelijking. PayWatch bouwt hierop voort met inbox scanning, escalatie detectie, en AI-hulp bij schulden.",
+      en: "MijnGeldzaken is a reliable Dutch household book with Nibud comparison. PayWatch builds on this with inbox scanning, escalation detection, and AI-powered debt help.",
+    },
+    focus: {
+      nl: "Digitaal huishoudboekje, bankkoppeling, Nibud-vergelijking",
+      en: "Digital household book, bank sync, Nibud comparison",
+    },
+    pricing: {
+      nl: "Gratis proef, Plus €2,45/maand",
+      en: "Free trial, Plus €2.45/month",
+    },
+    market: "NL",
+    features: [
+      { label: { nl: "Bankkoppeling", en: "Bank sync" }, paywatch: false, competitor: true },
+      { label: { nl: "Nibud vergelijking", en: "Nibud comparison" }, paywatch: true, competitor: true },
+      { label: { nl: "Automatische categorisatie", en: "Auto-categorization" }, paywatch: true, competitor: true },
+      { label: { nl: "Bonnetjes scannen", en: "Receipt scanning" }, paywatch: false, competitor: true },
+      { label: { nl: "E-mail inbox scanning", en: "Email inbox scanning" }, paywatch: true, competitor: false },
+      { label: { nl: "Camera & QR scanning", en: "Camera & QR scanning" }, paywatch: true, competitor: false },
+      { label: { nl: "Escalatie detectie", en: "Escalation detection" }, paywatch: true, competitor: false },
+      { label: { nl: "Herinneringen vóór boetes", en: "Reminders before penalties" }, paywatch: true, competitor: false },
+      { label: { nl: "Buddy systeem", en: "Buddy system" }, paywatch: true, competitor: false },
+      { label: { nl: "Schuldpreventie brieven", en: "Debt prevention letters" }, paywatch: true, competitor: false },
+      { label: { nl: "Toeslagen berekenen", en: "Benefits calculator" }, paywatch: true, competitor: false },
+      { label: { nl: "Schuldhulp zoeker", en: "Debt help finder" }, paywatch: true, competitor: false },
+      { label: { nl: "AI voice assistent", en: "AI voice assistant" }, paywatch: true, competitor: false },
+      { label: { nl: "Beslagvrije voet calculator", en: "Protected income calculator" }, paywatch: true, competitor: false },
+    ],
+    whenCompetitor: {
+      nl: [
+        "Je wilt een klassiek huishoudboekje met bankkoppeling",
+        "Je zoekt bonnetjes scannen en digitaal opslaan",
+        "Je wilt een beproefd Nederlands product",
+      ],
+      en: [
+        "You want a classic household book with bank sync",
+        "You're looking for receipt scanning and digital storage",
+        "You want a proven Dutch product",
+      ],
+    },
+    whenPayWatch: {
+      nl: [
+        "Je wilt voorkomen dat rekeningen escaleren naar incasso",
+        "Je wilt je inbox automatisch laten scannen op facturen",
+        "Je hebt hulp nodig bij schulden of betalingsachterstanden",
+        "Je wilt een AI-assistent die je helpt met je financiën",
+      ],
+      en: [
+        "You want to prevent bills from escalating to collections",
+        "You want your inbox automatically scanned for invoices",
+        "You need help with debts or payment arrears",
+        "You want an AI assistant to help with your finances",
+      ],
+    },
+    scenario: {
+      title: {
+        nl: "Je krijgt een naheffing van de Belastingdienst",
+        en: "You receive a tax assessment from the tax authority",
+      },
+      without: {
+        nl: "MijnGeldzaken toont de betaling achteraf in je categorieoverzicht. Maar de naheffingsbrief zelf, de betalingstermijn, en wat er gebeurt als je te laat bent — dat ziet MijnGeldzaken niet. De Belastingdienst wacht niet: na 6 weken volgt een aanmaning met 4% rente.",
+        en: "MijnGeldzaken shows the payment in your category overview after the fact. But the assessment letter itself, the payment deadline, and what happens if you're late — MijnGeldzaken doesn't see that. The tax authority won't wait: after 6 weeks a formal notice follows with 4% interest.",
+      },
+      with: {
+        nl: "PayWatch vindt de naheffingsbrief in je inbox, toont de betalingstermijn, en stuurt je een herinnering. Je beslagvrije voet wordt berekend zodat je weet hoeveel je kunt betalen. Als het niet lukt, helpt PayWatch je schuldhulp te vinden.",
+        en: "PayWatch finds the tax assessment in your inbox, shows the payment deadline, and sends you a reminder. Your protected income is calculated so you know how much you can pay. If it doesn't work out, PayWatch helps you find debt support.",
+      },
+    },
+    seoTitle: {
+      nl: "MijnGeldzaken alternatief: PayWatch met inbox scanning en schuldpreventie",
+      en: "MijnGeldzaken alternative: PayWatch with inbox scanning and debt prevention",
+    },
+    seoDesc: {
+      nl: "Zoek je een MijnGeldzaken alternatief? PayWatch scant je inbox, detecteert escalaties, berekent je toeslagen en helpt schulden voorkomen.",
+      en: "Looking for a MijnGeldzaken alternative? PayWatch scans your inbox, detects escalations, calculates your benefits and helps prevent debts.",
+    },
+  },
 ];
 
 export function getComparisonBySlug(slug: string): ComparisonData | undefined {
