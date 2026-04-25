@@ -13,7 +13,7 @@ export const siteConfig = {
       press: "pers@paywatch.nl",
       business: "business@paywatch.nl",
       info: "info@paywatch.nl",
-      privacy: "privacy@paywatch.app",
+      privacy: "samba@paywatch.nl",
     },
   },
 };
@@ -341,12 +341,15 @@ export const legalAdvisors: AidOrg[] = [
 /* ─── Subprocessors ─── */
 export const subprocessors = [
   { service: "Supabase", purpose: { nl: "Database & authenticatie", en: "Database & authentication" }, data: { nl: "Accountgegevens, rekeningen", en: "Account data, bills" }, location: "EU (eu-west-1)", gdpr: true },
+  { service: "Scaleway", purpose: { nl: "AI-analyse (rekening- en e-mailscan)", en: "AI analysis (bill & email scanning)" }, data: { nl: "E-mailtekst, foto's van rekeningen", en: "Email text, photos of bills" }, location: "EU (Parijs, Frankrijk)", gdpr: true },
   { service: "Vercel", purpose: { nl: "Hosting & deployment", en: "Hosting & deployment" }, data: { nl: "Verzoekdata, cookies", en: "Request data, cookies" }, location: "Global (EU edge)", gdpr: true },
   { service: "Resend", purpose: { nl: "Transactionele e-mails", en: "Transactional emails" }, data: { nl: "E-mailadres, naam", en: "Email address, name" }, location: "US (EU DPA)", gdpr: true },
+  { service: "Anthropic", purpose: { nl: "AI-inzichten & conceptbrieven", en: "AI insights & draft letters" }, data: { nl: "Geanonimiseerde rekeninggegevens", en: "Anonymized bill summaries" }, location: "US (EU DPA)", gdpr: true },
   { service: "Sanity.io", purpose: { nl: "Content management", en: "Content management" }, data: { nl: "Geen persoonsgegevens", en: "No personal data" }, location: "EU", gdpr: true },
+  { service: "ElevenLabs", purpose: { nl: "Spraakassistent (PayBuddy)", en: "Voice assistant (PayBuddy)" }, data: { nl: "Spraakaudio (niet opgeslagen)", en: "Voice audio (not stored)" }, location: "EU (DPA)", gdpr: true },
 ];
 
 export const securityMeasures = {
-  nl: [ "AES-256 encryptie voor alle data in rust", "TLS 1.3 voor data in transit", "Row Level Security (RLS) op Supabase", "OAuth 2.0 voor Gmail-koppeling (read-only scope)", "Geen opslag van e-mailwachtwoorden", "Automatische sessie-expiratie na 30 dagen", "SOC 2 Type II compliance via Supabase", "Tweefactorauthenticatie beschikbaar" ],
-  en: [ "AES-256 encryption for all data at rest", "TLS 1.3 for data in transit", "Row Level Security (RLS) on Supabase", "OAuth 2.0 for Gmail connection (read-only scope)", "No storage of email passwords", "Automatic session expiry after 30 days", "SOC 2 Type II compliance via Supabase", "Two-factor authentication available" ],
+  nl: [ "AES-256 encryptie voor alle data in rust", "TLS 1.3 voor data in transit", "Row Level Security (RLS) op Supabase", "OAuth 2.0 voor Gmail-koppeling (read-only scope)", "Geen opslag van e-mailwachtwoorden", "Geen opslag van foto's of afbeeldingen", "AI-verwerking volledig binnen de EU (Scaleway, Parijs)", "Automatische sessie-expiratie na 30 dagen", "SOC 2 Type II compliance via Supabase", "Tweefactorauthenticatie beschikbaar" ],
+  en: [ "AES-256 encryption for all data at rest", "TLS 1.3 for data in transit", "Row Level Security (RLS) on Supabase", "OAuth 2.0 for Gmail connection (read-only scope)", "No storage of email passwords", "No storage of photos or images", "AI processing fully within the EU (Scaleway, Paris)", "Automatic session expiry after 30 days", "SOC 2 Type II compliance via Supabase", "Two-factor authentication available" ],
 };

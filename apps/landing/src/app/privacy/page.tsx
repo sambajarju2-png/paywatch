@@ -7,7 +7,7 @@ import { siteConfig } from "@/lib/config";
 /* ── Tab 1: Existing Privacy Policy ── */
 const privacyContent = {
   nl: {
-    lastUpdated: "Laatst bijgewerkt: 26 maart 2026",
+    lastUpdated: "Laatst bijgewerkt: 25 april 2026",
     sections: [
       {
         title: "1. Wie zijn wij?",
@@ -15,23 +15,23 @@ const privacyContent = {
       },
       {
         title: "2. Welke gegevens verzamelen wij?",
-        body: `Wij verzamelen de volgende categorieën persoonsgegevens: accountgegevens (naam, e-mailadres), e-mailmetadata (afzender, onderwerp, datum — tijdelijk verwerkt via de Gmail OAuth-scope gmail.readonly en/of de Microsoft Graph-scope Mail.Read, uitsluitend voor het herkennen van rekeningen), rekening- en betaalgegevens die uit e-mails worden geëxtraheerd (bedrijfsnaam, bedrag, vervaldatum, IBAN, referentie), gebruiksgegevens (inlogmomenten, gebruikte functies), en taalvoorkeur en thema-instelling (opgeslagen in localStorage). Volledige e-mailteksten en bijlagen worden niet opgeslagen.`,
+        body: `Wij verzamelen alleen wat nodig is:\n\n• Accountgegevens: naam en e-mailadres\n• Rekeninggegevens: bedrijfsnaam, bedrag, vervaldatum, IBAN en referentie — geëxtraheerd uit je e-mails of gescande rekeningen\n• E-mailmetadata: afzender, onderwerp en datum — tijdelijk verwerkt via Gmail (read-only) of Outlook (read-only), uitsluitend voor het herkennen van rekeningen\n• Gebruiksgegevens: inlogmomenten en gebruikte functies\n\nWat wij NIET opslaan:\n• Geen volledige e-mailteksten of bijlagen\n• Geen foto's of afbeeldingen van je rekeningen\n• Geen adresgegevens of BSN\n• Geen bankwachtwoorden of inloggegevens\n• Geen locatiegegevens`,
       },
       {
         title: "3. Waarvoor gebruiken wij je gegevens?",
-        body: "Wij verwerken je gegevens voor het leveren van onze dienst (rekeningen herkennen en bijhouden), het verbeteren van onze AI-modellen (geanonimiseerd), het versturen van service-gerelateerde e-mails, en het naleven van wettelijke verplichtingen.",
+        body: "Wij verwerken je gegevens uitsluitend voor: het leveren van onze dienst (rekeningen herkennen, bijhouden en waarschuwen bij escalatie), het berekenen van financiële overzichten (toeslagen, beslagvrije voet), het versturen van service-gerelateerde e-mails, en het naleven van wettelijke verplichtingen.",
       },
       {
         title: "4. Rechtsgronden",
-        body: "Wij verwerken je gegevens op basis van: uitvoering van de overeenkomst (het leveren van de PayWatch-dienst), toestemming (voor Gmail-koppeling), en gerechtvaardigd belang (voor dienstverlening en verbetering).",
+        body: "Wij verwerken je gegevens op basis van: uitvoering van de overeenkomst (het leveren van de PayWatch-dienst), toestemming (voor Gmail/Outlook-koppeling), en gerechtvaardigd belang (voor dienstverlening en verbetering).",
       },
       {
         title: "5. Delen met derden",
-        body: "Wij delen je gegevens alleen met verwerkers die noodzakelijk zijn voor onze dienstverlening. Zie onze pagina Gegevensverwerking voor een complete lijst van subverwerkers. Wij verkopen nooit je gegevens aan derden.",
+        body: "Wij delen je gegevens alleen met verwerkers die noodzakelijk zijn voor onze dienstverlening. Alle gevoelige gegevens (e-mails, rekeningen, foto's) worden verwerkt via onze eigen AI-engine gehost bij Scaleway in Parijs, Frankrijk. Je data verlaat de EU niet voor scan- en analysedoeleinden. Zie onze pagina Gegevensverwerking voor een complete lijst. Wij verkopen nooit je gegevens aan derden.",
       },
       {
         title: "6. Beveiliging",
-        body: "Wij nemen de bescherming van je gegevens serieus. We gebruiken AES-256 encryptie, TLS 1.3, Row Level Security, en OAuth 2.0 met read-only scope voor Gmail. Zie onze pagina Gegevensverwerking voor alle beveiligingsmaatregelen.",
+        body: "Wij nemen de bescherming van je gegevens serieus. We gebruiken AES-256 encryptie, TLS 1.3, Row Level Security, en OAuth 2.0 met read-only scope. Onze AI-analyse draait op servers in de EU (Parijs, Frankrijk) — je financiële gegevens verlaten Europa niet. Foto's van rekeningen worden direct na verwerking verwijderd en niet opgeslagen.",
       },
       {
         title: "7. Bewaartermijnen",
@@ -52,7 +52,7 @@ const privacyContent = {
     ],
   },
   en: {
-    lastUpdated: "Last updated: March 26, 2026",
+    lastUpdated: "Last updated: April 25, 2026",
     sections: [
       {
         title: "1. Who are we?",
@@ -60,23 +60,23 @@ const privacyContent = {
       },
       {
         title: "2. What data do we collect?",
-        body: "We collect the following categories of personal data: account information (name, email address), email metadata (sender, subject, date — temporarily processed via the Gmail OAuth scope gmail.readonly and/or the Microsoft Graph scope Mail.Read, solely for recognizing bills), bill and payment data extracted from emails (vendor name, amount, due date, IBAN, reference), usage data (login times, features used), and language preference and theme setting (stored in localStorage). Full email texts and attachments are not stored.",
+        body: "We only collect what's necessary:\n\n• Account details: name and email address\n• Bill data: vendor name, amount, due date, IBAN, and reference — extracted from your emails or scanned bills\n• Email metadata: sender, subject, and date — temporarily processed via Gmail (read-only) or Outlook (read-only), solely for recognizing bills\n• Usage data: login times and features used\n\nWhat we do NOT store:\n• No full email texts or attachments\n• No photos or images of your bills\n• No home addresses or BSN numbers\n• No bank passwords or login credentials\n• No location data",
       },
       {
         title: "3. What do we use your data for?",
-        body: "We process your data to deliver our service (recognizing and tracking bills), improve our AI models (anonymized), send service-related emails, and comply with legal obligations.",
+        body: "We process your data exclusively to: deliver our service (recognizing, tracking, and alerting on bill escalation), calculate financial overviews (benefits eligibility, beslagvrije voet), send service-related emails, and comply with legal obligations.",
       },
       {
         title: "4. Legal basis",
-        body: "We process your data based on: performance of contract (delivering the PayWatch service), consent (for Gmail connection), and legitimate interest (for service delivery and improvement).",
+        body: "We process your data based on: performance of contract (delivering the PayWatch service), consent (for Gmail/Outlook connection), and legitimate interest (for service delivery and improvement).",
       },
       {
         title: "5. Sharing with third parties",
-        body: "We only share your data with processors necessary for our service delivery. See our Data Processing page for a complete list of sub-processors. We never sell your data to third parties.",
+        body: "We only share your data with processors necessary for our service delivery. All sensitive data (emails, bills, photos) is processed via our own AI engine hosted at Scaleway in Paris, France. Your data does not leave the EU for scanning purposes. See our Data Processing page for a complete list. We never sell your data to third parties.",
       },
       {
         title: "6. Security",
-        body: "We take the protection of your data seriously. We use AES-256 encryption, TLS 1.3, Row Level Security, and OAuth 2.0 with read-only scope for Gmail. See our Data Processing page for all security measures.",
+        body: "We take the protection of your data seriously. We use AES-256 encryption, TLS 1.3, Row Level Security, and OAuth 2.0 with read-only scope. Our AI analysis runs on servers in the EU (Paris, France) — your financial data never leaves Europe. Photos of bills are deleted immediately after processing and are not stored.",
       },
       {
         title: "7. Retention periods",
