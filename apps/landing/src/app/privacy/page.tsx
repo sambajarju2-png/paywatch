@@ -163,11 +163,11 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
           {
             title: "Welke AI-diensten wij gebruiken",
             items: [
-              "Google Gemini 2.5 Flash: classificeert e-mails (rekening/geen rekening) en extraheert gegevens uit camerafoto's",
-              "Anthropic Claude Haiku 4.5: extraheert rekeninggegevens uit e-mailtekst, genereert financiële inzichten en conceptbrieven",
+              "Onze eigen scan-engine (Mistral, gehost bij Scaleway in Parijs, Frankrijk): classificeert e-mails, extraheert rekeninggegevens en verwerkt camerafoto's — volledig binnen de EU",
+              "Anthropic Claude Haiku: genereert financiële inzichten en conceptbrieven op basis van geanonimiseerde rekeninggegevens",
               "AI-modellen ontvangen alleen de minimaal benodigde data per verzoek",
               "Wij trainen GEEN AI-modellen met jouw gegevens",
-              "AI-verwerking vindt plaats via beveiligde API-verbindingen (HTTPS)",
+              "Gevoelige gegevens (e-mails, foto's, IBAN's) verlaten de EU niet",
             ],
           },
         ],
@@ -204,8 +204,8 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
             title: "Lijst van verwerkers",
             items: [
               "Supabase (database en authenticatie) — EU-gehost, GDPR-compliant",
-              "Google Gemini API (AI-classificatie en extractie) — alleen e-mailfragmenten worden verstuurd",
-              "Anthropic Claude API (AI-extractie en inzichten) — alleen minimale e-mailtekst wordt verstuurd",
+              "Scaleway Generative API (AI-scan en extractie) — gehost in Parijs, Frankrijk, volledig binnen de EU",
+              "Anthropic Claude API (AI-inzichten en brieven) — alleen geanonimiseerde rekeninggegevens",
               "Microsoft Graph API (Outlook e-mail scanning) — alleen-lezen toegang via Mail.Read scope",
               "Vercel (hosting) — verwerkt geen gebruikersgegevens direct",
               "Resend (e-mail) — alleen voor transactionele e-mails (wachtwoord reset, verificatie)",
@@ -300,11 +300,11 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
           {
             title: "Which AI services we use",
             items: [
-              "Google Gemini 2.5 Flash: classifies emails (bill/not bill) and extracts data from camera photos",
-              "Anthropic Claude Haiku 4.5: extracts bill data from email text, generates financial insights and draft letters",
+              "Our own scanning engine (Mistral, hosted at Scaleway in Paris, France): classifies emails, extracts bill data, and processes camera photos — fully within the EU",
+              "Anthropic Claude Haiku: generates financial insights and draft letters based on anonymized bill data",
               "AI models only receive the minimum data required per request",
               "We do NOT train AI models with your data",
-              "AI processing occurs via secure API connections (HTTPS)",
+              "Sensitive data (emails, photos, IBANs) never leaves the EU",
             ],
           },
         ],
@@ -341,8 +341,8 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
             title: "List of processors",
             items: [
               "Supabase (database and authentication) — EU-hosted, GDPR-compliant",
-              "Google Gemini API (AI classification and extraction) — only email fragments are sent",
-              "Anthropic Claude API (AI extraction and insights) — only minimal email text is sent",
+              "Scaleway Generative API (AI scanning and extraction) — hosted in Paris, France, fully within the EU",
+              "Anthropic Claude API (AI insights and letters) — only anonymized bill data is sent",
               "Microsoft Graph API (Outlook email scanning) — read-only access via Mail.Read scope",
               "Vercel (hosting) — does not process user data directly",
               "Resend (email) — only for transactional emails (password reset, verification)",
