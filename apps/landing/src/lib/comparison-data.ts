@@ -12,6 +12,11 @@ export interface ComparisonScenario {
   with: { nl: string; en: string };
 }
 
+export interface ComparisonFAQ {
+  q: { nl: string; en: string };
+  a: { nl: string; en: string };
+}
+
 export interface ComparisonData {
   slug: string;
   name: string;
@@ -27,9 +32,11 @@ export interface ComparisonData {
   market: string;
   color: string; /* accent color for the competitor */
   features: ComparisonFeature[];
+  commonalities?: { nl: string[]; en: string[] }; /* what both apps have in common */
   whenCompetitor: { nl: string[]; en: string[] };
   whenPayWatch: { nl: string[]; en: string[] };
   scenario: ComparisonScenario;
+  faqs?: ComparisonFAQ[];
   seoTitle: { nl: string; en: string };
   seoDesc: { nl: string; en: string };
 }
@@ -840,3 +847,57 @@ export const escalationSteps = {
     { stage: "Bailiff", cost: "+€500+", color: "#7F1D1D", days: "Day 90+" },
   ],
 };
+
+/* ─── Default commonalities (generated per competitor) ─── */
+export function getCommonalities(data: ComparisonData): { nl: string[]; en: string[] } {
+  if (data.commonalities) return data.commonalities;
+  return {
+    nl: [
+      "Beide apps helpen je grip te krijgen op je financiën",
+      "Beide bieden een gratis basisversie",
+      "Beide werken op je smartphone",
+      `Het verschil: ${data.name} focust op ${data.tagline.nl.toLowerCase()} — PayWatch focust op het voorkomen dat rekeningen escaleren`,
+    ],
+    en: [
+      "Both apps help you get a grip on your finances",
+      "Both offer a free basic version",
+      "Both work on your smartphone",
+      `The difference: ${data.name} focuses on ${data.tagline.en.toLowerCase()} — PayWatch focuses on preventing bills from escalating`,
+    ],
+  };
+}
+
+/* ─── Default FAQs (generated per competitor) ─── */
+export function getFAQs(data: ComparisonData): ComparisonFAQ[] {
+  if (data.faqs?.length) return data.faqs;
+  return [
+    {
+      q: { nl: `Wat is het verschil tussen ${data.name} en PayWatch?`, en: `What is the difference between ${data.name} and PayWatch?` },
+      a: {
+        nl: `${data.name} richt zich op ${data.tagline.nl.toLowerCase()}. PayWatch focust op het voorkomen dat rekeningen escaleren naar aanmaningen, incasso's en deurwaarders door je inbox automatisch te scannen en je op tijd te waarschuwen.`,
+        en: `${data.name} focuses on ${data.tagline.en.toLowerCase()}. PayWatch focuses on preventing bills from escalating into formal notices, collections, and bailiffs by automatically scanning your inbox and warning you in time.`,
+      },
+    },
+    {
+      q: { nl: "Is PayWatch gratis?", en: "Is PayWatch free?" },
+      a: {
+        nl: "Ja, PayWatch is gratis te gebruiken. Je kunt je inbox koppelen, rekeningen scannen, escalaties volgen en schuldhulp zoeken zonder te betalen.",
+        en: "Yes, PayWatch is free to use. You can connect your inbox, scan bills, track escalations, and find debt support without paying.",
+      },
+    },
+    {
+      q: { nl: `Kan ik ${data.name} en PayWatch tegelijk gebruiken?`, en: `Can I use ${data.name} and PayWatch at the same time?` },
+      a: {
+        nl: `Ja. ${data.name} is goed voor ${data.tagline.nl.toLowerCase()}. PayWatch vult dat aan door rekeningen te monitoren en te voorkomen dat facturen escaleren. Ze dekken verschillende behoeften.`,
+        en: `Yes. ${data.name} is good for ${data.tagline.en.toLowerCase()}. PayWatch complements that by monitoring bills and preventing invoices from escalating. They cover different needs.`,
+      },
+    },
+    {
+      q: { nl: `Is ${data.name} geschikt voor schulden voorkomen?`, en: `Is ${data.name} suitable for preventing debts?` },
+      a: {
+        nl: `${data.name} geeft inzicht in je financiën, maar monitort niet actief je rekeningen op escalatierisico's. PayWatch is specifiek gebouwd om te voorkomen dat facturen aanmaningen of incassozaken worden.`,
+        en: `${data.name} gives insight into your finances but doesn't actively monitor your bills for escalation risks. PayWatch is specifically built to prevent invoices from becoming formal notices or collection cases.`,
+      },
+    },
+  ];
+}
