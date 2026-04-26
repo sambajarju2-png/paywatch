@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { comparisons } from "@/lib/comparison-data";
 
 /**
  * Google Indexing API — push URLs for instant indexing
@@ -24,15 +25,12 @@ const BASE = "https://paywatch.app";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const INDEXING_API_URL = "https://indexing.googleapis.com/v3/urlNotifications:publish";
 
-// All indexable URLs for bulk submission
+// Auto-generated from comparison-data.ts + static pages
 const ALL_URLS = [
   "/", "/features", "/pricing", "/schuldhulp", "/app-voor-schulden-voorkomen",
   "/blog", "/about", "/support", "/resources", "/contact",
   "/vergelijking", "/vergelijking/schuldhulpmaatje",
-  "/vergelijking/dyme-alternatief", "/vergelijking/fikks-alternatief",
-  "/vergelijking/grassfeld-alternatief", "/vergelijking/cleo-alternatief",
-  "/vergelijking/monefy-alternatief", "/vergelijking/ynab-alternatief",
-  "/vergelijking/buddy-alternatief", "/vergelijking/mijngeldzaken-alternatief",
+  ...comparisons.map((c) => `/vergelijking/${c.slug}`),
   "/features/email-scanner", "/features/camera-scanner", "/features/betaalfases",
   "/features/buddy", "/features/cashflow", "/features/maandbudget",
   "/schuldhulp/rotterdam", "/schuldhulp/amsterdam", "/schuldhulp/den-haag",

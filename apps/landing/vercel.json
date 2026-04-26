@@ -3,6 +3,10 @@
     {
       "path": "/api/blog/daily?secret=8d48a02ceca751ccc34cfcef924f9d28dbb51b46f0e95d57a8e91c22e73bf73a",
       "schedule": "0 7 * * 1"
+    },
+    {
+      "path": "/api/cron/auto-index",
+      "schedule": "0 6 * * *"
     }
   ]
 }

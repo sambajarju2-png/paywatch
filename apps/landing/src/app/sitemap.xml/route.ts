@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "next-sanity";
+import { comparisons } from "@/lib/comparison-data";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
@@ -46,7 +47,6 @@ export async function GET() {
     { url: `${BASE}/features`, lastmod: now, changefreq: "weekly", priority: "0.9" },
     { url: `${BASE}/pricing`, lastmod: now, changefreq: "monthly", priority: "0.9" },
     { url: `${BASE}/schuldhulp`, lastmod: now, changefreq: "weekly", priority: "0.9" },
-    { url: `${BASE}/app-voor-schulden-voorkomen`, lastmod: now, changefreq: "weekly", priority: "0.9" },
     { url: `${BASE}/blog`, lastmod: now, changefreq: "daily", priority: "0.8" },
     { url: `${BASE}/about`, lastmod: now, changefreq: "monthly", priority: "0.7" },
     { url: `${BASE}/support`, lastmod: now, changefreq: "monthly", priority: "0.7" },
@@ -57,17 +57,13 @@ export async function GET() {
     { url: `${BASE}/roadmap`, lastmod: now, changefreq: "monthly", priority: "0.5" },
   ];
 
-  // ── Comparison pages (high SEO value) ──
-  const comparisonSlugs = [
-    "dyme-alternatief", "fikks-alternatief", "grassfeld-alternatief",
-    "cleo-alternatief", "monefy-alternatief", "ynab-alternatief",
-    "buddy-alternatief", "mijngeldzaken-alternatief",
-  ];
+  // ── Comparison pages (auto-generated from comparison-data.ts) ──
   const comparisonPages: SitemapEntry[] = [
     { url: `${BASE}/vergelijking`, lastmod: now, changefreq: "weekly", priority: "0.85" },
     { url: `${BASE}/vergelijking/schuldhulpmaatje`, lastmod: now, changefreq: "monthly", priority: "0.85" },
-    ...comparisonSlugs.map((s) => ({
-      url: `${BASE}/vergelijking/${s}`,
+    { url: `${BASE}/app-voor-schulden-voorkomen`, lastmod: now, changefreq: "weekly", priority: "0.9" },
+    ...comparisons.map((c) => ({
+      url: `${BASE}/vergelijking/${c.slug}`,
       lastmod: now,
       changefreq: "monthly" as const,
       priority: "0.8",
