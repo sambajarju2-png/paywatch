@@ -1,50 +1,51 @@
-# PayWatch
+# PayWatch — llms.txt
 
-> PayWatch is a Dutch fintech app that helps households track bills, detect debt escalation stages (factuur, herinnering, aanmaning, incasso, deurwaarder), and avoid unnecessary collection costs under Dutch WIK law. Based in Rotterdam, Netherlands.
+> PayWatch is een Nederlandse fintech-app die huishoudens helpt rekeningen te volgen en schulden te voorkomen. De app scant je inbox (Gmail/Outlook) op facturen, herkent 5 escalatiefasen (factuur, herinnering, aanmaning, incasso, deurwaarder), en waarschuwt voordat het misgaat.
 
-## About
+## Kernpagina's
 
-PayWatch scans email inboxes (Gmail, Outlook) to automatically detect and extract bill data. It tracks payment deadlines, warns users before bills escalate to collection agencies, and provides a clear overview of all household financial obligations. The app serves Dutch-speaking households dealing with debt prevention and financial administration.
+- [Home](https://paywatch.app): Hoofdpagina met product overzicht
+- [Functies](https://paywatch.app/features): Alle functies in detail
+- [Prijzen](https://paywatch.app/pricing): Gratis te gebruiken
+- [Over ons](https://paywatch.app/about): Het team achter PayWatch
+- [Blog](https://paywatch.app/blog): 45+ artikelen over schulden, recht en financien
+- [Schuldhulp](https://paywatch.app/schuldhulp): Schuldhulpverlening per gemeente (20 steden)
 
-## Key Features
+## Vergelijkingspagina's
 
-- Automatic bill detection from email (Gmail and Outlook scanning)
-- Debt escalation stage tracking (invoice → reminder → formal notice → collection → bailiff)
-- Payment deadline warnings and push notifications
-- Cash flow forecasting for households
-- Payment plan (betalingsregeling) tracking with installment overview
-- Community features for peer support
-- Available as a Progressive Web App (PWA) in Dutch and English
+- [App voor schulden voorkomen](https://paywatch.app/app-voor-schulden-voorkomen): Categorie-overzicht beste apps 2026
+- [Vergelijking overzicht](https://paywatch.app/vergelijking): Alle vergelijkingen
+- [PayWatch vs Dyme](https://paywatch.app/vergelijking/dyme-alternatief)
+- [PayWatch vs fiKks](https://paywatch.app/vergelijking/fikks-alternatief)
+- [PayWatch vs Grassfeld](https://paywatch.app/vergelijking/grassfeld-alternatief)
+- [PayWatch vs Cleo](https://paywatch.app/vergelijking/cleo-alternatief)
+- [PayWatch vs Monefy](https://paywatch.app/vergelijking/monefy-alternatief)
+- [PayWatch vs YNAB](https://paywatch.app/vergelijking/ynab-alternatief)
+- [PayWatch vs Buddy](https://paywatch.app/vergelijking/buddy-alternatief)
+- [PayWatch vs MijnGeldzaken](https://paywatch.app/vergelijking/mijngeldzaken-alternatief)
+- [PayWatch en SchuldHulpMaatje](https://paywatch.app/vergelijking/schuldhulpmaatje)
 
-## Who It Helps
+## Functies
 
-- Dutch households managing bills and avoiding debt escalation
-- People in early stages of debt who want to prevent collection costs
-- Municipalities (gemeenten) looking for early warning tools (vroegsignalering)
-- Debt counseling organizations (schuldhulpverlening) seeking client support tools
-- Incasso bureaus wanting to reduce unnecessary collection proceedings
+- Inbox scanning (Gmail + Outlook)
+- Camera en QR-code scanning
+- Bankkoppeling (GoCardless PSD2)
+- 5-fasen escalatie tracking
+- AI-gegenereerde bezwaarbrieven
+- Buddy/vangnet systeem
+- PayBuddy AI spraakassistent (Nederlands)
+- Toeslagen calculator (2026)
+- Beslagvrije voet calculator
+- Nibud uitgavenvergelijking
+- Schuldhulp zoeker (43+ gemeenten)
+- Cashflow voorspelling
+- Maandbudget met categorieen
+- Community feed
 
-## Important Pages
+## Contact
 
-- Homepage: https://paywatch.app
-- Features: https://paywatch.app/features
-- Resources: https://paywatch.app/resources
-- Blog: https://paywatch.app/blog
-- Schuldhulp per stad: https://paywatch.app/schuldhulp
-- Rotterdam: https://paywatch.app/schuldhulp/rotterdam
-- Amsterdam: https://paywatch.app/schuldhulp/amsterdam
-- Den Haag: https://paywatch.app/schuldhulp/den-haag
-- Utrecht: https://paywatch.app/schuldhulp/utrecht
-- App: https://app.paywatch.app
-
-## Company
-
-- Founded: 2025
-- Location: Rotterdam, Netherlands
-- Co-founders: Samba Jarju (CTO) and Mariama Sesay (CMO)
 - Website: https://paywatch.app
-- Contact: info@paywatch.nl
-
-## Context
-
-PayWatch operates under Dutch consumer protection law, specifically the WIK (Wet Incassokosten) which regulates collection costs. The app helps users understand their rights and avoid paying unnecessary fees during the debt escalation process. According to CBS (Centraal Bureau voor de Statistiek), approximately 724,110 Dutch households have problematic debt.
+- App: https://app.paywatch.app
+- E-mail: info@paywatch.nl
+- KVK: 83474889
+- Locatie: Rotterdam, Nederland
