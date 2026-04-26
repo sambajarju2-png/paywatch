@@ -82,8 +82,19 @@ export default function Footer() {
             <span className="hidden sm:inline">·</span>
             <span>{t.footer.copyright}</span>
           </div>
-          {/* Social icons */}
+          {/* Social icons + App Store */}
           <div className="flex items-center gap-4">
+            {/* App Store badge */}
+            <a href="#" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity" aria-label="Download on the App Store">
+              <svg width="120" height="40" viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/svg">
+                <rect width="120" height="40" rx="6" fill="var(--navy, #0A2540)"/>
+                <g fill="#fff">
+                  <path d="M24.769 20.3a4.949 4.949 0 012.356-4.151 5.066 5.066 0 00-3.99-2.158c-1.68-.176-3.308 1.005-4.164 1.005-.872 0-2.19-.988-3.608-.958a5.315 5.315 0 00-4.473 2.728c-1.934 3.348-.491 8.269 1.361 10.976.927 1.325 2.01 2.805 3.428 2.753 1.387-.058 1.905-.885 3.58-.885 1.658 0 2.144.885 3.59.852 1.489-.025 2.426-1.332 3.32-2.67a10.962 10.962 0 001.52-3.092 4.782 4.782 0 01-2.92-4.4zM22.037 12.21a4.872 4.872 0 001.115-3.49 4.957 4.957 0 00-3.208 1.66 4.636 4.636 0 00-1.144 3.36 4.1 4.1 0 003.237-1.53z"/>
+                  <text x="42" y="16" fontSize="8" fontFamily="-apple-system,BlinkMacSystemFont,sans-serif" fontWeight="400" letterSpacing=".5">{isNl ? 'Download in de' : 'Download on the'}</text>
+                  <text x="42" y="28" fontSize="14" fontFamily="-apple-system,BlinkMacSystemFont,sans-serif" fontWeight="600">App Store</text>
+                </g>
+              </svg>
+            </a>
             <a href="https://www.linkedin.com/company/paywatch-nl" target="_blank" rel="noopener noreferrer" className="text-[var(--muted)] hover:text-[var(--navy)] transition-colors" aria-label="LinkedIn">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
             </a>
