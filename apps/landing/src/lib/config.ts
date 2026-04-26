@@ -41,12 +41,11 @@ export const footerColumns = {
   ],
   company: [
     { labelNl: "Over ons", labelEn: "About", href: "/about" },
+    { labelNl: "Vergelijken", labelEn: "Compare", href: "/vergelijking" },
     { labelNl: "Vacatures", labelEn: "Jobs", href: "/jobs" },
     { labelNl: "Blog", labelEn: "Blog", href: "/blog" },
     { labelNl: "Contact", labelEn: "Contact", href: "/contact" },
     { labelNl: "Roadmap", labelEn: "Roadmap", href: "/roadmap" },
-    { labelNl: "Tech Stack", labelEn: "Tech Stack", href: "/tech-stack" },
-
   ],
   legal: [
     { labelNl: "Privacybeleid", labelEn: "Privacy Policy", href: "/privacy" },
