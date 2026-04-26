@@ -207,8 +207,48 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
               "Scaleway Generative API (AI-scan en extractie) — gehost in Parijs, Frankrijk, volledig binnen de EU",
               "Anthropic Claude API (AI-inzichten en brieven) — alleen geanonimiseerde rekeninggegevens",
               "Microsoft Graph API (Outlook e-mail scanning) — alleen-lezen toegang via Mail.Read scope",
+              "Enable Banking (PSD2 open banking) — banksynchronisatie via beveiligde PSD2-verbinding, alleen-lezen toegang tot transacties en saldo. Wij kunnen NOOIT geld overboeken of je saldo wijzigen. Verbindingen verlopen automatisch na 90 dagen",
               "Vercel (hosting) — verwerkt geen gebruikersgegevens direct",
               "Resend (e-mail) — alleen voor transactionele e-mails (wachtwoord reset, verificatie)",
+              "Apple Push Notification service (APNs) — voor pushmeldingen op iOS-apparaten",
+              "ElevenLabs (spraak-AI) — voor de PayBuddy spraakassistent, alleen wanneer je de spraakfunctie actief gebruikt",
+            ],
+          },
+        ],
+      },
+      {
+        title: "5b. iOS-app: apparaatrechten",
+        body: "De PayWatch iOS-app vraagt optioneel toegang tot de volgende apparaatfuncties. Je kunt elk recht op elk moment intrekken via iOS Instellingen:",
+        subsections: [
+          {
+            title: "Camera",
+            items: [
+              "Wordt gebruikt om rekeningen te scannen via de camerafunctie",
+              "Foto's worden NIET opgeslagen — alleen de geëxtraheerde gegevens (bedrijfsnaam, bedrag, vervaldatum) worden bewaard",
+              "Je kunt de camera ook gebruiken om QR-codes op rekeningen te scannen — dit gebeurt volledig lokaal op je apparaat",
+            ],
+          },
+          {
+            title: "Microfoon",
+            items: [
+              "Wordt alleen gebruikt voor PayBuddy, je financiële spraakassistent",
+              "Spraak wordt in realtime verwerkt via ElevenLabs en NIET opgeslagen door PayWatch",
+              "De microfoon is pas actief wanneer je expliciet op de spraakknop drukt",
+            ],
+          },
+          {
+            title: "Pushmeldingen",
+            items: [
+              "Herinneringen wanneer een rekening bijna vervalt of achterstallig is",
+              "Meldingen over e-mailscanresultaten en banktransactiematches",
+              "Je kunt meldingen op elk moment uitschakelen via iOS Instellingen → Meldingen → PayWatch",
+            ],
+          },
+          {
+            title: "Face ID / Touch ID",
+            items: [
+              "Optioneel: bescherm de app met biometrische verificatie",
+              "PayWatch heeft GEEN toegang tot je biometrische gegevens — iOS verwerkt dit volledig lokaal",
             ],
           },
         ],
@@ -344,8 +384,48 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
               "Scaleway Generative API (AI scanning and extraction) — hosted in Paris, France, fully within the EU",
               "Anthropic Claude API (AI insights and letters) — only anonymized bill data is sent",
               "Microsoft Graph API (Outlook email scanning) — read-only access via Mail.Read scope",
+              "Enable Banking (PSD2 open banking) — bank sync via secure PSD2 connection, read-only access to transactions and balance. We can NEVER transfer money or modify your balance. Connections expire automatically after 90 days",
               "Vercel (hosting) — does not process user data directly",
               "Resend (email) — only for transactional emails (password reset, verification)",
+              "Apple Push Notification service (APNs) — for push notifications on iOS devices",
+              "ElevenLabs (voice AI) — for the PayBuddy voice assistant, only when you actively use the voice feature",
+            ],
+          },
+        ],
+      },
+      {
+        title: "5b. iOS app: device permissions",
+        body: "The PayWatch iOS app optionally requests access to the following device features. You can revoke any permission at any time via iOS Settings:",
+        subsections: [
+          {
+            title: "Camera",
+            items: [
+              "Used to scan bills using the camera function",
+              "Photos are NOT stored — only the extracted data (vendor name, amount, due date) is kept",
+              "You can also use the camera to scan QR codes on bills — this happens entirely locally on your device",
+            ],
+          },
+          {
+            title: "Microphone",
+            items: [
+              "Only used for PayBuddy, your financial voice assistant",
+              "Speech is processed in real-time via ElevenLabs and NOT stored by PayWatch",
+              "The microphone is only active when you explicitly press the voice button",
+            ],
+          },
+          {
+            title: "Push notifications",
+            items: [
+              "Reminders when a bill is about to be due or overdue",
+              "Notifications about email scan results and bank transaction matches",
+              "You can disable notifications at any time via iOS Settings → Notifications → PayWatch",
+            ],
+          },
+          {
+            title: "Face ID / Touch ID",
+            items: [
+              "Optional: protect the app with biometric verification",
+              "PayWatch has NO access to your biometric data — iOS processes this entirely locally",
             ],
           },
         ],
