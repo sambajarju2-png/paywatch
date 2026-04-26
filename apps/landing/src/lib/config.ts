@@ -75,10 +75,16 @@ export const gemeenten = [
 export const founders = [
   {
     name: "Samba",
-    role: { nl: "Co-founder & CTO", en: "Co-founder & CTO" },
+    slug: "samba-jarju",
+    fullName: "Samba Jarju",
+    role: { nl: "Co-founder", en: "Co-founder" },
     bio: {
-      nl: "Techneut met een missie. Bouwt PayWatch van de grond af op met AI en een obsessie voor gebruiksvriendelijkheid.",
-      en: "Tech builder on a mission. Building PayWatch from the ground up with AI and an obsession for user experience.",
+      nl: "Marketeer met een passie voor technologie en gebruiksvriendelijkheid. Gelooft dat data het leven van mensen makkelijker kan maken als je het goed inzet.",
+      en: "Marketer with a passion for technology and user experience. Believes data can make people's lives easier when used right.",
+    },
+    fullBio: {
+      nl: "Samba is marketeer van hart en techneut van aard. Hij combineert een scherp oog voor data met een drang om dingen simpel te houden. Bij PayWatch vertaalt hij complexe financiele processen naar iets dat iedereen begrijpt. Zijn achtergrond in marketing en data-analyse zorgt ervoor dat alles wat PayWatch bouwt niet alleen technisch goed werkt, maar ook echt aansluit bij de mensen die het gebruiken. Hij is geobsedeerd door gebruiksvriendelijkheid. Niet het soort dat je op een feature-lijst zet, maar het soort dat je merkt als je de app opent en alles gewoon klopt. Elke scherm, elke flow, elk detail wordt afgewogen vanuit de vraag: maakt dit het makkelijker voor iemand die al genoeg stress heeft? Privacy staat bij Samba op plek een. Niet als marketingpraatje, maar als ontwerpprincipe. Gegevens worden verwerkt in de EU, foto's van rekeningen worden direct verwijderd na verwerking, en de app vraagt alleen om data die echt nodig is. Dat is geen concessie, dat is hoe je het hoort te doen.",
+      en: "Samba is a marketer at heart and a techie by nature. He combines a sharp eye for data with a drive to keep things simple. At PayWatch he translates complex financial processes into something everyone understands. His background in marketing and data analysis ensures that everything PayWatch builds doesn't just work technically, but also connects with the people who use it. He's obsessed with user experience. Not the kind you put on a feature list, but the kind you notice when you open the app and everything just feels right. Every screen, every flow, every detail is weighed against the question: does this make things easier for someone who already has enough stress? Privacy is Samba's number one priority. Not as a marketing talking point, but as a design principle. Data is processed in the EU, photos of bills are deleted immediately after processing, and the app only asks for data that's truly needed. That's not a compromise, that's how it should be done.",
     },
     photo: "",
     linkedin: "https://www.linkedin.com/in/sambajarju/",
@@ -86,14 +92,20 @@ export const founders = [
   },
   {
     name: "Mariama",
-    role: { nl: "Co-founder & CMO", en: "Co-founder & CMO" },
+    slug: "mariama-sesay",
+    fullName: "Mariama Sesay",
+    role: { nl: "Co-founder", en: "Co-founder" },
     bio: {
-      nl: "De stem van PayWatch. Zorgt dat onze boodschap warm, helder en menselijk is — nooit corporate.",
-      en: "The voice of PayWatch. Ensures our message stays warm, clear and human — never corporate.",
+      nl: "Sales en juridisch adviseur met ervaring in privacy en consumentenrecht. Zorgt dat PayWatch groeit en dat de rechten van gebruikers altijd voorop staan.",
+      en: "Sales and legal advisor with experience in privacy and consumer law. Makes sure PayWatch grows while always putting user rights first.",
+    },
+    fullBio: {
+      nl: "Mariama brengt twee werelden samen die zelden bij dezelfde persoon zitten: sales en recht. Ze heeft ervaring opgebouwd bij juridische kantoren waar ze werkte aan privacyrecht, consumentenbescherming en AVG-compliance. Die achtergrond maakt haar tot de ideale persoon om ervoor te zorgen dat PayWatch niet alleen groeit, maar dat ook op de juiste manier doet. In haar salesrol is ze het eerste gezicht van PayWatch naar buiten. Ze praat met gemeenten, hulporganisaties en incassobureaus. Niet met een verkooppraatje, maar met een eerlijk verhaal over wat de app doet en waarom het ertoe doet. Haar juridische achtergrond geeft haar geloofwaardigheid in die gesprekken. Ze kent de regels, ze kent de risico's, en ze weet wat organisaties nodig hebben voordat ze ja zeggen. Op het gebied van privacy is Mariama de interne bewaker. Ze beoordeelt elke nieuwe feature op privacyimpact, zorgt dat verwerkersovereenkomsten op orde zijn, en houdt PayWatch scherp op databescherming. Dat is geen bijrol, dat is een kernfunctie.",
+      en: "Mariama brings together two worlds that rarely sit with the same person: sales and law. She has built experience at legal firms where she worked on privacy law, consumer protection and GDPR compliance. That background makes her the ideal person to ensure PayWatch doesn't just grow, but does so the right way. In her sales role she's the first face of PayWatch to the outside world. She talks to municipalities, aid organizations and collection agencies. Not with a sales pitch, but with an honest story about what the app does and why it matters. Her legal background gives her credibility in those conversations. She knows the rules, she knows the risks, and she knows what organizations need before they say yes. On privacy, Mariama is the internal guardian. She reviews every new feature for privacy impact, ensures data processing agreements are in order, and keeps PayWatch sharp on data protection. That's not a side role, that's a core function.",
     },
     photo: "",
     linkedin: "https://www.linkedin.com/in/hadja-mariama-sesay-3a5392228/",
-    email: "mariama@paywatch.com",
+    email: "mariama@paywatch.nl",
   },
 ];
 
