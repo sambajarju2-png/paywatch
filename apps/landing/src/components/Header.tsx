@@ -8,10 +8,19 @@ import { navItems, siteConfig } from "@/lib/config";
 import HamburgerIcon from "./HamburgerIcon";
 import OverlayMenu from "./OverlayMenu";
 
+const vergelijkDropdown = [
+  { slug: "dyme-alternatief", name: "Dyme", domain: "dyme.app" },
+  { slug: "grassfeld-alternatief", name: "Grassfeld", domain: "grassfeld.com" },
+  { slug: "fikks-alternatief", name: "fiKks", domain: "wijgaanhetfikksen.nl" },
+  { slug: "cleo-alternatief", name: "Cleo", domain: "meetcleo.com" },
+  { slug: "schuldhulpmaatje", name: "SchuldHulpMaatje", domain: "schuldhulpmaatje.nl" },
+];
+
 export default function Header() {
   const { lang, setLang, theme, setTheme, t } = useApp();
   const { getNav } = useSanityContent();
   const [overlayOpen, setOverlayOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   /* Use Sanity nav if available, otherwise hardcoded */
   const sanityHeaderNav = getNav("header");
@@ -41,7 +50,55 @@ export default function Header() {
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-6">
             {headerItems.map((item) =>
-              item.isExternal ? (
+              item.key === "vergelijken" ? (
+                <div
+                  key={item.key}
+                  className="relative"
+                  onMouseEnter={() => setDropdownOpen(true)}
+                  onMouseLeave={() => setDropdownOpen(false)}
+                >
+                  <Link
+                    href={item.href}
+                    className="flex items-center gap-1 text-sm font-medium text-slate-300 hover:text-white transition-colors"
+                  >
+                    {item.label}
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`transition-transform ${dropdownOpen ? "rotate-180" : ""}`}><path d="M6 9l6 6 6-6"/></svg>
+                  </Link>
+                  {dropdownOpen && (
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 w-56">
+                      <div className="rounded-xl border border-slate-700 bg-[#0A2540] shadow-xl overflow-hidden">
+                        {vergelijkDropdown.map((c) => (
+                          <Link
+                            key={c.slug}
+                            href={`/vergelijking/${c.slug}`}
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                          >
+                            <img
+                              src={`https://img.logo.dev/${c.domain}?token=pk_RLZzD1KxRrCpEywuCrIRRw&size=40&format=png`}
+                              alt=""
+                              width={20}
+                              height={20}
+                              className="rounded"
+                              loading="lazy"
+                              onError={(e) => { e.currentTarget.style.display = "none"; }}
+                            />
+                            <span>vs {c.name}</span>
+                          </Link>
+                        ))}
+                        <div className="border-t border-slate-700">
+                          <Link
+                            href="/vergelijking"
+                            className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-blue-400 hover:bg-slate-800 transition-colors"
+                          >
+                            {lang === "nl" ? "Bekijk alle vergelijkingen" : "View all comparisons"}
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : item.isExternal ? (
                 <a key={item.key} href={item.href} target="_blank" rel="noopener noreferrer"
                   className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
                   {item.label}

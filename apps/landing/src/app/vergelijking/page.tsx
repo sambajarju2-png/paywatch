@@ -161,7 +161,7 @@ export default function VergelijkingIndex() {
                             PayWatch en {c.name}
                           </p>
                           <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                            {lang === "nl" ? "Samenwerking" : "Partnership"}
+                            {lang === "nl" ? "Aanbevolen" : "Recommended"}
                           </span>
                         </div>
                         <p className="text-sm text-[var(--muted)] leading-relaxed mb-3">
@@ -169,11 +169,11 @@ export default function VergelijkingIndex() {
                         </p>
                         <p className="text-xs text-[var(--muted)] mb-3">
                           {lang === "nl"
-                            ? "Geen concurrent maar een partner. PayWatch vangt signalen vroeg op, deze organisatie helpt als het al misgaat. Samen dekken ze het hele traject."
-                            : "Not a competitor but a partner. PayWatch catches signals early, this organization helps when things have already gone wrong. Together they cover the entire journey."}
+                            ? "Geen concurrent maar een aanrader. Deze organisatie helpt waar PayWatch stopt. Samen dekken ze het hele traject van preventie tot oplossing."
+                            : "Not a competitor but recommended. This organization helps where PayWatch stops. Together they cover the full journey from prevention to resolution."}
                         </p>
                         <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 group-hover:gap-2 transition-all">
-                          {lang === "nl" ? "Bekijk samenwerking" : "View partnership"}
+                          {lang === "nl" ? "Bekijk aanbeveling" : "View recommendation"}
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                         </span>
                       </div>

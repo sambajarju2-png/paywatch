@@ -22,6 +22,7 @@ export const siteConfig = {
 export const navItems = [
   { key: "features", href: "/features" },
   { key: "pricing", href: "/pricing" },
+  { key: "vergelijken", href: "/vergelijking" },
   { key: "about", href: "/about" },
   { key: "resources", href: "/resources" },
   { key: "jobs", href: "/jobs" },
