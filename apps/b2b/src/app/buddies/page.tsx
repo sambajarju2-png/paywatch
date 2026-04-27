@@ -2,7 +2,7 @@ import { getTenant } from "@/lib/tenant";
 import { getAuthUser } from "@/lib/auth";
 import { createSupabaseAdmin } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
-import OrgNav from "@/components/OrgNav";
+import PageShell from "@/components/PageShell";
 
 export default async function BuddiesPage() {
   const [tenant, user] = await Promise.all([getTenant(), getAuthUser()]);
@@ -18,73 +18,47 @@ export default async function BuddiesPage() {
     .order("assigned_at", { ascending: false })
     .limit(100);
 
-  // Get member details
-  const memberIds = [...new Set((buddies || []).map(b => b.buddy_member_id))];
+  const memberIds = [...new Set((buddies || []).map((b: any) => b.buddy_member_id))];
   let memberDetails: Record<string, any> = {};
-
   if (memberIds.length > 0) {
-    const { data: members } = await supabase
-      .from("organization_members")
-      .select("id, invite_email, role")
-      .in("id", memberIds);
-
+    const { data: members } = await supabase.from("organization_members").select("id, invite_email, role").in("id", memberIds);
     if (members) members.forEach((m: any) => { memberDetails[m.id] = m; });
   }
 
   const roleLabels: Record<string, string> = {
-    schuldhulpverlener: "Schuldhulpverlener",
-    dossierbehandelaar: "Dossierbehandelaar",
-    bewindvoerder: "Bewindvoerder",
-    vrijwilliger: "Vrijwilliger",
-    maatje: "Maatje",
-    coach: "Coach",
-    sociaal_werker: "Sociaal werker",
-    administrateur: "Administrateur",
-    debiteurencoach: "Debiteurencoach",
+    schuldhulpverlener: "Schuldhulpverlener", dossierbehandelaar: "Dossierbehandelaar",
+    bewindvoerder: "Bewindvoerder", vrijwilliger: "Vrijwilliger", maatje: "Maatje",
+    coach: "Coach", sociaal_werker: "Sociaal werker", administrateur: "Administrateur", debiteurencoach: "Debiteurencoach",
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <OrgNav tenant={tenant} userEmail={user.email} active="buddies" />
+    <PageShell tenant={tenant} userEmail={user.email || ""}>
+      <div style={{ padding: "32px 40px", maxWidth: 1100 }}>
+        <h1 className="text-page-heading text-pw-text mb-2">Coaches & Buddies</h1>
+        <p className="text-label text-pw-muted mb-6">{buddies?.length || 0} koppelingen</p>
 
-      <main className="max-w-6xl mx-auto px-6 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Coaches &amp; Buddies</h1>
-            <p className="text-sm text-gray-500 mt-1">{buddies?.length || 0} koppelingen</p>
-          </div>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-          <div className="grid grid-cols-[1fr_150px_120px_100px] gap-4 px-4 py-3 border-b border-gray-100 text-xs font-medium text-gray-500 uppercase">
-            <span>Coach</span>
-            <span>Rol</span>
-            <span>Status</span>
-            <span>Sinds</span>
-          </div>
-
+        <div className="bg-pw-surface border border-pw-border rounded-card overflow-hidden">
           {(!buddies || buddies.length === 0) ? (
-            <div className="p-12 text-center text-gray-500 text-sm">
-              Nog geen coaches gekoppeld aan gebruikers.
-            </div>
+            <div className="p-12 text-center text-pw-muted text-label">Nog geen coaches gekoppeld aan gebruikers.</div>
           ) : (
             buddies.map((b: any) => {
               const member = memberDetails[b.buddy_member_id] || {};
               return (
-                <div key={b.id} className="grid grid-cols-[1fr_150px_120px_100px] gap-4 px-4 py-3 border-b border-gray-50 items-center text-sm">
-                  <div className="font-medium text-gray-900">{member.invite_email || "Onbekend"}</div>
-                  <span className="text-gray-600 text-xs">{roleLabels[b.role] || b.role}</span>
-                  <span className={"px-2 py-0.5 text-[10px] font-semibold rounded inline-block w-fit " +
-                    (b.status === "active" ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500")}>
-                    {b.status}
-                  </span>
-                  <span className="text-xs text-gray-500">{new Date(b.assigned_at).toLocaleDateString("nl-NL")}</span>
+                <div key={b.id} className="px-5 py-3 border-b border-pw-border/50 flex items-center justify-between text-label">
+                  <div className="font-medium text-pw-text">{member.invite_email || "Onbekend"}</div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-caption text-pw-muted">{roleLabels[b.role] || b.role}</span>
+                    <span className={"px-2 py-0.5 text-tiny font-semibold rounded-badge " + (b.status === "active" ? "bg-pw-green-light text-pw-green" : "bg-pw-bg text-pw-muted")}>
+                      {b.status}
+                    </span>
+                    <span className="text-caption text-pw-muted">{new Date(b.assigned_at).toLocaleDateString("nl-NL")}</span>
+                  </div>
                 </div>
               );
             })
           )}
         </div>
-      </main>
-    </div>
+      </div>
+    </PageShell>
   );
 }
