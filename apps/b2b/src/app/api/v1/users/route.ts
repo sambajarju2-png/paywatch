@@ -27,11 +27,7 @@ export async function GET(request: NextRequest) {
   if (status) query = query.eq("status", status);
 
   const { data, count, error } = await query;
-
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({
-    data,
-    pagination: { total: count, limit, offset },
-  });
+  return NextResponse.json({ data, pagination: { total: count, limit, offset } });
 }

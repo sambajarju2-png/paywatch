@@ -1,3 +1,4 @@
+import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { headers } from "next/headers";
@@ -9,6 +10,21 @@ export async function POST(request: NextRequest) {
   const orgId = h.get("x-tenant-id");
   if (!orgId) return NextResponse.json({ error: "No org context" }, { status: 400 });
 
+  // Verify user is authenticated
+  const cookieStore = await cookies();
+  const supabaseAuth = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return cookieStore.getAll(); },
+        setAll() {},
+      },
+    }
+  );
+  const { data: { user } } = await supabaseAuth.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -19,7 +35,7 @@ export async function POST(request: NextRequest) {
   const external_id = formData.get("external_id") as string;
 
   const token = randomBytes(24).toString("hex");
-  const expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days
+  const expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
   const { error } = await supabase.from("b2b_invites").insert({
     organization_id: orgId,
@@ -33,8 +49,6 @@ export async function POST(request: NextRequest) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-
-  // TODO: send email via Resend with branded template
 
   return NextResponse.redirect(new URL("/invites", request.url));
 }

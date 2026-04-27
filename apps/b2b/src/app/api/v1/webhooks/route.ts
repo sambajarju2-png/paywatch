@@ -20,7 +20,6 @@ export async function GET() {
     .order("created_at", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
   return NextResponse.json({ data });
 }
 
@@ -37,7 +36,6 @@ export async function POST(request: NextRequest) {
   }
 
   const secret = randomBytes(32).toString("hex");
-
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -45,12 +43,7 @@ export async function POST(request: NextRequest) {
 
   const { data, error } = await supabase
     .from("b2b_webhooks")
-    .insert({
-      organization_id: orgId,
-      url,
-      events,
-      secret,
-    })
+    .insert({ organization_id: orgId, url, events, secret })
     .select("id, url, events, status, created_at")
     .single();
 

@@ -13,7 +13,6 @@ export async function GET() {
   );
 
   const { data, error } = await supabase.rpc("get_org_analytics", { p_organization_id: orgId });
-
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ data });

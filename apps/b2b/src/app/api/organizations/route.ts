@@ -1,3 +1,4 @@
+import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
@@ -6,16 +7,20 @@ const SUPER_ADMINS = ["sambajarju2@gmail.com", "samba@paywatch.nl", "mariama@pay
 
 async function verifySuperAdmin() {
   const cookieStore = await cookies();
-  const supabase = createClient(
+  const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll() {},
+      },
+    }
   );
-  // Try all possible cookie names
-  const allCookies = cookieStore.getAll();
-  const accessToken = allCookies.find(c => c.name.includes("access-token") || c.name.includes("access_token"));
-  if (!accessToken) return null;
 
-  const { data: { user } } = await supabase.auth.getUser(accessToken.value);
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user || !SUPER_ADMINS.includes(user.email?.toLowerCase() || "")) return null;
   return user;
 }
@@ -42,7 +47,6 @@ export async function POST(request: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  // Default features per type
   const featureDefaults: Record<string, object> = {
     gemeente: { bank_sync: true, ai_insights: true, payment_plans: true, community: false, camera_scan: true, buddy_system: true, spending_analytics: true, push_notifications: true, export_reports: true, escalation_alerts: true },
     incasso: { bank_sync: false, ai_insights: true, payment_plans: true, community: false, camera_scan: true, buddy_system: true, spending_analytics: false, push_notifications: true, export_reports: true, escalation_alerts: true },
@@ -73,7 +77,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Add current user as owner
   await supabase.from("organization_members").insert({
     organization_id: org.id,
     user_id: user.id,
@@ -82,6 +85,5 @@ export async function POST(request: NextRequest) {
     permissions: { manage_users: true, manage_buddies: true, view_analytics: true, manage_settings: true, api_access: true },
   });
 
-  // Redirect to the new org's page
   return NextResponse.redirect(new URL(`/organizations/${org.id}`, request.url));
 }
