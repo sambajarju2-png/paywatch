@@ -3,7 +3,7 @@ import { getAuthUser } from "@/lib/auth";
 import { createSupabaseAdmin } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import OrgNav from "@/components/OrgNav";
+import PageShell from "@/components/PageShell";
 
 export default async function OrgDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

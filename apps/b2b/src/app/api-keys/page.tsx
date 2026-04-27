@@ -2,7 +2,7 @@ import { getTenant, canManage } from "@/lib/tenant";
 import { getAuthUser } from "@/lib/auth";
 import { createSupabaseAdmin } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
-import OrgNav from "@/components/OrgNav";
+import PageShell from "@/components/PageShell";
 
 export default async function ApiKeysPage() {
   const [tenant, user] = await Promise.all([getTenant(), getAuthUser()]);
@@ -34,8 +34,9 @@ export default async function ApiKeysPage() {
   const revokedKeys = ((keys || []) as ApiKeyRow[]).filter(k => k.revoked_at);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <OrgNav tenant={tenant} userEmail={user.email} active="api-keys" />
+    <PageShell tenant={tenant} userEmail={user.email || ""}>
+              {/* nav handled by PageShell */}
+        {false && <div data-active="api-keys" />
 
       <main className="max-w-6xl mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-6">

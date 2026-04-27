@@ -3,6 +3,7 @@ import { getAuthUser } from "@/lib/auth";
 import { createSupabaseAdmin } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import PageShell from "@/components/PageShell";
 
 export default async function InvitesPage() {
   const [tenant, user] = await Promise.all([getTenant(), getAuthUser()]);
@@ -27,7 +28,7 @@ export default async function InvitesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <PageShell tenant={tenant} userEmail={user.email || ""}>
       <header className="bg-white border-b border-gray-200 px-6 py-4" style={{ borderTopColor: tenant.primaryColor, borderTopWidth: 3, borderTopStyle: "solid" }}>
         <div className="flex items-center justify-between max-w-6xl mx-auto">
           <div className="flex items-center gap-3">
