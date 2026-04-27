@@ -2,7 +2,7 @@ import { getTenant } from "@/lib/tenant";
 import { getAuthUser } from "@/lib/auth";
 import { createSupabaseAdmin } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
-import PageShell from "@/components/PageShell";
+import OrgNav from "@/components/OrgNav";
 
 export default async function AnalyticsPage() {
   const [tenant, user] = await Promise.all([getTenant(), getAuthUser()]);
@@ -40,9 +40,8 @@ export default async function AnalyticsPage() {
   };
 
   return (
-    <PageShell tenant={tenant} userEmail={user.email || ""}>
-              {/* nav handled by PageShell */}
-        {false && <div data-active="analytics" />
+    <div className="min-h-screen bg-gray-50">
+      <OrgNav tenant={tenant} userEmail={user.email} active="analytics" />
 
       <main className="max-w-6xl mx-auto px-6 py-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Rapportage</h1>
