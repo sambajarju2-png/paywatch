@@ -25,7 +25,7 @@ export default async function AnalyticsPage() {
     .order("onboarded_at", { ascending: true });
 
   const monthCounts: Record<string, number> = {};
-  (monthlyData || []).forEach((row) => {
+  (monthlyData || []).forEach((row: { onboarded_at: string }) => {
     const month = new Date(row.onboarded_at).toLocaleDateString("nl-NL", { month: "short", year: "numeric" });
     monthCounts[month] = (monthCounts[month] || 0) + 1;
   });
