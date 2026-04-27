@@ -94,13 +94,25 @@ export async function middleware(request: NextRequest) {
     // Org admin mode — resolve tenant from subdomain
     response.headers.set("x-tenant-mode", "org-admin");
 
-    // Look up org by slug (using service role for speed, cached in edge)
-    const { data: org } = await supabase
-      .from("organizations")
-      .select("id, name, slug, type, status, logo_url, primary_color, features, tier")
-      .eq("slug", subdomain)
-      .eq("status", "active")
-      .single();
+    // Look up org by slug using direct REST API (more reliable in edge middleware)
+    let org: any = null;
+    try {
+      const orgRes = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/organizations?slug=eq.${subdomain}&status=eq.active&select=id,name,slug,type,status,logo_url,primary_color,features,tier&limit=1`,
+        {
+          headers: {
+            "apikey": process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            "Authorization": `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+          },
+        }
+      );
+      const orgs = await orgRes.json();
+      if (Array.isArray(orgs) && orgs.length > 0) {
+        org = orgs[0];
+      }
+    } catch (e) {
+      console.error("Org lookup failed:", e);
+    }
 
     if (!org) {
       // Unknown subdomain — show 404
@@ -123,12 +135,24 @@ export async function middleware(request: NextRequest) {
 
     // If logged in, verify they are a member of this org
     if (user) {
-      const { data: membership } = await supabase
-        .from("organization_members")
-        .select("id, role")
-        .eq("organization_id", org.id)
-        .eq("user_id", user.id)
-        .single();
+      let membership: any = null;
+      try {
+        const memRes = await fetch(
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/organization_members?organization_id=eq.${org.id}&user_id=eq.${user.id}&select=id,role&limit=1`,
+          {
+            headers: {
+              "apikey": process.env.SUPABASE_SERVICE_ROLE_KEY!,
+              "Authorization": `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+            },
+          }
+        );
+        const members = await memRes.json();
+        if (Array.isArray(members) && members.length > 0) {
+          membership = members[0];
+        }
+      } catch (e) {
+        console.error("Membership check failed:", e);
+      }
 
       // Also check if super admin (they can access any org)
       const isSuperAdmin = SUPER_ADMINS.includes(user.email?.toLowerCase() || "");
