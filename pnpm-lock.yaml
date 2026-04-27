@@ -83,6 +83,61 @@ importers:
         specifier: ^5.7.0
         version: 5.9.3
 
+  apps/b2b:
+    dependencies:
+      '@paywatch/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@paywatch/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@paywatch/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      '@supabase/ssr':
+        specifier: ^0.9.0
+        version: 0.9.0(@supabase/supabase-js@2.99.3)
+      '@supabase/supabase-js':
+        specifier: ^2.99.3
+        version: 2.99.3
+      lucide-react:
+        specifier: ^0.383.0
+        version: 0.383.0(react@19.2.4)
+      next:
+        specifier: ^16.0.0
+        version: 16.2.1(@babel/core@7.29.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react:
+        specifier: ^19.0.0
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.4(react@19.2.4)
+      recharts:
+        specifier: ^2.15.4
+        version: 2.15.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.15
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.14)
+      autoprefixer:
+        specifier: ^10.4.0
+        version: 10.4.27(postcss@8.5.8)
+      postcss:
+        specifier: ^8.4.0
+        version: 8.5.8
+      tailwindcss:
+        specifier: ^3.4.0
+        version: 3.4.19(tsx@4.21.0)(yaml@2.8.2)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
   apps/landing:
     dependencies:
       '@paywatch/config':
@@ -8905,7 +8960,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 20.19.37
+      '@types/node': 22.19.15
 
   '@uiw/codemirror-extensions-basic-setup@4.25.8(@codemirror/autocomplete@6.20.1)(@codemirror/commands@6.10.3)(@codemirror/language@6.12.2)(@codemirror/lint@6.9.5)(@codemirror/search@6.6.0)(@codemirror/state@6.6.0)(@codemirror/view@6.40.0)':
     dependencies:
