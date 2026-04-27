@@ -18,8 +18,20 @@ export default async function ApiKeysPage() {
     .eq("organization_id", tenant.orgId)
     .order("created_at", { ascending: false });
 
-  const activeKeys = (keys || []).filter(k => !k.revoked_at);
-  const revokedKeys = (keys || []).filter(k => k.revoked_at);
+  interface ApiKeyRow {
+    id: string;
+    name: string;
+    key_prefix: string;
+    scopes: string[];
+    rate_limit: number;
+    environment: string;
+    last_used_at: string | null;
+    created_at: string;
+    revoked_at: string | null;
+  }
+
+  const activeKeys = ((keys || []) as ApiKeyRow[]).filter(k => !k.revoked_at);
+  const revokedKeys = ((keys || []) as ApiKeyRow[]).filter(k => k.revoked_at);
 
   return (
     <div className="min-h-screen bg-gray-50">

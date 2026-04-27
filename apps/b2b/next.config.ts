@@ -3,10 +3,6 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   transpilePackages: ["@paywatch/ui", "@paywatch/database", "@paywatch/config"],
   poweredByHeader: false,
-  typescript: {
-    // TODO: fix remaining strict TS errors and remove this
-    ignoreBuildErrors: true,
-  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "img.logo.dev" },

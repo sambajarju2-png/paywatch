@@ -105,7 +105,7 @@ export default async function OrgDetailPage({ params }: { params: Promise<{ id: 
               <p className="text-sm text-gray-400">Geen teamleden</p>
             ) : (
               <div className="space-y-2">
-                {members.map((m) => (
+                {members.map((m: any) => (
                   <div key={m.id} className="flex items-center justify-between py-2 border-b border-gray-50">
                     <div>
                       <div className="text-sm font-medium text-gray-900">{m.invite_email || "Onbekend"}</div>

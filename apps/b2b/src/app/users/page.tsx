@@ -23,7 +23,7 @@ export default async function UsersPage() {
     .limit(100);
 
   // Get user details for active users
-  const userIds = (users || []).filter(u => u.user_id).map(u => u.user_id);
+  const userIds = (users || []).filter((u: any) => u.user_id).map((u: any) => u.user_id);
   let userDetails: Record<string, any> = {};
 
   if (userIds.length > 0) {
@@ -33,7 +33,7 @@ export default async function UsersPage() {
       .in("user_id", userIds);
 
     if (settings) {
-      settings.forEach(s => { userDetails[s.user_id] = s; });
+      settings.forEach((s: any) => { userDetails[s.user_id] = s; });
     }
   }
 
@@ -86,7 +86,7 @@ export default async function UsersPage() {
               Nog geen gebruikers. <Link href="/invites" className="font-medium hover:underline" style={{ color: tenant.primaryColor }}>Nodig je eerste gebruiker uit</Link>
             </div>
           ) : (
-            users.map((uo) => {
+            users.map((uo: any) => {
               const detail = userDetails[uo.user_id] || {};
               const name = detail.display_name || detail.first_name || uo.external_id || "Onbekend";
               return (

@@ -78,7 +78,7 @@ export default async function InvitesPage() {
               Nog geen uitnodigingen verstuurd.
             </div>
           ) : (
-            invites.map((inv) => (
+            invites.map((inv: any) => (
               <div key={inv.id} className="grid grid-cols-[1fr_120px_150px_100px_100px] gap-4 px-4 py-3 border-b border-gray-50 items-center text-sm">
                 <div>
                   <div className="font-medium text-gray-900">{inv.email || "Geen e-mail"}</div>

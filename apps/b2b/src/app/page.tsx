@@ -53,7 +53,7 @@ export default async function DashboardPage() {
                 </Link>
               </div>
             ) : (
-              orgs.map((org) => (
+              orgs.map((org: any) => (
                 <Link
                   key={org.id}
                   href={`/organizations/${org.id}`}

@@ -28,7 +28,7 @@ export default async function BuddiesPage() {
       .select("id, invite_email, role")
       .in("id", memberIds);
 
-    if (members) members.forEach(m => { memberDetails[m.id] = m; });
+    if (members) members.forEach((m: any) => { memberDetails[m.id] = m; });
   }
 
   const roleLabels: Record<string, string> = {
@@ -68,7 +68,7 @@ export default async function BuddiesPage() {
               Nog geen coaches gekoppeld aan gebruikers.
             </div>
           ) : (
-            buddies.map((b) => {
+            buddies.map((b: any) => {
               const member = memberDetails[b.buddy_member_id] || {};
               return (
                 <div key={b.id} className="grid grid-cols-[1fr_150px_120px_100px] gap-4 px-4 py-3 border-b border-gray-50 items-center text-sm">
