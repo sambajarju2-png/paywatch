@@ -3,7 +3,7 @@ import { getAuthUser } from "@/lib/auth";
 import { createSupabaseAdmin } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import OrgNav from "@/components/OrgNav";
+import PageShell from "@/components/PageShell";
 
 export default async function OrgDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -52,8 +52,8 @@ export default async function OrgDetailPage({ params }: { params: Promise<{ id: 
   const features = org.features || {};
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <OrgNav tenant={tenant} userEmail={user.email} active="organizations" />
+    <PageShell tenant={tenant} userEmail={user.email || ""}>
+      
 
       <main className="max-w-6xl mx-auto px-6 py-8">
         <div className="flex items-center gap-3 mb-2">
@@ -176,6 +176,6 @@ export default async function OrgDetailPage({ params }: { params: Promise<{ id: 
           </div>
         </div>
       </main>
-    </div>
+    </PageShell>
   );
 }
