@@ -12,14 +12,11 @@ async function verifySuperAdmin() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
+        getAll() { return cookieStore.getAll(); },
         setAll() {},
       },
     }
   );
-
   const { data: { user } } = await supabase.auth.getUser();
   if (!user || !SUPER_ADMINS.includes(user.email?.toLowerCase() || "")) return null;
   return user;
@@ -36,10 +33,15 @@ export async function POST(request: NextRequest) {
   const primary_color = formData.get("primary_color") as string;
   const tier = formData.get("tier") as string;
   const contact_email = formData.get("contact_email") as string;
+  const contact_name = formData.get("contact_name") as string;
   const logo_url = formData.get("logo_url") as string;
+  const city = formData.get("city") as string;
+  const kvk_number = formData.get("kvk_number") as string;
+  const website = formData.get("website") as string;
+  const custom_intro_text = formData.get("custom_intro_text") as string;
 
   if (!name || !slug || !type) {
-    return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    return NextResponse.json({ error: "Naam, slug en type zijn verplicht" }, { status: 400 });
   }
 
   const supabase = createClient(
@@ -64,16 +66,19 @@ export async function POST(request: NextRequest) {
       primary_color: primary_color || "#2563EB",
       tier: tier || "pilot",
       contact_email: contact_email || null,
+      contact_name: contact_name || null,
       logo_url: logo_url || null,
+      city: city || null,
+      kvk_number: kvk_number || null,
+      website: website || null,
+      custom_intro_text: custom_intro_text || null,
       features: featureDefaults[type] || featureDefaults.gemeente,
     })
     .select("id")
     .single();
 
   if (error) {
-    if (error.code === "23505") {
-      return NextResponse.json({ error: "Slug already taken" }, { status: 409 });
-    }
+    if (error.code === "23505") return NextResponse.json({ error: "Deze slug is al in gebruik" }, { status: 409 });
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
@@ -81,6 +86,7 @@ export async function POST(request: NextRequest) {
     organization_id: org.id,
     user_id: user.id,
     role: "owner",
+    invite_email: user.email,
     invite_status: "accepted",
     permissions: { manage_users: true, manage_buddies: true, view_analytics: true, manage_settings: true, api_access: true },
   });
