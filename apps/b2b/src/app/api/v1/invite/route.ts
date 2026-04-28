@@ -30,25 +30,45 @@ export async function POST(request: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  const formData = await request.formData();
-  const email = formData.get("email") as string;
-  const external_id = formData.get("external_id") as string;
+  // Accept both JSON and FormData
+  let email: string | null = null;
+  let external_id: string | null = null;
+
+  const contentType = request.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) {
+    const body = await request.json();
+    email = body.email || null;
+    external_id = body.external_id || null;
+  } else {
+    const formData = await request.formData();
+    email = formData.get("email") as string || null;
+    external_id = formData.get("external_id") as string || null;
+  }
 
   const token = randomBytes(24).toString("hex");
   const expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  const invite_url = `https://app.paywatch.app/invite/${token}`;
 
-  const { error } = await supabase.from("b2b_invites").insert({
+  const { data: invite, error } = await supabase.from("b2b_invites").insert({
     organization_id: orgId,
-    email: email || null,
-    external_id: external_id || null,
+    email,
+    external_id,
     token,
     invite_type: "single",
     expires_at,
-  });
+  }).select("id, token").single();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.redirect(new URL("/invites", request.url));
+  // TODO: Send invite email via Resend when email is provided
+  // if (email) { await sendInviteEmail(email, invite_url, orgName); }
+
+  return NextResponse.json({
+    success: true,
+    invite_id: invite.id,
+    invite_url,
+    token: invite.token,
+  });
 }

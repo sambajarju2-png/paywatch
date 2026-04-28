@@ -3,6 +3,7 @@ import { getAuthUser } from "@/lib/auth";
 import { createSupabaseAdmin } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 import PageShell from "@/components/PageShell";
+import InviteForm from "./InviteForm";
 
 export default async function InvitesPage() {
   const [tenant, user] = await Promise.all([getTenant(), getAuthUser()]);
@@ -31,22 +32,7 @@ export default async function InvitesPage() {
       <div style={{ padding: "32px 40px", maxWidth: 1100 }}>
         <h1 className="text-page-heading text-pw-text mb-6">Uitnodigingen</h1>
 
-        <div className="bg-pw-surface border border-pw-border rounded-card p-6 mb-6">
-          <h2 className="text-section-head text-pw-text mb-4">Nieuwe uitnodiging</h2>
-          <form action="/api/v1/invite" method="POST" className="flex gap-3 items-end">
-            <div className="flex-1">
-              <label className="block text-caption text-pw-muted font-medium mb-1">E-mailadres</label>
-              <input name="email" type="email" placeholder="gebruiker@email.com" className="w-full px-3 py-2 border border-pw-border rounded-input text-label" />
-            </div>
-            <div className="flex-1">
-              <label className="block text-caption text-pw-muted font-medium mb-1">Referentie (optioneel)</label>
-              <input name="external_id" placeholder="Dossiernr / casenr" className="w-full px-3 py-2 border border-pw-border rounded-input text-label" />
-            </div>
-            <button type="submit" className="px-4 py-2 text-white text-label font-semibold rounded-button border-none cursor-pointer" style={{ backgroundColor: tenant.primaryColor }}>
-              Versturen
-            </button>
-          </form>
-        </div>
+        <InviteForm orgId={tenant.orgId} tenantColor={tenant.primaryColor} />
 
         <div className="bg-pw-surface border border-pw-border rounded-card overflow-hidden">
           {(!invites || invites.length === 0) ? (

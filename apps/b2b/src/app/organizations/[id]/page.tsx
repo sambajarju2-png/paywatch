@@ -20,7 +20,6 @@ export default async function OrgDetailPage({ params }: { params: Promise<{ id: 
 
   if (!org) redirect("/");
 
-  // Get stats
   const { count: userCount } = await supabase
     .from("user_organizations")
     .select("id", { count: "exact", head: true })
@@ -50,19 +49,18 @@ export default async function OrgDetailPage({ params }: { params: Promise<{ id: 
     .order("created_at");
 
   const features = org.features || {};
+  const roleLabels: Record<string, string> = { owner: "Eigenaar", admin: "Admin", viewer: "Viewer", coach: "Coach" };
 
   return (
     <PageShell tenant={tenant} userEmail={user.email || ""}>
-      
-
-      <main className="max-w-6xl mx-auto px-6 py-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="flex gap-3"><Link href="/" className="text-sm text-gray-400 hover:text-gray-600">&larr; Alle organisaties</Link></div>
+      <div style={{ padding: "32px 40px", maxWidth: 1100 }}>
+        <div className="mb-2">
+          <Link href="/" className="text-label text-pw-muted no-underline">&larr; Alle organisaties</Link>
         </div>
 
         <div className="flex items-center gap-4 mb-8">
           <div
-            className="w-14 h-14 rounded-xl flex items-center justify-center text-white font-bold text-lg"
+            className="w-14 h-14 rounded-xl flex items-center justify-center text-white font-bold text-body"
             style={{ backgroundColor: org.primary_color || "#2563EB" }}
           >
             {org.logo_url ? (
@@ -72,47 +70,49 @@ export default async function OrgDetailPage({ params }: { params: Promise<{ id: 
             )}
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{org.name}</h1>
-            <p className="text-sm text-gray-500">
-              <a href={"https://" + org.slug + ".paywatch.app"} target="_blank" rel="noopener" className="text-blue-600 hover:underline">
+            <h1 className="text-page-heading text-pw-text">{org.name}</h1>
+            <p className="text-label text-pw-muted">
+              <a href={"https://" + org.slug + ".paywatch.app"} target="_blank" rel="noopener" className="text-pw-blue no-underline font-medium">
                 {org.slug}.paywatch.app
               </a>
               {" "}&middot; {org.type} &middot; {org.tier}
             </p>
           </div>
-          <Link href={`/organizations/${id}/edit`} className="px-4 py-2 bg-pw-navy text-white text-xs font-semibold rounded no-underline">Bewerken</Link>
+          <Link href={`/organizations/${id}/edit`} className="ml-auto px-4 py-2 bg-pw-navy text-white text-label font-semibold rounded-button no-underline">
+            Bewerken
+          </Link>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-4 gap-3 mb-6">
           {[
             { label: "Gebruikers", value: userCount || 0 },
             { label: "Actief", value: activeUsers || 0 },
             { label: "Openstaande invites", value: pendingInvites || 0 },
             { label: "Teamleden", value: memberCount || 0 },
           ].map((s) => (
-            <div key={s.label} className="bg-white border border-gray-200 rounded-xl p-4">
-              <div className="text-xs text-gray-500 mb-1">{s.label}</div>
-              <div className="text-2xl font-bold" style={{ color: org.primary_color }}>{s.value}</div>
+            <div key={s.label} className="bg-pw-surface border border-pw-border rounded-card p-4">
+              <div className="text-caption text-pw-muted mb-1">{s.label}</div>
+              <div className="text-hero" style={{ color: org.primary_color || "#2563EB" }}>{s.value}</div>
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 gap-4">
           {/* Team members */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6">
-            <h2 className="font-semibold text-gray-900 mb-4">Teamleden</h2>
+          <div className="bg-pw-surface border border-pw-border rounded-card p-6">
+            <h2 className="text-section-head text-pw-text mb-4">Teamleden</h2>
             {(!members || members.length === 0) ? (
-              <p className="text-sm text-gray-400">Geen teamleden</p>
+              <p className="text-label text-pw-muted">Geen teamleden</p>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {members.map((m: any) => (
-                  <div key={m.id} className="flex items-center justify-between py-2 border-b border-gray-50">
+                  <div key={m.id} className="flex items-center justify-between py-2 border-b border-pw-border/30">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">{m.invite_email || "Onbekend"}</div>
-                      <div className="text-xs text-gray-400">{m.invite_status}</div>
+                      <div className="text-label font-medium text-pw-text">{m.invite_email || "Onbekend"}</div>
+                      <div className="text-caption text-pw-muted">{m.invite_status}</div>
                     </div>
-                    <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-semibold rounded">{m.role}</span>
+                    <span className="px-2.5 py-1 bg-pw-bg text-pw-muted text-tiny font-semibold rounded-badge">{roleLabels[m.role] || m.role}</span>
                   </div>
                 ))}
               </div>
@@ -120,62 +120,65 @@ export default async function OrgDetailPage({ params }: { params: Promise<{ id: 
           </div>
 
           {/* Features */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6">
-            <h2 className="font-semibold text-gray-900 mb-4">Features</h2>
+          <div className="bg-pw-surface border border-pw-border rounded-card p-6">
+            <h2 className="text-section-head text-pw-text mb-4">Features</h2>
             <div className="grid grid-cols-2 gap-2">
               {Object.entries(features).map(([key, enabled]) => (
-                <div key={key} className="flex items-center gap-2 text-sm">
-                  <span className={"w-2 h-2 rounded-full " + (enabled ? "bg-green-500" : "bg-gray-300")} />
-                  <span className="text-gray-700 font-mono text-xs">{key}</span>
+                <div key={key} className="flex items-center gap-2 py-1">
+                  <span className={"w-2 h-2 rounded-full " + (enabled ? "bg-pw-green" : "bg-pw-border")} />
+                  <span className="text-label text-pw-text">{key.replace(/_/g, " ")}</span>
+                  <span className={"text-caption font-semibold ml-auto " + (enabled ? "text-pw-green" : "text-pw-muted")}>
+                    {enabled ? "Aan" : "Uit"}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Org info */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6">
-            <h2 className="font-semibold text-gray-900 mb-4">Details</h2>
-            <div className="space-y-2 text-sm">
+          <div className="bg-pw-surface border border-pw-border rounded-card p-6">
+            <h2 className="text-section-head text-pw-text mb-4">Details</h2>
+            <div className="space-y-2 text-label">
               {[
                 ["Status", org.status],
-                ["Contact", org.contact_email || "—"],
-                ["KvK", org.kvk_number || "—"],
-                ["Stad", org.city || "—"],
-                ["Website", org.website || "—"],
+                ["Contact", org.contact_email || "\u2014"],
+                ["KvK", org.kvk_number || "\u2014"],
+                ["Stad", org.city || "\u2014"],
+                ["Website", org.website || "\u2014"],
                 ["Aangemaakt", new Date(org.created_at).toLocaleDateString("nl-NL")],
               ].map(([label, val]) => (
-                <div key={label} className="flex justify-between">
-                  <span className="text-gray-500">{label}</span>
-                  <span className="font-medium text-gray-900">{val}</span>
+                <div key={label as string} className="flex justify-between py-1 border-b border-pw-border/30">
+                  <span className="text-pw-muted">{label}</span>
+                  <span className="font-medium text-pw-text">{val}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Branding preview */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6">
-            <h2 className="font-semibold text-gray-900 mb-4">Branding</h2>
+          <div className="bg-pw-surface border border-pw-border rounded-card p-6">
+            <h2 className="text-section-head text-pw-text mb-4">Branding</h2>
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg" style={{ backgroundColor: org.primary_color || "#2563EB" }} />
-                <span className="text-sm font-mono text-gray-600">{org.primary_color || "#2563EB"}</span>
+                <span className="text-label font-mono text-pw-muted">{org.primary_color || "#2563EB"}</span>
               </div>
               {org.logo_url && (
                 <div>
-                  <p className="text-xs text-gray-500 mb-1">Logo</p>
+                  <p className="text-caption text-pw-muted mb-1">Logo</p>
                   <img src={org.logo_url} alt="" className="h-10 w-auto" />
                 </div>
               )}
               {org.custom_intro_text && (
                 <div>
-                  <p className="text-xs text-gray-500 mb-1">Intro tekst</p>
-                  <p className="text-sm text-gray-700">{org.custom_intro_text}</p>
+                  <p className="text-caption text-pw-muted mb-1">Intro tekst</p>
+                  <p className="text-label text-pw-text">{org.custom_intro_text}</p>
                 </div>
               )}
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </PageShell>
   );
 }

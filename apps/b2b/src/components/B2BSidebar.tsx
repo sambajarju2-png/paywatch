@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { createBrowserClient } from "@supabase/ssr";
 
 interface Props {
   mode: "super-admin" | "org-admin";
@@ -29,8 +30,19 @@ const ORG_NAV = [
 
 export default function B2BSidebar({ mode, orgName, orgLogo, orgColor, userEmail }: Props) {
   const pathname = usePathname();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const navItems = mode === "super-admin" ? SUPER_NAV : ORG_NAV;
+
+  async function handleLogout() {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
 
   useEffect(() => {
     const saved = localStorage.getItem("pw-b2b-sidebar-collapsed");
@@ -173,6 +185,23 @@ export default function B2BSidebar({ mode, orgName, orgLogo, orgColor, userEmail
             {userEmail}
           </div>
         )}
+
+        <button
+          onClick={handleLogout}
+          style={{
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "10px 12px", borderRadius: 8, width: "100%",
+            background: "transparent", border: "none", cursor: "pointer",
+            color: "rgba(255,255,255,0.35)", fontSize: 12,
+          }}
+          title={collapsed ? "Uitloggen" : undefined}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+          </svg>
+          {!collapsed && <span>Uitloggen</span>}
+        </button>
       </div>
     </aside>
   );
