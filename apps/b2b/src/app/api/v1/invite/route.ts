@@ -4,11 +4,16 @@ import { cookies } from "next/headers";
 import { headers } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 import { randomBytes } from "crypto";
+import QRCode from "qrcode";
+import { sendInviteEmail } from "@/lib/resend";
 
 export async function POST(request: NextRequest) {
   const h = await headers();
   const orgId = h.get("x-tenant-id");
   if (!orgId) return NextResponse.json({ error: "No org context" }, { status: 400 });
+
+  const orgName = h.get("x-tenant-name") ? decodeURIComponent(h.get("x-tenant-name")!) : "Partner";
+  const orgColor = h.get("x-tenant-color") || "#2563EB";
 
   // Verify user is authenticated
   const cookieStore = await cookies();
@@ -49,6 +54,18 @@ export async function POST(request: NextRequest) {
   const expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
   const invite_url = `https://app.paywatch.app/invite/${token}`;
 
+  // Generate QR code as data URL
+  let qr_code_url: string | null = null;
+  try {
+    qr_code_url = await QRCode.toDataURL(invite_url, {
+      width: 300,
+      margin: 2,
+      color: { dark: "#0A2540", light: "#FFFFFF" },
+    });
+  } catch (e) {
+    console.error("[QR] Generation failed:", e);
+  }
+
   const { data: invite, error } = await supabase.from("b2b_invites").insert({
     organization_id: orgId,
     email,
@@ -56,19 +73,41 @@ export async function POST(request: NextRequest) {
     token,
     invite_type: "single",
     expires_at,
+    qr_code_url,
   }).select("id, token").single();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // TODO: Send invite email via Resend when email is provided
-  // if (email) { await sendInviteEmail(email, invite_url, orgName); }
+  // Send invite email if email provided and Resend is configured
+  let emailSent = false;
+  if (email && process.env.RESEND_API_KEY) {
+    const result = await sendInviteEmail({
+      to: email,
+      orgName,
+      orgColor,
+      inviteUrl: invite_url,
+    });
+    emailSent = result.success;
+  }
+
+  // Log in audit
+  await supabase.from("b2b_audit_log").insert({
+    organization_id: orgId,
+    actor_id: user.id,
+    actor_type: "staff",
+    action: "invite.created",
+    target_type: "invite",
+    target_id: invite.id,
+    metadata: { email, external_id, email_sent: emailSent },
+  }).then(() => {});
 
   return NextResponse.json({
     success: true,
     invite_id: invite.id,
     invite_url,
-    token: invite.token,
+    qr_code_url,
+    email_sent: emailSent,
   });
 }

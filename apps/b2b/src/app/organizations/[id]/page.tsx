@@ -4,6 +4,7 @@ import { createSupabaseAdmin } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import PageShell from "@/components/PageShell";
+import MemberSection from "./MemberSection";
 
 export default async function OrgDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -49,7 +50,6 @@ export default async function OrgDetailPage({ params }: { params: Promise<{ id: 
     .order("created_at");
 
   const features = org.features || {};
-  const roleLabels: Record<string, string> = { owner: "Eigenaar", admin: "Admin", viewer: "Viewer", coach: "Coach" };
 
   return (
     <PageShell tenant={tenant} userEmail={user.email || ""}>
@@ -99,25 +99,17 @@ export default async function OrgDetailPage({ params }: { params: Promise<{ id: 
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          {/* Team members */}
-          <div className="bg-pw-surface border border-pw-border rounded-card p-6">
-            <h2 className="text-section-head text-pw-text mb-4">Teamleden</h2>
-            {(!members || members.length === 0) ? (
-              <p className="text-label text-pw-muted">Geen teamleden</p>
-            ) : (
-              <div className="space-y-1">
-                {members.map((m: any) => (
-                  <div key={m.id} className="flex items-center justify-between py-2 border-b border-pw-border/30">
-                    <div>
-                      <div className="text-label font-medium text-pw-text">{m.invite_email || "Onbekend"}</div>
-                      <div className="text-caption text-pw-muted">{m.invite_status}</div>
-                    </div>
-                    <span className="px-2.5 py-1 bg-pw-bg text-pw-muted text-tiny font-semibold rounded-badge">{roleLabels[m.role] || m.role}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Team members — interactive */}
+          <MemberSection
+            orgId={id}
+            orgColor={org.primary_color || "#2563EB"}
+            members={(members || []).map((m: any) => ({
+              id: m.id,
+              role: m.role,
+              invite_email: m.invite_email || "Onbekend",
+              invite_status: m.invite_status || "unknown",
+            }))}
+          />
 
           {/* Features */}
           <div className="bg-pw-surface border border-pw-border rounded-card p-6">
