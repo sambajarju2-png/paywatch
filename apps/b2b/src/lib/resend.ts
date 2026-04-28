@@ -1,6 +1,11 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy init — Resend throws if no API key at construction time
+function getResendClient() {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return null;
+  return new Resend(key);
+}
 
 interface InviteEmailOptions {
   to: string;
@@ -11,6 +16,12 @@ interface InviteEmailOptions {
 }
 
 export async function sendInviteEmail({ to, orgName, orgColor, inviteUrl, inviterName }: InviteEmailOptions) {
+  const resend = getResendClient();
+  if (!resend) {
+    console.warn("[Resend] No API key configured, skipping email");
+    return { success: false, error: "RESEND_API_KEY not set" };
+  }
+
   const fromName = inviterName || orgName;
 
   const html = `
