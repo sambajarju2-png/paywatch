@@ -91,5 +91,5 @@ export async function POST(request: NextRequest) {
     permissions: { manage_users: true, manage_buddies: true, view_analytics: true, manage_settings: true, api_access: true },
   });
 
-  return NextResponse.redirect(new URL(`/organizations/${org.id}`, request.url));
+  return NextResponse.json({ success: true, id: org.id, slug: formData.get("slug") });
 }

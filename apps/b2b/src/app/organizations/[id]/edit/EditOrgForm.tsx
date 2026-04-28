@@ -1,13 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createBrowserClient } from "@supabase/ssr";
-
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 const FEATURE_LABELS: Record<string, string> = {
   bank_sync: "Bankrekening koppeling",
@@ -22,20 +16,12 @@ const FEATURE_LABELS: Record<string, string> = {
   escalation_alerts: "Escalatie waarschuwingen",
 };
 
-export default function EditOrgForm({ orgId }: { orgId: string }) {
+export default function EditOrgForm({ orgId, initialData }: { orgId: string; initialData: any }) {
   const router = useRouter();
-  const [org, setOrg] = useState<any>(null);
+  const [org, setOrg] = useState<any>(initialData);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    async function load() {
-      const { data } = await supabase.from("organizations").select("*").eq("id", orgId).single();
-      if (data) setOrg(data);
-    }
-    load();
-  }, [orgId]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -70,14 +56,6 @@ export default function EditOrgForm({ orgId }: { orgId: string }) {
     const features = { ...org.features };
     features[key] = !features[key];
     setOrg({ ...org, features });
-  }
-
-  if (!org) {
-    return (
-      <div style={{ padding: "32px 40px" }}>
-        <div className="text-label text-pw-muted">Laden...</div>
-      </div>
-    );
   }
 
   const features = org.features || {};

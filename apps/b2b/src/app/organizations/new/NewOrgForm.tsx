@@ -65,13 +65,14 @@ export default function NewOrgForm() {
     formData.set("custom_intro_text", customIntro);
 
     try {
-      const res = await fetch("/api/organizations", { method: "POST", body: formData, redirect: "follow" });
-      if (res.redirected) {
-        router.push(new URL(res.url).pathname);
+      const res = await fetch("/api/organizations", { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.error) {
+        setError(data.error);
+      } else if (data.id) {
+        router.push(`/organizations/${data.id}`);
         return;
       }
-      const data = await res.json();
-      if (data.error) setError(data.error);
     } catch (err: any) {
       setError(err.message || "Er ging iets mis");
     }
