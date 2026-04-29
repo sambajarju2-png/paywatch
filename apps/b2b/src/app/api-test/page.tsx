@@ -10,7 +10,7 @@ export default async function ApiTestPage() {
   // Only super-admins or org admins can access
   return (
     <PageShell tenant={tenant} userEmail={user.email || ""}>
-      <ApiTestClient orgId={tenant.orgId || ""} orgSlug={tenant.orgSlug || "b2b"} />
+      <ApiTestClient orgId={tenant.orgId || ""} orgSlug={tenant.slug || "b2b"} />
     </PageShell>
   );
 }
