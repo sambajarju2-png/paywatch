@@ -3,6 +3,7 @@ import { getAuthUser } from "@/lib/auth";
 import { createSupabaseAdmin } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 import PageShell from "@/components/PageShell";
+import AssignCoach from "./AssignCoach";
 
 const ROLE_LABELS: Record<string, string> = {
   schuldhulpverlener: "Schuldhulpverlener",
@@ -18,7 +19,7 @@ export default async function BuddiesPage() {
 
   const supabase = createSupabaseAdmin();
 
-  const [buddiesResult, membersResult, settingsResult] = await Promise.all([
+  const [buddiesResult, membersResult, settingsResult, userOrgsResult] = await Promise.all([
     supabase.from("b2b_buddies")
       .select("id, user_id, buddy_member_id, role, status, assigned_at")
       .eq("organization_id", tenant.orgId)
@@ -28,14 +29,31 @@ export default async function BuddiesPage() {
       .eq("organization_id", tenant.orgId),
     supabase.from("user_settings")
       .select("user_id, display_name, first_name, last_name"),
+    supabase.from("user_organizations")
+      .select("user_id, external_id")
+      .eq("organization_id", tenant.orgId)
+      .eq("status", "active"),
   ]);
 
   const buddies = buddiesResult.data || [];
   const members = membersResult.data || [];
   const settings = settingsResult.data || [];
+  const userOrgs = userOrgsResult.data || [];
 
   const memberMap = new Map(members.map((m: any) => [m.id, m]));
   const settingsMap = new Map(settings.map((s: any) => [s.user_id, s]));
+
+  // Build user list for assignment dropdown
+  const assignableUsers = userOrgs.map((uo: any) => {
+    const s = settingsMap.get(uo.user_id);
+    const name = s?.display_name || [s?.first_name, s?.last_name].filter(Boolean).join(" ") || uo.external_id || uo.user_id.substring(0, 8);
+    return { id: uo.user_id, name };
+  });
+
+  // Build coach list (members with coach/admin role)
+  const assignableCoaches = members
+    .filter((m: any) => ["coach", "admin", "owner"].includes(m.role))
+    .map((m: any) => ({ memberId: m.id, email: m.invite_email || "Onbekend" }));
 
   // Group by coach
   const coachGroups: Record<string, { email: string; clients: any[] }> = {};
@@ -66,10 +84,15 @@ export default async function BuddiesPage() {
         </div>
 
         {coaches.length === 0 ? (
-          <div className="bg-white border border-pw-border rounded-2xl p-12 text-center">
-            <p className="text-pw-muted mb-2">Nog geen coach koppelingen</p>
-          </div>
+          <>
+            <AssignCoach users={assignableUsers} coaches={assignableCoaches} orgId={tenant.orgId} />
+            <div className="bg-white border border-pw-border rounded-2xl p-12 text-center">
+              <p className="text-pw-muted mb-2">Nog geen coach koppelingen</p>
+            </div>
+          </>
         ) : (
+          <>
+            <AssignCoach users={assignableUsers} coaches={assignableCoaches} orgId={tenant.orgId} />
           <div className="grid grid-cols-2 gap-4">
             {coaches.map((coach) => {
               const load = coach.clients.length;
@@ -123,6 +146,7 @@ export default async function BuddiesPage() {
               );
             })}
           </div>
+          </>
         )}
       </div>
     </PageShell>
