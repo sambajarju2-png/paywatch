@@ -152,12 +152,9 @@ export async function POST(request: NextRequest) {
         .update({ last_triggered_at: new Date().toISOString(), last_success_at: new Date().toISOString(), failure_count: 0 })
         .eq("id", wh.id);
     } else {
-      await supabase.rpc("increment_webhook_failure", { webhook_id: wh.id }).catch(() => {
-        // If RPC doesn't exist, do manual update
-        supabase.from("b2b_webhooks")
-          .update({ last_triggered_at: new Date().toISOString(), last_failure_at: new Date().toISOString() })
-          .eq("id", wh.id);
-      });
+      await supabase.from("b2b_webhooks")
+        .update({ last_triggered_at: new Date().toISOString(), last_failure_at: new Date().toISOString() })
+        .eq("id", wh.id);
     }
 
     results.push({ webhook_id: wh.id, status, success });
