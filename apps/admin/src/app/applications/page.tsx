@@ -2,9 +2,22 @@
 
 import { useState, useEffect } from "react";
 
-const C = { blue: "#2563EB", green: "#059669", amber: "#D97706", navy: "#0A2540", muted: "#64748B", border: "#E2E8F0", borderLight: "#F1F5F9", surface: "#FFFFFF" };
+const C = { blue: "#2563EB", green: "#059669", amber: "#D97706", navy: "#0A2540", muted: "#64748B", border: "#E2E8F0", borderLight: "#F1F5F9", surface: "#FFFFFF", red: "#DC2626" };
 
-interface Application { id: string; job_id: string; job_title: string; name: string; email: string; phone?: string; message: string; lang: string; status: string; created_at: string; }
+interface Application {
+  id: string;
+  job_id: string;
+  job_title: string;
+  name: string;
+  email: string;
+  phone?: string;
+  message: string;
+  lang: string;
+  status: string;
+  linkedin_url?: string;
+  admin_notes?: string;
+  created_at: string;
+}
 
 const TABS = ["all", "new", "read", "done"] as const;
 const TAB_LABELS: Record<string, string> = { all: "Alles", new: "Nieuw", read: "Gelezen", done: "Afgehandeld" };
@@ -14,17 +27,27 @@ export default function ApplicationsPage() {
   const [apps, setApps] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<string>("all");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<Application | null>(null);
   const [replyText, setReplyText] = useState("");
   const [sending, setSending] = useState(false);
+  const [editingNotes, setEditingNotes] = useState<string | null>(null);
+  const [notesDraft, setNotesDraft] = useState("");
+  const [savingNotes, setSavingNotes] = useState(false);
+  const [linkedInDraft, setLinkedInDraft] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    fetch("/api/admin/applications").then((r) => r.json()).then((d) => setApps(d.applications || [])).catch(() => {}).finally(() => setLoading(false));
+    fetch("/api/admin/applications").then(r => r.json()).then(d => setApps(d.applications || [])).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   async function updateStatus(id: string, status: string) {
     await fetch("/api/admin/applications", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status }) });
-    setApps((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
+    setApps(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+  }
+
+  async function updateField(id: string, field: string, value: string) {
+    await fetch("/api/admin/applications", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, [field]: value }) });
+    setApps(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
   }
 
   async function sendReply() {
@@ -33,13 +56,12 @@ export default function ApplicationsPage() {
     try {
       await fetch("/api/admin/reply", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ to: replyTo.email, name: replyTo.name, subject: `Re: Sollicitatie ${replyTo.job_title}`, message: replyText }) });
       await updateStatus(replyTo.id, "done");
-      setReplyTo(null);
-      setReplyText("");
+      setReplyTo(null); setReplyText("");
     } catch { alert("Verzenden mislukt"); }
     finally { setSending(false); }
   }
 
-  const filtered = tab === "all" ? apps : apps.filter((a) => a.status === tab);
+  const filtered = tab === "all" ? apps : apps.filter(a => a.status === tab);
 
   return (
     <div>
@@ -47,54 +69,133 @@ export default function ApplicationsPage() {
       <p style={{ margin: "4px 0 24px", fontSize: 14, color: C.muted }}>{apps.length} sollicitaties ontvangen</p>
 
       <div style={{ display: "flex", gap: 4, marginBottom: 16, background: C.borderLight, borderRadius: 8, padding: 4, width: "fit-content" }}>
-        {TABS.map((t) => (
-          <button key={t} onClick={() => setTab(t)} style={{
-            padding: "6px 16px", borderRadius: 6, border: "none", fontSize: 12, fontWeight: 600, cursor: "pointer",
-            background: tab === t ? C.surface : "transparent", color: tab === t ? C.navy : C.muted,
-            boxShadow: tab === t ? "0 1px 2px rgba(0,0,0,0.06)" : "none", fontFamily: "'Plus Jakarta Sans', system-ui",
-          }}>{TAB_LABELS[t]} {t !== "all" && `(${apps.filter((a) => a.status === t).length})`}</button>
+        {TABS.map(t => (
+          <button key={t} onClick={() => setTab(t)} style={{ padding: "6px 16px", borderRadius: 6, border: "none", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: tab === t ? C.surface : "transparent", color: tab === t ? C.navy : C.muted, boxShadow: tab === t ? "0 1px 2px rgba(0,0,0,0.06)" : "none" }}>
+            {TAB_LABELS[t]} {t !== "all" && `(${apps.filter(a => a.status === t).length})`}
+          </button>
         ))}
       </div>
 
       {loading ? <div style={{ padding: 40, color: C.muted }}>Laden...</div> : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {filtered.map((a) => (
-            <div key={a.id} style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 20 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                <div>
-                  <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.navy }}>{a.name}</p>
-                  <p style={{ margin: "2px 0 0", fontSize: 12, color: C.muted }}>{a.email}{a.phone ? ` · ${a.phone}` : ""}</p>
+          {filtered.map(a => {
+            const isExpanded = expandedId === a.id;
+            return (
+              <div key={a.id} style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+                {/* Collapsed row */}
+                <div style={{ padding: 20, cursor: "pointer" }} onClick={() => { setExpandedId(isExpanded ? null : a.id); if (a.status === "new") updateStatus(a.id, "read"); }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: C.blue, flexShrink: 0 }}>
+                        {a.name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2)}
+                      </div>
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.navy }}>{a.name}</p>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: C.blue, background: "#EFF6FF", padding: "2px 8px", borderRadius: 4 }}>{a.job_title}</span>
+                          {a.status === "new" && <span style={{ width: 7, height: 7, borderRadius: "50%", background: C.blue, display: "inline-block" }} />}
+                        </div>
+                        <p style={{ margin: "2px 0 0", fontSize: 12, color: C.muted }}>{a.email}{a.phone ? ` · ${a.phone}` : ""}</p>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <span style={{ fontSize: 11, color: C.muted }}>{new Date(a.created_at).toLocaleDateString("nl-NL")}</span>
+                      <select value={a.status} onChange={e => { e.stopPropagation(); updateStatus(a.id, e.target.value); }}
+                        onClick={e => e.stopPropagation()}
+                        style={{ padding: "4px 8px", borderRadius: 6, border: `1px solid ${C.border}`, fontSize: 12, color: STATUS_COLORS[a.status] || C.muted, fontFamily: "inherit" }}>
+                        <option value="new">Nieuw</option><option value="read">Gelezen</option><option value="done">Afgehandeld</option>
+                      </select>
+                    </div>
+                  </div>
+                  {!isExpanded && <p style={{ margin: "10px 0 0", fontSize: 13, color: C.muted, lineHeight: 1.5, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{a.message}</p>}
                 </div>
-                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                  <select value={a.status} onChange={(e) => updateStatus(a.id, e.target.value)} style={{
-                    padding: "4px 8px", borderRadius: 6, border: `1px solid ${C.border}`, fontSize: 12,
-                    color: STATUS_COLORS[a.status] || C.muted, fontFamily: "'Plus Jakarta Sans', system-ui",
-                  }}>
-                    <option value="new">Nieuw</option><option value="read">Gelezen</option><option value="done">Afgehandeld</option>
-                  </select>
-                  <button onClick={() => { setReplyTo(a); setReplyText(""); }} style={{
-                    padding: "5px 12px", borderRadius: 6, border: "none", background: C.blue, color: "#fff",
-                    fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Plus Jakarta Sans', system-ui",
-                  }}>Reageer</button>
-                </div>
+
+                {/* Expanded content */}
+                {isExpanded && (
+                  <div style={{ borderTop: `1px solid ${C.borderLight}`, padding: "0 20px 20px" }}>
+                    {/* Message */}
+                    <p style={{ margin: "16px 0 0", fontSize: 14, color: "#374151", lineHeight: 1.7 }}>{a.message}</p>
+
+                    {/* LinkedIn + notes row */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 16 }}>
+                      <div>
+                        <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 600, color: C.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>LinkedIn</p>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          <input
+                            type="url"
+                            defaultValue={a.linkedin_url || ""}
+                            placeholder="https://linkedin.com/in/..."
+                            onChange={e => setLinkedInDraft(prev => ({ ...prev, [a.id]: e.target.value }))}
+                            style={{ flex: 1, padding: "8px 10px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 12, outline: "none", fontFamily: "inherit" }}
+                          />
+                          {a.linkedin_url && (
+                            <a href={a.linkedin_url} target="_blank" rel="noopener noreferrer"
+                              style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${C.border}`, background: "#EFF6FF", color: C.blue, fontSize: 12, textDecoration: "none", fontWeight: 600 }}>
+                              Open
+                            </a>
+                          )}
+                          {linkedInDraft[a.id] !== undefined && linkedInDraft[a.id] !== a.linkedin_url && (
+                            <button onClick={() => updateField(a.id, "linkedin_url", linkedInDraft[a.id])}
+                              style={{ padding: "8px 10px", borderRadius: 8, background: C.blue, border: "none", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                              Sla op
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 600, color: C.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>Notities</p>
+                        {editingNotes === a.id ? (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                            <textarea value={notesDraft} onChange={e => setNotesDraft(e.target.value)} rows={3} autoFocus
+                              style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${C.blue}`, fontSize: 12, resize: "vertical", outline: "none", fontFamily: "inherit" }} />
+                            <div style={{ display: "flex", gap: 6 }}>
+                              <button onClick={async () => { setSavingNotes(true); await updateField(a.id, "admin_notes", notesDraft); setSavingNotes(false); setEditingNotes(null); }}
+                                disabled={savingNotes}
+                                style={{ padding: "6px 12px", borderRadius: 6, background: C.blue, border: "none", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                                {savingNotes ? "Opslaan..." : "Opslaan"}
+                              </button>
+                              <button onClick={() => setEditingNotes(null)} style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${C.border}`, background: "transparent", fontSize: 12, color: C.muted, cursor: "pointer", fontFamily: "inherit" }}>Annuleer</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div onClick={() => { setEditingNotes(a.id); setNotesDraft(a.admin_notes || ""); }}
+                            style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 12, color: a.admin_notes ? "#374151" : C.muted, lineHeight: 1.5, cursor: "text", minHeight: 72, background: "#FAFBFC" }}>
+                            {a.admin_notes || "Klik om notities toe te voegen..."}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                      <button onClick={() => { setReplyTo(a); setReplyText(""); }}
+                        style={{ padding: "8px 16px", borderRadius: 8, background: C.blue, border: "none", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                        Reageer
+                      </button>
+                      <a href={`mailto:${a.email}`}
+                        style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${C.border}`, background: "transparent", color: C.navy, fontSize: 13, textDecoration: "none", fontWeight: 500 }}>
+                        Open in mail
+                      </a>
+                    </div>
+                  </div>
+                )}
               </div>
-              <span style={{ display: "inline-block", fontSize: 11, fontWeight: 600, color: C.blue, background: "#EFF6FF", padding: "2px 8px", borderRadius: 4, marginBottom: 8 }}>{a.job_title}</span>
-              <p style={{ margin: 0, fontSize: 13, color: C.muted, lineHeight: 1.5 }}>{a.message}</p>
-            </div>
-          ))}
+            );
+          })}
           {filtered.length === 0 && <div style={{ padding: 40, textAlign: "center", color: C.muted, background: C.surface, borderRadius: 12, border: `1px solid ${C.border}` }}>Geen sollicitaties{tab !== "all" ? " in deze categorie" : ""}</div>}
         </div>
       )}
 
+      {/* Reply modal */}
       {replyTo && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }} onClick={() => setReplyTo(null)}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: C.surface, borderRadius: 16, padding: 24, width: "100%", maxWidth: 500, boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: C.surface, borderRadius: 16, padding: 24, width: "100%", maxWidth: 500, boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}>
             <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700, color: C.navy }}>Reageer op {replyTo.name}</h3>
             <p style={{ margin: "0 0 16px", fontSize: 12, color: C.muted }}>{replyTo.email} — {replyTo.job_title}</p>
-            <textarea value={replyText} onChange={(e) => setReplyText(e.target.value)} rows={6} placeholder="Typ je reactie..." style={{ width: "100%", padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, resize: "vertical", outline: "none", fontFamily: "'Plus Jakarta Sans', system-ui", boxSizing: "border-box" }} />
+            <textarea value={replyText} onChange={e => setReplyText(e.target.value)} rows={6} placeholder="Typ je reactie..." style={{ width: "100%", padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, resize: "vertical", outline: "none", fontFamily: "inherit", boxSizing: "border-box" }} />
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 12 }}>
-              <button onClick={() => setReplyTo(null)} style={{ padding: "8px 16px", borderRadius: 6, border: `1px solid ${C.border}`, background: "transparent", fontSize: 13, cursor: "pointer", fontFamily: "'Plus Jakarta Sans', system-ui", color: C.muted }}>Annuleer</button>
-              <button onClick={sendReply} disabled={sending || !replyText.trim()} style={{ padding: "8px 16px", borderRadius: 6, border: "none", background: C.blue, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: sending ? 0.5 : 1, fontFamily: "'Plus Jakarta Sans', system-ui" }}>{sending ? "Verzenden..." : "Verzend"}</button>
+              <button onClick={() => setReplyTo(null)} style={{ padding: "8px 16px", borderRadius: 6, border: `1px solid ${C.border}`, background: "transparent", fontSize: 13, cursor: "pointer", fontFamily: "inherit", color: C.muted }}>Annuleer</button>
+              <button onClick={sendReply} disabled={sending || !replyText.trim()} style={{ padding: "8px 16px", borderRadius: 6, border: "none", background: C.blue, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: sending ? 0.5 : 1, fontFamily: "inherit" }}>{sending ? "Verzenden..." : "Verzend"}</button>
             </div>
           </div>
         </div>

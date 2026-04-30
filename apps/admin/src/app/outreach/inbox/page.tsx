@@ -39,7 +39,8 @@ type InboxEmail = {
   contact_id?: string;
   contact_name?: string;
   contact_type?: string;
-  attachments?: Array<{ name: string; size: number; type: string; path: string; url: string }>;
+  starred?: boolean;
+  attachments?: Array<{ name: string; size: number; type: string; path: string; url: string | null }>;
 };
 
 const STATUS_ICON: Record<string, { icon: typeof Send; color: string }> = {
@@ -75,6 +76,15 @@ export default function InboxPage() {
   const [direction, setDirection] = useState("all");
   const [mailbox, setMailbox] = useState("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [showStarredOnly, setShowStarredOnly] = useState(false);
+
+  // One-off compose modal
+  const [showCompose, setShowCompose] = useState(false);
+  const [composeTo, setComposeTo] = useState("");
+  const [composeSubject, setComposeSubject] = useState("");
+  const [composeBody, setComposeBody] = useState("");
+  const [composeSender, setComposeSender] = useState("samba@paywatch.nl");
+  const [composeSending, setComposeSending] = useState(false);
 
   // Reply
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
@@ -109,6 +119,44 @@ export default function InboxPage() {
     finally { setReplySending(false); }
   }
 
+  async function toggleStar(emailId: string, current: boolean) {
+    // Optimistic update
+    setEmails(prev => prev.map(e => e.id === emailId ? { ...e, starred: !current } : e));
+    try {
+      await fetch("/api/admin/outreach/inbox", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: emailId, starred: !current }),
+      });
+    } catch {
+      // Revert on error
+      setEmails(prev => prev.map(e => e.id === emailId ? { ...e, starred: current } : e));
+    }
+  }
+
+  async function sendOneOff() {
+    if (!composeTo.trim() || !composeSubject.trim() || !composeBody.trim()) return;
+    setComposeSending(true);
+    try {
+      const res = await fetch("/api/admin/outreach/quick-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sender: composeSender,
+          to_email: composeTo.trim(),
+          subject: composeSubject.trim(),
+          body_html: composeBody.replace(/\n/g, "<br/>"),
+        }),
+      });
+      if (res.ok) {
+        setShowCompose(false);
+        setComposeTo(""); setComposeSubject(""); setComposeBody("");
+        await fetchEmails();
+      } else { alert("Verzenden mislukt"); }
+    } catch { alert("Fout bij verzenden"); }
+    finally { setComposeSending(false); }
+  }
+
   const fetchEmails = useCallback(async () => {
     setLoading(true);
     try {
@@ -140,10 +188,28 @@ export default function InboxPage() {
           <h2 className="text-lg font-bold text-pw-navy">Inbox</h2>
           <p className="text-xs text-pw-muted mt-0.5">{total} email{total !== 1 ? "s" : ""} across all contacts</p>
         </div>
-        <button onClick={fetchEmails} disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-pw-muted hover:text-pw-text transition-colors">
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowStarredOnly(v => !v)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${showStarredOnly ? "bg-amber-50 border-amber-200 text-amber-700" : "bg-white border-pw-border text-pw-muted hover:text-pw-text"}`}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill={showStarredOnly ? "#D97706" : "none"} stroke={showStarredOnly ? "#D97706" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            Starred
+          </button>
+          <button
+            onClick={() => setShowCompose(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-pw-navy text-white hover:bg-blue-800 transition-colors"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Snel verzenden
+          </button>
+          <button onClick={fetchEmails} disabled={loading}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-pw-muted hover:text-pw-text transition-colors">
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -195,7 +261,7 @@ export default function InboxPage() {
           </div>
         ) : (
           <div className="divide-y divide-pw-border">
-            {emails.map((email) => {
+            {emails.filter(e => !showStarredOnly || e.starred).map((email) => {
               const isInbound = email.direction === "inbound";
               const isExpanded = expandedId === email.id;
               const statusConfig = STATUS_ICON[email.status] || STATUS_ICON.sent;
@@ -209,6 +275,17 @@ export default function InboxPage() {
                     className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50/80 transition-colors ${
                       isExpanded ? "bg-blue-50/30" : ""
                     } ${email.status === "received" || email.replied_at ? "bg-blue-50/20" : ""}`}>
+
+                    {/* Star button */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleStar(email.id, !!email.starred); }}
+                      className="shrink-0 text-pw-muted hover:text-amber-500 transition-colors"
+                      title={email.starred ? "Verwijder ster" : "Markeer als belangrijk"}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill={email.starred ? "#D97706" : "none"} stroke={email.starred ? "#D97706" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                      </svg>
+                    </button>
 
                     {/* Direction icon */}
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
@@ -419,6 +496,59 @@ export default function InboxPage() {
               className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-pw-border bg-white hover:bg-gray-50 disabled:opacity-40">
               Next →
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* One-off compose modal */}
+      {showCompose && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowCompose(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-bold text-pw-navy">Snel verzenden</h3>
+              <button onClick={() => setShowCompose(false)} className="text-pw-muted hover:text-pw-navy">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-pw-muted uppercase tracking-wider mb-1">Afzender</label>
+                <select value={composeSender} onChange={e => setComposeSender(e.target.value)}
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-pw-border bg-pw-bg focus:outline-none focus:border-pw-blue">
+                  <option value="samba@paywatch.nl">Samba Jarju — samba@paywatch.nl</option>
+                  <option value="mariama@paywatch.nl">Mariama Sesay — mariama@paywatch.nl</option>
+                  <option value="info@paywatch.nl">PayWatch — info@paywatch.nl</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-pw-muted uppercase tracking-wider mb-1">Aan</label>
+                <input type="email" value={composeTo} onChange={e => setComposeTo(e.target.value)}
+                  placeholder="naam@organisatie.nl" autoFocus
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-pw-border focus:outline-none focus:border-pw-blue" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-pw-muted uppercase tracking-wider mb-1">Onderwerp</label>
+                <input type="text" value={composeSubject} onChange={e => setComposeSubject(e.target.value)}
+                  placeholder="Onderwerp..."
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-pw-border focus:outline-none focus:border-pw-blue" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-pw-muted uppercase tracking-wider mb-1">Bericht</label>
+                <textarea value={composeBody} onChange={e => setComposeBody(e.target.value)}
+                  rows={6} placeholder="Typ je bericht..."
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-pw-border focus:outline-none focus:border-pw-blue resize-none" />
+              </div>
+              <div className="flex justify-end gap-2 pt-1">
+                <button onClick={() => setShowCompose(false)}
+                  className="px-4 py-2 text-sm text-pw-muted border border-pw-border rounded-lg hover:bg-pw-bg transition-colors">
+                  Annuleer
+                </button>
+                <button onClick={sendOneOff} disabled={composeSending || !composeTo.trim() || !composeSubject.trim() || !composeBody.trim()}
+                  className="px-4 py-2 text-sm font-semibold bg-pw-navy text-white rounded-lg hover:bg-blue-800 disabled:opacity-40 transition-colors flex items-center gap-2">
+                  {composeSending ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Verzenden...</> : <><Send className="w-3.5 h-3.5" /> Verzend</>}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

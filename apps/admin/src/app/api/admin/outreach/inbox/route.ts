@@ -112,3 +112,27 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }
+
+/**
+ * PATCH /api/admin/outreach/inbox
+ * Toggle star on an email.
+ * Body: { id: string, starred: boolean }
+ */
+export async function PATCH(req: NextRequest) {
+  try {
+    const supabase = createServiceRoleClient();
+    const { id, starred } = await req.json();
+    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+
+    const { error } = await supabase
+      .from("b2b_email_log")
+      .update({ starred: !!starred })
+      .eq("id", id);
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[Inbox PATCH]", err);
+    return NextResponse.json({ error: "Failed" }, { status: 500 });
+  }
+}

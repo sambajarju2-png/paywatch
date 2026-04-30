@@ -34,11 +34,17 @@ export async function PATCH(request: NextRequest) {
   if (!admin.isAdmin) return admin.response;
 
   try {
-    const { id, status } = await request.json();
-    if (!id || !status) return NextResponse.json({ error: "Missing id or status" }, { status: 400 });
+    const body = await request.json();
+    const { id, status, linkedin_url, admin_notes } = body;
+    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
     const supabase = getAdmin();
-    await supabase.from("job_applications").update({ status }).eq("id", id);
+    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (status !== undefined) updates.status = status;
+    if (linkedin_url !== undefined) updates.linkedin_url = linkedin_url;
+    if (admin_notes !== undefined) updates.admin_notes = admin_notes;
+
+    await supabase.from("job_applications").update(updates).eq("id", id);
 
     return NextResponse.json({ ok: true });
   } catch (err) {
