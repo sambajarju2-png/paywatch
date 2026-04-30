@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 
 interface User {
@@ -23,6 +24,7 @@ const STATUS_MAP: Record<string, { label: string; variant: "success" | "warning"
 const PAGE_SIZE = 10;
 
 export default function UsersClient({ users }: { users: User[] }) {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(0);
@@ -89,15 +91,16 @@ export default function UsersClient({ users }: { users: User[] }) {
               <th className="text-left py-3 px-5 text-[11px] font-bold text-pw-muted uppercase tracking-wider">Coach</th>
               <th className="text-left py-3 px-5 text-[11px] font-bold text-pw-muted uppercase tracking-wider">Gemeente</th>
               <th className="text-left py-3 px-5 text-[11px] font-bold text-pw-muted uppercase tracking-wider">Laatst actief</th>
+              <th className="py-3 px-5 w-8"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-pw-border">
             {paged.length === 0 ? (
-              <tr><td colSpan={5} className="py-12 text-center text-sm text-pw-muted">Geen gebruikers gevonden</td></tr>
+              <tr><td colSpan={6} className="py-12 text-center text-sm text-pw-muted">Geen gebruikers gevonden</td></tr>
             ) : paged.map((user) => {
               const st = STATUS_MAP[user.status] || STATUS_MAP.active;
               return (
-                <tr key={user.id} className="group hover:bg-pw-bg/50 transition-colors">
+                <tr key={user.id} onClick={() => router.push(`/users/${user.id}`)} className="group hover:bg-pw-bg/50 transition-colors cursor-pointer">
                   <td className="py-3 px-5">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full bg-pw-navy text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
@@ -114,6 +117,9 @@ export default function UsersClient({ users }: { users: User[] }) {
                   <td className="py-3 px-5 text-sm text-pw-text">{user.coach_email || <span className="text-pw-muted">—</span>}</td>
                   <td className="py-3 px-5 text-sm text-pw-muted">{user.gemeente || "—"}</td>
                   <td className="py-3 px-5 text-sm text-pw-muted">{relativeTime(user.last_active)}</td>
+                  <td className="py-3 px-5">
+                    <svg className="w-4 h-4 text-pw-muted group-hover:text-pw-blue transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                  </td>
                 </tr>
               );
             })}
