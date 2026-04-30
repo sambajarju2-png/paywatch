@@ -31,12 +31,12 @@ interface Bill {
 
 interface PaymentPlan {
   id: string;
-  creditor_name: string;
-  total_amount_cents: number;
-  paid_amount_cents: number;
-  status: string;
+  bill_id: string | null;
+  total_terms: number;
+  amount_per_term: number;
+  payment_day: number | null;
   start_date: string | null;
-  end_date: string | null;
+  status: string;
 }
 
 interface Finances {
@@ -52,7 +52,8 @@ interface Finances {
 
 interface AuditEntry {
   action: string;
-  actor_email: string;
+  actor_id: string | null;
+  actor_type: string;
   metadata: Record<string, any> | null;
   created_at: string;
 }
@@ -74,8 +75,7 @@ interface Props {
   finances: Finances | null;
   bills: Bill[];
   paymentPlans: PaymentPlan[];
-  auditLog: AuditEntry[];
-}
+  auditLog: AuditEntry[];}
 
 function euro(cents: number | null) {
   if (!cents) return "€ 0,00";
@@ -261,23 +261,22 @@ export default function UserDetailClient({
                 <h2 className="text-sm font-bold text-pw-navy">Betalingsregelingen</h2>
               </div>
               <div className="divide-y divide-pw-border">
-                {paymentPlans.map((pp) => {
-                  const progress = pp.total_amount_cents > 0
-                    ? Math.round((pp.paid_amount_cents / pp.total_amount_cents) * 100)
-                    : 0;
-                  return (
-                    <div key={pp.id} className="px-5 py-3">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-xs font-semibold text-pw-text">{pp.creditor_name}</p>
-                        <span className="text-[11px] text-pw-muted">{progress}%</span>
-                      </div>
-                      <div className="w-full bg-pw-bg rounded-full h-1.5 mb-1">
-                        <div className="h-1.5 rounded-full bg-pw-blue" style={{ width: `${progress}%` }} />
-                      </div>
-                      <p className="text-[11px] text-pw-muted">{euro(pp.paid_amount_cents)} / {euro(pp.total_amount_cents)}</p>
+                {paymentPlans.map((pp) => (
+                  <div key={pp.id} className="px-5 py-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-xs font-semibold text-pw-text">
+                        {pp.bill_id ? `Rekening ${pp.bill_id.substring(0, 8)}...` : "Betalingsregeling"}
+                      </p>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${pp.status === "active" ? "bg-green-50 text-pw-green" : "bg-pw-bg text-pw-muted"}`}>
+                        {pp.status}
+                      </span>
                     </div>
-                  );
-                })}
+                    <p className="text-[11px] text-pw-muted">
+                      {euro(pp.amount_per_term)} / {pp.total_terms} termijnen
+                      {pp.start_date && ` · vanaf ${new Date(pp.start_date).toLocaleDateString("nl-NL")}`}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -293,7 +292,7 @@ export default function UserDetailClient({
                   <div key={idx} className="px-5 py-3">
                     <p className="text-xs font-medium text-pw-text">{entry.action}</p>
                     <p className="text-[11px] text-pw-muted mt-0.5">
-                      {entry.actor_email} · {relativeTime(entry.created_at)}
+                      {entry.actor_type} · {relativeTime(entry.created_at)}
                     </p>
                   </div>
                 ))}

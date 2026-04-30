@@ -2,12 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdmin, createSupabaseServer } from "@/lib/supabase-server";
 
 /**
- * GET  /api/chat/[buddy_id] — fetch messages for a buddy link
+ * GET  /api/chat/[buddy_id] — fetch messages for a B2B buddy link
  * POST /api/chat/[buddy_id] — send a message
  *
- * Only the coach (organization_member) or the client (user) can access.
- * We verify by checking that the buddy link belongs to this org
- * and that the caller is the assigned coach OR the client.
+ * Access allowed: assigned coach, the client user, OR org owner/admin
+ * Uses b2b_buddy_messages table (separate from consumer app's buddy_messages)
  */
 
 async function verifyAccess(supabaseAdmin: any, supabaseUser: any, buddyId: string) {
@@ -22,20 +21,21 @@ async function verifyAccess(supabaseAdmin: any, supabaseUser: any, buddyId: stri
 
   if (!buddy) return null;
 
-  // Check access: must be the client OR the coach member (matched via organization_members.user_id)
+  // Look up the caller's membership in this org (also get role for admin/owner check)
   const { data: member } = await supabaseAdmin
     .from("organization_members")
-    .select("id")
+    .select("id, role")
     .eq("organization_id", buddy.organization_id)
     .eq("user_id", user.id)
     .single();
 
   const isClient = buddy.user_id === user.id;
   const isCoach = member?.id === buddy.buddy_member_id;
+  const isAdminOrOwner = ["admin", "owner"].includes(member?.role || "");
 
-  if (!isClient && !isCoach) return null;
+  if (!isClient && !isCoach && !isAdminOrOwner) return null;
 
-  return { buddy, senderId: user.id };
+  return { buddy, senderId: user.id, role: member?.role || "client" };
 }
 
 export async function GET(
@@ -50,7 +50,7 @@ export async function GET(
   if (!access) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { data: messages, error } = await supabaseAdmin
-    .from("buddy_messages")
+    .from("b2b_buddy_messages")
     .select("id, sender_id, content, is_read, created_at")
     .eq("buddy_link_id", buddy_id)
     .order("created_at", { ascending: true })
@@ -58,14 +58,14 @@ export async function GET(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Mark unread messages as read (messages sent TO this user)
+  // Mark unread messages as read for this caller
   const unread = (messages || [])
     .filter((m: any) => !m.is_read && m.sender_id !== access.senderId)
     .map((m: any) => m.id);
 
   if (unread.length > 0) {
     await supabaseAdmin
-      .from("buddy_messages")
+      .from("b2b_buddy_messages")
       .update({ is_read: true })
       .in("id", unread);
   }
@@ -90,7 +90,7 @@ export async function POST(
   if (content.length > 2000) return NextResponse.json({ error: "Bericht te lang" }, { status: 400 });
 
   const { data: message, error } = await supabaseAdmin
-    .from("buddy_messages")
+    .from("b2b_buddy_messages")
     .insert({
       buddy_link_id: buddy_id,
       sender_id: access.senderId,

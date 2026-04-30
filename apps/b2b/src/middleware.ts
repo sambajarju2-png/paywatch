@@ -166,6 +166,28 @@ export async function middleware(request: NextRequest) {
       if (membership) {
         response.headers.set("x-member-role", membership.role);
         response.headers.set("x-member-id", membership.id);
+
+        // Role-based route protection
+        const role = membership.role;
+        const isCoach = role === "coach";
+        const isViewer = role === "viewer";
+
+        // Admin-only routes (coaches + viewers cannot access)
+        const adminOnlyRoutes = ["/settings", "/api-keys", "/members", "/audit-log", "/analytics", "/invites"];
+        // Coach-restricted routes (only their /buddies view)
+        const coachOnlyRoutes = ["/buddies"];
+
+        if (isCoach) {
+          const allowed = pathname === "/buddies" || pathname.startsWith("/buddies") || pathname.startsWith("/api/");
+          if (!allowed) {
+            return NextResponse.redirect(new URL("/buddies", request.url));
+          }
+        } else if (isViewer) {
+          const isBlocked = adminOnlyRoutes.some(r => pathname === r || pathname.startsWith(r + "/"));
+          if (isBlocked) {
+            return NextResponse.redirect(new URL("/", request.url));
+          }
+        }
       }
       if (isSuperAdmin) {
         response.headers.set("x-member-role", "super_admin");

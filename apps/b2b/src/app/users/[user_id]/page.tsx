@@ -57,7 +57,7 @@ export default async function UserDetailPage({
       .limit(20),
     supabase
       .from("payment_plans")
-      .select("id, creditor_name, total_amount_cents, paid_amount_cents, status, start_date, end_date")
+      .select("id, bill_id, total_terms, amount_per_term, payment_day, start_date, status")
       .eq("user_id", userOrg.user_id)
       .order("created_at", { ascending: false }),
     supabase
@@ -73,11 +73,11 @@ export default async function UserDetailPage({
       .eq("status", "active")
       .single(),
     supabase.auth.admin.getUserById(userOrg.user_id),
+    // actor_email does not exist on b2b_audit_log — select actor_id, look up email separately
     supabase
       .from("b2b_audit_log")
-      .select("action, actor_email, metadata, created_at")
+      .select("action, actor_id, actor_type, metadata, created_at")
       .eq("organization_id", tenant.orgId)
-      .contains("metadata", { user_id: userOrg.user_id })
       .order("created_at", { ascending: false })
       .limit(10),
   ]);

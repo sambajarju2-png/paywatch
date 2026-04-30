@@ -7,6 +7,7 @@ import { createBrowserClient } from "@supabase/ssr";
 
 interface Props {
   mode: "super-admin" | "org-admin";
+  memberRole?: string | null;
   orgName?: string | null;
   orgLogo?: string | null;
   orgColor?: string;
@@ -17,7 +18,8 @@ const SUPER_NAV = [
   { href: "/", label: "Organisaties", key: "organizations", icon: "M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5m-4 0h4" },
 ];
 
-const ORG_NAV = [
+// Full org admin nav (owner + admin roles)
+const ADMIN_NAV = [
   { href: "/", label: "Dashboard", key: "dashboard", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
   { href: "/users", label: "Gebruikers", key: "users", icon: "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" },
   { href: "/invites", label: "Uitnodigen", key: "invites", icon: "M22 2L11 13M22 2l-7 20-4-9-9-4 20-7Z" },
@@ -29,11 +31,29 @@ const ORG_NAV = [
   { href: "/settings", label: "Instellingen", key: "settings", icon: "M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" },
 ];
 
-export default function B2BSidebar({ mode, orgName, orgLogo, orgColor, userEmail }: Props) {
+// Coach nav — only see their clients
+const COACH_NAV = [
+  { href: "/buddies", label: "Mijn cliënten", key: "buddies", icon: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" },
+];
+
+// Viewer nav — read-only overview
+const VIEWER_NAV = [
+  { href: "/", label: "Dashboard", key: "dashboard", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
+  { href: "/users", label: "Gebruikers", key: "users", icon: "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" },
+];
+
+function getNavForRole(mode: string, role: string | null | undefined) {
+  if (mode === "super-admin") return SUPER_NAV;
+  if (role === "coach") return COACH_NAV;
+  if (role === "viewer") return VIEWER_NAV;
+  return ADMIN_NAV; // owner, admin, super_admin, unknown
+}
+
+export default function B2BSidebar({ mode, memberRole, orgName, orgLogo, orgColor, userEmail }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
-  const navItems = mode === "super-admin" ? SUPER_NAV : ORG_NAV;
+  const navItems = getNavForRole(mode, memberRole);
 
   async function handleLogout() {
     const supabase = createBrowserClient(
@@ -182,8 +202,15 @@ export default function B2BSidebar({ mode, orgName, orgLogo, orgColor, userEmail
         </button>
 
         {userEmail && !collapsed && (
-          <div style={{ padding: "8px 12px", fontSize: 11, color: "rgba(255,255,255,0.3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {userEmail}
+          <div style={{ padding: "8px 12px" }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {userEmail}
+            </div>
+            {memberRole && (
+              <div style={{ marginTop: 3, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: "0.07em" }}>
+                {memberRole === "owner" ? "Eigenaar" : memberRole === "admin" ? "Beheerder" : memberRole === "coach" ? "Coach" : memberRole === "viewer" ? "Viewer" : memberRole}
+              </div>
+            )}
           </div>
         )}
 
