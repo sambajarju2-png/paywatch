@@ -392,10 +392,10 @@ export default function EmailPage() {
             }}
           >
             <Icon d={ICONS.mail} size={22} color={C.blue} />
-            Email & Newsletter
+            Newsletters
           </h1>
           <p style={{ fontSize: 13, color: C.muted, margin: "4px 0 0" }}>
-            Subscribers, broadcasts, and email performance
+            Subscribers, campagnes en e-mail prestaties
           </p>
         </div>
       </div>

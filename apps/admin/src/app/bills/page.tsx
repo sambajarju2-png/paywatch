@@ -5,6 +5,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell,
 } from "recharts";
+import { shimmerStyle } from "@/components/Shimmer";
 
 const C = {
   blue: "#2563EB", green: "#059669", amber: "#D97706", orange: "#EA580C",
@@ -44,8 +45,24 @@ export default function BillsPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: 40, color: C.muted, fontSize: 14 }}>
-        Rekeningen laden...
+      <div>
+        <style>{shimmerStyle}</style>
+        <div style={{ display: "flex", gap: 16, marginBottom: 24 }}>
+          {[0,1,2,3].map(i => (
+            <div key={i} style={{ flex: 1, background: "#fff", borderRadius: 12, border: "1px solid #E2E8F0", padding: 20 }}>
+              <div style={{ width: 80, height: 11, borderRadius: 4, background: "linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite", marginBottom: 12 }} />
+              <div style={{ width: 56, height: 28, borderRadius: 4, background: "linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
+            </div>
+          ))}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          {[0,1].map(i => (
+            <div key={i} style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8F0", padding: 20, height: 280 }}>
+              <div style={{ width: 140, height: 14, borderRadius: 4, background: "linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite", marginBottom: 20 }} />
+              <div style={{ width: "100%", height: 200, borderRadius: 8, background: "linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
