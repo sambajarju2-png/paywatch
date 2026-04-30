@@ -83,8 +83,25 @@ export async function GET(req: NextRequest) {
       contact_type: e.contact_id ? contactMap[e.contact_id]?.type || null : null,
     }));
 
+    // Generate signed URLs for attachments (1 hour expiry, admin-only access)
+    const enrichedWithSignedUrls = await Promise.all(
+      enriched.map(async (e) => {
+        if (!e.attachments || e.attachments.length === 0) return e;
+        const signedAttachments = await Promise.all(
+          (e.attachments as Array<{ name: string; size: number; type: string; path: string }>).map(async (att) => {
+            if (!att.path) return att;
+            const { data } = await supabase.storage
+              .from("email-attachments")
+              .createSignedUrl(att.path, 3600); // 1 hour
+            return { ...att, url: data?.signedUrl || null };
+          })
+        );
+        return { ...e, attachments: signedAttachments };
+      })
+    );
+
     return NextResponse.json({
-      emails: enriched,
+      emails: enrichedWithSignedUrls,
       total: count || 0,
       page,
       per_page: perPage,

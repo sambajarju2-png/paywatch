@@ -114,7 +114,8 @@ export async function POST(req: NextRequest) {
 
     // ── Extract attachments ──
     const attachmentCount = parseInt(formData.get("attachment-count") as string || "0", 10);
-    const attachments: Array<{ name: string; size: number; type: string; path: string; url: string }> = [];
+    // Bucket is private — store path only, signed URLs generated at read time
+    const attachments: Array<{ name: string; size: number; type: string; path: string }> = [];
 
     for (let i = 1; i <= attachmentCount; i++) {
       const file = formData.get(`attachment-${i}`) as File | null;
@@ -133,16 +134,11 @@ export async function POST(req: NextRequest) {
           });
 
         if (!uploadError) {
-          const { data: urlData } = supabase.storage
-            .from("email-attachments")
-            .getPublicUrl(storagePath);
-
           attachments.push({
             name: file.name,
             size: file.size,
             type: file.type || "application/octet-stream",
             path: storagePath,
-            url: urlData?.publicUrl || "",
           });
           console.log(`[Inbound] Saved attachment: ${file.name} (${file.size} bytes)`);
         } else {

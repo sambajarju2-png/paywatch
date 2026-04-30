@@ -295,25 +295,50 @@ export default function InboxPage() {
                       {email.attachments && email.attachments.length > 0 && (
                         <div className="mt-2 bg-slate-50 rounded-lg border border-pw-border p-3">
                           <p className="text-xs font-semibold text-pw-navy mb-2">
-                            📎 {email.attachments.length} bijlage{email.attachments.length > 1 ? "n" : ""}
+                            Bijlagen ({email.attachments.length})
                           </p>
-                          <div className="flex flex-wrap gap-2">
-                            {email.attachments.map((att, idx) => (
-                              <a
-                                key={idx}
-                                href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/email-attachments/${att.path}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-pw-border hover:border-pw-blue transition-colors text-xs"
-                              >
-                                <span className="text-pw-blue font-semibold">{att.name}</span>
-                                <span className="text-pw-muted">
-                                  ({att.size > 1024 * 1024
-                                    ? `${(att.size / 1024 / 1024).toFixed(1)} MB`
-                                    : `${Math.round(att.size / 1024)} KB`})
-                                </span>
-                              </a>
-                            ))}
+                          <div className="flex flex-col gap-3">
+                            {email.attachments.map((att, idx) => {
+                              const isImage = att.type?.startsWith("image/");
+                              return (
+                                <div key={idx}>
+                                  {isImage && att.url ? (
+                                    <div>
+                                      <img
+                                        src={att.url}
+                                        alt={att.name}
+                                        className="max-w-full rounded-lg border border-pw-border max-h-96 object-contain"
+                                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                                      />
+                                      <a
+                                        href={att.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="mt-1 flex items-center gap-1 text-xs text-pw-blue hover:underline"
+                                      >
+                                        {att.name} ({att.size > 1024 * 1024
+                                          ? `${(att.size / 1024 / 1024).toFixed(1)} MB`
+                                          : `${Math.round(att.size / 1024)} KB`})
+                                      </a>
+                                    </div>
+                                  ) : (
+                                    <a
+                                      href={att.url || "#"}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-pw-border hover:border-pw-blue transition-colors text-xs"
+                                    >
+                                      <span className="text-pw-blue font-semibold">{att.name}</span>
+                                      <span className="text-pw-muted">
+                                        ({att.size > 1024 * 1024
+                                          ? `${(att.size / 1024 / 1024).toFixed(1)} MB`
+                                          : `${Math.round(att.size / 1024)} KB`})
+                                      </span>
+                                    </a>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       )}
