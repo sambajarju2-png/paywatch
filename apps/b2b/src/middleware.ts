@@ -165,6 +165,7 @@ export async function middleware(request: NextRequest) {
 
       if (membership) {
         response.headers.set("x-member-role", membership.role);
+        response.headers.set("x-member-id", membership.id);
       }
       if (isSuperAdmin) {
         response.headers.set("x-member-role", "super_admin");

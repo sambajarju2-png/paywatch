@@ -4,6 +4,7 @@ import { createSupabaseAdmin } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 import PageShell from "@/components/PageShell";
 import AssignCoach from "./AssignCoach";
+import CoachView from "./CoachView";
 
 const ROLE_LABELS: Record<string, string> = {
   schuldhulpverlener: "Schuldhulpverlener",
@@ -18,7 +19,56 @@ export default async function BuddiesPage() {
   if (!tenant.orgId) redirect("/");
 
   const supabase = createSupabaseAdmin();
+  const isCoachOnly = tenant.memberRole === "coach";
 
+  // --- COACH VIEW: only show own clients ---
+  if (isCoachOnly && tenant.memberId) {
+    const [myBuddiesResult, settingsResult, userOrgsResult, authUsersResult] = await Promise.all([
+      supabase
+        .from("b2b_buddies")
+        .select("id, user_id, role, status, assigned_at")
+        .eq("organization_id", tenant.orgId)
+        .eq("buddy_member_id", tenant.memberId)
+        .eq("status", "active"),
+      supabase.from("user_settings").select("user_id, display_name, first_name, last_name, last_active_at"),
+      supabase.from("user_organizations").select("user_id, status, onboarded_at").eq("organization_id", tenant.orgId),
+      supabase.auth.admin.listUsers({ perPage: 1000 }),
+    ]);
+
+    const buddies = myBuddiesResult.data || [];
+    const settings = settingsResult.data || [];
+    const userOrgs = userOrgsResult.data || [];
+    const authUsers = authUsersResult.data?.users || [];
+
+    const settingsMap = new Map(settings.map((s: any) => [s.user_id, s]));
+    const userOrgMap = new Map(userOrgs.map((u: any) => [u.user_id, u]));
+    const authMap = new Map(authUsers.map((u: any) => [u.id, u.email]));
+
+    const clients = buddies.map((b: any) => {
+      const s = settingsMap.get(b.user_id);
+      const uo = userOrgMap.get(b.user_id);
+      const email = authMap.get(b.user_id) || "";
+      const name = s?.display_name || [s?.first_name, s?.last_name].filter(Boolean).join(" ") || email || "Onbekend";
+      return {
+        buddyId: b.id,
+        userId: b.user_id,
+        name,
+        email,
+        role: ROLE_LABELS[b.role] || b.role || "Client",
+        status: uo?.status || "unknown",
+        lastActive: s?.last_active_at || null,
+        onboardedAt: uo?.onboarded_at || null,
+      };
+    });
+
+    return (
+      <PageShell tenant={tenant} userEmail={user.email || ""}>
+        <CoachView clients={clients} coachUserId={user.id} />
+      </PageShell>
+    );
+  }
+
+  // --- ADMIN VIEW: all coaches with their workload ---
   const [buddiesResult, membersResult, settingsResult, userOrgsResult] = await Promise.all([
     supabase.from("b2b_buddies")
       .select("id, user_id, buddy_member_id, role, status, assigned_at")
@@ -27,8 +77,7 @@ export default async function BuddiesPage() {
     supabase.from("organization_members")
       .select("id, user_id, invite_email, role")
       .eq("organization_id", tenant.orgId),
-    supabase.from("user_settings")
-      .select("user_id, display_name, first_name, last_name"),
+    supabase.from("user_settings").select("user_id, display_name, first_name, last_name"),
     supabase.from("user_organizations")
       .select("user_id, external_id")
       .eq("organization_id", tenant.orgId)
@@ -43,19 +92,16 @@ export default async function BuddiesPage() {
   const memberMap = new Map(members.map((m: any) => [m.id, m]));
   const settingsMap = new Map(settings.map((s: any) => [s.user_id, s]));
 
-  // Build user list for assignment dropdown
   const assignableUsers = userOrgs.map((uo: any) => {
     const s = settingsMap.get(uo.user_id);
     const name = s?.display_name || [s?.first_name, s?.last_name].filter(Boolean).join(" ") || uo.external_id || uo.user_id.substring(0, 8);
     return { id: uo.user_id, name };
   });
 
-  // Build coach list (members with coach/admin role)
   const assignableCoaches = members
     .filter((m: any) => ["coach", "admin", "owner"].includes(m.role))
     .map((m: any) => ({ memberId: m.id, email: m.invite_email || "Onbekend" }));
 
-  // Group by coach
   const coachGroups: Record<string, { email: string; clients: any[] }> = {};
   buddies.forEach((b: any) => {
     const coach = memberMap.get(b.buddy_member_id);
@@ -63,11 +109,7 @@ export default async function BuddiesPage() {
     if (!coachGroups[coachEmail]) coachGroups[coachEmail] = { email: coachEmail, clients: [] };
     const clientSettings = settingsMap.get(b.user_id);
     const clientName = clientSettings?.display_name || [clientSettings?.first_name, clientSettings?.last_name].filter(Boolean).join(" ") || "Onbekend";
-    coachGroups[coachEmail].clients.push({
-      ...b,
-      clientName,
-      roleName: ROLE_LABELS[b.role] || b.role,
-    });
+    coachGroups[coachEmail].clients.push({ ...b, clientName, roleName: ROLE_LABELS[b.role] || b.role });
   });
 
   const coaches = Object.values(coachGroups);
@@ -83,16 +125,13 @@ export default async function BuddiesPage() {
           </div>
         </div>
 
+        <AssignCoach users={assignableUsers} coaches={assignableCoaches} orgId={tenant.orgId} />
+
         {coaches.length === 0 ? (
-          <>
-            <AssignCoach users={assignableUsers} coaches={assignableCoaches} orgId={tenant.orgId} />
-            <div className="bg-white border border-pw-border rounded-2xl p-12 text-center">
-              <p className="text-pw-muted mb-2">Nog geen coach koppelingen</p>
-            </div>
-          </>
+          <div className="bg-white border border-pw-border rounded-2xl p-12 text-center">
+            <p className="text-pw-muted">Nog geen coach koppelingen</p>
+          </div>
         ) : (
-          <>
-            <AssignCoach users={assignableUsers} coaches={assignableCoaches} orgId={tenant.orgId} />
           <div className="grid grid-cols-2 gap-4">
             {coaches.map((coach) => {
               const load = coach.clients.length;
@@ -113,8 +152,6 @@ export default async function BuddiesPage() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Workload bar */}
                   <div className="mb-4">
                     <div className="flex items-center justify-between text-xs mb-1">
                       <span className="text-pw-muted">Werklast</span>
@@ -127,8 +164,6 @@ export default async function BuddiesPage() {
                       />
                     </div>
                   </div>
-
-                  {/* Client list */}
                   <div className="space-y-1">
                     {coach.clients.map((c: any) => (
                       <div key={c.id} className="flex items-center justify-between py-2 px-3 bg-pw-bg rounded-lg">
@@ -146,7 +181,6 @@ export default async function BuddiesPage() {
               );
             })}
           </div>
-          </>
         )}
       </div>
     </PageShell>

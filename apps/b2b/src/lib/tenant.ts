@@ -11,6 +11,7 @@ export interface TenantContext {
   primaryColor: string;
   logoUrl: string | null;
   memberRole: string | null;
+  memberId: string | null;
 }
 
 export async function getTenant(): Promise<TenantContext> {
@@ -25,6 +26,7 @@ export async function getTenant(): Promise<TenantContext> {
     primaryColor: h.get("x-tenant-color") || "#2563EB",
     logoUrl: h.get("x-tenant-logo") || null,
     memberRole: h.get("x-member-role"),
+    memberId: h.get("x-member-id"),
   };
 }
 
