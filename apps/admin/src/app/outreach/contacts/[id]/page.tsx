@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -26,6 +26,7 @@ import {
   Pencil,
   FileText,
   X,
+  Paperclip,
 } from "lucide-react";
 
 /* ── types ── */
@@ -907,9 +908,11 @@ function EmailComposeModal({ contact, onClose, onSent }: {
   const [sender, setSender] = useState("samba@paywatch.nl");
   const [subject, setSubject] = useState("");
   const [bodyHtml, setBodyHtml] = useState("");
+  const [attachments, setAttachments] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedSender = EMAIL_SENDERS.find((s) => s.email === sender);
 
@@ -921,19 +924,20 @@ function EmailComposeModal({ contact, onClose, onSent }: {
     setSending(true);
     setError(null);
     try {
-      // Convert plain text newlines to HTML
       const html = bodyHtml.replace(/\n/g, "<br/>");
+      const formData = new FormData();
+      formData.append("sender", sender);
+      formData.append("to_email", toEmail);
+      if (toName) formData.append("to_name", toName);
+      formData.append("subject", subject.trim());
+      formData.append("body_html", html);
+      if (contact.id) formData.append("contact_id", contact.id);
+      for (const file of attachments) {
+        formData.append("attachment", file, file.name);
+      }
       const res = await fetch("/api/admin/outreach/quick-email", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sender,
-          to_email: toEmail,
-          to_name: toName,
-          subject: subject.trim(),
-          body_html: html,
-          contact_id: contact.id,
-        }),
+        body: formData,
       });
       if (!res.ok) {
         const data = await res.json();
@@ -1038,6 +1042,47 @@ function EmailComposeModal({ contact, onClose, onSent }: {
                   rows={8}
                   className="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:outline-none focus:border-blue-500 resize-none text-slate-900 dark:text-white"
                   placeholder="Write your message..." />
+              </div>
+
+              {/* Attachments */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1.5">Attachments</label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.png,.jpg,.jpeg,.gif"
+                  className="hidden"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    setAttachments(prev => [...prev, ...files].slice(0, 5));
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }}
+                />
+                {attachments.length > 0 && (
+                  <div className="space-y-1.5 mb-2">
+                    {attachments.map((file, i) => (
+                      <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600">
+                        <FileText className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+                        <span className="text-xs text-slate-700 dark:text-slate-300 truncate flex-1">{file.name}</span>
+                        <span className="text-[10px] text-slate-400 flex-shrink-0">{(file.size / 1024).toFixed(0)} KB</span>
+                        <button onClick={() => setAttachments(prev => prev.filter((_, idx) => idx !== i))}
+                          className="p-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-600">
+                          <X className="w-3 h-3 text-slate-400" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={attachments.length >= 5}
+                  className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Paperclip className="w-3.5 h-3.5" />
+                  {attachments.length === 0 ? "Attach files" : `Add more (${attachments.length}/5)`}
+                </button>
               </div>
 
               {/* Signature preview */}

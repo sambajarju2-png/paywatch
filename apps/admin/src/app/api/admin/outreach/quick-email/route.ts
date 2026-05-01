@@ -50,19 +50,57 @@ export async function GET() {
 
 /**
  * POST — send a single email with auto-appended signature
- * Body: { sender, to_email, to_name?, subject, body_html, contact_id? }
+ * Accepts FormData (with attachments) or JSON (backwards compatible)
+ * FormData fields: sender, to_email, to_name?, subject, body_html, contact_id?, attachment (File, multiple)
+ * JSON body: { sender, to_email, to_name?, subject, body_html, contact_id? }
  */
 export async function POST(req: NextRequest) {
   try {
     const supabase = createServiceRoleClient();
-    const body = await req.json();
-    const { sender, to_email, to_name, subject, body_html, contact_id } = body;
+
+    // Parse body — FormData or JSON
+    let sender: string, to_email: string, to_name: string | null, subject: string, body_html: string, contact_id: string | null;
+    let attachments: File[] = [];
+
+    const contentType = req.headers.get("content-type") || "";
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await req.formData();
+      sender = formData.get("sender") as string || "";
+      to_email = formData.get("to_email") as string || "";
+      to_name = formData.get("to_name") as string || null;
+      subject = formData.get("subject") as string || "";
+      body_html = formData.get("body_html") as string || "";
+      contact_id = formData.get("contact_id") as string || null;
+      // Collect all attachment files
+      const files = formData.getAll("attachment");
+      for (const f of files) {
+        if (f instanceof File && f.size > 0) attachments.push(f);
+      }
+    } else {
+      const body = await req.json();
+      sender = body.sender || "";
+      to_email = body.to_email || "";
+      to_name = body.to_name || null;
+      subject = body.subject || "";
+      body_html = body.body_html || "";
+      contact_id = body.contact_id || null;
+    }
 
     if (!sender || !to_email || !subject || !body_html) {
       return NextResponse.json(
         { error: "sender, to_email, subject, and body_html required" },
         { status: 400 }
       );
+    }
+
+    // Limit: max 5 attachments, 10MB each
+    for (const att of attachments) {
+      if (att.size > 10 * 1024 * 1024) {
+        return NextResponse.json({ error: `Attachment "${att.name}" is too large (max 10MB)` }, { status: 400 });
+      }
+    }
+    if (attachments.length > 5) {
+      return NextResponse.json({ error: "Maximum 5 attachments allowed" }, { status: 400 });
     }
 
     const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY;
@@ -99,6 +137,11 @@ export async function POST(req: NextRequest) {
     form.append("o:tracking-clicks", "htmlonly");
     form.append("o:tag", "quick-email");
     form.append("v:email_log_id", emailLogId);
+
+    // Add attachments
+    for (const att of attachments) {
+      form.append("attachment", att, att.name);
+    }
 
     const res = await fetch(
       `https://api.eu.mailgun.net/v3/${account.domain}/messages`,
