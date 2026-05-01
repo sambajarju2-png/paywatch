@@ -109,7 +109,7 @@ function ChatPanel({
             <p className="text-[11px] text-pw-muted">Laatste activiteit: {relativeTime(client.lastActive)}</p>
           </div>
           <Link
-            href={`/users`}
+            href={`/users/${client.userId}`}
             className="text-xs text-pw-blue font-semibold hover:underline mr-2 no-underline"
             onClick={onClose}
           >

@@ -178,7 +178,8 @@ export async function middleware(request: NextRequest) {
         const coachOnlyRoutes = ["/buddies"];
 
         if (isCoach) {
-          const allowed = pathname === "/buddies" || pathname.startsWith("/buddies") || pathname.startsWith("/api/");
+          const allowed = pathname === "/buddies" || pathname.startsWith("/buddies")
+            || pathname.startsWith("/users/") || pathname.startsWith("/api/");
           if (!allowed) {
             return NextResponse.redirect(new URL("/buddies", request.url));
           }
