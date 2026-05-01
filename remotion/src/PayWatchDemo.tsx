@@ -4,138 +4,710 @@ import {
   Sequence,
   useCurrentFrame,
   useVideoConfig,
-  interpolate,
   spring,
+  interpolate,
   Easing,
+  Img,
+  staticFile,
 } from "remotion";
 import { loadFont } from "@remotion/google-fonts/PlusJakartaSans";
 
 const { fontFamily } = loadFont();
 
-// ─── DESIGN TOKENS ───────────────────────────────────────────
+// ============================================================
+// DESIGN TOKENS
+// ============================================================
 const C = {
   bg: "#F4F7FB",
-  card: "#FFFFFF",
+  surface: "#FFFFFF",
   navy: "#0A2540",
   blue: "#2563EB",
-  blueTint: "#EFF6FF",
+  blueLight: "#EFF6FF",
   text: "#0F172A",
   muted: "#64748B",
   border: "#E2E8F0",
   green: "#059669",
-  greenLight: "#F0FDF4",
   amber: "#D97706",
-  amberLight: "#FEF3C7",
   orange: "#EA580C",
   red: "#DC2626",
-  redLight: "#FEF2F2",
   darkRed: "#991B1B",
   purple: "#7C3AED",
-  purpleLight: "#F5F3FF",
+  dark: "#0A1628",
+  darkSurface: "#1E293B",
+  teal: "#14B8A6",
 };
 
 const FONT = fontFamily;
 
-// ─── ANIMATION HELPERS ───────────────────────────────────────
-function easeOut(t: number) {
-  return 1 - Math.pow(1 - t, 5);
+// ============================================================
+// LUCIDE ICON SVG PATHS (outline, 24x24, stroke 1.5-2)
+// ============================================================
+function LucideIcon({
+  d,
+  size = 24,
+  color = C.navy,
+  strokeWidth = 1.5,
+  fill = "none",
+  style = {},
+}: {
+  d: string | string[];
+  size?: number;
+  color?: string;
+  strokeWidth?: number;
+  fill?: string;
+  style?: React.CSSProperties;
+}) {
+  const paths = Array.isArray(d) ? d : [d];
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill={fill}
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={style}
+    >
+      {paths.map((p, i) => (
+        <path key={i} d={p} />
+      ))}
+    </svg>
+  );
 }
 
-function useSpring(delay: number, config = { damping: 12, stiffness: 200, mass: 0.8 }) {
+// Lucide icon paths
+const ICONS = {
+  alertTriangle: [
+    "M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z",
+    "M12 9v4",
+    "M12 17h.01",
+  ],
+  shield: [
+    "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+  ],
+  shieldCheck: [
+    "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+    "M9 12l2 2 4-4",
+  ],
+  creditCard: [
+    "M21 4H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z",
+    "M1 10h22",
+  ],
+  trendingUp: [
+    "M23 6l-9.5 9.5-5-5L1 18",
+    "M17 6h6v6",
+  ],
+  layoutDashboard: [
+    "M3 3h7v9H3z",
+    "M14 3h7v5h-7z",
+    "M14 12h7v9h-7z",
+    "M3 16h7v5H3z",
+  ],
+  messageCircle: [
+    "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z",
+  ],
+  camera: [
+    "M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z",
+    "M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
+  ],
+  check: ["M20 6L9 17l-5-5"],
+  phone: [
+    "M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z",
+  ],
+  phoneOff: [
+    "M5.19 5.19A19.563 19.563 0 0 0 2.12 4.18A2 2 0 0 0 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91",
+    "M14.05 18.36a16.04 16.04 0 0 0 5.95-5.95",
+    "M1 1l22 22",
+  ],
+  mail: [
+    "M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z",
+    "M22 6l-10 7L2 6",
+  ],
+  fileText: [
+    "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z",
+    "M14 2v6h6",
+    "M16 13H8",
+    "M16 17H8",
+    "M10 9H8",
+  ],
+  zap: ["M13 2L3 14h9l-1 8 10-12h-9l1-8z"],
+  flame: [
+    "M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z",
+  ],
+  users: [
+    "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2",
+    "M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
+    "M23 21v-2a4 4 0 0 0-3-3.87",
+    "M16 3.13a4 4 0 0 1 0 7.75",
+  ],
+  arrowRight: ["M5 12h14", "M12 5l7 7-7 7"],
+  download: ["M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", "M7 10l5 5 5-5", "M12 15V3"],
+  euro: [
+    "M18 8.5a6.5 6.5 0 0 0-11.24-1",
+    "M18 15.5a6.5 6.5 0 0 1-11.24 1",
+    "M3 10h12",
+    "M3 14h12",
+  ],
+  mic: [
+    "M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z",
+    "M19 10v2a7 7 0 0 1-14 0v-2",
+    "M12 19v4",
+    "M8 23h8",
+  ],
+  bell: [
+    "M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9",
+    "M13.73 21a2 2 0 0 1-3.46 0",
+  ],
+  home: [
+    "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
+    "M9 22V12h6v10",
+  ],
+  scan: [
+    "M4 7V4h3",
+    "M20 7V4h-3",
+    "M4 17v3h3",
+    "M20 17v3h-3",
+  ],
+};
+
+// ============================================================
+// UTILITY: SPRING CONFIGS
+// ============================================================
+const SPRING_APPLE = { stiffness: 150, damping: 15, mass: 0.8 };
+const SPRING_BOUNCY = { stiffness: 200, damping: 12, mass: 0.6 };
+const SPRING_GENTLE = { stiffness: 80, damping: 20, mass: 1.0 };
+const SPRING_ELASTIC = { stiffness: 300, damping: 10, mass: 0.5 };
+
+// ============================================================
+// UTILITY: ROLLING NUMBER COUNTER
+// ============================================================
+function RollingNumber({
+  target,
+  from = 0,
+  decimals = 0,
+  prefix = "",
+  suffix = "",
+  duration = 60,
+  style = {},
+}: {
+  target: number;
+  from?: number;
+  decimals?: number;
+  prefix?: string;
+  suffix?: string;
+  duration?: number;
+  style?: React.CSSProperties;
+}) {
+  const frame = useCurrentFrame() - from;
+  const { fps } = useVideoConfig();
+  if (frame < 0) return null;
+  const progress = Math.min(frame / duration, 1);
+  const eased = Easing.bezier(0.34, 1.56, 0.64, 1)(progress);
+  const value = target * Math.min(eased, 1);
+  const formatted = value.toFixed(decimals).replace(".", ",");
+  return (
+    <span style={{ fontFamily: FONT, fontVariantNumeric: "tabular-nums", ...style }}>
+      {prefix}
+      {formatted}
+      {suffix}
+    </span>
+  );
+}
+
+// ============================================================
+// UTILITY: SPRING-IN WRAPPER
+// ============================================================
+function SpringIn({
+  children,
+  from,
+  delay = 0,
+  config = SPRING_APPLE,
+  style = {},
+}: {
+  children: React.ReactNode;
+  from: number;
+  delay?: number;
+  config?: { stiffness: number; damping: number; mass: number };
+  style?: React.CSSProperties;
+}) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  return spring({ frame: Math.max(0, frame - delay), fps, config });
-}
-
-function useFadeSlide(delay: number, distance = 40) {
-  const s = useSpring(delay);
-  return {
-    opacity: s,
-    transform: `translateY(${(1 - s) * distance}px)`,
-  };
-}
-
-function useCounter(target: number, startFrame: number, duration = 40) {
-  const frame = useCurrentFrame();
-  const progress = Math.min(1, Math.max(0, (frame - startFrame) / duration));
-  return Math.round(target * easeOut(progress));
-}
-
-function formatEuro(cents: number): string {
-  const euros = cents / 100;
-  return `€${euros.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}`;
-}
-
-// ─── PHONE MOCKUP ────────────────────────────────────────────
-const PhoneMockup: React.FC<{
-  children: React.ReactNode;
-  rotateX?: number;
-  rotateY?: number;
-  scale?: number;
-}> = ({ children, rotateX = 0, rotateY = 0, scale = 1 }) => (
-  <div
-    style={{
-      width: 380,
-      height: 780,
-      borderRadius: 48,
-      background: "#1a1a2e",
-      padding: 10,
-      boxShadow: "0 40px 80px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.08)",
-      transform: `perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale})`,
-      position: "relative",
-    }}
-  >
-    {/* Dynamic Island */}
+  const s = spring({
+    frame: frame - from - delay,
+    fps,
+    config,
+    durationInFrames: 40,
+  });
+  return (
     <div
       style={{
-        position: "absolute",
-        top: 12,
-        left: "50%",
-        transform: "translateX(-50%)",
-        width: 110,
-        height: 30,
-        background: "#000",
-        borderRadius: 20,
-        zIndex: 30,
-      }}
-    />
-    {/* Screen */}
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        borderRadius: 38,
-        overflow: "hidden",
-        background: C.bg,
-        position: "relative",
+        transform: `scale(${interpolate(s, [0, 1], [0.6, 1])})`,
+        opacity: interpolate(s, [0, 0.3], [0, 1], {
+          extrapolateRight: "clamp",
+        }),
+        ...style,
       }}
     >
       {children}
     </div>
-    {/* Home indicator */}
+  );
+}
+
+// ============================================================
+// COMPONENT: ANIMATED GRADIENT MESH BACKGROUND
+// ============================================================
+function GradientMesh({
+  color1 = "#2563EB",
+  color2 = "#7C3AED",
+  color3 = "#14B8A6",
+  opacity = 0.15,
+  dark = false,
+}: {
+  color1?: string;
+  color2?: string;
+  color3?: string;
+  opacity?: number;
+  dark?: boolean;
+}) {
+  const frame = useCurrentFrame();
+  const bg = dark ? C.dark : C.bg;
+  const x1 = 30 + Math.sin(frame * 0.008) * 20;
+  const y1 = 30 + Math.cos(frame * 0.006) * 20;
+  const x2 = 70 + Math.sin(frame * 0.01 + 2) * 15;
+  const y2 = 60 + Math.cos(frame * 0.007 + 1) * 20;
+  const x3 = 50 + Math.sin(frame * 0.012 + 4) * 25;
+  const y3 = 80 + Math.cos(frame * 0.009 + 3) * 15;
+  return (
+    <AbsoluteFill style={{ backgroundColor: bg }}>
+      <div
+        style={{
+          position: "absolute",
+          width: 800,
+          height: 800,
+          borderRadius: "50%",
+          background: color1,
+          filter: "blur(180px)",
+          opacity,
+          left: `${x1}%`,
+          top: `${y1}%`,
+          transform: "translate(-50%, -50%)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          width: 600,
+          height: 600,
+          borderRadius: "50%",
+          background: color2,
+          filter: "blur(160px)",
+          opacity: opacity * 0.8,
+          left: `${x2}%`,
+          top: `${y2}%`,
+          transform: "translate(-50%, -50%)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          width: 500,
+          height: 500,
+          borderRadius: "50%",
+          background: color3,
+          filter: "blur(140px)",
+          opacity: opacity * 0.6,
+          left: `${x3}%`,
+          top: `${y3}%`,
+          transform: "translate(-50%, -50%)",
+        }}
+      />
+    </AbsoluteFill>
+  );
+}
+
+// ============================================================
+// COMPONENT: VIGNETTE OVERLAY
+// ============================================================
+function Vignette({ intensity = 0.4 }: { intensity?: number }) {
+  return (
+    <AbsoluteFill
+      style={{
+        background: `radial-gradient(circle at 50% 50%, transparent 40%, rgba(0,0,0,${intensity}) 100%)`,
+        pointerEvents: "none",
+        zIndex: 999,
+      }}
+    />
+  );
+}
+
+// ============================================================
+// COMPONENT: FLOATING PARTICLES
+// ============================================================
+function Particles({
+  count = 20,
+  color = C.blue,
+  area = { x: 0, y: 0, w: 1080, h: 1920 },
+}: {
+  count?: number;
+  color?: string;
+  area?: { x: number; y: number; w: number; h: number };
+}) {
+  const frame = useCurrentFrame();
+  const particles = React.useMemo(
+    () =>
+      Array.from({ length: count }, (_, i) => ({
+        x: Math.random() * area.w + area.x,
+        y: Math.random() * area.h + area.y,
+        size: 3 + Math.random() * 5,
+        speed: 0.5 + Math.random() * 1.5,
+        phase: Math.random() * Math.PI * 2,
+      })),
+    [count, area.w, area.h, area.x, area.y]
+  );
+
+  return (
+    <>
+      {particles.map((p, i) => {
+        const cycle = (frame * p.speed + p.phase * 60) % 180;
+        const op = interpolate(cycle, [0, 60, 120, 180], [0, 0.7, 0.7, 0]);
+        const scale = interpolate(cycle, [0, 60, 120, 180], [0, 1, 1, 0]);
+        const yOff = Math.sin((frame * 0.02 + p.phase) * p.speed) * 30;
+        const xOff = Math.cos((frame * 0.015 + p.phase) * p.speed) * 20;
+        return (
+          <div
+            key={i}
+            style={{
+              position: "absolute",
+              width: p.size,
+              height: p.size,
+              borderRadius: "50%",
+              backgroundColor: color,
+              left: p.x + xOff,
+              top: p.y + yOff,
+              opacity: op,
+              transform: `scale(${scale})`,
+              filter: `blur(${p.size > 5 ? 1 : 0}px)`,
+              boxShadow: `0 0 ${p.size * 2}px ${color}40`,
+            }}
+          />
+        );
+      })}
+    </>
+  );
+}
+
+// ============================================================
+// COMPONENT: GIANT BACKGROUND TEXT
+// ============================================================
+function BackgroundText({
+  text,
+  fontSize = 280,
+  color = C.border,
+  opacity = 0.3,
+  x = 0,
+  y = 0,
+  rotation = 0,
+  from = 0,
+}: {
+  text: string;
+  fontSize?: number;
+  color?: string;
+  opacity?: number;
+  x?: number;
+  y?: number;
+  rotation?: number;
+  from?: number;
+}) {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const s = spring({ frame: frame - from, fps, config: SPRING_GENTLE, durationInFrames: 60 });
+  const textOp = interpolate(s, [0, 1], [0, opacity]);
+  const textScale = interpolate(s, [0, 1], [0.85, 1]);
+  return (
     <div
       style={{
         position: "absolute",
-        bottom: 16,
-        left: "50%",
-        transform: "translateX(-50%)",
-        width: 120,
-        height: 5,
-        borderRadius: 3,
-        background: "rgba(255,255,255,0.25)",
+        left: x,
+        top: y,
+        fontSize,
+        fontWeight: 800,
+        fontFamily: FONT,
+        color,
+        opacity: textOp,
+        transform: `scale(${textScale}) rotate(${rotation}deg)`,
+        letterSpacing: "-0.04em",
+        lineHeight: 0.85,
+        whiteSpace: "nowrap",
+        pointerEvents: "none",
+        zIndex: 0,
       }}
-    />
-  </div>
-);
+    >
+      {text}
+    </div>
+  );
+}
 
-// ─── BOTTOM TAB BAR ──────────────────────────────────────────
-const BottomTabBar: React.FC<{ active: string }> = ({ active }) => {
+// ============================================================
+// COMPONENT: LETTER-BY-LETTER REVEAL
+// ============================================================
+function LetterReveal({
+  text,
+  from,
+  fontSize = 48,
+  color = C.navy,
+  fontWeight = 700,
+  center = true,
+  style = {},
+}: {
+  text: string;
+  from: number;
+  fontSize?: number;
+  color?: string;
+  fontWeight?: number;
+  center?: boolean;
+  style?: React.CSSProperties;
+}) {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const chars = text.split("");
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: center ? "center" : "flex-start",
+        fontFamily: FONT,
+        fontSize,
+        fontWeight,
+        color,
+        gap: 0,
+        ...style,
+      }}
+    >
+      {chars.map((ch, i) => {
+        const s = spring({
+          frame: frame - from - i * 2,
+          fps,
+          config: SPRING_BOUNCY,
+          durationInFrames: 25,
+        });
+        const y = interpolate(s, [0, 1], [40, 0]);
+        const op = interpolate(s, [0, 0.4], [0, 1], {
+          extrapolateRight: "clamp",
+        });
+        return (
+          <span
+            key={i}
+            style={{
+              display: "inline-block",
+              transform: `translateY(${y}px)`,
+              opacity: op,
+            }}
+          >
+            {ch === " " ? "\u00A0" : ch}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+// ============================================================
+// COMPONENT: IPHONE 15 PRO MOCKUP WITH 3D MOTION
+// ============================================================
+function IPhoneMockup({
+  children,
+  from = 0,
+  sceneCamera = {},
+  showStatusBar = true,
+}: {
+  children: React.ReactNode;
+  from?: number;
+  sceneCamera?: {
+    scaleFrom?: number;
+    scaleTo?: number;
+    rotateYFrom?: number;
+    rotateYTo?: number;
+    rotateXFrom?: number;
+    rotateXTo?: number;
+    translateXFrom?: number;
+    translateXTo?: number;
+    translateYFrom?: number;
+    translateYTo?: number;
+    duration?: number;
+  };
+  showStatusBar?: boolean;
+}) {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const localFrame = frame - from;
+
+  // Gentle floating — always active
+  const floatY = Math.sin(frame * 0.012) * 8;
+  const floatRotY = Math.sin(frame * 0.008) * 2;
+  const floatRotX = Math.cos(frame * 0.01) * 1;
+
+  // Scene-specific camera
+  const dur = sceneCamera.duration || 120;
+  const camProgress = Math.min(Math.max(localFrame / dur, 0), 1);
+  const eased = Easing.bezier(0.4, 0, 0.2, 1)(camProgress);
+  const scale = interpolate(
+    eased,
+    [0, 1],
+    [sceneCamera.scaleFrom ?? 1, sceneCamera.scaleTo ?? 1]
+  );
+  const rotY =
+    interpolate(eased, [0, 1], [sceneCamera.rotateYFrom ?? 0, sceneCamera.rotateYTo ?? 0]) +
+    floatRotY;
+  const rotX =
+    interpolate(eased, [0, 1], [sceneCamera.rotateXFrom ?? 0, sceneCamera.rotateXTo ?? 0]) +
+    floatRotX;
+  const transX = interpolate(
+    eased,
+    [0, 1],
+    [sceneCamera.translateXFrom ?? 0, sceneCamera.translateXTo ?? 0]
+  );
+  const transY =
+    interpolate(eased, [0, 1], [sceneCamera.translateYFrom ?? 0, sceneCamera.translateYTo ?? 0]) +
+    floatY;
+
+  const PHONE_W = 375;
+  const PHONE_H = 812;
+  const SCALE = 1.15; // fill more of the vertical frame
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: "50%",
+        top: "50%",
+        transform: `
+          translate(-50%, -50%)
+          perspective(1200px)
+          translateX(${transX}px)
+          translateY(${transY}px)
+          rotateY(${rotY}deg)
+          rotateX(${rotX}deg)
+          scale(${scale * SCALE})
+        `,
+        transformStyle: "preserve-3d",
+        zIndex: 10,
+      }}
+    >
+      {/* Phone frame */}
+      <div
+        style={{
+          width: PHONE_W,
+          height: PHONE_H,
+          borderRadius: 52,
+          background: "#000",
+          boxShadow:
+            "0 50px 100px -20px rgba(0,0,0,0.4), 0 0 0 10px #1a1a2e, 0 0 0 12px #2d2d44, inset 0 0 0 2px #333",
+          overflow: "hidden",
+          position: "relative",
+        }}
+      >
+        {/* Dynamic Island */}
+        <div
+          style={{
+            position: "absolute",
+            top: 10,
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 126,
+            height: 36,
+            background: "#000",
+            borderRadius: 20,
+            zIndex: 60,
+          }}
+        />
+
+        {/* Status bar */}
+        {showStatusBar && (
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 54,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "0 28px",
+              zIndex: 50,
+              color: C.text,
+              fontSize: 14,
+              fontWeight: 600,
+              fontFamily: FONT,
+            }}
+          >
+            <span>09:41</span>
+            <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
+              <svg width="16" height="12" viewBox="0 0 16 12">
+                <path
+                  d="M1 8h2v4H1zM5 5h2v7H5zM9 2h2v10H9zM13 0h2v12h-2z"
+                  fill={C.text}
+                  opacity="0.8"
+                />
+              </svg>
+              <svg width="24" height="12" viewBox="0 0 24 12">
+                <rect
+                  x="0"
+                  y="1"
+                  width="20"
+                  height="10"
+                  rx="2"
+                  stroke={C.text}
+                  strokeWidth="1"
+                  fill="none"
+                  opacity="0.6"
+                />
+                <rect
+                  x="21"
+                  y="4"
+                  width="2"
+                  height="4"
+                  rx="0.5"
+                  fill={C.text}
+                  opacity="0.4"
+                />
+                <rect x="2" y="3" width="14" height="6" rx="1" fill={C.green} />
+              </svg>
+            </div>
+          </div>
+        )}
+
+        {/* Screen content */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            overflow: "hidden",
+          }}
+        >
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// COMPONENT: BOTTOM TAB BAR
+// ============================================================
+function BottomTabBar({ activeIndex = 0 }: { activeIndex?: number }) {
   const tabs = [
-    { id: "overzicht", label: "Overzicht" },
-    { id: "betalingen", label: "Betalingen" },
-    { id: "feed", label: "Feed" },
-    { id: "stats", label: "Stats" },
-    { id: "buddy", label: "Buddy" },
+    { label: "Overzicht", icon: ICONS.layoutDashboard },
+    { label: "Betalingen", icon: ICONS.creditCard },
+    { label: "Feed", icon: ICONS.users },
+    { label: "Stats", icon: ICONS.trendingUp },
+    { label: "Buddy", icon: ICONS.messageCircle },
   ];
   return (
     <div
@@ -144,851 +716,2047 @@ const BottomTabBar: React.FC<{ active: string }> = ({ active }) => {
         bottom: 0,
         left: 0,
         right: 0,
-        background: C.card,
+        height: 82,
+        background: "rgba(255,255,255,0.92)",
+        backdropFilter: "blur(20px)",
         borderTop: `1px solid ${C.border}`,
-        padding: "8px 0 24px",
         display: "flex",
         justifyContent: "space-around",
-        zIndex: 10,
+        alignItems: "flex-start",
+        paddingTop: 8,
+        zIndex: 40,
       }}
     >
-      {tabs.map((t) => {
-        const isActive = t.id === active;
-        const isFeed = t.id === "feed";
-        return (
-          <div key={t.id} style={{ textAlign: "center", position: "relative" }}>
+      {tabs.map((t, i) => (
+        <div
+          key={i}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 2,
+          }}
+        >
+          <LucideIcon
+            d={t.icon}
+            size={i === 2 ? 28 : 22}
+            color={i === activeIndex ? C.blue : C.muted}
+            strokeWidth={i === activeIndex ? 2 : 1.5}
+          />
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: i === activeIndex ? 600 : 400,
+              color: i === activeIndex ? C.blue : C.muted,
+              fontFamily: FONT,
+            }}
+          >
+            {t.label}
+          </span>
+          {i === activeIndex && (
             <div
               style={{
-                width: isFeed ? 36 : 22,
-                height: isFeed ? 36 : 22,
-                margin: "0 auto 3px",
-                borderRadius: isFeed ? 18 : 5,
-                background: isActive ? C.blue : isFeed ? C.blue : C.border,
-                opacity: isActive || isFeed ? 1 : 0.5,
+                width: 4,
+                height: 4,
+                borderRadius: 2,
+                background: C.blue,
+                marginTop: 1,
               }}
             />
-            <div
-              style={{
-                fontFamily: FONT,
-                fontSize: 10,
-                fontWeight: isActive ? 600 : 400,
-                color: isActive ? C.blue : C.muted,
-              }}
-            >
-              {t.label}
-            </div>
-            {isActive && (
-              <div
-                style={{
-                  width: 4,
-                  height: 4,
-                  borderRadius: 2,
-                  background: C.blue,
-                  margin: "3px auto 0",
-                }}
-              />
-            )}
-          </div>
-        );
-      })}
+          )}
+        </div>
+      ))}
     </div>
   );
-};
+}
 
-// ─── SCENE 1: HERO INTRO ────────────────────────────────────
-const HeroScene: React.FC = () => {
+// ============================================================
+// COMPONENT: PAYWATCH TOPBAR
+// ============================================================
+function AppTopbar() {
+  return (
+    <div
+      style={{
+        height: 96,
+        padding: "54px 20px 0",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        background: "rgba(255,255,255,0.85)",
+        backdropFilter: "blur(12px)",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {/* PayWatch mini logo mark */}
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <rect x="2" y="2" width="10" height="24" rx="2" fill={C.navy} />
+          <path
+            d="M12 2h14a0 0 0 0 1 0 0v14a14 14 0 0 1-14-14z"
+            fill={C.blue}
+          />
+        </svg>
+        <span
+          style={{
+            fontSize: 18,
+            fontWeight: 700,
+            color: C.navy,
+            fontFamily: FONT,
+            letterSpacing: "-0.02em",
+          }}
+        >
+          Paywatch
+        </span>
+      </div>
+      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+        <div style={{ position: "relative" }}>
+          <LucideIcon d={ICONS.bell} size={20} color={C.muted} />
+          <div
+            style={{
+              position: "absolute",
+              top: -2,
+              right: -2,
+              width: 8,
+              height: 8,
+              borderRadius: 4,
+              background: C.red,
+              border: "2px solid #fff",
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// COMPONENT: STAT CARD
+// ============================================================
+function StatCard({
+  label,
+  value,
+  sub,
+  color = C.blue,
+  from,
+  delay = 0,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  color?: string;
+  from: number;
+  delay?: number;
+}) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const logoScale = spring({ frame, fps, config: { damping: 10, stiffness: 80 }, from: 0.6, to: 1 });
-  const logoOpacity = interpolate(frame, [0, 25], [0, 1], { extrapolateRight: "clamp" });
-  const taglineOpacity = interpolate(frame, [40, 65], [0, 1], { extrapolateRight: "clamp" });
-  const taglineY = interpolate(frame, [40, 65], [30, 0], { extrapolateRight: "clamp" });
+  const s = spring({
+    frame: frame - from - delay,
+    fps,
+    config: SPRING_APPLE,
+    durationInFrames: 30,
+  });
+  const scale = interpolate(s, [0, 1], [0.7, 1]);
+  const op = interpolate(s, [0, 0.3], [0, 1], { extrapolateRight: "clamp" });
+  return (
+    <div
+      style={{
+        background: C.surface,
+        borderRadius: 12,
+        border: `1px solid ${C.border}`,
+        padding: "14px 16px",
+        transform: `scale(${scale})`,
+        opacity: op,
+        borderTop: `3px solid ${color}`,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 11,
+          color: C.muted,
+          fontFamily: FONT,
+          fontWeight: 500,
+          marginBottom: 4,
+        }}
+      >
+        {label}
+      </div>
+      <div
+        style={{
+          fontSize: 24,
+          fontWeight: 800,
+          color,
+          fontFamily: FONT,
+          letterSpacing: "-0.02em",
+        }}
+      >
+        {value}
+      </div>
+      <div
+        style={{
+          fontSize: 10,
+          color: C.muted,
+          fontFamily: FONT,
+          marginTop: 2,
+        }}
+      >
+        {sub}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// COMPONENT: BILL ROW
+// ============================================================
+function BillRow({
+  vendor,
+  amount,
+  stage,
+  stageColor,
+  from,
+  delay = 0,
+}: {
+  vendor: string;
+  amount: string;
+  stage: string;
+  stageColor: string;
+  from: number;
+  delay?: number;
+}) {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const s = spring({
+    frame: frame - from - delay,
+    fps,
+    config: SPRING_APPLE,
+    durationInFrames: 25,
+  });
+  const x = interpolate(s, [0, 1], [60, 0]);
+  const op = interpolate(s, [0, 0.4], [0, 1], { extrapolateRight: "clamp" });
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "12px 16px",
+        background: C.surface,
+        borderRadius: 12,
+        border: `1px solid ${C.border}`,
+        transform: `translateX(${x}px)`,
+        opacity: op,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 8,
+            background: `${stageColor}10`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <LucideIcon d={ICONS.fileText} size={18} color={stageColor} />
+        </div>
+        <div>
+          <div
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              color: C.text,
+              fontFamily: FONT,
+            }}
+          >
+            {vendor}
+          </div>
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              color: stageColor,
+              fontFamily: FONT,
+              marginTop: 2,
+            }}
+          >
+            {stage}
+          </div>
+        </div>
+      </div>
+      <div
+        style={{
+          fontSize: 16,
+          fontWeight: 700,
+          color: C.text,
+          fontFamily: FONT,
+        }}
+      >
+        {amount}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// COMPONENT: PAYBUDDY ORB (MULTI-LAYER)
+// ============================================================
+function PayBuddyOrb({
+  size = 240,
+  from = 0,
+  intensity = 1,
+}: {
+  size?: number;
+  from?: number;
+  intensity?: number;
+}) {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const localFrame = frame - from;
+  if (localFrame < 0) return null;
+
+  const pulse = 1 + Math.sin(localFrame * 0.06) * 0.04 * intensity;
+  const glow = 0.5 + Math.sin(localFrame * 0.08) * 0.2 * intensity;
+
+  // Ring expansion
+  const ringCount = 4;
+  const rings = Array.from({ length: ringCount }, (_, i) => {
+    const cycle = ((localFrame + i * 22) % 90) / 90;
+    return {
+      scale: 1 + cycle * 0.6,
+      opacity: (1 - cycle) * 0.3,
+      rotation: localFrame * (0.3 + i * 0.15),
+    };
+  });
+
+  // Orbital particles
+  const orbParticles = Array.from({ length: 16 }, (_, i) => {
+    const angle = (i / 16) * Math.PI * 2 + localFrame * 0.02;
+    const r = size * 0.55 + Math.sin(localFrame * 0.03 + i) * 20;
+    return {
+      x: Math.cos(angle) * r,
+      y: Math.sin(angle) * r,
+      size: 3 + Math.sin(localFrame * 0.05 + i * 0.7) * 2,
+      opacity: 0.4 + Math.sin(localFrame * 0.04 + i * 1.1) * 0.3,
+    };
+  });
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        width: size * 2.5,
+        height: size * 2.5,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      {/* Expanding rings */}
+      {rings.map((ring, i) => (
+        <div
+          key={`ring-${i}`}
+          style={{
+            position: "absolute",
+            width: size,
+            height: size,
+            borderRadius: "50%",
+            border: `2px solid ${C.teal}`,
+            opacity: ring.opacity,
+            transform: `scale(${ring.scale}) rotate(${ring.rotation}deg)`,
+          }}
+        />
+      ))}
+
+      {/* Outer glow */}
+      <div
+        style={{
+          position: "absolute",
+          width: size * 1.8,
+          height: size * 1.8,
+          borderRadius: "50%",
+          background: `radial-gradient(circle, ${C.teal}30 0%, transparent 70%)`,
+          filter: "blur(40px)",
+          opacity: glow,
+          transform: `scale(${pulse})`,
+        }}
+      />
+
+      {/* Mid glow layer */}
+      <div
+        style={{
+          position: "absolute",
+          width: size * 1.2,
+          height: size * 1.2,
+          borderRadius: "50%",
+          background: `radial-gradient(circle, ${C.purple}20 0%, ${C.teal}15 50%, transparent 70%)`,
+          filter: "blur(25px)",
+          opacity: 0.6 + Math.sin(localFrame * 0.05) * 0.2,
+        }}
+      />
+
+      {/* Core sphere */}
+      <div
+        style={{
+          width: size,
+          height: size,
+          borderRadius: "50%",
+          background: `radial-gradient(circle at 35% 35%, #34D399, ${C.teal}, #0D9488)`,
+          boxShadow: `0 0 ${60 * intensity}px ${C.teal}60, 0 0 ${120 * intensity}px ${C.teal}30, inset 0 -20px 40px rgba(0,0,0,0.2), inset 0 10px 20px rgba(255,255,255,0.15)`,
+          transform: `scale(${pulse})`,
+          position: "relative",
+          zIndex: 2,
+        }}
+      >
+        {/* Highlight */}
+        <div
+          style={{
+            position: "absolute",
+            top: "15%",
+            left: "20%",
+            width: "35%",
+            height: "25%",
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%)",
+          }}
+        />
+      </div>
+
+      {/* Orbital particles */}
+      {orbParticles.map((p, i) => (
+        <div
+          key={`op-${i}`}
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            width: p.size,
+            height: p.size,
+            borderRadius: "50%",
+            background: i % 3 === 0 ? C.teal : i % 3 === 1 ? C.green : "#34D399",
+            transform: `translate(${p.x}px, ${p.y}px) translate(-50%, -50%)`,
+            opacity: p.opacity,
+            boxShadow: `0 0 ${p.size * 3}px ${C.teal}40`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ============================================================
+// COMPONENT: REALISTIC LETTER / BILL PAPER
+// ============================================================
+function RealisticLetter({
+  vendor,
+  amount,
+  stage,
+  stageColor,
+  from,
+  delay = 0,
+  startX = 600,
+  startY = -300,
+  endX = 0,
+  endY = 0,
+  startRotation = 15,
+  endRotation = -3,
+  showStamp = false,
+}: {
+  vendor: string;
+  amount: string;
+  stage: string;
+  stageColor: string;
+  from: number;
+  delay?: number;
+  startX?: number;
+  startY?: number;
+  endX?: number;
+  endY?: number;
+  startRotation?: number;
+  endRotation?: number;
+  showStamp?: boolean;
+}) {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const s = spring({
+    frame: frame - from - delay,
+    fps,
+    config: { stiffness: 120, damping: 16, mass: 0.9 },
+    durationInFrames: 45,
+  });
+  const x = interpolate(s, [0, 1], [startX, endX]);
+  const y = interpolate(s, [0, 1], [startY, endY]);
+  const rot = interpolate(s, [0, 1], [startRotation, endRotation]);
+  const scale = interpolate(s, [0, 1], [0.7, 1]);
+  const op = interpolate(s, [0, 0.3], [0, 1], { extrapolateRight: "clamp" });
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: "50%",
+        top: "50%",
+        width: 320,
+        transform: `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${rot}deg) scale(${scale})`,
+        opacity: op,
+        zIndex: 5,
+      }}
+    >
+      <div
+        style={{
+          background: "#FEFEFE",
+          borderRadius: 8,
+          padding: 28,
+          boxShadow:
+            "0 25px 80px rgba(0,0,0,0.15), 0 8px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9)",
+          border: "1px solid #E8E8E8",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        {/* Left color strip */}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: 5,
+            background: stageColor,
+          }}
+        />
+
+        {/* Header line */}
+        <div
+          style={{
+            fontSize: 10,
+            fontWeight: 600,
+            color: stageColor,
+            fontFamily: FONT,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            marginBottom: 10,
+          }}
+        >
+          {stage}
+        </div>
+
+        <div
+          style={{
+            fontSize: 18,
+            fontWeight: 700,
+            color: C.navy,
+            fontFamily: FONT,
+            marginBottom: 6,
+          }}
+        >
+          {vendor}
+        </div>
+
+        <div
+          style={{
+            fontSize: 36,
+            fontWeight: 800,
+            color: C.navy,
+            fontFamily: FONT,
+            letterSpacing: "-0.02em",
+            marginBottom: 12,
+          }}
+        >
+          {amount}
+        </div>
+
+        {/* Fake text lines */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div
+            style={{
+              width: "80%",
+              height: 6,
+              borderRadius: 3,
+              background: "#E8E8E8",
+            }}
+          />
+          <div
+            style={{
+              width: "60%",
+              height: 6,
+              borderRadius: 3,
+              background: "#E8E8E8",
+            }}
+          />
+          <div
+            style={{
+              width: "70%",
+              height: 6,
+              borderRadius: 3,
+              background: "#E8E8E8",
+            }}
+          />
+        </div>
+
+        {/* URGENT stamp */}
+        {showStamp && (
+          <div
+            style={{
+              position: "absolute",
+              top: 20,
+              right: 15,
+              padding: "4px 14px",
+              border: `3px solid ${C.red}`,
+              color: C.red,
+              fontSize: 12,
+              fontWeight: 800,
+              fontFamily: FONT,
+              transform: "rotate(12deg)",
+              opacity: 0.85,
+              letterSpacing: "0.1em",
+            }}
+          >
+            URGENT
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// COMPONENT: GRADIENT TEXT
+// ============================================================
+function GradientText({
+  children,
+  fontSize = 280,
+  from1 = C.blue,
+  to1 = C.purple,
+  style = {},
+}: {
+  children: React.ReactNode;
+  fontSize?: number;
+  from1?: string;
+  to1?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <span
+      style={{
+        fontSize,
+        fontWeight: 900,
+        fontFamily: FONT,
+        letterSpacing: "-0.04em",
+        lineHeight: 0.9,
+        background: `linear-gradient(135deg, ${from1} 0%, ${to1} 100%)`,
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent",
+        filter: `drop-shadow(0 20px 60px ${from1}40)`,
+        ...style,
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
+// ============================================================
+// COMPONENT: HEALTH GAUGE
+// ============================================================
+function HealthGauge({
+  score,
+  size = 200,
+  from = 0,
+  color = C.red,
+}: {
+  score: number;
+  size?: number;
+  from?: number;
+  color?: string;
+}) {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const localFrame = frame - from;
+  if (localFrame < 0) return null;
+
+  const s = spring({
+    frame: localFrame,
+    fps,
+    config: SPRING_GENTLE,
+    durationInFrames: 60,
+  });
+
+  const radius = size / 2 - 12;
+  const circ = 2 * Math.PI * radius;
+  const dashTarget = (score / 100) * circ;
+  const dash = dashTarget * s;
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke={C.border}
+        strokeWidth="10"
+        opacity="0.3"
+      />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke={color}
+        strokeWidth="10"
+        strokeLinecap="round"
+        strokeDasharray={`${dash} ${circ}`}
+        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        style={{ filter: `drop-shadow(0 0 8px ${color}60)` }}
+      />
+      <text
+        x={size / 2}
+        y={size / 2 - 10}
+        textAnchor="middle"
+        fill={color}
+        fontSize={size * 0.28}
+        fontWeight="800"
+        fontFamily={FONT}
+      >
+        {Math.round(score * s)}
+      </text>
+      <text
+        x={size / 2}
+        y={size / 2 + 20}
+        textAnchor="middle"
+        fill={C.muted}
+        fontSize={size * 0.08}
+        fontWeight="600"
+        fontFamily={FONT}
+      >
+        Actie nodig
+      </text>
+    </svg>
+  );
+}
+
+// ============================================================
+// SCENE 1: LOGO REVEAL (0 - 150 frames / 0-5s)
+// ============================================================
+function Scene1LogoReveal() {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  const logoS = spring({ frame: frame - 20, fps, config: SPRING_ELASTIC, durationInFrames: 40 });
+  const logoScale = interpolate(logoS, [0, 1], [0, 1]);
+  const logoOp = interpolate(logoS, [0, 0.3], [0, 1], { extrapolateRight: "clamp" });
+
+  // Focus blur effect
+  const blur = interpolate(frame, [0, 30, 60], [12, 4, 0], { extrapolateRight: "clamp" });
+
+  // Tagline
+  const taglineOp = interpolate(frame, [80, 100], [0, 1], { extrapolateRight: "clamp" });
+  const taglineY = interpolate(frame, [80, 110], [30, 0], { extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) });
+
+  // Exit
+  const exitOp = interpolate(frame, [120, 150], [1, 0], { extrapolateRight: "clamp" });
+  const exitScale = interpolate(frame, [120, 150], [1, 1.15], { extrapolateRight: "clamp" });
 
   return (
     <AbsoluteFill
       style={{
-        backgroundColor: C.navy,
-        justifyContent: "center",
-        alignItems: "center",
+        opacity: exitOp,
+        transform: `scale(${exitScale})`,
       }}
     >
-      {/* Gradient mesh BG */}
-      <div
-        style={{
-          position: "absolute",
-          width: "150%",
-          height: "150%",
-          background: `radial-gradient(circle at 35% 35%, ${C.blue}18 0%, transparent 50%),
-                       radial-gradient(circle at 65% 65%, ${C.purple}15 0%, transparent 50%)`,
-          filter: "blur(80px)",
-        }}
-      />
+      <GradientMesh dark opacity={0.2} color1="#2563EB" color2="#7C3AED" color3="#14B8A6" />
 
-      {/* Logo — actual PayWatch SVG */}
-      <div
+      <AbsoluteFill
         style={{
-          transform: `scale(${logoScale})`,
-          opacity: logoOpacity,
-          textAlign: "center",
-          filter: `blur(${interpolate(frame, [0, 20], [8, 0], { extrapolateRight: "clamp" })}px)`,
+          justifyContent: "center",
+          alignItems: "center",
+          filter: `blur(${blur}px)`,
         }}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="380" viewBox="0 0 384 75" style={{ filter: "brightness(0) invert(1)" }}>
-          <g transform="matrix(1, 0, 0, 1, 22, 5)">
-            <g clipPath="url(#a23)">
-              <path fill="#fff" d="M 44.359375 40.308594 L 44.359375 20.671875 C 20 20.671875 0.257812 40.414062 0.257812 64.773438 L 19.894531 64.773438 C 19.894531 51.261719 30.847656 40.308594 44.359375 40.308594Z"/>
-              <path fill="#fff" d="M 42.011719 20.671875 L 62.46875 20.671875 L 62.46875 64.78125 L 42.011719 64.78125Z"/>
-              <path fill="#fff" d="M 0.25 0.21875 L 42.003906 0.21875 L 42.003906 20.675781 L 0.25 20.675781Z"/>
-              <path fill="#fff" d="M 48.746094 0.214844 L 62.46875 0.214844 L 62.46875 13.933594 L 48.746094 13.933594Z"/>
-            </g>
-          </g>
-          <g transform="matrix(1, 0, 0, 1, 98, 0)">
-            <g fill="#fff">
-              <g transform="translate(0.45, 57.89)"><path d="M 29.25 -38.875 C 30.945312 -37.875 32.191406 -36.53125 32.984375 -34.84375 C 33.785156 -33.164062 34.1875 -31.15625 34.1875 -28.8125 C 34.1875 -26.488281 33.796875 -24.390625 33.015625 -22.515625 C 32.242188 -20.640625 31.035156 -19.132812 29.390625 -18 C 28.222656 -17.101562 26.800781 -16.425781 25.125 -15.96875 C 23.445312 -15.519531 21.378906 -15.296875 18.921875 -15.296875 L 12.734375 -15.296875 L 12.734375 0 L 5.859375 0 L 5.859375 -41 L 18.921875 -41 C 21.316406 -41 23.34375 -40.828125 25 -40.484375 C 26.65625 -40.140625 28.070312 -39.601562 29.25 -38.875Z M 25.296875 -23 C 25.910156 -23.5625 26.378906 -24.28125 26.703125 -25.15625 C 27.035156 -26.039062 27.203125 -27.132812 27.203125 -28.4375 C 27.203125 -29.71875 27.023438 -30.785156 26.671875 -31.640625 C 26.316406 -32.492188 25.832031 -33.160156 25.21875 -33.640625 C 24.414062 -34.273438 23.421875 -34.691406 22.234375 -34.890625 C 21.054688 -35.097656 19.644531 -35.203125 18 -35.203125 L 12.734375 -35.203125 L 12.734375 -21.15625 L 18 -21.15625 C 19.6875 -21.15625 21.132812 -21.285156 22.34375 -21.546875 C 23.550781 -21.804688 24.535156 -22.289062 25.296875 -23Z"/></g>
-              <g transform="translate(35.69, 57.89)"><path d="M 11.5 0.546875 C 10.332031 0.546875 9.210938 0.394531 8.140625 0.09375 C 7.066406 -0.195312 6.113281 -0.65625 5.28125 -1.28125 C 4.445312 -1.90625 3.789062 -2.71875 3.3125 -3.71875 C 2.832031 -4.726562 2.59375 -5.929688 2.59375 -7.328125 C 2.59375 -8.878906 2.882812 -10.179688 3.46875 -11.234375 C 4.050781 -12.296875 4.847656 -13.164062 5.859375 -13.84375 C 6.878906 -14.519531 8.054688 -15.066406 9.390625 -15.484375 C 10.722656 -15.910156 12.144531 -16.257812 13.65625 -16.53125 L 18.03125 -17.34375 C 18.988281 -17.53125 19.671875 -17.835938 20.078125 -18.265625 C 20.492188 -18.703125 20.703125 -19.265625 20.703125 -19.953125 C 20.703125 -21.140625 20.425781 -22.078125 19.875 -22.765625 C 19.332031 -23.460938 18.628906 -23.957031 17.765625 -24.25 C 16.910156 -24.550781 16 -24.703125 15.03125 -24.703125 C 14 -24.703125 13.039062 -24.53125 12.15625 -24.1875 C 11.28125 -23.851562 10.554688 -23.316406 9.984375 -22.578125 C 9.421875 -21.847656 9.066406 -20.859375 8.921875 -19.609375 L 2.96875 -20.703125 C 3.457031 -23.691406 4.757812 -25.894531 6.875 -27.3125 C 9 -28.738281 11.851562 -29.453125 15.4375 -29.453125 C 16.875 -29.453125 18.28125 -29.296875 19.65625 -28.984375 C 21.039062 -28.679688 22.289062 -28.148438 23.40625 -27.390625 C 24.519531 -26.628906 25.40625 -25.585938 26.0625 -24.265625 C 26.726562 -22.941406 27.0625 -21.265625 27.0625 -19.234375 L 27.0625 -8.015625 C 27.0625 -6.660156 27.265625 -5.738281 27.671875 -5.25 C 28.085938 -4.757812 28.796875 -4.515625 29.796875 -4.515625 L 30.25 -4.515625 L 30.25 0 L 27.109375 0 C 25.484375 0 24.179688 -0.300781 23.203125 -0.90625 C 22.222656 -1.507812 21.570312 -2.484375 21.25 -3.828125 L 20.9375 -3.828125 C 20.1875 -2.773438 19.296875 -1.925781 18.265625 -1.28125 C 17.242188 -0.632812 16.148438 -0.171875 14.984375 0.109375 C 13.828125 0.398438 12.664062 0.546875 11.5 0.546875Z M 13.0625 -4.65625 C 14.570312 -4.65625 15.9375 -5.007812 17.15625 -5.71875 C 18.375 -6.425781 19.34375 -7.425781 20.0625 -8.71875 C 20.78125 -10.019531 21.140625 -11.550781 21.140625 -13.3125 L 13.75 -11.671875 C 12.226562 -11.390625 11.054688 -10.957031 10.234375 -10.375 C 9.410156 -9.800781 9 -8.96875 9 -7.875 C 9 -6.75 9.390625 -5.929688 10.171875 -5.421875 C 10.960938 -4.910156 11.925781 -4.65625 13.0625 -4.65625Z"/></g>
-              <g transform="translate(66.36, 57.89)"><path d="M 23.0625 -28.921875 L 29.9375 -28.921875 L 12.3125 14.5 L 5.546875 14.5 L 12.078125 -0.953125 L 0.484375 -28.921875 L 7.765625 -28.921875 L 15.265625 -8.21875Z"/></g>
-              <g transform="translate(95.51, 57.89)"><path d="M 40.546875 -28.921875 L 47.453125 -28.921875 L 37.375 0.03125 L 31.3125 0.03125 L 24.046875 -20.640625 L 16.765625 0.03125 L 10.609375 0.03125 L 0.75 -28.921875 L 7.59375 -28.921875 L 14.140625 -8.453125 L 21.453125 -28.921875 L 26.5625 -28.921875 L 33.875 -8.484375Z"/></g>
-              <g transform="translate(142.33, 57.89)"><path d="M 11.5 0.546875 C 10.332031 0.546875 9.210938 0.394531 8.140625 0.09375 C 7.066406 -0.195312 6.113281 -0.65625 5.28125 -1.28125 C 4.445312 -1.90625 3.789062 -2.71875 3.3125 -3.71875 C 2.832031 -4.726562 2.59375 -5.929688 2.59375 -7.328125 C 2.59375 -8.878906 2.882812 -10.179688 3.46875 -11.234375 C 4.050781 -12.296875 4.847656 -13.164062 5.859375 -13.84375 C 6.878906 -14.519531 8.054688 -15.066406 9.390625 -15.484375 C 10.722656 -15.910156 12.144531 -16.257812 13.65625 -16.53125 L 18.03125 -17.34375 C 18.988281 -17.53125 19.671875 -17.835938 20.078125 -18.265625 C 20.492188 -18.703125 20.703125 -19.265625 20.703125 -19.953125 C 20.703125 -21.140625 20.425781 -22.078125 19.875 -22.765625 C 19.332031 -23.460938 18.628906 -23.957031 17.765625 -24.25 C 16.910156 -24.550781 16 -24.703125 15.03125 -24.703125 C 14 -24.703125 13.039062 -24.53125 12.15625 -24.1875 C 11.28125 -23.851562 10.554688 -23.316406 9.984375 -22.578125 C 9.421875 -21.847656 9.066406 -20.859375 8.921875 -19.609375 L 2.96875 -20.703125 C 3.457031 -23.691406 4.757812 -25.894531 6.875 -27.3125 C 9 -28.738281 11.851562 -29.453125 15.4375 -29.453125 C 16.875 -29.453125 18.28125 -29.296875 19.65625 -28.984375 C 21.039062 -28.679688 22.289062 -28.148438 23.40625 -27.390625 C 24.519531 -26.628906 25.40625 -25.585938 26.0625 -24.265625 C 26.726562 -22.941406 27.0625 -21.265625 27.0625 -19.234375 L 27.0625 -8.015625 C 27.0625 -6.660156 27.265625 -5.738281 27.671875 -5.25 C 28.085938 -4.757812 28.796875 -4.515625 29.796875 -4.515625 L 30.25 -4.515625 L 30.25 0 L 27.109375 0 C 25.484375 0 24.179688 -0.300781 23.203125 -0.90625 C 22.222656 -1.507812 21.570312 -2.484375 21.25 -3.828125 L 20.9375 -3.828125 C 20.1875 -2.773438 19.296875 -1.925781 18.265625 -1.28125 C 17.242188 -0.632812 16.148438 -0.171875 14.984375 0.109375 C 13.828125 0.398438 12.664062 0.546875 11.5 0.546875Z M 13.0625 -4.65625 C 14.570312 -4.65625 15.9375 -5.007812 17.15625 -5.71875 C 18.375 -6.425781 19.34375 -7.425781 20.0625 -8.71875 C 20.78125 -10.019531 21.140625 -11.550781 21.140625 -13.3125 L 13.75 -11.671875 C 12.226562 -11.390625 11.054688 -10.957031 10.234375 -10.375 C 9.410156 -9.800781 9 -8.96875 9 -7.875 C 9 -6.75 9.390625 -5.929688 10.171875 -5.421875 C 10.960938 -4.910156 11.925781 -4.65625 13.0625 -4.65625Z"/></g>
-              <g transform="translate(173.01, 57.89)"><path d="M 14.6875 0 C 12.101562 0 10.078125 -0.734375 8.609375 -2.203125 C 7.140625 -3.671875 6.40625 -5.753906 6.40625 -8.453125 L 6.40625 -23.75 L 0.625 -23.75 L 0.625 -28.921875 L 2.609375 -28.921875 C 4.148438 -28.921875 5.28125 -29.28125 6 -30 C 6.71875 -30.71875 7.078125 -32.019531 7.078125 -33.90625 L 7.078125 -38.390625 L 13.109375 -38.390625 L 13.109375 -28.921875 L 19.40625 -28.921875 L 19.40625 -23.75 L 13.109375 -23.75 L 13.109375 -9.140625 C 13.109375 -7.796875 13.441406 -6.789062 14.109375 -6.125 C 14.785156 -5.457031 15.679688 -5.125 16.796875 -5.125 L 19.40625 -5.125 L 19.40625 0Z"/></g>
-              <g transform="translate(193.24, 57.89)"><path d="M 17.21875 0.515625 C 15.050781 0.515625 13.050781 0.160156 11.21875 -0.546875 C 9.394531 -1.253906 7.8125 -2.269531 6.46875 -3.59375 C 5.125 -4.914062 4.082031 -6.492188 3.34375 -8.328125 C 2.613281 -10.171875 2.25 -12.226562 2.25 -14.5 C 2.25 -16.738281 2.613281 -18.773438 3.34375 -20.609375 C 4.082031 -22.453125 5.125 -24.035156 6.46875 -25.359375 C 7.8125 -26.679688 9.394531 -27.695312 11.21875 -28.40625 C 13.050781 -29.113281 15.050781 -29.46875 17.21875 -29.46875 C 19.519531 -29.46875 21.601562 -29.070312 23.46875 -28.28125 C 25.34375 -27.5 26.925781 -26.359375 28.21875 -24.859375 C 29.519531 -23.359375 30.425781 -21.53125 30.9375 -19.375 L 24.78125 -18.578125 C 24.226562 -20.421875 23.273438 -21.8125 21.921875 -22.75 C 20.578125 -23.6875 18.992188 -24.15625 17.171875 -24.15625 C 15.554688 -24.15625 14.125 -23.753906 12.875 -22.953125 C 11.632812 -22.160156 10.65625 -21.039062 9.9375 -19.59375 C 9.21875 -18.144531 8.859375 -16.445312 8.859375 -14.5 C 8.859375 -12.5625 9.21875 -10.863281 9.9375 -9.40625 C 10.65625 -7.945312 11.632812 -6.816406 12.875 -6.015625 C 14.125 -5.222656 15.554688 -4.828125 17.171875 -4.828125 C 18.992188 -4.828125 20.578125 -5.289062 21.921875 -6.21875 C 23.273438 -7.15625 24.226562 -8.539062 24.78125 -10.375 L 30.9375 -9.609375 C 30.425781 -7.460938 29.515625 -5.632812 28.203125 -4.125 C 26.898438 -2.625 25.3125 -1.472656 23.4375 -0.671875 C 21.5625 0.117188 19.488281 0.515625 17.21875 0.515625Z"/></g>
-              <g transform="translate(224.83, 57.89)"><path d="M 20.390625 -29.46875 C 22.441406 -29.46875 24.21875 -29.070312 25.71875 -28.28125 C 27.226562 -27.5 28.398438 -26.320312 29.234375 -24.75 C 30.066406 -23.1875 30.484375 -21.222656 30.484375 -18.859375 L 30.484375 0 L 23.8125 0 L 23.8125 -17.71875 C 23.8125 -19.289062 23.546875 -20.535156 23.015625 -21.453125 C 22.492188 -22.367188 21.800781 -23.03125 20.9375 -23.4375 C 20.070312 -23.851562 19.113281 -24.0625 18.0625 -24.0625 C 16.925781 -24.0625 15.835938 -23.820312 14.796875 -23.34375 C 13.765625 -22.863281 12.925781 -22.082031 12.28125 -21 C 11.644531 -19.914062 11.316406 -18.457031 11.296875 -16.625 L 11.296875 0 L 4.6875 0 L 4.6875 -44.171875 L 11.296875 -44.171875 L 11.296875 -25.296875 C 12.273438 -26.609375 13.539062 -27.628906 15.09375 -28.359375 C 16.644531 -29.097656 18.410156 -29.46875 20.390625 -29.46875Z"/></g>
-            </g>
-          </g>
-        </svg>
-      </div>
-
-      {/* Tagline */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 700,
-          left: 0,
-          right: 0,
-          textAlign: "center",
-          opacity: taglineOpacity,
-          transform: `translateY(${taglineY}px)`,
-          padding: "0 80px",
-        }}
-      >
+        {/* Logo mark */}
         <div
           style={{
-            fontFamily: FONT,
-            fontSize: 28,
-            fontWeight: 500,
-            color: "rgba(255,255,255,0.65)",
-            lineHeight: 1.4,
+            transform: `scale(${logoScale})`,
+            opacity: logoOp,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 24,
           }}
         >
-          De slimme buffer tussen jou en incassokosten
-        </div>
-      </div>
-    </AbsoluteFill>
-  );
-};
-
-// ─── SCENE 2: THE PROBLEM ───────────────────────────────────
-const ProblemScene: React.FC = () => {
-  const frame = useCurrentFrame();
-
-  // Dutch government/utility letter cards that pile up then fade
-  const letters = [
-    { vendor: "Belastingdienst", amount: "€174,00", type: "Aanmaning", color: "#003082", delay: 5 },
-    { vendor: "Ziggo", amount: "€89,95", type: "Incasso", color: C.red, delay: 20 },
-    { vendor: "Vattenfall", amount: "€234,12", type: "Herinnering", color: C.amber, delay: 35 },
-    { vendor: "DUO", amount: "€1.250,00", type: "Deurwaarder", color: C.darkRed, delay: 50 },
-  ];
-
-  // After letters pile up, they blur and fade away
-  const fadeOutStart = 110;
-  const lettersFading = frame > fadeOutStart;
-  const globalBlur = lettersFading ? interpolate(frame, [fadeOutStart, fadeOutStart + 40], [0, 20], { extrapolateRight: "clamp" }) : 0;
-  const globalFade = lettersFading ? interpolate(frame, [fadeOutStart, fadeOutStart + 40], [1, 0], { extrapolateRight: "clamp" }) : 1;
-
-  const statOpacity = interpolate(frame, [130, 155], [0, 1], { extrapolateRight: "clamp" });
-  const statY = interpolate(frame, [130, 155], [50, 0], { extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) });
-  const statBlur = interpolate(frame, [130, 150], [6, 0], { extrapolateRight: "clamp" });
-
-  return (
-    <AbsoluteFill style={{ backgroundColor: C.navy, justifyContent: "center", alignItems: "center" }}>
-      {/* Subtle red stress gradient */}
-      <div style={{
-        position: "absolute", width: "200%", height: "200%",
-        background: `radial-gradient(circle at 50% 40%, ${C.red}12 0%, transparent 60%)`,
-        filter: "blur(80px)", opacity: lettersFading ? 1 - globalFade : 0.5,
-      }} />
-
-      {/* Pile of official letters */}
-      <div style={{ position: "relative", width: 340, height: 500, filter: `blur(${globalBlur}px)`, opacity: globalFade }}>
-        {letters.map((l, i) => {
-          const enterOpacity = interpolate(frame, [l.delay, l.delay + 12], [0, 1], { extrapolateRight: "clamp" });
-          const enterY = interpolate(frame, [l.delay, l.delay + 18], [-80, 0], { extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) });
-          const enterScale = interpolate(frame, [l.delay, l.delay + 15], [1.1, 1], { extrapolateRight: "clamp" });
-          const rotate = (i - 1.5) * 4 + Math.sin(frame * 0.03 + i) * 1.5;
-
-          return (
-            <div
-              key={i}
-              style={{
-                position: "absolute",
-                top: i * 30 + 40,
-                left: 20 + i * 8,
-                width: 280,
-                background: "#FFFFFF",
-                borderRadius: 8,
-                padding: "20px 22px",
-                boxShadow: `0 8px 30px rgba(0,0,0,0.15), inset 0 0 0 1px ${l.color}30`,
-                opacity: enterOpacity,
-                transform: `translateY(${enterY}px) scale(${enterScale}) rotate(${rotate}deg)`,
-                zIndex: 10 - i,
-              }}
-            >
-              {/* Blue government stripe on Belastingdienst */}
-              {l.vendor === "Belastingdienst" && (
-                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: "#003082", borderRadius: "8px 8px 0 0" }} />
-              )}
-              <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 600, color: l.color, textTransform: "uppercase" as const, letterSpacing: 1, marginBottom: 6 }}>
-                {l.type}
-              </div>
-              <div style={{ fontFamily: FONT, fontSize: 16, fontWeight: 700, color: C.navy }}>{l.vendor}</div>
-              <div style={{ fontFamily: FONT, fontSize: 24, fontWeight: 800, color: C.text, marginTop: 6 }}>{l.amount}</div>
-              <div style={{ fontFamily: FONT, fontSize: 10, color: C.muted, marginTop: 4 }}>Betaal binnen 14 dagen</div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Stat text — appears as letters fade */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 300,
-          left: 0, right: 0,
-          textAlign: "center",
-          opacity: statOpacity,
-          transform: `translateY(${statY}px)`,
-          filter: `blur(${statBlur}px)`,
-          padding: "0 60px",
-        }}
-      >
-        <div style={{ fontFamily: FONT, fontSize: 38, fontWeight: 800, color: "#fff", lineHeight: 1.3 }}>
-          3.1 miljoen huishoudens
-        </div>
-        <div style={{ fontFamily: FONT, fontSize: 22, fontWeight: 500, color: "rgba(255,255,255,0.5)", marginTop: 12 }}>
-          kampen met schulden in Nederland
-        </div>
-      </div>
-    </AbsoluteFill>
-  );
-};
-
-// ─── SCENE 3: DASHBOARD ─────────────────────────────────────
-const DashboardScene: React.FC = () => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const phoneX = spring({ frame, fps, config: { damping: 14, stiffness: 100 }, from: 600, to: 0 });
-  const phoneRotateY = interpolate(Math.sin(frame * 0.02), [-1, 1], [-2, 2]);
-  const income = useCounter(463716, 30, 50);
-  const expenses = useCounter(475983, 35, 50);
-  const net = useCounter(12267, 40, 50);
-  const vrij = useCounter(4100, 60, 40);
-  const open = useCounter(57400, 70, 40);
-
-  return (
-    <AbsoluteFill style={{ backgroundColor: C.bg, justifyContent: "center", alignItems: "center" }}>
-      <div style={{ transform: `translateX(${phoneX}px)` }}>
-        <PhoneMockup rotateY={phoneRotateY} scale={1.15}>
-          <div style={{ padding: "50px 16px 100px", height: "100%", overflow: "hidden" }}>
-            {/* Topbar */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, ...useFadeSlide(5) }}>
-              <span style={{ fontFamily: FONT, fontSize: 18, fontWeight: 800, color: C.navy }}>Paywatch</span>
-              <div style={{ display: "flex", gap: 8 }}>
-                {[1, 2, 3].map((i) => (
-                  <div key={i} style={{ width: 24, height: 24, borderRadius: 6, background: C.border, position: "relative" }}>
-                    {i === 3 && <div style={{ position: "absolute", top: -3, right: -3, width: 10, height: 10, background: C.red, borderRadius: 5, border: "2px solid " + C.card }} />}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Financieel inzicht card */}
-            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 14, marginBottom: 12, ...useFadeSlide(15) }}>
-              <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: C.muted, marginBottom: 10 }}>Financieel inzicht</div>
-              <div style={{ display: "flex", gap: 8 }}>
-                {[
-                  { label: "Bank inkomen", value: formatEuro(income), color: C.green },
-                  { label: "Bank uitgaven", value: formatEuro(expenses), color: C.red },
-                  { label: "Netto", value: `↘ ${formatEuro(net)}`, color: C.red },
-                ].map((item, i) => (
-                  <div key={i} style={{ flex: 1, background: C.bg, borderRadius: 8, padding: "8px 10px" }}>
-                    <div style={{ fontFamily: FONT, fontSize: 10, color: C.muted }}>{item.label}</div>
-                    <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 700, color: item.color, marginTop: 2 }}>{item.value}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Tab toggle */}
-            <div style={{ display: "flex", background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 3, marginBottom: 12, ...useFadeSlide(25) }}>
-              <div style={{ flex: 1, background: C.blueTint, borderRadius: 9, padding: 8, textAlign: "center" }}>
-                <span style={{ fontFamily: FONT, fontSize: 12, fontWeight: 600, color: C.blue }}>Overzicht</span>
-              </div>
-              <div style={{ flex: 1, padding: 8, textAlign: "center" }}>
-                <span style={{ fontFamily: FONT, fontSize: 12, color: C.muted }}>AI Inzicht</span>
-              </div>
-            </div>
-
-            {/* Vrij besteedbaar */}
-            <div style={{ background: C.card, border: `2px solid ${C.amber}40`, borderRadius: 14, padding: 14, marginBottom: 12, ...useFadeSlide(35) }}>
-              <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: C.text }}>Vrij besteedbaar deze maand</div>
-              <div style={{ fontFamily: FONT, fontSize: 36, fontWeight: 800, color: C.navy, marginTop: 4, letterSpacing: -1 }}>{formatEuro(vrij)}</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 8 }}>
-                <div style={{ fontFamily: FONT, fontSize: 11, color: C.muted, display: "flex", justifyContent: "space-between" }}>
-                  <span>Inkomen</span><span>€2.400,00</span>
-                </div>
-                <div style={{ fontFamily: FONT, fontSize: 11, color: C.muted, display: "flex", justifyContent: "space-between" }}>
-                  <span>Vaste lasten (8)</span><span>-€1.785,00</span>
-                </div>
-                <div style={{ fontFamily: FONT, fontSize: 11, color: C.red, display: "flex", justifyContent: "space-between" }}>
-                  <span>Open rekeningen (2)</span><span>-€574,00</span>
-                </div>
-              </div>
-              <div style={{ marginTop: 8, background: `${C.amber}15`, padding: "4px 10px", borderRadius: 4, display: "inline-flex", alignItems: "center", gap: 4 }}>
-                <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: C.amber }}>⚠ 1 vaste last in incasso</span>
-              </div>
-            </div>
-
-            {/* Stats grid */}
-            <div style={{ display: "flex", gap: 10, ...useFadeSlide(50) }}>
-              <div style={{ flex: 1, background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 14 }}>
-                <div style={{ fontFamily: FONT, fontSize: 10, color: C.muted }}>Openstaand</div>
-                <div style={{ fontFamily: FONT, fontSize: 26, fontWeight: 800, color: C.navy, marginTop: 4 }}>{formatEuro(open)}</div>
-                <div style={{ fontFamily: FONT, fontSize: 10, color: C.muted, marginTop: 2 }}>2 rekeningen</div>
-              </div>
-              <div style={{ flex: 1, background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 14 }}>
-                <div style={{ fontFamily: FONT, fontSize: 10, color: C.red }}>Achterstallig</div>
-                <div style={{ fontFamily: FONT, fontSize: 26, fontWeight: 800, color: C.red, marginTop: 4 }}>2</div>
-                <div style={{ fontFamily: FONT, fontSize: 10, color: C.muted, marginTop: 2 }}>Direct betalen</div>
-              </div>
-            </div>
-          </div>
-          <BottomTabBar active="overzicht" />
-        </PhoneMockup>
-      </div>
-    </AbsoluteFill>
-  );
-};
-
-// ─── SCENE 4: BILL DETAIL ───────────────────────────────────
-const BillDetailScene: React.FC = () => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const drawerY = spring({ frame, fps, config: { damping: 14, stiffness: 80 }, from: 500, to: 0 });
-
-  return (
-    <AbsoluteFill style={{ backgroundColor: C.bg, justifyContent: "center", alignItems: "center" }}>
-      <PhoneMockup rotateY={-2} scale={1.15}>
-        <div style={{ height: "100%", position: "relative" }}>
-          {/* Background list */}
-          <div style={{ padding: "50px 16px", opacity: 0.3 }}>
-            <div style={{ fontFamily: FONT, fontSize: 16, fontWeight: 700, color: C.navy }}>Betalingen</div>
-          </div>
-
-          {/* Bill drawer */}
-          <div
+          <svg width="120" height="120" viewBox="0 0 28 28" fill="none">
+            <rect x="2" y="2" width="10" height="24" rx="2" fill="#FFFFFF" />
+            <path d="M12 2h14a0 0 0 0 1 0 0v14a14 14 0 0 1-14-14z" fill={C.blue} />
+          </svg>
+          <span
             style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              background: C.card,
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
-              boxShadow: "0 -8px 30px rgba(0,0,0,0.12)",
-              transform: `translateY(${drawerY}px)`,
-              height: 620,
+              fontSize: 72,
+              fontWeight: 800,
+              color: "#FFFFFF",
+              fontFamily: FONT,
+              letterSpacing: "-0.03em",
             }}
           >
-            {/* Drag handle */}
-            <div style={{ width: 40, height: 4, background: C.border, borderRadius: 2, margin: "10px auto 0" }} />
+            Paywatch
+          </span>
+        </div>
 
-            {/* Dark header */}
-            <div style={{ background: C.navy, margin: "12px 12px 0", borderRadius: 16, padding: 20, ...useFadeSlide(15) }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ fontFamily: FONT, fontSize: 16, color: "#fff" }}>🏛</span>
+        {/* Tagline */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 500,
+            opacity: taglineOp,
+            transform: `translateY(${taglineY}px)`,
+          }}
+        >
+          <span
+            style={{
+              fontSize: 32,
+              fontWeight: 500,
+              color: "rgba(255,255,255,0.7)",
+              fontFamily: FONT,
+              textAlign: "center",
+            }}
+          >
+            De slimme buffer tussen jou
+          </span>
+          <br />
+          <span
+            style={{
+              fontSize: 32,
+              fontWeight: 500,
+              color: "rgba(255,255,255,0.7)",
+              fontFamily: FONT,
+              textAlign: "center",
+            }}
+          >
+            en incassokosten
+          </span>
+        </div>
+      </AbsoluteFill>
+
+      <Particles count={25} color="rgba(255,255,255,0.3)" area={{ x: 0, y: 0, w: 1080, h: 1920 }} />
+      <Vignette intensity={0.5} />
+    </AbsoluteFill>
+  );
+}
+
+// ============================================================
+// SCENE 2: PROBLEM (150 - 360 frames / 5-12s)
+// ============================================================
+function Scene2Problem() {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  // Entry
+  const entryOp = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: "clamp" });
+
+  // Exit
+  const exitOp = interpolate(frame, [180, 210], [1, 0], { extrapolateRight: "clamp" });
+  const exitBlur = interpolate(frame, [180, 210], [0, 10], { extrapolateRight: "clamp" });
+
+  return (
+    <AbsoluteFill style={{ opacity: entryOp * exitOp, filter: `blur(${exitBlur}px)` }}>
+      <GradientMesh opacity={0.08} color1={C.red} color2={C.orange} color3={C.amber} />
+
+      {/* GIANT "3.1" background text */}
+      <BackgroundText text="3.1" fontSize={480} color={C.red} opacity={0.06} x={-80} y={200} from={10} />
+      <BackgroundText text="MILJOEN" fontSize={180} color={C.red} opacity={0.05} x={40} y={650} from={20} />
+
+      {/* Flying letters (realistic bills) */}
+      <RealisticLetter
+        vendor="Belastingdienst"
+        amount="€174,00"
+        stage="AANMANING"
+        stageColor={C.orange}
+        from={20}
+        startX={500}
+        startY={-500}
+        endX={120}
+        endY={-180}
+        startRotation={25}
+        endRotation={-5}
+        showStamp
+      />
+      <RealisticLetter
+        vendor="Vattenfall"
+        amount="€400,00"
+        stage="INCASSO"
+        stageColor={C.red}
+        from={20}
+        delay={10}
+        startX={-500}
+        startY={-400}
+        endX={-140}
+        endY={60}
+        startRotation={-20}
+        endRotation={4}
+      />
+      <RealisticLetter
+        vendor="Ziggo"
+        amount="€89,95"
+        stage="HERINNERING"
+        stageColor={C.amber}
+        from={20}
+        delay={20}
+        startX={400}
+        startY={500}
+        endX={100}
+        endY={280}
+        startRotation={30}
+        endRotation={-8}
+      />
+
+      {/* Central text - MASSIVE */}
+      <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", zIndex: 20 }}>
+        <Sequence from={60}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <LetterReveal
+              text="3.1 MILJOEN"
+              from={0}
+              fontSize={120}
+              color={C.navy}
+              fontWeight={900}
+            />
+            <Sequence from={20}>
+              <LetterReveal
+                text="huishoudens"
+                from={0}
+                fontSize={72}
+                color={C.muted}
+                fontWeight={600}
+              />
+            </Sequence>
+            <Sequence from={40}>
+              <LetterReveal
+                text="kampen met schulden"
+                from={0}
+                fontSize={52}
+                color={C.red}
+                fontWeight={700}
+              />
+            </Sequence>
+          </div>
+        </Sequence>
+      </AbsoluteFill>
+
+      <Particles count={12} color={`${C.red}60`} area={{ x: 100, y: 200, w: 880, h: 1200 }} />
+      <Vignette intensity={0.3} />
+    </AbsoluteFill>
+  );
+}
+
+// ============================================================
+// SCENE 3: DASHBOARD (360 - 660 frames / 12-22s)
+// ============================================================
+function Scene3Dashboard() {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  const entryOp = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: "clamp" });
+  const exitOp = interpolate(frame, [270, 300], [1, 0], { extrapolateRight: "clamp" });
+
+  return (
+    <AbsoluteFill style={{ opacity: entryOp * exitOp }}>
+      <GradientMesh opacity={0.06} />
+
+      {/* MASSIVE background "€41" */}
+      <BackgroundText text="€41" fontSize={400} color={C.blue} opacity={0.05} x={-40} y={300} from={30} />
+      <BackgroundText text="GRIP" fontSize={220} color={C.navy} opacity={0.04} x={500} y={1300} from={50} rotation={-5} />
+
+      {/* iPhone slides in from right */}
+      <IPhoneMockup
+        from={0}
+        sceneCamera={{
+          translateXFrom: 400,
+          translateXTo: 0,
+          rotateYFrom: -12,
+          rotateYTo: 0,
+          scaleFrom: 0.85,
+          scaleTo: 1,
+          duration: 60,
+        }}
+      >
+        {/* Dashboard screen content */}
+        <div style={{ background: C.bg, width: "100%", height: "100%" }}>
+          <AppTopbar />
+
+          <div style={{ padding: "8px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+            {/* Greeting */}
+            <Sequence from={40}>
+              <SpringIn from={40}>
+                <div style={{ fontSize: 20, fontWeight: 700, color: C.navy, fontFamily: FONT }}>
+                  Hoi, Samba
+                </div>
+              </SpringIn>
+            </Sequence>
+
+            {/* Vrij besteedbaar card */}
+            <Sequence from={55}>
+              <SpringIn from={55}>
+                <div
+                  style={{
+                    background: C.surface,
+                    borderRadius: 16,
+                    border: `1px solid ${C.border}`,
+                    padding: "16px 18px",
+                  }}
+                >
+                  <div style={{ fontSize: 11, color: C.muted, fontFamily: FONT, fontWeight: 500 }}>
+                    Vrij besteedbaar deze maand
                   </div>
-                  <span style={{ fontFamily: FONT, fontSize: 16, fontWeight: 700, color: "#fff" }}>Belastingdienst</span>
+                  <div
+                    style={{
+                      fontSize: 48,
+                      fontWeight: 800,
+                      color: C.navy,
+                      fontFamily: FONT,
+                      letterSpacing: "-0.03em",
+                      marginTop: 4,
+                    }}
+                  >
+                    <RollingNumber target={41} from={55} prefix="€" suffix=",00" duration={45} style={{}} />
+                  </div>
+                  {/* Breakdown */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 10 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontFamily: FONT }}>
+                      <span style={{ color: C.muted }}>Inkomen</span>
+                      <span style={{ color: C.green, fontWeight: 600 }}>€2.400</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontFamily: FONT }}>
+                      <span style={{ color: C.muted }}>Vaste lasten</span>
+                      <span style={{ color: C.text, fontWeight: 600 }}>-€1.785</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontFamily: FONT }}>
+                      <span style={{ color: C.muted }}>Open rekeningen</span>
+                      <span style={{ color: C.red, fontWeight: 600 }}>-€574</span>
+                    </div>
+                  </div>
+                  {/* Warning */}
+                  <div
+                    style={{
+                      marginTop: 10,
+                      padding: "8px 10px",
+                      background: `${C.amber}10`,
+                      borderRadius: 8,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <LucideIcon d={ICONS.alertTriangle} size={14} color={C.amber} />
+                    <span style={{ fontSize: 11, color: C.amber, fontWeight: 600, fontFamily: FONT }}>
+                      1 vaste last in incasso
+                    </span>
+                  </div>
                 </div>
-                <div style={{ background: "rgba(255,255,255,0.2)", borderRadius: 4, padding: "3px 8px" }}>
-                  <span style={{ fontFamily: FONT, fontSize: 9, fontWeight: 600, color: "#fff" }}>PRIORITEIT</span>
+              </SpringIn>
+            </Sequence>
+
+            {/* Stat cards */}
+            <Sequence from={80}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <StatCard label="Openstaand" value="€574" sub="2 rekeningen" color={C.blue} from={80} delay={0} />
+                <StatCard label="Achterstallig" value="2" sub="Direct betalen" color={C.red} from={80} delay={5} />
+              </div>
+            </Sequence>
+
+            {/* Bills */}
+            <Sequence from={110}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <BillRow vendor="Belastingdienst" amount="€174,00" stage="Aanmaning" stageColor={C.orange} from={110} delay={0} />
+                <BillRow vendor="Vattenfall" amount="€400,00" stage="Incasso" stageColor={C.red} from={110} delay={6} />
+              </div>
+            </Sequence>
+          </div>
+
+          <BottomTabBar activeIndex={0} />
+        </div>
+      </IPhoneMockup>
+
+      <Particles count={10} color={`${C.blue}30`} area={{ x: 50, y: 400, w: 980, h: 800 }} />
+      <Vignette intensity={0.2} />
+    </AbsoluteFill>
+  );
+}
+
+// ============================================================
+// SCENE 4: BILL DETAIL (660 - 900 frames / 22-30s)
+// ============================================================
+function Scene4BillDetail() {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  const entryOp = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: "clamp" });
+  const exitOp = interpolate(frame, [210, 240], [1, 0], { extrapolateRight: "clamp" });
+
+  // Letter flies into phone and morphs
+  const letterPhase = interpolate(frame, [0, 60], [0, 1], { extrapolateRight: "clamp" });
+  const letterOp = interpolate(frame, [40, 70], [1, 0], { extrapolateRight: "clamp" });
+  const drawerOp = interpolate(frame, [60, 80], [0, 1], { extrapolateRight: "clamp" });
+
+  return (
+    <AbsoluteFill style={{ opacity: entryOp * exitOp }}>
+      <GradientMesh opacity={0.06} />
+
+      {/* Background text */}
+      <BackgroundText text="€174" fontSize={320} color={C.orange} opacity={0.05} x={-20} y={400} from={20} />
+
+      {/* Floating letter that morphs into phone UI */}
+      {frame < 70 && (
+        <RealisticLetter
+          vendor="Belastingdienst"
+          amount="€174,00"
+          stage="AANMANING"
+          stageColor={C.orange}
+          from={0}
+          startX={300}
+          startY={-200}
+          endX={0}
+          endY={0}
+          startRotation={15}
+          endRotation={0}
+          showStamp
+        />
+      )}
+
+      {/* Scan line effect */}
+      {frame >= 35 && frame < 65 && (
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: `${30 + ((frame - 35) / 30) * 40}%`,
+            transform: "translateX(-50%)",
+            width: 340,
+            height: 3,
+            background: `linear-gradient(90deg, transparent, ${C.blue}, transparent)`,
+            boxShadow: `0 0 20px ${C.blue}80`,
+            zIndex: 15,
+          }}
+        />
+      )}
+
+      {/* Phone with bill detail */}
+      <div style={{ opacity: drawerOp }}>
+        <IPhoneMockup
+          from={60}
+          sceneCamera={{
+            scaleFrom: 1.3,
+            scaleTo: 1,
+            duration: 60,
+          }}
+        >
+          <div style={{ background: C.bg, width: "100%", height: "100%" }}>
+            {/* Dark navy header */}
+            <div
+              style={{
+                background: C.navy,
+                padding: "54px 20px 24px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: C.amber, fontFamily: FONT, padding: "3px 8px", background: `${C.amber}20`, borderRadius: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  PRIORITEIT
                 </div>
               </div>
-              <div style={{ fontFamily: FONT, fontSize: 36, fontWeight: 800, color: "#fff", letterSpacing: -1 }}>€174,00</div>
-              <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-                <div style={{ background: `${C.orange}30`, borderRadius: 4, padding: "2px 8px" }}>
-                  <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: C.orange }}>Aanmaning</span>
-                </div>
-                <div style={{ background: `${C.red}30`, borderRadius: 4, padding: "2px 8px" }}>
-                  <span style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, color: C.red }}>Achterstallig</span>
-                </div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.7)", fontFamily: FONT }}>
+                Belastingdienst
               </div>
-              {/* Progress bar */}
-              <div style={{ marginTop: 12, ...useFadeSlide(30) }}>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ fontFamily: FONT, fontSize: 11, color: "rgba(255,255,255,0.6)" }}>Betalingsregeling</span>
-                  <span style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: "#fff" }}>1/3</span>
+              <div style={{ fontSize: 48, fontWeight: 800, color: "#FFFFFF", fontFamily: FONT, letterSpacing: "-0.03em" }}>
+                <RollingNumber target={174} from={0} prefix="€" suffix=",00" duration={40} style={{}} />
+              </div>
+              {/* Badges */}
+              <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: C.orange, background: `${C.orange}20`, padding: "3px 10px", borderRadius: 4, fontFamily: FONT }}>
+                  Aanmaning
                 </div>
-                <div style={{ width: "100%", height: 6, background: "rgba(255,255,255,0.15)", borderRadius: 3, marginTop: 6 }}>
-                  <div style={{ width: "33%", height: "100%", background: C.blue, borderRadius: 3 }} />
+                <div style={{ fontSize: 10, fontWeight: 600, color: C.red, background: `${C.red}20`, padding: "3px 10px", borderRadius: 4, fontFamily: FONT }}>
+                  Achterstallig
                 </div>
               </div>
             </div>
 
             {/* Tabs */}
-            <div style={{ display: "flex", margin: "12px 12px", background: C.bg, borderRadius: 10, padding: 3, ...useFadeSlide(40) }}>
+            <div style={{ display: "flex", padding: "0 16px", gap: 0, marginTop: 12 }}>
               {["Details", "Escalatie", "Acties", "Regeling"].map((t, i) => (
-                <div key={t} style={{ flex: 1, padding: 8, textAlign: "center", background: i === 0 ? C.card : "transparent", borderRadius: 7 }}>
-                  <span style={{ fontFamily: FONT, fontSize: 11, fontWeight: i === 0 ? 600 : 400, color: i === 0 ? C.navy : C.muted }}>{t}</span>
+                <div key={i} style={{ flex: 1, textAlign: "center", padding: "10px 0", fontSize: 12, fontWeight: i === 0 ? 700 : 500, color: i === 0 ? C.blue : C.muted, borderBottom: i === 0 ? `2px solid ${C.blue}` : `1px solid ${C.border}`, fontFamily: FONT }}>
+                  {t}
                 </div>
               ))}
             </div>
 
             {/* Detail rows */}
-            <div style={{ padding: "0 16px" }}>
+            <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
               {[
-                { label: "Vervaldatum", value: "donderdag 30 april 2026" },
-                { label: "Ontvangstdatum", value: "25 maart 2026" },
+                { label: "Vervaldatum", value: "30 april 2026" },
+                { label: "Ontvangstdatum", value: "15 maart 2026" },
                 { label: "Categorie", value: "Overheid" },
                 { label: "Bron", value: "Camera scan" },
+                { label: "Referentie", value: "BEL-2026-0174" },
               ].map((row, i) => (
-                <div key={i} style={{ background: C.bg, borderRadius: 12, padding: "10px 14px", marginBottom: 8, ...useFadeSlide(50 + i * 8) }}>
-                  <div style={{ fontFamily: FONT, fontSize: 10, color: C.muted }}>{row.label}</div>
-                  <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: C.text, marginTop: 2 }}>{row.value}</div>
-                </div>
+                <Sequence key={i} from={80 + i * 6}>
+                  <SpringIn from={80 + i * 6} delay={0}>
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: `1px solid ${C.border}` }}>
+                      <span style={{ fontSize: 13, color: C.muted, fontFamily: FONT }}>{row.label}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: C.text, fontFamily: FONT }}>{row.value}</span>
+                    </div>
+                  </SpringIn>
+                </Sequence>
               ))}
             </div>
           </div>
-        </div>
-      </PhoneMockup>
+        </IPhoneMockup>
+      </div>
+
+      <Vignette intensity={0.2} />
     </AbsoluteFill>
   );
-};
+}
 
-// ─── SCENE 5: PAYBUDDY VOICE CALL (HERO) ────────────────────
-const VoiceCallScene: React.FC = () => {
+// ============================================================
+// SCENE 5: PAYBUDDY VOICE CALL (900 - 1440 / 30-48s)
+// ============================================================
+function Scene5PayBuddy() {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const phase = Math.floor(frame / 75); // ~2.5s per phase
 
-  // Orb animation
-  const orbScale = 1 + Math.sin(frame * 0.06) * 0.04;
-  const ring1 = (frame % 90) / 90;
-  const ring2 = ((frame + 45) % 90) / 90;
+  const entryOp = interpolate(frame, [0, 30], [0, 1], { extrapolateRight: "clamp" });
+  const exitOp = interpolate(frame, [510, 540], [1, 0], { extrapolateRight: "clamp" });
 
-  const messages: { from: string; text: string; startFrame: number }[] = [
-    { from: "paybuddy", text: "Hoi! Fijn dat je belt. Waar kan ik je mee helpen?", startFrame: 30 },
-    { from: "user", text: "Ik heb een brief, kun je meekijken?", startFrame: 100 },
-    { from: "paybuddy", text: "Natuurlijk, ik open de camera...", startFrame: 170 },
-    { from: "paybuddy", text: "Dit is een aanmaning van Ziggo voor negenentachtig euro en vijfennegentig cent. De vervaldatum is vijftien mei.", startFrame: 310 },
-    { from: "paybuddy", text: "Wil je deze toevoegen?", startFrame: 400 },
-    { from: "user", text: "Ja, doe maar.", startFrame: 440 },
-    { from: "paybuddy", text: "Top, de rekening staat erin!", startFrame: 480 },
-  ];
+  // Camera push into orb
+  const pushScale = interpolate(frame, [0, 300], [1, 1.15], {
+    extrapolateRight: "clamp",
+    easing: Easing.bezier(0.4, 0, 0.2, 1),
+  });
 
-  // Find the last 2 visible messages
-  const visibleMsgs = messages.filter((m) => frame >= m.startFrame).slice(-2);
-  const showCamera = frame >= 200 && frame < 280;
-  const showProcessing = frame >= 280 && frame < 310;
+  // Conversation flow
+  const msg1From = 90;
+  const msg2From = 180;
+  const msg3From = 270;
+  const cameraFrom = 340;
+  const resultFrom = 420;
 
   return (
-    <AbsoluteFill style={{ backgroundColor: C.bg, justifyContent: "center", alignItems: "center" }}>
-      <PhoneMockup scale={1.15}>
-        <div style={{ width: "100%", height: "100%", background: "#0A1628", position: "relative" }}>
-          {/* Orb */}
+    <AbsoluteFill style={{ opacity: entryOp * exitOp, transform: `scale(${pushScale})` }}>
+      <GradientMesh dark opacity={0.25} color1={C.teal} color2={C.purple} color3="#0D9488" />
+
+      {/* Orb - centered and hero */}
+      <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
+        <div style={{ marginTop: -200 }}>
+          <PayBuddyOrb size={200} from={0} intensity={1.2} />
+        </div>
+      </AbsoluteFill>
+
+      {/* PayBuddy label */}
+      <Sequence from={20}>
+        <div
+          style={{
+            position: "absolute",
+            top: 260,
+            left: 0,
+            right: 0,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          <SpringIn from={20}>
+            <span style={{ fontSize: 36, fontWeight: 800, color: "#FFFFFF", fontFamily: FONT }}>
+              PayBuddy
+            </span>
+          </SpringIn>
+          <Sequence from={30}>
+            <SpringIn from={30}>
+              <span style={{ fontSize: 16, color: `${C.teal}`, fontWeight: 500, fontFamily: FONT }}>
+                Aan het praten
+              </span>
+            </SpringIn>
+          </Sequence>
+        </div>
+      </Sequence>
+
+      {/* Conversation bubbles */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 350,
+          left: 80,
+          right: 80,
+          display: "flex",
+          flexDirection: "column",
+          gap: 14,
+        }}
+      >
+        {/* PayBuddy greeting */}
+        <Sequence from={msg1From}>
+          <SpringIn from={msg1From} config={SPRING_BOUNCY}>
+            <div
+              style={{
+                background: "rgba(255,255,255,0.1)",
+                backdropFilter: "blur(20px)",
+                borderRadius: "20px 20px 20px 4px",
+                padding: "14px 18px",
+                maxWidth: 340,
+                border: "1px solid rgba(255,255,255,0.1)",
+              }}
+            >
+              <LetterReveal
+                text="Hoi! Fijn dat je belt."
+                from={msg1From + 5}
+                fontSize={18}
+                color="rgba(255,255,255,0.9)"
+                fontWeight={500}
+                center={false}
+              />
+              <Sequence from={30}>
+                <LetterReveal
+                  text="Waar kan ik je mee helpen?"
+                  from={msg1From + 35}
+                  fontSize={18}
+                  color="rgba(255,255,255,0.9)"
+                  fontWeight={500}
+                  center={false}
+                  style={{ marginTop: 4 }}
+                />
+              </Sequence>
+            </div>
+          </SpringIn>
+        </Sequence>
+
+        {/* User message */}
+        <Sequence from={msg2From}>
+          <SpringIn from={msg2From} config={SPRING_BOUNCY}>
+            <div
+              style={{
+                background: C.blue,
+                borderRadius: "20px 20px 4px 20px",
+                padding: "14px 18px",
+                maxWidth: 300,
+                alignSelf: "flex-end",
+                marginLeft: "auto",
+              }}
+            >
+              <LetterReveal
+                text="Ik heb een brief, kun je meekijken?"
+                from={msg2From + 5}
+                fontSize={18}
+                color="#FFFFFF"
+                fontWeight={500}
+                center={false}
+              />
+            </div>
+          </SpringIn>
+        </Sequence>
+
+        {/* PayBuddy response */}
+        <Sequence from={msg3From}>
+          <SpringIn from={msg3From} config={SPRING_BOUNCY}>
+            <div
+              style={{
+                background: "rgba(255,255,255,0.1)",
+                backdropFilter: "blur(20px)",
+                borderRadius: "20px 20px 20px 4px",
+                padding: "14px 18px",
+                maxWidth: 340,
+                border: "1px solid rgba(255,255,255,0.1)",
+              }}
+            >
+              <LetterReveal
+                text="Natuurlijk! Maak een foto van je rekening."
+                from={msg3From + 5}
+                fontSize={18}
+                color="rgba(255,255,255,0.9)"
+                fontWeight={500}
+                center={false}
+              />
+            </div>
+          </SpringIn>
+        </Sequence>
+
+        {/* Camera action */}
+        <Sequence from={cameraFrom}>
+          <SpringIn from={cameraFrom} config={SPRING_APPLE}>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 8 }}>
+              <div
+                style={{
+                  padding: "12px 24px",
+                  background: C.blue,
+                  borderRadius: 12,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <LucideIcon d={ICONS.camera} size={18} color="#FFF" />
+                <span style={{ fontSize: 14, fontWeight: 600, color: "#FFF", fontFamily: FONT }}>
+                  Camera
+                </span>
+              </div>
+            </div>
+          </SpringIn>
+        </Sequence>
+
+        {/* Processing + result */}
+        <Sequence from={resultFrom}>
+          <SpringIn from={resultFrom} config={SPRING_BOUNCY}>
+            <div
+              style={{
+                background: `${C.green}20`,
+                backdropFilter: "blur(20px)",
+                borderRadius: 16,
+                padding: "16px 20px",
+                border: `1px solid ${C.green}30`,
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <LucideIcon d={ICONS.check} size={24} color={C.green} strokeWidth={3} />
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: "#FFF", fontFamily: FONT }}>
+                  Top, de rekening staat erin!
+                </div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", fontFamily: FONT, marginTop: 2 }}>
+                  Ziggo - €89,95
+                </div>
+              </div>
+            </div>
+          </SpringIn>
+        </Sequence>
+      </div>
+
+      {/* Call controls */}
+      <Sequence from={50}>
+        <div
+          style={{
+            position: "absolute",
+            bottom: 120,
+            left: 0,
+            right: 0,
+            display: "flex",
+            justifyContent: "center",
+            gap: 40,
+          }}
+        >
+          <SpringIn from={50} delay={0}>
+            <div
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 32,
+                background: "rgba(255,255,255,0.1)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <LucideIcon d={ICONS.mic} size={24} color="rgba(255,255,255,0.7)" />
+            </div>
+          </SpringIn>
+          <SpringIn from={50} delay={5}>
+            <div
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 32,
+                background: C.red,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: `0 8px 24px ${C.red}40`,
+              }}
+            >
+              <LucideIcon d={ICONS.phoneOff} size={24} color="#FFF" />
+            </div>
+          </SpringIn>
+          <SpringIn from={50} delay={10}>
+            <div
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 32,
+                background: "rgba(255,255,255,0.1)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <LucideIcon d={ICONS.camera} size={24} color="rgba(255,255,255,0.7)" />
+            </div>
+          </SpringIn>
+        </div>
+      </Sequence>
+
+      <Particles count={15} color={`${C.teal}40`} area={{ x: 100, y: 100, w: 880, h: 1700 }} />
+      <Vignette intensity={0.5} />
+    </AbsoluteFill>
+  );
+}
+
+// ============================================================
+// SCENE 6: WIK SHIELD (1440 - 1680 / 48-56s)
+// ============================================================
+function Scene6WIKShield() {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  const entryOp = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: "clamp" });
+  const exitOp = interpolate(frame, [210, 240], [1, 0], { extrapolateRight: "clamp" });
+
+  // Shield slam animation
+  const shieldS = spring({ frame: frame - 30, fps, config: SPRING_ELASTIC, durationInFrames: 30 });
+  const shieldScale = interpolate(shieldS, [0, 1], [3, 1]);
+  const shieldOp = interpolate(shieldS, [0, 0.2], [0, 1], { extrapolateRight: "clamp" });
+
+  // Impact shake
+  const shakeX = frame >= 30 && frame < 45 ? Math.sin(frame * 4) * (45 - frame) * 0.5 : 0;
+  const shakeY = frame >= 30 && frame < 45 ? Math.cos(frame * 5) * (45 - frame) * 0.3 : 0;
+
+  return (
+    <AbsoluteFill
+      style={{
+        opacity: entryOp * exitOp,
+        transform: `translate(${shakeX}px, ${shakeY}px)`,
+      }}
+    >
+      <GradientMesh opacity={0.08} color1={C.purple} color2={C.blue} color3={C.green} />
+
+      {/* Background text */}
+      <BackgroundText text="TE HOOG" fontSize={200} color={C.red} opacity={0.04} x={60} y={250} from={60} rotation={-3} />
+
+      {/* Shield slam */}
+      <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
+        <div
+          style={{
+            transform: `scale(${shieldScale})`,
+            opacity: shieldOp,
+            filter: `drop-shadow(0 20px 60px ${C.purple}40)`,
+          }}
+        >
+          <LucideIcon d={ICONS.shieldCheck} size={180} color={C.purple} strokeWidth={1.2} />
+        </div>
+      </AbsoluteFill>
+
+      {/* Cost comparison */}
+      <Sequence from={60}>
+        <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 20,
+              marginTop: 300,
+            }}
+          >
+            {/* Overcharged amount */}
+            <SpringIn from={60}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <span style={{ fontSize: 18, color: C.muted, fontFamily: FONT, fontWeight: 500 }}>
+                  Berekend door incassobureau
+                </span>
+                <span
+                  style={{
+                    fontSize: 72,
+                    fontWeight: 800,
+                    color: C.red,
+                    fontFamily: FONT,
+                    textDecoration: "line-through",
+                    textDecorationColor: C.red,
+                    letterSpacing: "-0.03em",
+                  }}
+                >
+                  €145
+                </span>
+              </div>
+            </SpringIn>
+
+            {/* Legal max */}
+            <Sequence from={90}>
+              <SpringIn from={90} config={SPRING_BOUNCY}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  <span style={{ fontSize: 18, color: C.muted, fontFamily: FONT, fontWeight: 500 }}>
+                    Wettelijk maximum (WIK)
+                  </span>
+                  <GradientText fontSize={96} from1={C.green} to1="#34D399">
+                    €40
+                  </GradientText>
+                </div>
+              </SpringIn>
+            </Sequence>
+
+            {/* Savings message */}
+            <Sequence from={130}>
+              <SpringIn from={130}>
+                <div
+                  style={{
+                    background: `${C.green}15`,
+                    borderRadius: 16,
+                    padding: "14px 28px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    border: `1px solid ${C.green}30`,
+                  }}
+                >
+                  <LucideIcon d={ICONS.shieldCheck} size={24} color={C.green} />
+                  <span
+                    style={{
+                      fontSize: 20,
+                      fontWeight: 700,
+                      color: C.green,
+                      fontFamily: FONT,
+                    }}
+                  >
+                    €105 bespaard
+                  </span>
+                </div>
+              </SpringIn>
+            </Sequence>
+          </div>
+        </AbsoluteFill>
+      </Sequence>
+
+      <Particles count={8} color={`${C.purple}40`} area={{ x: 200, y: 200, w: 680, h: 1200 }} />
+      <Vignette intensity={0.25} />
+    </AbsoluteFill>
+  );
+}
+
+// ============================================================
+// SCENE 7: TOESLAGEN (1680 - 1920 / 56-64s)
+// ============================================================
+function Scene7Toeslagen() {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  const entryOp = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: "clamp" });
+  const exitOp = interpolate(frame, [210, 240], [1, 0], { extrapolateRight: "clamp" });
+
+  return (
+    <AbsoluteFill style={{ opacity: entryOp * exitOp }}>
+      <GradientMesh opacity={0.08} color1={C.green} color2={C.teal} color3={C.blue} />
+
+      {/* Giant +€705 */}
+      <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
+        <Sequence from={20}>
+          <SpringIn from={20} config={SPRING_ELASTIC}>
+            <GradientText fontSize={220} from1={C.green} to1="#34D399" style={{ textAlign: "center" }}>
+              +€705
+            </GradientText>
+          </SpringIn>
+        </Sequence>
+
+        <div style={{ position: "absolute", top: 620, display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <Sequence from={40}>
+            <LetterReveal text="per maand" from={40} fontSize={48} color={C.muted} fontWeight={600} />
+          </Sequence>
+          <Sequence from={55}>
+            <LetterReveal text="aan toeslagen gevonden" from={55} fontSize={36} color={C.muted} fontWeight={400} />
+          </Sequence>
+        </div>
+      </AbsoluteFill>
+
+      {/* Benefit cards floating */}
+      <div style={{ position: "absolute", bottom: 300, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+        {[
+          { name: "Huurtoeslag", amount: "+€484,17/mnd", color: C.green },
+          { name: "Zorgtoeslag", amount: "+€221,00/mnd", color: C.teal },
+          { name: "Kinderopvangtoeslag", amount: "+€500,00/mnd", color: C.blue },
+        ].map((b, i) => (
+          <Sequence key={i} from={80 + i * 15}>
+            <SpringIn from={80 + i * 15} config={SPRING_BOUNCY}>
+              <div
+                style={{
+                  background: "rgba(255,255,255,0.95)",
+                  borderRadius: 16,
+                  padding: "16px 28px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  width: 420,
+                  border: `1px solid ${C.border}`,
+                  boxShadow: `0 12px 40px rgba(0,0,0,0.06)`,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 10,
+                      background: `${b.color}12`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <LucideIcon d={ICONS.euro} size={20} color={b.color} />
+                  </div>
+                  <span style={{ fontSize: 16, fontWeight: 600, color: C.navy, fontFamily: FONT }}>
+                    {b.name}
+                  </span>
+                </div>
+                <span style={{ fontSize: 18, fontWeight: 800, color: b.color, fontFamily: FONT }}>
+                  {b.amount}
+                </span>
+              </div>
+            </SpringIn>
+          </Sequence>
+        ))}
+      </div>
+
+      <Particles count={12} color={`${C.green}40`} area={{ x: 100, y: 100, w: 880, h: 1700 }} />
+      <Vignette intensity={0.2} />
+    </AbsoluteFill>
+  );
+}
+
+// ============================================================
+// SCENE 8: STATS (1920 - 2160 / 64-72s)
+// ============================================================
+function Scene8Stats() {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  const entryOp = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: "clamp" });
+  const exitOp = interpolate(frame, [210, 240], [1, 0], { extrapolateRight: "clamp" });
+
+  return (
+    <AbsoluteFill style={{ opacity: entryOp * exitOp }}>
+      <GradientMesh opacity={0.06} />
+
+      <BackgroundText text="38" fontSize={500} color={C.red} opacity={0.04} x={200} y={200} from={10} />
+
+      <IPhoneMockup
+        from={0}
+        sceneCamera={{
+          scaleFrom: 0.9,
+          scaleTo: 1.05,
+          duration: 120,
+        }}
+      >
+        <div style={{ background: C.bg, width: "100%", height: "100%" }}>
+          <AppTopbar />
+
+          <div style={{ padding: "8px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+            <Sequence from={20}>
+              <SpringIn from={20}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: C.navy, fontFamily: FONT }}>
+                  Financiele gezondheid
+                </div>
+              </SpringIn>
+            </Sequence>
+
+            {/* Health gauge */}
+            <Sequence from={30}>
+              <HealthGauge score={38} size={180} from={30} color={C.red} />
+            </Sequence>
+
+            {/* Stat cards */}
+            <Sequence from={70}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, width: "100%" }}>
+                <StatCard label="Op tijd betaald" value="50%" sub="12/24" color={C.blue} from={70} delay={0} />
+                <StatCard label="Streak" value="0" sub="dagen" color={C.amber} from={70} delay={5} />
+                <StatCard label="Bespaard" value="€688,95" sub="incassokosten" color={C.green} from={70} delay={10} />
+                <StatCard label="Achterstallig" value="2" sub="Direct betalen" color={C.red} from={70} delay={15} />
+              </div>
+            </Sequence>
+          </div>
+
+          <BottomTabBar activeIndex={3} />
+        </div>
+      </IPhoneMockup>
+
+      <Vignette intensity={0.2} />
+    </AbsoluteFill>
+  );
+}
+
+// ============================================================
+// SCENE 9: CLOSING (2160 - 2700 / 72-90s)
+// ============================================================
+function Scene9Closing() {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  // Phone pull back
+  const pullS = spring({ frame, fps, config: SPRING_GENTLE, durationInFrames: 60 });
+  const phoneScale = interpolate(pullS, [0, 1], [1.15, 0.7]);
+  const phoneOp = interpolate(frame, [0, 30, 90, 120], [1, 1, 1, 0], { extrapolateRight: "clamp" });
+
+  // Logo reveal
+  const logoFrom = 150;
+  const logoS = spring({ frame: frame - logoFrom, fps, config: SPRING_ELASTIC, durationInFrames: 40 });
+  const logoScale = interpolate(logoS, [0, 1], [0, 1]);
+  const logoOp = interpolate(logoS, [0, 0.3], [0, 1], { extrapolateRight: "clamp" });
+
+  // CTA
+  const ctaFrom = 300;
+  const ctaS = spring({ frame: frame - ctaFrom, fps, config: SPRING_BOUNCY, durationInFrames: 30 });
+  const ctaScale = interpolate(ctaS, [0, 1], [0.8, 1]);
+  const ctaOp = interpolate(ctaS, [0, 0.3], [0, 1], { extrapolateRight: "clamp" });
+
+  // Pulse on CTA
+  const ctaPulse = frame >= ctaFrom + 60 ? 1 + Math.sin((frame - ctaFrom - 60) * 0.08) * 0.03 : 1;
+
+  return (
+    <AbsoluteFill>
+      <GradientMesh dark opacity={0.25} color1={C.blue} color2={C.purple} color3={C.teal} />
+
+      {/* Background text */}
+      <BackgroundText text="GRIP" fontSize={320} color="rgba(255,255,255,0.03)" x={-60} y={300} from={150} />
+      <BackgroundText text="CONTROLE" fontSize={200} color="rgba(255,255,255,0.02)" x={100} y={1200} from={180} rotation={-3} />
+
+      {/* Phone pulling back */}
+      <div style={{ opacity: phoneOp }}>
+        <IPhoneMockup
+          from={0}
+          sceneCamera={{
+            scaleFrom: 1 / 1.15,
+            scaleTo: 0.6,
+            duration: 90,
+          }}
+        >
+          <div style={{ background: C.bg, width: "100%", height: "100%" }}>
+            <AppTopbar />
+            <div style={{ padding: "8px 16px" }}>
+              <div style={{ fontSize: 20, fontWeight: 700, color: C.navy, fontFamily: FONT }}>Hoi, Samba</div>
+              <div style={{ background: C.surface, borderRadius: 16, border: `1px solid ${C.border}`, padding: "16px 18px", marginTop: 10 }}>
+                <div style={{ fontSize: 11, color: C.muted, fontFamily: FONT, fontWeight: 500 }}>Vrij besteedbaar deze maand</div>
+                <div style={{ fontSize: 48, fontWeight: 800, color: C.navy, fontFamily: FONT, letterSpacing: "-0.03em" }}>€41,00</div>
+              </div>
+            </div>
+            <BottomTabBar activeIndex={0} />
+          </div>
+        </IPhoneMockup>
+      </div>
+
+      {/* Logo */}
+      <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 30,
+            transform: `scale(${logoScale})`,
+            opacity: logoOp,
+          }}
+        >
+          <svg width="100" height="100" viewBox="0 0 28 28" fill="none">
+            <rect x="2" y="2" width="10" height="24" rx="2" fill="#FFFFFF" />
+            <path d="M12 2h14a0 0 0 0 1 0 0v14a14 14 0 0 1-14-14z" fill={C.blue} />
+          </svg>
+          <span
+            style={{
+              fontSize: 64,
+              fontWeight: 800,
+              color: "#FFFFFF",
+              fontFamily: FONT,
+              letterSpacing: "-0.03em",
+            }}
+          >
+            Paywatch
+          </span>
+        </div>
+      </AbsoluteFill>
+
+      {/* Taglines */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 420,
+          left: 0,
+          right: 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 12,
+        }}
+      >
+        <Sequence from={200}>
+          <LetterReveal
+            text="Grip op je rekeningen"
+            from={200}
+            fontSize={40}
+            color="rgba(255,255,255,0.9)"
+            fontWeight={700}
+          />
+        </Sequence>
+        <Sequence from={230}>
+          <LetterReveal
+            text="Beschermd tegen te hoge kosten"
+            from={230}
+            fontSize={28}
+            color="rgba(255,255,255,0.5)"
+            fontWeight={500}
+          />
+        </Sequence>
+      </div>
+
+      {/* CTA Button */}
+      <Sequence from={ctaFrom}>
+        <div
+          style={{
+            position: "absolute",
+            bottom: 280,
+            left: 0,
+            right: 0,
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            style={{
+              padding: "18px 48px",
+              background: C.blue,
+              borderRadius: 16,
+              transform: `scale(${ctaScale * ctaPulse})`,
+              opacity: ctaOp,
+              boxShadow: `0 16px 48px ${C.blue}50, inset 0 2px 0 rgba(255,255,255,0.2)`,
+            }}
+          >
+            <span
+              style={{
+                fontSize: 22,
+                fontWeight: 700,
+                color: "#FFFFFF",
+                fontFamily: FONT,
+              }}
+            >
+              Download nu gratis
+            </span>
+          </div>
+        </div>
+      </Sequence>
+
+      {/* URL */}
+      <Sequence from={350}>
+        <SpringIn from={350}>
           <div
             style={{
               position: "absolute",
-              top: "28%",
-              left: "50%",
-              transform: `translate(-50%, -50%) scale(${orbScale})`,
-              width: 160,
-              height: 160,
+              bottom: 200,
+              left: 0,
+              right: 0,
+              textAlign: "center",
             }}
           >
-            {/* Outer ring 1 */}
-            <div
+            <span
               style={{
-                position: "absolute",
-                inset: -20,
-                borderRadius: "50%",
-                border: `2px solid ${C.green}`,
-                opacity: 1 - ring1,
-                transform: `scale(${1 + ring1 * 0.4})`,
-              }}
-            />
-            {/* Outer ring 2 */}
-            <div
-              style={{
-                position: "absolute",
-                inset: -20,
-                borderRadius: "50%",
-                border: `2px solid ${C.purple}`,
-                opacity: 1 - ring2,
-                transform: `scale(${1 + ring2 * 0.4})`,
-              }}
-            />
-            {/* Middle ring */}
-            <div
-              style={{
-                position: "absolute",
-                inset: 10,
-                borderRadius: "50%",
-                background: `linear-gradient(135deg, ${C.green}40, ${C.purple}30)`,
-              }}
-            />
-            {/* Core orb */}
-            <div
-              style={{
-                position: "absolute",
-                inset: 30,
-                borderRadius: "50%",
-                background: `radial-gradient(circle at 35% 35%, #5EEAD4, #14B8A6, #0D9488)`,
-                boxShadow: `0 0 60px ${C.green}60, 0 0 120px ${C.green}20`,
-              }}
-            />
-            {/* Floating particles */}
-            {[...Array(6)].map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  position: "absolute",
-                  left: 80 + Math.cos((frame * 0.03 + i) * 1.2) * 90,
-                  top: 80 + Math.sin((frame * 0.04 + i) * 0.9) * 90,
-                  width: 4,
-                  height: 4,
-                  borderRadius: 2,
-                  background: C.green,
-                  opacity: 0.3 + Math.sin(frame * 0.1 + i) * 0.3,
-                }}
-              />
-            ))}
-          </div>
-
-          {/* Label */}
-          <div style={{ position: "absolute", top: "50%", left: 0, right: 0, textAlign: "center" }}>
-            <div style={{ fontFamily: FONT, fontSize: 20, fontWeight: 700, color: "#fff" }}>PayBuddy</div>
-            <div style={{ fontFamily: FONT, fontSize: 12, color: C.muted, marginTop: 4 }}>
-              {showProcessing ? "Foto analyseren..." : phase < 1 ? "Verbinden..." : "Aan het praten"}
-            </div>
-          </div>
-
-          {/* Camera overlay */}
-          {showCamera && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: "rgba(0,0,0,0.85)",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: 24,
-                zIndex: 20,
+                fontSize: 20,
+                fontWeight: 600,
+                color: "rgba(255,255,255,0.4)",
+                fontFamily: FONT,
+                letterSpacing: "0.05em",
               }}
             >
-              <div style={{ width: 240, height: 180, borderRadius: 16, border: `2px dashed ${C.blue}`, background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontFamily: FONT, fontSize: 28, marginBottom: 4 }}>📸</div>
-                  <div style={{ fontFamily: FONT, fontSize: 12, color: "rgba(255,255,255,0.7)" }}>Maak een foto van je rekening</div>
-                </div>
-              </div>
-              <div style={{ display: "flex", gap: 12, width: "80%" }}>
-                <div style={{ flex: 1, background: C.blue, borderRadius: 10, padding: "12px 0", textAlign: "center" }}>
-                  <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: "#fff" }}>Camera</span>
-                </div>
-                <div style={{ flex: 1, background: "rgba(255,255,255,0.15)", borderRadius: 10, padding: "12px 0", textAlign: "center" }}>
-                  <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: "#fff" }}>Galerij</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Processing */}
-          {showProcessing && (
-            <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 20 }}>
-              <div style={{ width: 40, height: 40, border: `3px solid rgba(255,255,255,0.2)`, borderTopColor: C.blue, borderRadius: "50%", transform: `rotate(${frame * 8}deg)` }} />
-            </div>
-          )}
-
-          {/* Message bubbles */}
-          <div style={{ position: "absolute", bottom: 100, left: 16, right: 16, display: "flex", flexDirection: "column", gap: 8, zIndex: 15 }}>
-            {visibleMsgs.map((m, i) => {
-              const msgOpacity = interpolate(frame, [m.startFrame, m.startFrame + 15], [0, 1], { extrapolateRight: "clamp" });
-              const msgY = interpolate(frame, [m.startFrame, m.startFrame + 15], [20, 0], { extrapolateRight: "clamp" });
-              return (
-                <div
-                  key={m.startFrame}
-                  style={{
-                    alignSelf: m.from === "user" ? "flex-end" : "flex-start",
-                    maxWidth: "85%",
-                    background: m.from === "user" ? C.blue : "rgba(255,255,255,0.12)",
-                    borderRadius: m.from === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
-                    padding: "10px 14px",
-                    opacity: msgOpacity,
-                    transform: `translateY(${msgY}px)`,
-                    backdropFilter: "blur(8px)",
-                  }}
-                >
-                  <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 700, color: m.from === "user" ? "rgba(255,255,255,0.6)" : C.muted, marginBottom: 3, textTransform: "uppercase" as const }}>
-                    {m.from === "user" ? "Jij" : "PayBuddy"}
-                  </div>
-                  <div style={{ fontFamily: FONT, fontSize: 12, color: "#fff", lineHeight: 1.45 }}>{m.text}</div>
-                </div>
-              );
-            })}
+              paywatch.app
+            </span>
           </div>
+        </SpringIn>
+      </Sequence>
 
-          {/* Controls */}
-          <div style={{ position: "absolute", bottom: 30, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 20 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 24, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ fontSize: 18 }}>📷</span>
-            </div>
-            <div style={{ width: 56, height: 56, borderRadius: 28, background: C.red, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ fontSize: 20, color: "#fff", transform: "rotate(135deg)" }}>📞</span>
+      {/* Investor pitch date */}
+      <Sequence from={400}>
+        <SpringIn from={400}>
+          <div
+            style={{
+              position: "absolute",
+              bottom: 100,
+              left: 0,
+              right: 0,
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <div
+              style={{
+                padding: "10px 20px",
+                background: "rgba(255,255,255,0.06)",
+                borderRadius: 12,
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 14,
+                  color: "rgba(255,255,255,0.4)",
+                  fontFamily: FONT,
+                  fontWeight: 500,
+                }}
+              >
+                28 mei 2026 — Hogeschool Rotterdam
+              </span>
             </div>
           </div>
-        </div>
-      </PhoneMockup>
+        </SpringIn>
+      </Sequence>
+
+      <Particles count={20} color="rgba(255,255,255,0.15)" area={{ x: 0, y: 0, w: 1080, h: 1920 }} />
+      <Vignette intensity={0.5} />
     </AbsoluteFill>
   );
-};
+}
 
-// ─── SCENE 6: WIK SHIELD ────────────────────────────────────
-const WikShieldScene: React.FC = () => {
-  const frame = useCurrentFrame();
-  const saved = useCounter(4000, 80, 30);
-  const alertSlide = useFadeSlide(40);
-  const shieldSlide = useFadeSlide(80);
-  const letterSlide = useFadeSlide(120);
-
-  return (
-    <AbsoluteFill style={{ backgroundColor: C.bg, justifyContent: "center", alignItems: "center" }}>
-      <PhoneMockup scale={1.15}>
-        <div style={{ padding: "50px 16px", height: "100%", overflow: "hidden" }}>
-          <div style={{ fontFamily: FONT, fontSize: 18, fontWeight: 700, color: C.navy, marginBottom: 16, ...useFadeSlide(5) }}>WIK Shield</div>
-
-          {/* Bill card */}
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 16, marginBottom: 14, ...useFadeSlide(10) }}>
-            <div style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: C.text }}>Incassobureau De Jong</div>
-            <div style={{ fontFamily: FONT, fontSize: 10, color: C.muted, marginTop: 4 }}>Oorspronkelijk: €200,00</div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
-              <div>
-                <div style={{ fontFamily: FONT, fontSize: 10, color: C.muted }}>Gevraagde kosten</div>
-                <div style={{ fontFamily: FONT, fontSize: 24, fontWeight: 800, color: C.red }}>€80,00</div>
-              </div>
-              <div>
-                <div style={{ fontFamily: FONT, fontSize: 10, color: C.muted }}>Wettelijk max</div>
-                <div style={{ fontFamily: FONT, fontSize: 24, fontWeight: 800, color: C.green }}>€40,00</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Alert */}
-          <div style={{ background: C.redLight, border: `1px solid ${C.red}40`, borderRadius: 14, padding: 14, marginBottom: 14, ...alertSlide }}>
-            <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 700, color: C.red }}>⚠ Te hoog!</div>
-            <div style={{ fontFamily: FONT, fontSize: 12, color: C.text, marginTop: 4 }}>Wettelijk mogen ze maar €40 rekenen. Je betaalt €40 teveel.</div>
-          </div>
-
-          {/* Shield activated */}
-          <div style={{ background: C.greenLight, border: `1px solid ${C.green}40`, borderRadius: 14, padding: 14, marginBottom: 14, textAlign: "center", ...shieldSlide }}>
-            <div style={{ fontSize: 36, marginBottom: 6 }}>🛡️</div>
-            <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 700, color: C.green }}>WIK Shield geactiveerd</div>
-            <div style={{ fontFamily: FONT, fontSize: 28, fontWeight: 800, color: C.green, marginTop: 8 }}>+{formatEuro(saved)}</div>
-            <div style={{ fontFamily: FONT, fontSize: 11, color: C.muted, marginTop: 2 }}>bespaard</div>
-          </div>
-
-          {/* Letter generation */}
-          <div style={{ background: C.blue, borderRadius: 10, padding: "14px 0", textAlign: "center", ...letterSlide }}>
-            <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, color: "#fff" }}>Bezwaarbrief gegenereerd →</span>
-          </div>
-        </div>
-      </PhoneMockup>
-    </AbsoluteFill>
-  );
-};
-
-// ─── SCENE 7: FINANCIAL OVERVIEW ────────────────────────────
-const FinancialScene: React.FC = () => {
-  const frame = useCurrentFrame();
-  const total = useCounter(70517, 60, 40);
-
-  return (
-    <AbsoluteFill style={{ backgroundColor: C.bg, justifyContent: "center", alignItems: "center" }}>
-      <PhoneMockup rotateY={2} scale={1.15}>
-        <div style={{ padding: "50px 16px", height: "100%", overflow: "hidden" }}>
-          <div style={{ fontFamily: FONT, fontSize: 16, fontWeight: 700, color: C.navy, marginBottom: 14, ...useFadeSlide(5) }}>Toeslagen Check</div>
-
-          {/* Toeslagen items */}
-          {[
-            { name: "Huurtoeslag", amount: "+€484,17/mnd", color: C.green },
-            { name: "Zorgtoeslag", amount: "+€221,00/mnd", color: C.green, warning: "Mogelijk €1.779 te veel" },
-            { name: "Kinderopvangtoeslag", amount: "€500,00/mnd", color: C.text },
-          ].map((t, i) => (
-            <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 14, marginBottom: 10, ...useFadeSlide(15 + i * 12) }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 600, color: C.text }}>{t.name}</div>
-                <div style={{ fontFamily: FONT, fontSize: 16, fontWeight: 700, color: t.color }}>{t.amount}</div>
-              </div>
-              {t.warning && (
-                <div style={{ fontFamily: FONT, fontSize: 10, color: C.amber, marginTop: 4, background: C.amberLight, padding: "3px 8px", borderRadius: 4, display: "inline-block" }}>
-                  ⚠ {t.warning}
-                </div>
-              )}
-            </div>
-          ))}
-
-          {/* Total */}
-          <div style={{ background: C.greenLight, border: `1px solid ${C.green}40`, borderRadius: 14, padding: 20, textAlign: "center", marginTop: 10, ...useFadeSlide(55) }}>
-            <div style={{ fontFamily: FONT, fontSize: 12, color: C.muted }}>Geschat totaal per maand</div>
-            <div style={{ fontFamily: FONT, fontSize: 40, fontWeight: 800, color: C.green, marginTop: 4 }}>+{formatEuro(total)}</div>
-            <div style={{ fontFamily: FONT, fontSize: 11, color: C.muted, marginTop: 4 }}>Extra inkomen gevonden</div>
-          </div>
-        </div>
-      </PhoneMockup>
-    </AbsoluteFill>
-  );
-};
-
-// ─── SCENE 8: STATS ─────────────────────────────────────────
-const StatsScene: React.FC = () => {
-  const frame = useCurrentFrame();
-  const score = useCounter(38, 20, 50);
-  const saved = useCounter(68895, 40, 50);
-  const circumference = 2 * Math.PI * 50;
-  const dashOffset = circumference * (1 - score / 100);
-
-  return (
-    <AbsoluteFill style={{ backgroundColor: C.bg, justifyContent: "center", alignItems: "center" }}>
-      <PhoneMockup scale={1.15}>
-        <div style={{ padding: "50px 16px", height: "100%", overflow: "hidden" }}>
-          <div style={{ fontFamily: FONT, fontSize: 16, fontWeight: 700, color: C.navy, marginBottom: 14, ...useFadeSlide(5) }}>Statistieken</div>
-
-          {/* Health gauge */}
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 20, display: "flex", alignItems: "center", gap: 20, marginBottom: 14, ...useFadeSlide(10) }}>
-            <svg width={110} height={110} viewBox="0 0 120 120">
-              <circle cx="60" cy="60" r="50" fill="none" stroke={C.border} strokeWidth="10" />
-              <circle cx="60" cy="60" r="50" fill="none" stroke={C.red} strokeWidth="10" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={dashOffset} transform="rotate(-90 60 60)" />
-              <text x="60" y="55" textAnchor="middle" fill={C.red} fontFamily={FONT} fontWeight="800" fontSize="32">{score}</text>
-              <text x="60" y="75" textAnchor="middle" fill={C.muted} fontFamily={FONT} fontWeight="500" fontSize="11">Actie nodig</text>
-            </svg>
-            <div>
-              <div style={{ fontFamily: FONT, fontSize: 14, fontWeight: 700, color: C.text }}>Gezondheid</div>
-              <div style={{ fontFamily: FONT, fontSize: 11, color: C.muted, marginTop: 4 }}>Op basis van betaalgedrag en escalaties</div>
-            </div>
-          </div>
-
-          {/* Stats grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            {[
-              { label: "Op tijd betaald", value: "50%", sub: "12/24 op tijd", color: C.green, delay: 25 },
-              { label: "Streak", value: "0", sub: "op rij op tijd betaald", color: C.navy, delay: 33 },
-              { label: "Bespaard", value: formatEuro(saved), sub: "incassokosten vermeden", color: C.green, delay: 41 },
-              { label: "Achterstallig", value: "2", sub: "Betaal zo snel mogelijk", color: C.red, delay: 49 },
-            ].map((s, i) => (
-              <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 14, ...useFadeSlide(s.delay) }}>
-                <div style={{ fontFamily: FONT, fontSize: 10, color: C.muted }}>{s.label}</div>
-                <div style={{ fontFamily: FONT, fontSize: 24, fontWeight: 800, color: s.color, marginTop: 4 }}>{s.value}</div>
-                <div style={{ fontFamily: FONT, fontSize: 10, color: C.muted, marginTop: 2 }}>{s.sub}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <BottomTabBar active="stats" />
-      </PhoneMockup>
-    </AbsoluteFill>
-  );
-};
-
-// ─── SCENE 9: CLOSING ───────────────────────────────────────
-const ClosingScene: React.FC = () => {
-  const frame = useCurrentFrame();
-  const logoOpacity = interpolate(frame, [0, 40], [0, 1], { extrapolateRight: "clamp" });
-  const logoScale = interpolate(frame, [0, 40], [0.85, 1], { extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) });
-  const taglineOpacity = interpolate(frame, [40, 70], [0, 1], { extrapolateRight: "clamp" });
-  const ctaOpacity = interpolate(frame, [70, 100], [0, 1], { extrapolateRight: "clamp" });
-
-  return (
-    <AbsoluteFill style={{ backgroundColor: C.navy, justifyContent: "center", alignItems: "center" }}>
-      <div style={{ position: "absolute", width: "200%", height: "200%", background: `radial-gradient(circle at 30% 30%, ${C.blue}15 0%, transparent 50%), radial-gradient(circle at 70% 70%, ${C.purple}15 0%, transparent 50%)`, filter: "blur(100px)" }} />
-
-      <div style={{ textAlign: "center", opacity: logoOpacity, transform: `scale(${logoScale})` }}>
-        <div style={{ fontFamily: FONT, fontSize: 72, fontWeight: 800, color: "#fff", letterSpacing: -3 }}>PayWatch</div>
-      </div>
-
-      <div style={{ position: "absolute", top: "55%", left: 0, right: 0, textAlign: "center", opacity: taglineOpacity, padding: "0 80px" }}>
-        <div style={{ fontFamily: FONT, fontSize: 32, fontWeight: 700, color: "#fff", lineHeight: 1.3 }}>Grip op je rekeningen.</div>
-        <div style={{ fontFamily: FONT, fontSize: 28, fontWeight: 500, color: "rgba(255,255,255,0.5)", marginTop: 12 }}>Beschermd tegen te hoge kosten.</div>
-      </div>
-
-      <div style={{ position: "absolute", bottom: 280, left: 0, right: 0, textAlign: "center", opacity: ctaOpacity }}>
-        <div style={{ display: "inline-block", background: C.blue, borderRadius: 12, padding: "16px 40px" }}>
-          <span style={{ fontFamily: FONT, fontSize: 18, fontWeight: 600, color: "#fff" }}>Download nu gratis</span>
-        </div>
-        <div style={{ fontFamily: FONT, fontSize: 16, color: "rgba(255,255,255,0.4)", marginTop: 16 }}>paywatch.app</div>
-      </div>
-    </AbsoluteFill>
-  );
-};
-
-// ─── MAIN COMPOSITION ────────────────────────────────────────
+// ============================================================
+// MAIN COMPOSITION
+// ============================================================
 export const PayWatchDemo: React.FC = () => {
   return (
-    <AbsoluteFill style={{ backgroundColor: C.bg }}>
-      {/* Scene 1: Hero (0-4s) */}
-      <Sequence from={0} durationInFrames={120}>
-        <HeroScene />
+    <AbsoluteFill style={{ backgroundColor: C.bg, fontFamily: FONT }}>
+      {/* Scene 1: Logo Reveal (0-150) */}
+      <Sequence from={0} durationInFrames={150}>
+        <Scene1LogoReveal />
       </Sequence>
 
-      {/* Scene 2: Problem (4-10s) */}
-      <Sequence from={120} durationInFrames={180}>
-        <ProblemScene />
+      {/* Scene 2: Problem (150-360) */}
+      <Sequence from={150} durationInFrames={210}>
+        <Scene2Problem />
       </Sequence>
 
-      {/* Scene 3: Dashboard (10-20s) */}
-      <Sequence from={300} durationInFrames={300}>
-        <DashboardScene />
+      {/* Scene 3: Dashboard (360-660) */}
+      <Sequence from={360} durationInFrames={300}>
+        <Scene3Dashboard />
       </Sequence>
 
-      {/* Scene 4: Bill Detail (20-28s) */}
-      <Sequence from={600} durationInFrames={240}>
-        <BillDetailScene />
+      {/* Scene 4: Bill Detail (660-900) */}
+      <Sequence from={660} durationInFrames={240}>
+        <Scene4BillDetail />
       </Sequence>
 
-      {/* Scene 5: Voice Call HERO (28-46s) */}
-      <Sequence from={840} durationInFrames={540}>
-        <VoiceCallScene />
+      {/* Scene 5: PayBuddy Voice Call (900-1440) */}
+      <Sequence from={900} durationInFrames={540}>
+        <Scene5PayBuddy />
       </Sequence>
 
-      {/* Scene 6: WIK Shield (46-54s) */}
-      <Sequence from={1380} durationInFrames={240}>
-        <WikShieldScene />
+      {/* Scene 6: WIK Shield (1440-1680) */}
+      <Sequence from={1440} durationInFrames={240}>
+        <Scene6WIKShield />
       </Sequence>
 
-      {/* Scene 7: Financial / Toeslagen (54-62s) */}
-      <Sequence from={1620} durationInFrames={240}>
-        <FinancialScene />
+      {/* Scene 7: Toeslagen (1680-1920) */}
+      <Sequence from={1680} durationInFrames={240}>
+        <Scene7Toeslagen />
       </Sequence>
 
-      {/* Scene 8: Stats (62-70s) */}
-      <Sequence from={1860} durationInFrames={240}>
-        <StatsScene />
+      {/* Scene 8: Stats (1920-2160) */}
+      <Sequence from={1920} durationInFrames={240}>
+        <Scene8Stats />
       </Sequence>
 
-      {/* Scene 9: Closing (70-90s) */}
-      <Sequence from={2100} durationInFrames={600}>
-        <ClosingScene />
+      {/* Scene 9: Closing (2160-2700) */}
+      <Sequence from={2160} durationInFrames={540}>
+        <Scene9Closing />
       </Sequence>
     </AbsoluteFill>
   );

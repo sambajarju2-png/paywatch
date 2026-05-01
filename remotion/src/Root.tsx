@@ -2,9 +2,10 @@ import React from "react";
 import { Composition } from "remotion";
 import { PayWatchDemo } from "./PayWatchDemo";
 
-export const Root: React.FC = () => {
+export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Main 90-second promo — 1080×1920 vertical (9:16) */}
       <Composition
         id="PayWatchDemo"
         component={PayWatchDemo}
@@ -13,7 +14,8 @@ export const Root: React.FC = () => {
         width={1080}
         height={1920}
       />
-      {/* Short preview for testing */}
+
+      {/* Short preview — first 30 seconds only */}
       <Composition
         id="PayWatchPreview"
         component={PayWatchDemo}
