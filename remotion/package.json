@@ -1,0 +1,24 @@
+{
+  "name": "paywatch-remotion",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "preview": "remotion preview src/index.ts",
+    "build": "remotion render src/index.ts PayWatchDemo out/paywatch-demo.mp4",
+    "build-preview": "remotion render src/index.ts PayWatchPreview out/paywatch-preview.mp4",
+    "studio": "remotion studio src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@remotion/cli": "^4.0.455",
+    "@remotion/google-fonts": "^4.0.455",
+    "@types/react": "^19.2.14",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "remotion": "^4.0.455",
+    "typescript": "^6.0.3"
+  }
+}
