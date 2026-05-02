@@ -31,7 +31,7 @@ export default async function BuddiesPage() {
         .eq("buddy_member_id", tenant.memberId)
         .eq("status", "active"),
       supabase.from("user_settings").select("user_id, display_name, first_name, last_name, last_active_at"),
-      supabase.from("user_organizations").select("user_id, status, onboarded_at").eq("organization_id", tenant.orgId),
+      supabase.from("user_organizations").select("id, user_id, status, onboarded_at").eq("organization_id", tenant.orgId),
       supabase.auth.admin.listUsers({ perPage: 1000 }),
     ]);
 
@@ -52,6 +52,7 @@ export default async function BuddiesPage() {
       return {
         buddyId: b.id,
         userId: b.user_id,
+        userOrgId: uo?.id || null,
         name,
         email,
         role: ROLE_LABELS[b.role] || b.role || "Client",

@@ -6,6 +6,7 @@ import Link from "next/link";
 interface Client {
   buddyId: string;
   userId: string;
+  userOrgId: string | null;
   name: string;
   email: string;
   role: string;
@@ -109,7 +110,7 @@ function ChatPanel({
             <p className="text-[11px] text-pw-muted">Laatste activiteit: {relativeTime(client.lastActive)}</p>
           </div>
           <Link
-            href={`/users/${client.userId}`}
+            href={client.userOrgId ? `/users/${client.userOrgId}` : `/users`}
             className="text-xs text-pw-blue font-semibold hover:underline mr-2 no-underline"
             onClick={onClose}
           >
@@ -250,7 +251,7 @@ export default function CoachView({
                   Chatten
                 </button>
                 <Link
-                  href="/users"
+                  href={client.userOrgId ? `/users/${client.userOrgId}` : `/users`}
                   className="px-3 py-2 bg-pw-bg border border-pw-border text-pw-text text-sm font-medium rounded-lg hover:bg-white transition-colors no-underline"
                 >
                   Dossier
