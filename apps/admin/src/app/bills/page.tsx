@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, RadialBarChart, RadialBar,
 } from "recharts";
 import { shimmerStyle } from "@/components/Shimmer";
 
@@ -11,6 +11,7 @@ const C = {
   blue: "#2563EB", green: "#059669", amber: "#D97706", orange: "#EA580C",
   red: "#DC2626", darkRed: "#991B1B", navy: "#0A2540", muted: "#64748B",
   border: "#E2E8F0", borderLight: "#F1F5F9", surface: "#FFFFFF",
+  blueLight: "#EFF6FF", greenLight: "#F0FDF4", redLight: "#FEF2F2",
 };
 
 const STAGE_COLORS: Record<string, string> = {
@@ -23,7 +24,35 @@ const STAGE_LABELS: Record<string, string> = {
 };
 
 function formatEuro(cents: number): string {
-  return `€ ${(cents / 100).toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `€ ${(cents / 100).toLocaleString("nl-NL", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+}
+
+// Custom tooltip for bar chart
+function BarTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0];
+  return (
+    <div className="bg-white border border-[#E2E8F0] rounded-xl shadow-lg p-3 min-w-[120px]">
+      <p className="text-[11px] text-[#64748B] font-medium mb-1">{label}</p>
+      <p className="text-[18px] font-bold" style={{ color: d.payload?.fill || C.navy }}>{d.value}</p>
+      <p className="text-[10px] text-[#94A3B8]">rekeningen</p>
+    </div>
+  );
+}
+
+// Custom tooltip for pie
+function PieTooltip({ active, payload }: any) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0];
+  return (
+    <div className="bg-white border border-[#E2E8F0] rounded-xl shadow-lg p-3">
+      <div className="flex items-center gap-2 mb-1">
+        <div className="w-2.5 h-2.5 rounded-full" style={{ background: d.payload.color }} />
+        <p className="text-[11px] font-semibold text-[#0A2540]">{d.name}</p>
+      </div>
+      <p className="text-[18px] font-bold text-[#0A2540]">{d.value}</p>
+    </div>
+  );
 }
 
 export default function BillsPage() {
@@ -47,19 +76,21 @@ export default function BillsPage() {
     return (
       <div>
         <style>{shimmerStyle}</style>
+        <div className="mb-1.5 h-7 w-32 rounded-lg bg-[#F1F5F9]" style={{ animation: "shimmer 1.5s infinite", backgroundImage: "linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%)", backgroundSize: "200% 100%" }} />
+        <div className="mb-6 h-4 w-48 rounded bg-[#F1F5F9]" style={{ animation: "shimmer 1.5s infinite", backgroundImage: "linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%)", backgroundSize: "200% 100%" }} />
         <div style={{ display: "flex", gap: 16, marginBottom: 24 }}>
-          {[0,1,2,3].map(i => (
+          {[0, 1, 2, 3].map(i => (
             <div key={i} style={{ flex: 1, background: "#fff", borderRadius: 12, border: "1px solid #E2E8F0", padding: 20 }}>
-              <div style={{ width: 80, height: 11, borderRadius: 4, background: "linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite", marginBottom: 12 }} />
-              <div style={{ width: 56, height: 28, borderRadius: 4, background: "linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
+              <div style={{ width: 80, height: 11, borderRadius: 4, backgroundImage: "linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite", marginBottom: 12 }} />
+              <div style={{ width: 56, height: 28, borderRadius: 4, backgroundImage: "linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
             </div>
           ))}
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-          {[0,1].map(i => (
+          {[0, 1, 2, 3].map(i => (
             <div key={i} style={{ background: "#fff", borderRadius: 12, border: "1px solid #E2E8F0", padding: 20, height: 280 }}>
-              <div style={{ width: 140, height: 14, borderRadius: 4, background: "linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite", marginBottom: 20 }} />
-              <div style={{ width: "100%", height: 200, borderRadius: 8, background: "linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
+              <div style={{ width: 140, height: 14, borderRadius: 4, backgroundImage: "linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite", marginBottom: 20 }} />
+              <div style={{ width: "100%", height: 200, borderRadius: 8, backgroundImage: "linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite" }} />
             </div>
           ))}
         </div>
@@ -94,43 +125,50 @@ export default function BillsPage() {
     value: c.count,
   }));
 
+  const sourceMax = Math.max(...sourceData.map((d) => d.value), 1);
   const catMax = Math.max(...catData.map((d) => d.value), 1);
 
   return (
     <div>
-      <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: C.navy, letterSpacing: "-0.03em" }}>Rekeningen</h1>
-      <p style={{ margin: "4px 0 24px", fontSize: 14, color: C.muted }}>Analyse van alle rekeningen</p>
+      {/* Header */}
+      <h1 className="text-[22px] font-extrabold text-[#0A2540] tracking-tight">Rekeningen</h1>
+      <p className="text-sm text-[#64748B] mt-1 mb-6">Analyse van alle rekeningen</p>
 
-      {/* Top stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+      {/* KPI cards */}
+      <div className="grid grid-cols-4 gap-4 mb-6">
         {[
-          { label: "Totaal", value: String(b.total), color: C.navy },
-          { label: "Betaald", value: String(b.paid), color: C.green },
-          { label: "Openstaand", value: String(b.outstanding), color: C.blue },
-          { label: "Achterstallig", value: String(b.overdue), color: C.red },
+          { label: "Totaal", value: b.total, color: C.navy, bg: "#F8FAFC" },
+          { label: "Betaald", value: b.paid, color: C.green, bg: C.greenLight },
+          { label: "Openstaand", value: b.outstanding, color: C.blue, bg: C.blueLight },
+          { label: "Achterstallig", value: b.overdue, color: C.red, bg: C.redLight },
         ].map((s) => (
-          <div key={s.label} style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 20 }}>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: C.muted }}>{s.label}</p>
-            <p style={{ margin: "6px 0 0", fontSize: 28, fontWeight: 700, color: s.color, letterSpacing: "-0.03em", lineHeight: 1 }}>{s.value}</p>
+          <div key={s.label} className="bg-white rounded-2xl border border-[#E2E8F0] p-5 hover:border-[#2563EB]/20 transition-all group">
+            <p className="text-[12px] font-medium text-[#64748B] uppercase tracking-wide mb-2">{s.label}</p>
+            <p className="text-[32px] font-extrabold tracking-tight leading-none" style={{ color: s.color }}>{s.value}</p>
+            {s.label !== "Totaal" && b.total > 0 && (
+              <p className="text-[11px] text-[#94A3B8] mt-1.5">
+                {Math.round((s.value / b.total) * 100)}% van totaal
+              </p>
+            )}
           </div>
         ))}
       </div>
 
-      {/* Betaalratio bar */}
-      <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 20, marginBottom: 24 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <span style={{ fontSize: 15, fontWeight: 600, color: C.navy }}>Betaalratio</span>
-          <span style={{ fontSize: 15, fontWeight: 700, color: C.navy }}>{paidRatio}%</span>
+      {/* Betaalratio */}
+      <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[14px] font-semibold text-[#0A2540]">Betaalratio</span>
+          <span className="text-[14px] font-bold text-[#0A2540]">{paidRatio}%</span>
         </div>
-        <div style={{ height: 10, background: C.borderLight, borderRadius: 5, overflow: "hidden", display: "flex" }}>
-          <div style={{ width: `${(b.paid / Math.max(b.total, 1)) * 100}%`, background: C.green, borderRadius: 5, transition: "width 0.6s ease" }} />
-          <div style={{ width: `${(b.outstanding / Math.max(b.total, 1)) * 100}%`, background: C.blue }} />
-          <div style={{ width: `${(b.overdue / Math.max(b.total, 1)) * 100}%`, background: C.red }} />
+        <div className="h-3 bg-[#F1F5F9] rounded-full overflow-hidden flex">
+          <div style={{ width: `${(b.paid / Math.max(b.total, 1)) * 100}%`, background: C.green, transition: "width 1s ease", borderRadius: "4px 0 0 4px" }} />
+          <div style={{ width: `${(b.outstanding / Math.max(b.total, 1)) * 100}%`, background: C.blue, transition: "width 1s ease" }} />
+          <div style={{ width: `${(b.overdue / Math.max(b.total, 1)) * 100}%`, background: C.red, transition: "width 1s ease", borderRadius: "0 4px 4px 0" }} />
         </div>
-        <div style={{ display: "flex", gap: 16, marginTop: 10 }}>
+        <div className="flex gap-5 mt-3">
           {statusData.map((s) => (
-            <div key={s.name} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: C.muted }}>
-              <div style={{ width: 8, height: 8, borderRadius: 2, background: s.color }} />
+            <div key={s.name} className="flex items-center gap-1.5 text-[12px] text-[#64748B]">
+              <div className="w-2 h-2 rounded-sm" style={{ background: s.color }} />
               {s.name} ({s.value})
             </div>
           ))}
@@ -138,18 +176,18 @@ export default function BillsPage() {
       </div>
 
       {/* Charts row */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
-        {/* Escalation */}
-        <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: "20px 20px 12px" }}>
-          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.navy }}>Escalatie verdeling</h2>
-          <div style={{ height: 240, marginTop: 16 }}>
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        {/* Escalation bar chart */}
+        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5">
+          <h2 className="text-[14px] font-semibold text-[#0A2540] mb-4">Escalatie verdeling</h2>
+          <div style={{ height: 220 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={escalationData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }} barCategoryGap="24%">
-                <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: C.muted }} dy={8} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: C.muted }} allowDecimals={false} />
-                <Tooltip contentStyle={{ borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13 }} />
-                <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={44}>
+              <BarChart data={escalationData} margin={{ top: 4, right: 4, left: -24, bottom: 0 }} barCategoryGap="28%">
+                <CartesianGrid strokeDasharray="2 4" stroke="#F1F5F9" vertical={false} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: C.muted, fontWeight: 500 }} dy={8} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#CBD5E1" }} allowDecimals={false} />
+                <Tooltip content={<BarTooltip />} cursor={{ fill: "#F8FAFC", radius: 6 }} />
+                <Bar dataKey="value" radius={[8, 8, 0, 0]} maxBarSize={48} animationDuration={800} animationEasing="ease-out">
                   {escalationData.map((e, i) => <Cell key={i} fill={e.fill} />)}
                 </Bar>
               </BarChart>
@@ -157,26 +195,40 @@ export default function BillsPage() {
           </div>
         </div>
 
-        {/* Donut */}
-        <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 20 }}>
-          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.navy }}>Status verdeling</h2>
-          <div style={{ display: "flex", alignItems: "center", gap: 24, height: 240 }}>
-            <div style={{ width: 160, height: 160, flexShrink: 0 }}>
+        {/* Status donut */}
+        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5">
+          <h2 className="text-[14px] font-semibold text-[#0A2540] mb-4">Status verdeling</h2>
+          <div className="flex items-center gap-6 h-[220px]">
+            <div style={{ width: 180, height: 180, flexShrink: 0 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={statusData} cx="50%" cy="50%" innerRadius={50} outerRadius={72} dataKey="value" stroke="none" paddingAngle={3}>
+                  <Pie
+                    data={statusData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={56}
+                    outerRadius={80}
+                    dataKey="value"
+                    stroke="none"
+                    paddingAngle={4}
+                    animationBegin={0}
+                    animationDuration={800}
+                    animationEasing="ease-out"
+                  >
                     {statusData.map((e, i) => <Cell key={i} fill={e.color} />)}
                   </Pie>
-                  <Tooltip contentStyle={{ borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13 }} />
+                  <Tooltip content={<PieTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div className="flex flex-col gap-3 flex-1">
               {statusData.map((s) => (
-                <div key={s.name} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: 3, background: s.color }} />
-                  <span style={{ fontSize: 13, color: C.muted, flex: 1 }}>{s.name}</span>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: C.navy }}>{s.value}</span>
+                <div key={s.name} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ background: s.color }} />
+                    <span className="text-[13px] text-[#64748B]">{s.name}</span>
+                  </div>
+                  <span className="text-[15px] font-bold text-[#0A2540]">{s.value}</span>
                 </div>
               ))}
             </div>
@@ -184,35 +236,52 @@ export default function BillsPage() {
         </div>
       </div>
 
-      {/* Source + Category */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 20 }}>
-          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.navy, marginBottom: 16 }}>Bron</h2>
-          {sourceData.map((s) => (
-            <div key={s.name} style={{ marginBottom: 12 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                <span style={{ fontSize: 13, color: C.navy }}>{s.name}</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: C.navy }}>{s.value}</span>
-              </div>
-              <div style={{ height: 6, background: C.borderLight, borderRadius: 3 }}>
-                <div style={{ height: "100%", width: `${(s.value / Math.max(...sourceData.map((d) => d.value), 1)) * 100}%`, background: C.blue, borderRadius: 3 }} />
-              </div>
-            </div>
-          ))}
+      {/* Source + Categories */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5">
+          <h2 className="text-[14px] font-semibold text-[#0A2540] mb-4">Bron</h2>
+          <div className="space-y-3">
+            {sourceData.map((s) => {
+              const pct = Math.round((s.value / sourceMax) * 100);
+              return (
+                <div key={s.name}>
+                  <div className="flex justify-between mb-1.5">
+                    <span className="text-[13px] text-[#0A2540]">{s.name}</span>
+                    <span className="text-[13px] font-semibold text-[#0A2540]">{s.value}</span>
+                  </div>
+                  <div className="h-1.5 bg-[#F1F5F9] rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{ width: `${pct}%`, background: C.blue }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-        <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 20 }}>
-          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.navy, marginBottom: 16 }}>Categorieën</h2>
-          {catData.map((s) => (
-            <div key={s.name} style={{ marginBottom: 12 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                <span style={{ fontSize: 13, color: C.navy }}>{s.name}</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: C.navy }}>{s.value}</span>
-              </div>
-              <div style={{ height: 6, background: C.borderLight, borderRadius: 3 }}>
-                <div style={{ height: "100%", width: `${(s.value / catMax) * 100}%`, background: C.green, borderRadius: 3 }} />
-              </div>
-            </div>
-          ))}
+
+        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5">
+          <h2 className="text-[14px] font-semibold text-[#0A2540] mb-4">Categorieën</h2>
+          <div className="space-y-3">
+            {catData.map((s) => {
+              const pct = Math.round((s.value / catMax) * 100);
+              return (
+                <div key={s.name}>
+                  <div className="flex justify-between mb-1.5">
+                    <span className="text-[13px] text-[#0A2540]">{s.name}</span>
+                    <span className="text-[13px] font-semibold text-[#0A2540]">{s.value}</span>
+                  </div>
+                  <div className="h-1.5 bg-[#F1F5F9] rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{ width: `${pct}%`, background: C.green }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
