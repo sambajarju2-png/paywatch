@@ -40,7 +40,7 @@ export async function GET() {
     .from("paywatch_subscriptions")
     .select("*")
     .in("user_id", userIds);
-  const subMap: Record<string, typeof subs extends null ? never : typeof subs[0]> = {};
+  const subMap: Record<string, any> = {};
   for (const s of subs || []) subMap[s.user_id] = s;
 
   const users = paid.map(u => {
