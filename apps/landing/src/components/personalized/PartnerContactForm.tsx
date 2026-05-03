@@ -16,6 +16,9 @@ export default function PartnerContactForm({ companyName, companyDomain, audienc
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Anti-bot: honeypot + form-load timestamp
+  const [honeypot, setHoneypot] = useState("");
+  const [loadTime] = useState(() => Date.now());
 
   function update(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -40,6 +43,8 @@ export default function PartnerContactForm({ companyName, companyDomain, audienc
           audience,
           brandColor: accentColor,
           logoUrl,
+          website: honeypot,   // honeypot — bots fill this
+          _t: loadTime,        // form load timestamp — bots are too fast
         }),
       });
 
@@ -86,6 +91,19 @@ export default function PartnerContactForm({ companyName, companyDomain, audienc
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Honeypot — hidden from real users, bots fill it */}
+        <div aria-hidden="true" style={{ position: "absolute", left: "-9999px", top: "-9999px", opacity: 0, pointerEvents: "none", tabIndex: -1 }}>
+          <label htmlFor="pw-website">Website (laat leeg)</label>
+          <input
+            id="pw-website"
+            type="text"
+            name="website"
+            value={honeypot}
+            onChange={(e) => setHoneypot(e.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+          />
+        </div>
         {companyName && (
           <div>
             <label className="block text-xs font-semibold text-[var(--muted)] mb-1.5">Organisatie</label>

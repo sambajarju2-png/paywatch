@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     const body = await request.json();
-    const { firstName, lastName, email, message, companyName, companyDomain, audience, brandColor, logoUrl } = body;
+    const { firstName, lastName, email, message, companyName, companyDomain, audience, brandColor, logoUrl, website, _t } = body;
 
     // Validation
     if (!firstName || !lastName || !email || !audience) {
@@ -145,6 +145,40 @@ export async function POST(request: NextRequest) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: "Ongeldig e-mailadres" }, { status: 400 });
     }
+
+    // ── Anti-bot checks ──────────────────────────────────────
+    // 1. Honeypot: if filled, it's a bot
+    if (website) {
+      return NextResponse.json({ success: true }); // Fake success
+    }
+
+    // 2. Time check: submitted in under 3 seconds = bot
+    if (_t && Date.now() - Number(_t) < 3000) {
+      return NextResponse.json({ success: true }); // Fake success
+    }
+
+    // 3. Gibberish detection: random mixed-case strings
+    const isGibberish = (text: string): boolean => {
+      if (!text || text.length < 3) return false;
+      // Random camelCase: alternating upper/lower (e.g. "fgJwkEhzqiKrLciFOODJ")
+      const caseChanges = (text.match(/[a-z][A-Z]|[A-Z][a-z]/g) || []).length;
+      if (caseChanges > text.length * 0.35 && text.length > 8) return true;
+      // Consonant clusters: 5+ consecutive consonants
+      if (/[bcdfghjklmnpqrstvwxyz]{5}/i.test(text)) return true;
+      // Long word with no spaces (bot auto-fills name fields with junk)
+      if (text.length > 18 && !text.includes(" ")) return true;
+      // High uppercase-in-middle ratio
+      const upperInMiddle = (text.match(/[a-z][A-Z]/g) || []).length;
+      if (upperInMiddle >= 3) return true;
+      return false;
+    };
+
+    if (isGibberish(firstName) || isGibberish(lastName)) {
+      return NextResponse.json({ success: true }); // Fake success — don't tell bot it failed
+    }
+
+    // 4. Free-form email domains that are not typical business emails (optional — skip for now)
+    // 5. IP rate limiting would go here, but edge middleware handles that
 
     const supabase = getSupabase();
 
