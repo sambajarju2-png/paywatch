@@ -110,6 +110,9 @@ export default function LeadsPage() {
   const [emailFrom, setEmailFrom] = useState("business@paywatch.nl");
   const [emailSending, setEmailSending] = useState(false);
   const [emailSent, setEmailSent] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showSpamOnly, setShowSpamOnly] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchLeads = useCallback(async () => {
     try {
@@ -194,6 +197,44 @@ export default function LeadsPage() {
     }
   }
 
+  // Spam detection: random-string names (high mixed-case ratio, no vowel patterns)
+  function isSpam(lead: Lead): boolean {
+    const name = `${lead.first_name || ""} ${lead.last_name || ""}`.trim();
+    if (name.length < 15) return false;
+    const upper = (name.match(/[A-Z]/g) || []).length;
+    const lower = (name.match(/[a-z]/g) || []).length;
+    const total = upper + lower;
+    if (total === 0) return false;
+    const upperRatio = upper / total;
+    // Random strings have 10-70% uppercase (camelCase bots)
+    // Real names have <30% uppercase (just initials)
+    const looksRandom = upperRatio > 0.1 && upperRatio < 0.75 && total > 14;
+    // Also flag very long single-word names (no spaces within first/last)
+    const noInternalSpaces = !(lead.first_name || "").includes(" ") && !(lead.last_name || "").includes(" ");
+    return looksRandom && noInternalSpaces;
+  }
+
+  async function bulkDelete(ids: string[]) {
+    if (ids.length === 0) return;
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/admin/outreach/leads", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      if (!res.ok) throw new Error("Delete failed");
+      setLeads((prev) => prev.filter((l) => !ids.includes(l.id)));
+      setSelectedIds(new Set());
+    } catch {
+      alert("Verwijderen mislukt");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  const spamLeads = leads.filter(isSpam);
+
   const counts = {
     total: leads.length,
     new: leads.filter((l) => l.status === "new").length,
@@ -270,7 +311,62 @@ export default function LeadsPage() {
           <RefreshCw size={13} />
           Vernieuwen
         </button>
+
+        {spamLeads.length > 0 && (
+          <button
+            onClick={() => setShowSpamOnly((v) => !v)}
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border transition-colors ${
+              showSpamOnly
+                ? "bg-red-50 border-red-200 text-red-700"
+                : "bg-white border-pw-border text-pw-muted hover:text-pw-text"
+            }`}
+          >
+            <AlertTriangle size={12} />
+            {spamLeads.length} spam
+          </button>
+        )}
       </div>
+
+      {/* Spam warning bar */}
+      {spamLeads.length > 0 && (
+        <div className="flex items-center justify-between bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4">
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={14} className="text-red-500 shrink-0" />
+            <div>
+              <p className="text-xs font-semibold text-red-700">{spamLeads.length} spam leads gedetecteerd</p>
+              <p className="text-[11px] text-red-500">Willekeurige namen zonder herkenbaar patroon — waarschijnlijk bots via het contactformulier.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => bulkDelete(spamLeads.map((l) => l.id))}
+            disabled={deleting}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors shrink-0 ml-4"
+          >
+            {deleting ? <Loader2 size={12} className="animate-spin" /> : <X size={12} />}
+            Verwijder alle spam
+          </button>
+        </div>
+      )}
+
+      {/* Bulk delete bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center justify-between bg-[#0A2540] rounded-xl px-4 py-3 mb-4">
+          <p className="text-xs font-semibold text-white">{selectedIds.size} geselecteerd</p>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setSelectedIds(new Set())} className="text-xs text-white/60 hover:text-white transition-colors">
+              Selectie opheffen
+            </button>
+            <button
+              onClick={() => bulkDelete(Array.from(selectedIds))}
+              disabled={deleting}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 transition-colors"
+            >
+              {deleting ? <Loader2 size={12} className="animate-spin" /> : <X size={12} />}
+              Verwijder {selectedIds.size}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Loading / Error */}
       {loading && leads.length === 0 && (
@@ -303,18 +399,45 @@ export default function LeadsPage() {
       {/* Leads list */}
       {leads.length > 0 && (
         <div className="space-y-2">
-          {leads.map((lead) => {
+          {leads.filter((l) => !showSpamOnly || isSpam(l)).map((lead) => {
             const expanded = expandedId === lead.id;
+            const spam = isSpam(lead);
+            const selected = selectedIds.has(lead.id);
             return (
               <div
                 key={lead.id}
-                className="bg-white border border-pw-border rounded-lg overflow-hidden"
+                className={`bg-white border rounded-lg overflow-hidden transition-all ${
+                  spam ? "border-red-200 bg-red-50/20" : "border-pw-border"
+                } ${selected ? "ring-2 ring-pw-blue" : ""}`}
               >
                 {/* Row */}
                 <button
                   onClick={() => setExpandedId(expanded ? null : lead.id)}
                   className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
                 >
+                  {/* Checkbox */}
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedIds((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(lead.id)) next.delete(lead.id);
+                        else next.add(lead.id);
+                        return next;
+                      });
+                    }}
+                    className={`w-4 h-4 rounded border-2 shrink-0 flex items-center justify-center cursor-pointer transition-colors ${
+                      selected ? "bg-pw-blue border-pw-blue" : "border-pw-border hover:border-pw-blue"
+                    }`}
+                  >
+                    {selected && <Check size={10} className="text-white" />}
+                  </div>
+
+                  {/* Spam badge */}
+                  {spam && (
+                    <span className="text-[10px] font-bold text-red-600 bg-red-100 px-1.5 py-0.5 rounded shrink-0">SPAM</span>
+                  )}
+
                   {/* Brand color dot */}
                   <div
                     className="w-3 h-3 rounded-full shrink-0"

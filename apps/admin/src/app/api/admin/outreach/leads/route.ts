@@ -99,3 +99,32 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const supabase = createServiceRoleClient();
+    const { ids } = await req.json();
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json({ error: "ids array required" }, { status: 400 });
+    }
+    if (ids.length > 200) {
+      return NextResponse.json({ error: "Max 200 at a time" }, { status: 400 });
+    }
+
+    const { error } = await supabase
+      .from("b2b_contact_submissions")
+      .delete()
+      .in("id", ids);
+
+    if (error) {
+      console.error("[Leads DELETE]", error);
+      return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, deleted: ids.length });
+  } catch (err) {
+    console.error("[Leads DELETE]", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}

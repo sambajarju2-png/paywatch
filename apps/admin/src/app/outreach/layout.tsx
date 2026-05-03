@@ -6,7 +6,6 @@ import {
   Users,
   Send,
   Mail,
-  Shield,
   Kanban,
   Inbox,
   Briefcase,
@@ -21,7 +20,6 @@ const TABS = [
   { href: "/outreach/ai-mentions", label: "AI Mentions", icon: Sparkles },
   { href: "/outreach/campaigns", label: "Campaigns", icon: Send },
   { href: "/outreach/queue", label: "Queue", icon: Mail },
-  { href: "/outreach/accounts", label: "Accounts", icon: Shield },
 ];
 export default function OutreachLayout({
   children,

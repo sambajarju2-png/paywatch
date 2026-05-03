@@ -85,6 +85,7 @@ export default function InboxPage() {
   const [composeBody, setComposeBody] = useState("");
   const [composeSender, setComposeSender] = useState("samba@paywatch.nl");
   const [composeSending, setComposeSending] = useState(false);
+  const [composeFiles, setComposeFiles] = useState<File[]>([]);
 
   // Reply
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
@@ -138,19 +139,20 @@ export default function InboxPage() {
     if (!composeTo.trim() || !composeSubject.trim() || !composeBody.trim()) return;
     setComposeSending(true);
     try {
+      const form = new FormData();
+      form.append("sender", composeSender);
+      form.append("to_email", composeTo.trim());
+      form.append("subject", composeSubject.trim());
+      form.append("body_html", composeBody.replace(/\n/g, "<br/>"));
+      for (const f of composeFiles) form.append("attachment", f);
+
       const res = await fetch("/api/admin/outreach/quick-email", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sender: composeSender,
-          to_email: composeTo.trim(),
-          subject: composeSubject.trim(),
-          body_html: composeBody.replace(/\n/g, "<br/>"),
-        }),
+        body: form,
       });
       if (res.ok) {
         setShowCompose(false);
-        setComposeTo(""); setComposeSubject(""); setComposeBody("");
+        setComposeTo(""); setComposeSubject(""); setComposeBody(""); setComposeFiles([]);
         await fetchEmails();
       } else { alert("Verzenden mislukt"); }
     } catch { alert("Fout bij verzenden"); }
@@ -537,6 +539,45 @@ export default function InboxPage() {
                 <textarea value={composeBody} onChange={e => setComposeBody(e.target.value)}
                   rows={6} placeholder="Typ je bericht..."
                   className="w-full px-3 py-2 text-sm rounded-lg border border-pw-border focus:outline-none focus:border-pw-blue resize-none" />
+              </div>
+              {/* Attachments */}
+              <div>
+                <label className="block text-xs font-semibold text-pw-muted uppercase tracking-wider mb-1">
+                  Bijlagen <span className="normal-case font-normal">(max 5, elk max 10MB)</span>
+                </label>
+                <label className={`flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed cursor-pointer transition-colors ${
+                  composeFiles.length >= 5 ? "border-pw-border opacity-50 cursor-not-allowed" : "border-pw-border hover:border-pw-blue hover:bg-blue-50/30"
+                }`}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+                  <span className="text-xs text-pw-muted">Voeg bijlagen toe</span>
+                  <input
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.txt"
+                    disabled={composeFiles.length >= 5}
+                    className="hidden"
+                    onChange={(e) => {
+                      const newFiles = Array.from(e.target.files || []);
+                      setComposeFiles((prev) => [...prev, ...newFiles].slice(0, 5));
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+                {composeFiles.length > 0 && (
+                  <div className="mt-2 flex flex-col gap-1">
+                    {composeFiles.map((f, idx) => (
+                      <div key={idx} className="flex items-center justify-between px-3 py-1.5 bg-[#F8FAFC] rounded-lg border border-pw-border text-xs">
+                        <span className="text-pw-text truncate max-w-[300px]">{f.name}</span>
+                        <div className="flex items-center gap-2 ml-2 shrink-0">
+                          <span className="text-pw-muted">{f.size > 1024*1024 ? `${(f.size/1024/1024).toFixed(1)}MB` : `${Math.round(f.size/1024)}KB`}</span>
+                          <button onClick={() => setComposeFiles((prev) => prev.filter((_, i) => i !== idx))} className="text-pw-muted hover:text-red-500 transition-colors">
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="flex justify-end gap-2 pt-1">
                 <button onClick={() => setShowCompose(false)}
