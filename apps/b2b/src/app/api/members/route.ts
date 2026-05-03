@@ -164,3 +164,82 @@ export async function POST(request: NextRequest) {
     user_id: targetUserId,
   });
 }
+
+export async function PATCH(request: NextRequest) {
+  const cookieStore = await cookies();
+  const supabaseAuth = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll() { return cookieStore.getAll(); }, setAll() {} } }
+  );
+  const { data: { user } } = await supabaseAuth.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const body = await request.json();
+  const { member_id, role, permissions, organization_id } = body;
+
+  if (!member_id || !organization_id) {
+    return NextResponse.json({ error: "member_id en organization_id zijn verplicht" }, { status: 400 });
+  }
+
+  // Only owner/admin/super-admin can change roles
+  const isSuperAdmin = SUPER_ADMINS.includes(user.email?.toLowerCase() || "");
+  if (!isSuperAdmin) {
+    const { data: myMembership } = await supabase
+      .from("organization_members").select("role").eq("organization_id", organization_id).eq("user_id", user.id).single();
+    if (!myMembership || !["owner", "admin"].includes(myMembership.role)) {
+      return NextResponse.json({ error: "Geen rechten" }, { status: 403 });
+    }
+  }
+
+  const updates: Record<string, unknown> = {};
+  const validRoles = ["owner", "admin", "coach", "viewer"];
+  if (role && validRoles.includes(role)) updates.role = role;
+  if (permissions && typeof permissions === "object") updates.permissions = permissions;
+
+  if (Object.keys(updates).length === 0) {
+    return NextResponse.json({ error: "Niets om bij te werken" }, { status: 400 });
+  }
+
+  const { error } = await supabase.from("organization_members").update(updates).eq("id", member_id).eq("organization_id", organization_id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
+}
+
+export async function DELETE(request: NextRequest) {
+  const cookieStore = await cookies();
+  const supabaseAuth = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll() { return cookieStore.getAll(); }, setAll() {} } }
+  );
+  const { data: { user } } = await supabaseAuth.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const { member_id, organization_id } = await request.json();
+
+  if (!member_id || !organization_id) {
+    return NextResponse.json({ error: "member_id en organization_id zijn verplicht" }, { status: 400 });
+  }
+
+  const isSuperAdmin = SUPER_ADMINS.includes(user.email?.toLowerCase() || "");
+  if (!isSuperAdmin) {
+    const { data: myMembership } = await supabase
+      .from("organization_members").select("role").eq("organization_id", organization_id).eq("user_id", user.id).single();
+    if (!myMembership || !["owner", "admin"].includes(myMembership.role)) {
+      return NextResponse.json({ error: "Geen rechten" }, { status: 403 });
+    }
+  }
+
+  // Can't remove yourself
+  const { data: target } = await supabase.from("organization_members").select("user_id").eq("id", member_id).single();
+  if (target?.user_id === user.id) {
+    return NextResponse.json({ error: "Je kunt jezelf niet verwijderen" }, { status: 400 });
+  }
+
+  const { error } = await supabase.from("organization_members").delete().eq("id", member_id).eq("organization_id", organization_id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
+}
