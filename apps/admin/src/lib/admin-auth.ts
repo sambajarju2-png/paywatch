@@ -20,6 +20,7 @@ const ALLOWED_EMAILS = [
   "mariama@paywatch.nl",
   "mariama@paywatch.com",
   "mariama@paywatch.app",
+  "admin@paywatch.nl",
 ];
 
 type AdminOk = { isAdmin: true; userId: string; email: string };

@@ -13,6 +13,7 @@ const SUPER_ADMINS = [
   "mariama@paywatch.nl",
   "mariama@paywatch.com",
   "mariama@paywatch.app",
+  "admin@paywatch.nl",  // test account
 ];
 
 function extractSubdomain(hostname: string): string | null {
@@ -86,13 +87,13 @@ export async function middleware(request: NextRequest) {
     // If logged in but not super admin, block access (except login page)
     const pathname = request.nextUrl.pathname;
     if (user && !SUPER_ADMINS.includes(user.email?.toLowerCase() || "")) {
-      if (pathname !== "/login" && !pathname.startsWith("/api/auth")) {
+      if (pathname !== "/login" && !pathname.startsWith("/api/") && !pathname.startsWith("/auth/")) {
         return NextResponse.redirect(new URL("/login?error=forbidden", request.url));
       }
     }
 
     // If not logged in, redirect to login (except login page and auth routes)
-    if (!user && pathname !== "/login" && !pathname.startsWith("/api/")) {
+    if (!user && pathname !== "/login" && !pathname.startsWith("/api/") && !pathname.startsWith("/auth/")) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
   } else {
@@ -134,7 +135,7 @@ export async function middleware(request: NextRequest) {
 
     // If not logged in, redirect to login (except login page and auth routes)
     const pathname = request.nextUrl.pathname;
-    if (!user && pathname !== "/login" && !pathname.startsWith("/api/")) {
+    if (!user && pathname !== "/login" && !pathname.startsWith("/api/") && !pathname.startsWith("/auth/")) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
 
@@ -163,7 +164,7 @@ export async function middleware(request: NextRequest) {
       const isSuperAdmin = SUPER_ADMINS.includes(user.email?.toLowerCase() || "");
 
       if (!membership && !isSuperAdmin) {
-        if (pathname !== "/login" && !pathname.startsWith("/api/auth")) {
+        if (pathname !== "/login" && !pathname.startsWith("/api/") && !pathname.startsWith("/auth/")) {
           return NextResponse.redirect(new URL("/login?error=not-member", request.url));
         }
       }
