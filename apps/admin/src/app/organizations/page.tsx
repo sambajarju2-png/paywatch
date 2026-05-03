@@ -75,8 +75,9 @@ interface Org {
 function EditDrawer({ org, onClose, onSave }: { org: Org; onClose: () => void; onSave: (updated: Org) => void }) {
   const [form, setForm] = useState({ ...org });
   const [saving, setSaving] = useState(false);
-  const [tab, setTab] = useState<"contract" | "billing" | "invoices">("contract");
+  const [tab, setTab] = useState<"contract" | "billing" | "invoices" | "tier">("contract");
   const [creatingInvoice, setCreatingInvoice] = useState(false);
+  const [sendingInvoice, setSendingInvoice] = useState<string | null>(null);
 
   function f(k: keyof typeof form, v: unknown) { setForm(prev => ({ ...prev, [k]: v })); }
 
@@ -91,6 +92,26 @@ function EditDrawer({ org, onClose, onSave }: { org: Org; onClose: () => void; o
       if (res.ok) onSave(form);
       else alert("Opslaan mislukt");
     } catch { alert("Fout"); } finally { setSaving(false); }
+  }
+
+  async function sendInvoice(invoiceId: string) {
+    setSendingInvoice(invoiceId);
+    try {
+      const res = await fetch("/api/admin/organizations/send-invoice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ invoice_id: invoiceId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const updated = form.invoices.map(i => i.id === invoiceId ? { ...i, status: "sent" } : i);
+        setForm(prev => ({ ...prev, invoices: updated }));
+        onSave({ ...form, invoices: updated });
+        alert(`Factuur verzonden naar ${data.sent_to}`);
+      } else {
+        alert("Verzenden mislukt: " + (data.error || "onbekende fout"));
+      }
+    } catch { alert("Fout bij verzenden"); } finally { setSendingInvoice(null); }
   }
 
   async function createInvoice() {
@@ -154,10 +175,10 @@ function EditDrawer({ org, onClose, onSave }: { org: Org; onClose: () => void; o
 
         {/* Tabs */}
         <div style={{ display: "flex", borderBottom: "1px solid " + C.border, padding: "0 28px" }}>
-          {(["contract", "billing", "invoices"] as const).map(t => (
+          {(["contract", "billing", "invoices", "tier"] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
               style={{ padding: "12px 16px", border: "none", borderBottom: `2px solid ${tab === t ? C.blue : "transparent"}`, background: "none", fontSize: 12, fontWeight: 600, color: tab === t ? C.blue : C.muted, cursor: "pointer", fontFamily: "inherit", textTransform: "capitalize" }}>
-              {t === "contract" ? "Contract" : t === "billing" ? "Facturering" : `Facturen (${form.invoices.length})`}
+              {t === "contract" ? "Contract" : t === "billing" ? "Facturering" : t === "tier" ? "Tier & Features" : `Facturen (${form.invoices.length})`}
             </button>
           ))}
         </div>
@@ -257,14 +278,22 @@ function EditDrawer({ org, onClose, onSave }: { org: Org; onClose: () => void; o
                           </div>
                           <div style={{ textAlign: "right" }}>
                             <p style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 800, color: C.navy }}>{formatEuro(inv.amount_cents)}</p>
-                            <select value={inv.status} onChange={e => updateInvoiceStatus(inv.id, e.target.value)}
-                              style={{ fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 6, border: "1px solid " + C.border, outline: "none", fontFamily: "inherit", cursor: "pointer", color: C.muted }}>
-                              <option value="draft">Concept</option>
-                              <option value="sent">Verzonden</option>
-                              <option value="paid">Betaald</option>
-                              <option value="overdue">Te laat</option>
-                              <option value="cancelled">Geannuleerd</option>
-                            </select>
+                            <div style={{ display: "flex", gap: 6, justifyContent: "flex-end", flexWrap: "wrap" }}>
+                              {inv.status === "draft" && (
+                                <button onClick={() => sendInvoice(inv.id)} disabled={sendingInvoice === inv.id}
+                                  style={{ padding: "4px 12px", borderRadius: 6, background: C.navy, border: "none", color: "#fff", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", opacity: sendingInvoice === inv.id ? 0.6 : 1 }}>
+                                  {sendingInvoice === inv.id ? "Verzenden..." : "✉ Verstuur"}
+                                </button>
+                              )}
+                              <select value={inv.status} onChange={e => updateInvoiceStatus(inv.id, e.target.value)}
+                                style={{ fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 6, border: "1px solid " + C.border, outline: "none", fontFamily: "inherit", cursor: "pointer", color: C.muted }}>
+                                <option value="draft">Concept</option>
+                                <option value="sent">Verzonden</option>
+                                <option value="paid">Betaald</option>
+                                <option value="overdue">Te laat</option>
+                                <option value="cancelled">Geannuleerd</option>
+                              </select>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -274,6 +303,79 @@ function EditDrawer({ org, onClose, onSave }: { org: Org; onClose: () => void; o
               )}
             </div>
           )}
+
+          {tab === "tier" && (() => {
+            const FEATURE_LABELS: Record<string, string> = {
+              buddy_system: "Coach systeem",
+              ai_insights: "AI inzichten",
+              camera_scan: "Camera scan",
+              payment_plans: "Betalingsregelingen",
+              push_notifications: "Push notificaties",
+              escalation_alerts: "Escalatie meldingen",
+              spending_analytics: "Uitgavenanalyse",
+              export_reports: "Rapportage export",
+              bank_sync: "Bankrekening koppeling",
+              community: "Community feed",
+              api_access: "API toegang",
+              custom_branding: "Custom branding",
+              audit_log: "Audit log",
+              webhooks: "Webhooks",
+              white_label: "White label",
+            };
+            const TIER_FEATURES: Record<string, Record<string, boolean>> = {
+              pilot:        { buddy_system: true, ai_insights: false, camera_scan: true, payment_plans: true, push_notifications: true, escalation_alerts: true, spending_analytics: false, export_reports: false, bank_sync: false, community: false, api_access: false, custom_branding: false, audit_log: false, webhooks: false, white_label: false },
+              professional: { buddy_system: true, ai_insights: true,  camera_scan: true, payment_plans: true, push_notifications: true, escalation_alerts: true, spending_analytics: true,  export_reports: true,  bank_sync: false, community: false, api_access: true,  custom_branding: false, audit_log: true,  webhooks: true,  white_label: false },
+              enterprise:   { buddy_system: true, ai_insights: true,  camera_scan: true, payment_plans: true, push_notifications: true, escalation_alerts: true, spending_analytics: true,  export_reports: true,  bank_sync: true,  community: true,  api_access: true,  custom_branding: true,  audit_log: true,  webhooks: true,  white_label: true  },
+            };
+            const SEAT_DEFAULTS: Record<string, string> = { pilot: "25", professional: "250", enterprise: "Onbeperkt" };
+            const SUPPORT: Record<string, string> = { pilot: "Email", professional: "Prioriteit", enterprise: "Dedicated + SLA" };
+            const BASE_PRICE: Record<string, string> = { pilot: "Gratis / op maat", professional: "€99/mnd + €2,99/user", enterprise: "€299/mnd + €1,99/user" };
+
+            const features = TIER_FEATURES[form.tier] || TIER_FEATURES.pilot;
+            const orgFeatures = form.features as Record<string, boolean> || {};
+
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                {/* Tier comparison */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                  {(["pilot", "professional", "enterprise"] as const).map(t => {
+                    const isActive = form.tier === t;
+                    const cfg = { pilot: { label: "Pilot", color: "#059669", bg: "#F0FDF4", border: "#BBF7D0" }, professional: { label: "Professional", color: "#2563EB", bg: "#EFF6FF", border: "#BFDBFE" }, enterprise: { label: "Enterprise", color: "#7C3AED", bg: "#F5F3FF", border: "#DDD6FE" } }[t];
+                    return (
+                      <button key={t} onClick={() => setForm(prev => ({ ...prev, tier: t }))}
+                        style={{ padding: "12px 10px", borderRadius: 10, border: `2px solid ${isActive ? cfg.color : C.border}`, background: isActive ? cfg.bg : "#fff", cursor: "pointer", textAlign: "center" }}>
+                        <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 700, color: cfg.color }}>{cfg.label}</p>
+                        <p style={{ margin: "0 0 2px", fontSize: 11, color: C.muted }}>{SEAT_DEFAULTS[t]} seats</p>
+                        <p style={{ margin: 0, fontSize: 10, color: C.muted }}>{BASE_PRICE[t]}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div style={{ background: "#F8FAFC", borderRadius: 10, padding: "14px 16px", border: "1px solid " + C.border }}>
+                  <p style={{ margin: "0 0 2px", fontSize: 11, fontWeight: 600, color: C.muted, textTransform: "uppercase", letterSpacing: "0.06em" }}>Support niveau</p>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: C.navy }}>{SUPPORT[form.tier] || "Email"}</p>
+                </div>
+
+                <div>
+                  <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 600, color: C.navy }}>Features voor dit tier</p>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                    {Object.entries(FEATURE_LABELS).map(([key, label]) => {
+                      const tierHas = features[key] || false;
+                      const orgHas = key in orgFeatures ? orgFeatures[key] : tierHas;
+                      return (
+                        <div key={key} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", borderRadius: 7, background: orgHas ? "#F0FDF4" : "#F8FAFC", border: "1px solid " + (orgHas ? "#BBF7D0" : C.border) }}>
+                          <span style={{ fontSize: 13, color: orgHas ? "#059669" : "#CBD5E1" }}>{orgHas ? "✓" : "✗"}</span>
+                          <span style={{ fontSize: 12, color: orgHas ? C.navy : C.muted }}>{label}</span>
+                          {tierHas !== orgHas && <span style={{ fontSize: 10, color: orgHas ? "#059669" : C.red, marginLeft: "auto" }}>{orgHas ? "+override" : "-override"}</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Save */}
