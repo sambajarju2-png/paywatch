@@ -118,7 +118,7 @@ export async function PATCH(request: NextRequest) {
   try {
     const { userId, plan } = await request.json();
     if (!userId || !plan) return NextResponse.json({ error: "userId and plan required" }, { status: 400 });
-    const valid = ["gratis", "pro", "premium"];
+    const valid = ["gratis", "pro_monthly", "pro_yearly", "premium_monthly", "premium_yearly"];
     if (!valid.includes(plan)) return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
 
     const supabase = getAdmin();

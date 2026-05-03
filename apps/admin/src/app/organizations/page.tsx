@@ -68,6 +68,7 @@ interface Org {
   contract_end_at: string | null;
   invoice_reference: string | null;
   billing_notes: string | null;
+  features: Record<string, boolean> | null;
   active_seats: number;
   invoices: Invoice[];
 }

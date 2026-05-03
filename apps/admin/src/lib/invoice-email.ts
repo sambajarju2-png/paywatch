@@ -1,14 +1,25 @@
 import { Resend } from "resend";
-
-// ⚠️  Set your PayWatch bank account details here
-const PAYWATCH_IBAN = "NL00 INGB 0000 0000 00";   // TODO: replace with real IBAN
-const PAYWATCH_BIC  = "INGBNL2A";                   // TODO: replace with real BIC
-const PAYWATCH_ACCOUNT_NAME = "PayWatch B.V. Rotterdam";
+import { createClient } from "@supabase/supabase-js";
 
 function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY;
   if (!key) return null;
   return new Resend(key);
+}
+
+async function getPaymentSettings(): Promise<Record<string, string>> {
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+    const { data } = await supabase.from("paywatch_settings").select("key, value");
+    const out: Record<string, string> = {};
+    for (const row of data || []) out[row.key] = row.value;
+    return out;
+  } catch {
+    return {};
+  }
 }
 
 function formatEuro(cents: number): string {
@@ -35,6 +46,16 @@ interface InvoiceEmailOptions {
 export async function sendInvoiceEmail(opts: InvoiceEmailOptions): Promise<{ success: boolean; error?: string }> {
   const resend = getResend();
   if (!resend) return { success: false, error: "RESEND_API_KEY niet geconfigureerd" };
+
+  const ps = await getPaymentSettings();
+  const IBAN         = ps.iban         || "—";
+  const BIC          = ps.bic          || "—";
+  const ACCOUNT_NAME = ps.account_name || "PayWatch";
+  const FROM_NAME    = ps.invoice_from_name  || "PayWatch";
+  const FROM_EMAIL   = ps.invoice_from_email || "noreply@paywatch.app";
+  const KVK          = ps.kvk          || "83474889";
+  const BTW          = ps.btw          || "";
+  const ADDRESS      = ps.address      || "Rotterdam, Nederland";
 
   const {
     to, orgName, invoiceNumber, periodStart, periodEnd,
@@ -96,9 +117,9 @@ export async function sendInvoiceEmail(opts: InvoiceEmailOptions): Promise<{ suc
         <div style="background:#EFF6FF;border-radius:12px;border:1px solid #BFDBFE;padding:20px 24px">
           <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:#1E40AF">Betaalinstructies</p>
           <table cellpadding="0" cellspacing="0" style="font-size:13px;color:#1E3A5F;line-height:1.8">
-            <tr><td style="padding-right:16px;color:#64748B;white-space:nowrap">IBAN</td><td><strong>${PAYWATCH_IBAN}</strong></td></tr>
-            <tr><td style="padding-right:16px;color:#64748B;white-space:nowrap">BIC</td><td>${PAYWATCH_BIC}</td></tr>
-            <tr><td style="padding-right:16px;color:#64748B;white-space:nowrap">Ten name van</td><td>${PAYWATCH_ACCOUNT_NAME}</td></tr>
+            <tr><td style="padding-right:16px;color:#64748B;white-space:nowrap">IBAN</td><td><strong>${IBAN}</strong></td></tr>
+            <tr><td style="padding-right:16px;color:#64748B;white-space:nowrap">BIC</td><td>${BIC}</td></tr>
+            <tr><td style="padding-right:16px;color:#64748B;white-space:nowrap">Ten name van</td><td>${ACCOUNT_NAME}</td></tr>
             <tr><td style="padding-right:16px;color:#64748B;white-space:nowrap">Kenmerk</td><td><strong>${invoiceNumber}</strong></td></tr>
             <tr><td style="padding-right:16px;color:#64748B;white-space:nowrap">Bedrag</td><td><strong>${formatEuro(amountCents)}</strong></td></tr>
             <tr><td style="padding-right:16px;color:#64748B;white-space:nowrap">Vervaldatum</td><td style="color:#DC2626;font-weight:600">${fmtDate(dueDate)}</td></tr>
@@ -117,7 +138,7 @@ export async function sendInvoiceEmail(opts: InvoiceEmailOptions): Promise<{ suc
       <tr><td style="padding:20px 36px;background:#F8FAFC;border-top:1px solid #E2E8F0">
         <table width="100%" cellpadding="0" cellspacing="0"><tr>
           <td style="font-size:11px;color:#94A3B8">
-            PayWatch · Rotterdam, Nederland · KVK 83474889
+            ${FROM_NAME} · ${ADDRESS} · KVK ${KVK}
           </td>
           <td align="right" style="font-size:11px;color:#94A3B8">
             samba@paywatch.nl
@@ -131,8 +152,8 @@ export async function sendInvoiceEmail(opts: InvoiceEmailOptions): Promise<{ suc
 
   try {
     const { data, error } = await resend.emails.send({
-      from: "PayWatch <noreply@paywatch.app>",
-      reply_to: "samba@paywatch.nl",
+      from: `${FROM_NAME} <noreply@paywatch.app>`,
+      reply_to: FROM_EMAIL,,
       to,
       subject: `Factuur ${invoiceNumber} — ${orgName} (${formatEuro(amountCents)})`,
       html,

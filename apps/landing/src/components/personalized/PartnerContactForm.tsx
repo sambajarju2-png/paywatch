@@ -92,7 +92,7 @@ export default function PartnerContactForm({ companyName, companyDomain, audienc
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Honeypot — hidden from real users, bots fill it */}
-        <div aria-hidden="true" style={{ position: "absolute", left: "-9999px", top: "-9999px", opacity: 0, pointerEvents: "none", tabIndex: -1 }}>
+        <div aria-hidden="true" tabIndex={-1} style={{ position: "absolute", left: "-9999px", top: "-9999px", opacity: 0, pointerEvents: "none" }}>
           <label htmlFor="pw-website">Website (laat leeg)</label>
           <input
             id="pw-website"

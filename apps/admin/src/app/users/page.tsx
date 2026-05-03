@@ -71,8 +71,8 @@ export default function UsersPage() {
     if (filter === "bots") result = result.filter(u => u.likely_bot);
     if (filter === "complete") result = result.filter(u => u.onboarding_complete);
     if (filter === "incomplete") result = result.filter(u => !u.onboarding_complete);
-    if (filter === "pro") result = result.filter(u => u.plan === "pro");
-    if (filter === "premium") result = result.filter(u => u.plan === "premium");
+    if (filter === "pro") result = result.filter(u => (u.plan || "").startsWith("pro"));
+    if (filter === "premium") result = result.filter(u => (u.plan || "").startsWith("premium"));
     return result;
   }, [users, search, filter]);
 
@@ -131,8 +131,8 @@ export default function UsersPage() {
 
       {/* Plan distribution */}
       {users.length > 0 && (() => {
-        const proCount = users.filter(u => u.plan === "pro").length;
-        const premiumCount = users.filter(u => u.plan === "premium").length;
+        const proCount = users.filter(u => (u.plan || "").startsWith("pro")).length;
+        const premiumCount = users.filter(u => (u.plan || "").startsWith("premium")).length;
         const gratisCount = users.length - proCount - premiumCount;
         return (
           <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
@@ -211,8 +211,10 @@ export default function UsersPage() {
                         style={{ fontSize: 12, fontWeight: 600, padding: "3px 8px", borderRadius: 6, border: "1px solid " + C.blue, outline: "none", fontFamily: "inherit", cursor: "pointer", background: "#EFF6FF", color: C.blue }}
                       >
                         <option value="gratis">Gratis</option>
-                        <option value="pro">Pro</option>
-                        <option value="premium">Premium</option>
+                        <option value="pro_monthly">Pro (maandelijks)</option>
+                        <option value="pro_yearly">Pro (jaarlijks)</option>
+                        <option value="premium_monthly">Premium (maandelijks)</option>
+                        <option value="premium_yearly">Premium (jaarlijks)</option>
                       </select>
                       {savingPlan === u.user_id && <span style={{ fontSize: 10, color: C.muted }}>...</span>}
                     </div>
@@ -224,12 +226,14 @@ export default function UsersPage() {
                     >
                       {(() => {
                         const p = u.plan || "gratis";
-                        const cfg = p === "premium" ? { bg: "#F5F3FF", color: "#7C3AED", label: "Premium" } :
-                                    p === "pro"     ? { bg: "#EFF6FF", color: "#2563EB", label: "Pro" } :
-                                                      { bg: "#F8FAFC", color: "#64748B", label: "Gratis" };
+                        const tier = p.startsWith("premium") ? "premium" : p.startsWith("pro") ? "pro" : "gratis";
+                        const period = p.endsWith("yearly") ? "/jr" : p.endsWith("monthly") ? "/mo" : "";
+                        const cfg = tier === "premium" ? { bg: "#F5F3FF", color: "#7C3AED", label: "Premium" } :
+                                    tier === "pro"     ? { bg: "#EFF6FF", color: "#2563EB", label: "Pro" } :
+                                                        { bg: "#F8FAFC", color: "#64748B", label: "Gratis" };
                         return (
                           <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 6, background: cfg.bg, color: cfg.color, display: "inline-flex", alignItems: "center", gap: 4 }}>
-                            {cfg.label}
+                            {cfg.label}{period}
                             <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                           </span>
                         );

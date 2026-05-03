@@ -72,7 +72,7 @@ export async function PATCH(req: NextRequest) {
     "name", "type", "status", "tier", "contact_name", "contact_email", "contact_phone",
     "billing_email", "kvk_number", "website", "city",
     "seat_limit", "price_per_seat", "monthly_fee", "billing_period",
-    "contract_start_at", "contract_end_at", "invoice_reference", "billing_notes",
+    "contract_start_at", "contract_end_at", "invoice_reference", "billing_notes", "features",
   ];
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
   for (const k of allowed) {
