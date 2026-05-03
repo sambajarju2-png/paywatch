@@ -71,7 +71,9 @@ export default async function UserDetailPage({
       .eq("user_id", userOrg.user_id)
       .eq("organization_id", tenant.orgId)
       .eq("status", "active")
-      .single(),
+      .order("assigned_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
     supabase.auth.admin.getUserById(userOrg.user_id),
     // actor_email does not exist on b2b_audit_log — select actor_id, look up email separately
     supabase

@@ -107,15 +107,15 @@ export async function POST(
   const isClient = access.buddy.user_id === access.senderId;
   if (!isClient) {
     try {
-      // Get sender display name
-      const { data: { user: senderUser } } = await supabaseAdmin.auth.admin.getUserById(access.senderId);
+      // Get coach name from organization_members (doesn't need auth.admin)
+      const { data: coachMember } = await supabaseAdmin
+        .from("organization_members")
+        .select("invite_email")
+        .eq("user_id", access.senderId)
+        .eq("organization_id", access.buddy.organization_id)
+        .single();
 
-      // Fallback chain: full_name → name → email prefix
-      let senderName = "Coach";
-      if (senderUser) {
-        const meta = senderUser.user_metadata as Record<string, string> | null;
-        senderName = meta?.full_name || meta?.name || senderUser.email?.split("@")[0] || "Coach";
-      }
+      const senderName = coachMember?.invite_email?.split("@")[0] || "Coach";
 
       await supabaseAdmin.from("hulp_messages").insert({
         user_id: access.buddy.user_id,

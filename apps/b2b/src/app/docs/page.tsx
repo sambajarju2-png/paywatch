@@ -63,8 +63,13 @@ export default async function DocsPage() {
         {/* Auth section */}
         <div className="bg-white border border-pw-border rounded-2xl p-6 mb-6">
           <h2 className="text-base font-bold text-pw-navy mb-3">Authenticatie</h2>
+          <p className="text-sm text-pw-muted mb-3">
+            Elke API call vereist een geldige API key in de <code className="bg-pw-bg px-1 rounded font-mono text-xs">Authorization</code> header.
+            Maak API keys aan via de <a href="/api-keys" className="text-pw-blue hover:underline">API pagina</a> in dit portaal.
+          </p>
           <p className="text-sm text-pw-muted mb-4">
-            Gebruik je API key in de Authorization header bij elk verzoek. API keys beheer je via de API pagina in het portaal.
+            Er zijn twee soorten keys: <strong>Live</strong> (echte data) en <strong>Sandbox</strong> (testomgeving). Begin altijd met Sandbox om te integreren.
+            Elke key heeft scopes die bepalen wat je kunt doen. Geef alleen de scopes die je nodig hebt.
           </p>
           <div className="bg-pw-bg rounded-xl p-4 font-mono text-sm text-pw-text">
             <span className="text-pw-muted">curl</span> -H <span className="text-pw-blue">"Authorization: Bearer pw_live_..."</span> \<br />
@@ -88,6 +93,12 @@ export default async function DocsPage() {
                 <span className="ml-auto text-[10px] font-bold text-pw-muted bg-pw-bg px-2 py-0.5 rounded">{ep.scope}</span>
               </summary>
               <div className="border-t border-pw-border p-5 space-y-4">
+                <p className="text-sm text-pw-text">{ep.description}</p>
+                {(ep as any).notes && (
+                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
+                    <p className="text-xs text-pw-blue leading-relaxed">{(ep as any).notes}</p>
+                  </div>
+                )}
                 {ep.body && (
                   <div>
                     <p className="text-xs font-bold text-pw-muted uppercase tracking-wider mb-2">Request Body</p>
