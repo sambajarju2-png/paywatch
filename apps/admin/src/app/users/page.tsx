@@ -16,6 +16,8 @@ interface User {
   last_active_at: string | null;
   created_at: string;
   likely_bot: boolean;
+  plan?: string;
+  voice_seconds_used?: number;
 }
 
 function getName(u: User): string {
@@ -138,7 +140,7 @@ export default function UsersPage() {
               <th style={{ width: 44, padding: "12px 16px", borderBottom: "1px solid " + C.border }}>
                 <input type="checkbox" checked={allSelected} onChange={toggleAll} style={{ cursor: "pointer" }} />
               </th>
-              {["Naam","Gemeente","Rekeningen","Onboarding","Actief",""].map(h => (
+              {["Naam","Gemeente","Plan","Rekeningen","Onboarding","Actief",""].map(h => (
                 <th key={h} style={{ textAlign: "left", padding: "12px 14px", fontSize: 11, fontWeight: 600, color: C.muted, textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "1px solid " + C.border }}>{h}</th>
               ))}
             </tr>
@@ -162,6 +164,19 @@ export default function UsersPage() {
                   </div>
                 </td>
                 <td style={{ padding: "12px 14px", color: C.muted, fontSize: 12 }}>{u.gemeente || "—"}</td>
+                <td style={{ padding: "12px 14px" }}>
+                  {(() => {
+                    const p = u.plan || "gratis";
+                    const cfg = p === "premium" ? { bg: "#F5F3FF", color: "#7C3AED", label: "Premium" } :
+                                p === "pro"     ? { bg: "#EFF6FF", color: "#2563EB", label: "Pro" } :
+                                                  { bg: "#F8FAFC", color: "#64748B", label: "Gratis" };
+                    return (
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: cfg.bg, color: cfg.color }}>
+                        {cfg.label}
+                      </span>
+                    );
+                  })()}
+                </td>
                 <td style={{ padding: "12px 14px", fontSize: 12, fontWeight: 600, color: u.bill_count > 0 ? C.navy : C.muted }}>{u.bill_count}</td>
                 <td style={{ padding: "12px 14px" }}>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 500, padding: "3px 10px", borderRadius: 6, color: u.onboarding_complete ? C.green : C.amber, background: u.onboarding_complete ? "#F0FDF4" : "#FFFBEB" }}>

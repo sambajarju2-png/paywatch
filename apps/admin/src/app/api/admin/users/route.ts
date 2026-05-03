@@ -21,7 +21,7 @@ export async function GET() {
     const [usersRes, billCountsRes, authRes] = await Promise.all([
       supabase
         .from("user_settings")
-        .select("user_id, display_name, first_name, last_name, language, onboarding_complete, gemeente, dark_mode, created_at, last_active_at")
+        .select("user_id, display_name, first_name, last_name, language, onboarding_complete, gemeente, dark_mode, created_at, last_active_at, plan, voice_seconds_used")
         .order("created_at", { ascending: false }),
       // Count bills per user (detect bots = 0 bills)
       supabase.from("bills").select("user_id").limit(10000),
