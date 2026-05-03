@@ -47,6 +47,8 @@ export default function UsersPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState<string | null>(null);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<string | null>(null);
+  const [savingPlan, setSavingPlan] = useState<string | null>(null);
 
   const C = { navy: "#0A2540", muted: "#64748B", border: "#E2E8F0", surface: "#FFFFFF", blue: "#2563EB", green: "#059669", amber: "#D97706", red: "#DC2626" };
 
@@ -69,6 +71,8 @@ export default function UsersPage() {
     if (filter === "bots") result = result.filter(u => u.likely_bot);
     if (filter === "complete") result = result.filter(u => u.onboarding_complete);
     if (filter === "incomplete") result = result.filter(u => !u.onboarding_complete);
+    if (filter === "pro") result = result.filter(u => u.plan === "pro");
+    if (filter === "premium") result = result.filter(u => u.plan === "premium");
     return result;
   }, [users, search, filter]);
 
@@ -79,6 +83,15 @@ export default function UsersPage() {
     else setSelected(prev => { const n = new Set(prev); filtered.forEach(u => n.add(u.user_id)); return n; });
   }
   function toggleOne(id: string) { setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }); }
+
+  async function changePlan(userId: string, plan: string) {
+    setSavingPlan(userId);
+    try {
+      const res = await fetch("/api/admin/users", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId, plan }) });
+      if (res.ok) setUsers(prev => prev.map(u => u.user_id === userId ? { ...u, plan } : u));
+      else alert("Plan wijzigen mislukt");
+    } catch { alert("Fout"); } finally { setSavingPlan(null); setEditingPlan(null); }
+  }
 
   async function deleteOne(userId: string) {
     if (!confirm("Verwijder deze gebruiker en alle data?")) return;
@@ -103,7 +116,7 @@ export default function UsersPage() {
   return (
     <div>
       <style>{shimmerStyle}</style>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: C.navy, letterSpacing: "-0.03em" }}>Gebruikers</h1>
           <p style={{ margin: "4px 0 0", fontSize: 14, color: C.muted }}>{users.length} geregistreerd{botCount > 0 ? " · " + botCount + " vermoedelijke bots" : ""}</p>
@@ -115,6 +128,28 @@ export default function UsersPage() {
           </button>
         )}
       </div>
+
+      {/* Plan distribution */}
+      {users.length > 0 && (() => {
+        const proCount = users.filter(u => u.plan === "pro").length;
+        const premiumCount = users.filter(u => u.plan === "premium").length;
+        const gratisCount = users.length - proCount - premiumCount;
+        return (
+          <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+            {[
+              { label: "Gratis", count: gratisCount, bg: "#F8FAFC", color: "#64748B", border: "#E2E8F0", filter: "all" },
+              { label: "Pro", count: proCount, bg: "#EFF6FF", color: C.blue, border: "#BFDBFE", filter: "pro" },
+              { label: "Premium", count: premiumCount, bg: "#F5F3FF", color: "#7C3AED", border: "#DDD6FE", filter: "premium" },
+            ].map(s => (
+              <button key={s.label} onClick={() => setFilter(s.filter)}
+                style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: 10, border: "1px solid " + (filter === s.filter ? s.color : s.border), background: filter === s.filter ? s.bg : "#fff", cursor: "pointer", fontFamily: "inherit", transition: "all 0.1s" }}>
+                <span style={{ fontSize: 22, fontWeight: 800, color: s.color }}>{s.count}</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: s.color }}>{s.label}</span>
+              </button>
+            ))}
+          </div>
+        );
+      })()}
 
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
         <input type="text" placeholder="Zoek op naam, email of gemeente..." value={search} onChange={e => setSearch(e.target.value)}
@@ -165,17 +200,42 @@ export default function UsersPage() {
                 </td>
                 <td style={{ padding: "12px 14px", color: C.muted, fontSize: 12 }}>{u.gemeente || "—"}</td>
                 <td style={{ padding: "12px 14px" }}>
-                  {(() => {
-                    const p = u.plan || "gratis";
-                    const cfg = p === "premium" ? { bg: "#F5F3FF", color: "#7C3AED", label: "Premium" } :
-                                p === "pro"     ? { bg: "#EFF6FF", color: "#2563EB", label: "Pro" } :
-                                                  { bg: "#F8FAFC", color: "#64748B", label: "Gratis" };
-                    return (
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: cfg.bg, color: cfg.color }}>
-                        {cfg.label}
-                      </span>
-                    );
-                  })()}
+                  {editingPlan === u.user_id ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <select
+                        autoFocus
+                        defaultValue={u.plan || "gratis"}
+                        onChange={(e) => changePlan(u.user_id, e.target.value)}
+                        onBlur={() => setEditingPlan(null)}
+                        disabled={savingPlan === u.user_id}
+                        style={{ fontSize: 12, fontWeight: 600, padding: "3px 8px", borderRadius: 6, border: "1px solid " + C.blue, outline: "none", fontFamily: "inherit", cursor: "pointer", background: "#EFF6FF", color: C.blue }}
+                      >
+                        <option value="gratis">Gratis</option>
+                        <option value="pro">Pro</option>
+                        <option value="premium">Premium</option>
+                      </select>
+                      {savingPlan === u.user_id && <span style={{ fontSize: 10, color: C.muted }}>...</span>}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setEditingPlan(u.user_id)}
+                      title="Klik om plan te wijzigen"
+                      style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0 }}
+                    >
+                      {(() => {
+                        const p = u.plan || "gratis";
+                        const cfg = p === "premium" ? { bg: "#F5F3FF", color: "#7C3AED", label: "Premium" } :
+                                    p === "pro"     ? { bg: "#EFF6FF", color: "#2563EB", label: "Pro" } :
+                                                      { bg: "#F8FAFC", color: "#64748B", label: "Gratis" };
+                        return (
+                          <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 6, background: cfg.bg, color: cfg.color, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                            {cfg.label}
+                            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                          </span>
+                        );
+                      })()}
+                    </button>
+                  )}
                 </td>
                 <td style={{ padding: "12px 14px", fontSize: 12, fontWeight: 600, color: u.bill_count > 0 ? C.navy : C.muted }}>{u.bill_count}</td>
                 <td style={{ padding: "12px 14px" }}>

@@ -110,3 +110,27 @@ export async function DELETE(request: NextRequest) {
   console.log(`[Admin] Bulk delete: ${deleted} deleted, ${errors} errors — by ${admin.email}`);
   return NextResponse.json({ ok: true, deleted, errors });
 }
+
+export async function PATCH(request: NextRequest) {
+  const admin = await verifyAdmin();
+  if (!admin.isAdmin) return admin.response;
+
+  try {
+    const { userId, plan } = await request.json();
+    if (!userId || !plan) return NextResponse.json({ error: "userId and plan required" }, { status: 400 });
+    const valid = ["gratis", "pro", "premium"];
+    if (!valid.includes(plan)) return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
+
+    const supabase = getAdmin();
+    const { error } = await supabase
+      .from("user_settings")
+      .update({ plan })
+      .eq("user_id", userId);
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[Admin PATCH user]", err);
+    return NextResponse.json({ error: "Failed" }, { status: 500 });
+  }
+}
