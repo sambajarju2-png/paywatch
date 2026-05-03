@@ -153,7 +153,7 @@ export async function sendInvoiceEmail(opts: InvoiceEmailOptions): Promise<{ suc
   try {
     const { data, error } = await resend.emails.send({
       from: `${FROM_NAME} <noreply@paywatch.app>`,
-      reply_to: FROM_EMAIL,,
+      reply_to: FROM_EMAIL,
       to,
       subject: `Factuur ${invoiceNumber} — ${orgName} (${formatEuro(amountCents)})`,
       html,
