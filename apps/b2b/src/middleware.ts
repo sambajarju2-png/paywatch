@@ -13,7 +13,6 @@ const SUPER_ADMINS = [
   "mariama@paywatch.nl",
   "mariama@paywatch.com",
   "mariama@paywatch.app",
-  "admin@paywatch.nl",  // test account
 ];
 
 function extractSubdomain(hostname: string): string | null {
