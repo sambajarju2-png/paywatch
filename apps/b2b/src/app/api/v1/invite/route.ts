@@ -51,6 +51,9 @@ export async function POST(request: NextRequest) {
   }
 
   const token = randomBytes(24).toString("hex");
+  // Short human-readable code for manual entry (e.g. PW-XKN8H2)
+  const _chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const short_code = "PW-" + Array.from({ length: 6 }, () => _chars[Math.floor(Math.random() * _chars.length)]).join("");
   const expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
   const invite_url = `https://app.paywatch.app/invite/${token}`;
 
@@ -71,10 +74,11 @@ export async function POST(request: NextRequest) {
     email,
     external_id,
     token,
+    short_code,
     invite_type: "single",
     expires_at,
     qr_code_url,
-  }).select("id, token").single();
+  }).select("id, token, short_code").single();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -107,6 +111,7 @@ export async function POST(request: NextRequest) {
     success: true,
     invite_id: invite.id,
     invite_url,
+    short_code: invite.short_code,
     qr_code_url,
     email_sent: emailSent,
   });
