@@ -103,7 +103,7 @@ export default async function UserDetailPage({
   const consents = consentResult.data || [];
   const auditLog = auditResult.data || [];
 
-  const hasConsent = consents.some((c) => c.granted && c.scope === "view_bills");
+  const hasConsent = consents.some((c) => c.granted && (c.scope === "full_access" || c.scope === "view_bills"));
 
   const name =
     settings?.display_name ||
