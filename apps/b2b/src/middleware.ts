@@ -3,11 +3,16 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "paywatch.app";
 
-// Super-admin emails (same as admin app)
+// Super-admin emails — all your accounts across devices
 const SUPER_ADMINS = [
   "sambajarju2@gmail.com",
+  "reiskenners@gmail.com",
+  "ayeitssamba@gmail.com",
   "samba@paywatch.nl",
+  "samba@paywatch.app",
+  "mariama@paywatch.nl",
   "mariama@paywatch.com",
+  "mariama@paywatch.app",
 ];
 
 function extractSubdomain(hostname: string): string | null {

@@ -13,8 +13,13 @@ import { NextResponse } from "next/server";
 
 const ALLOWED_EMAILS = [
   "sambajarju2@gmail.com",
+  "reiskenners@gmail.com",
+  "ayeitssamba@gmail.com",
   "samba@paywatch.nl",
+  "samba@paywatch.app",
+  "mariama@paywatch.nl",
   "mariama@paywatch.com",
+  "mariama@paywatch.app",
 ];
 
 type AdminOk = { isAdmin: true; userId: string; email: string };

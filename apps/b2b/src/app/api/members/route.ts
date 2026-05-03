@@ -6,7 +6,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { randomBytes } from "crypto";
 import { sendMemberInviteEmail } from "@/lib/resend";
 
-const SUPER_ADMINS = ["sambajarju2@gmail.com", "samba@paywatch.nl", "mariama@paywatch.com"];
+const SUPER_ADMINS = ["sambajarju2@gmail.com", "reiskenners@gmail.com", "ayeitssamba@gmail.com", "samba@paywatch.nl", "samba@paywatch.app", "mariama@paywatch.nl", "mariama@paywatch.com", "mariama@paywatch.app"];
 
 function generateTempPassword(): string {
   // Readable 12-char password: 3 words + 2 digits

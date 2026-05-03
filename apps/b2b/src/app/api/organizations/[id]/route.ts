@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 
-const SUPER_ADMINS = ["sambajarju2@gmail.com", "samba@paywatch.nl", "mariama@paywatch.com"];
+const SUPER_ADMINS = ["sambajarju2@gmail.com", "reiskenners@gmail.com", "ayeitssamba@gmail.com", "samba@paywatch.nl", "samba@paywatch.app", "mariama@paywatch.nl", "mariama@paywatch.com", "mariama@paywatch.app"];
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
