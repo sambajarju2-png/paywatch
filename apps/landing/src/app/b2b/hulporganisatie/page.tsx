@@ -1,5 +1,7 @@
 import Link from 'next/link';
-import { ArrowRight, ArrowLeft, Users, CheckCircle2, MessageSquare, FileText, BarChart3, Clock, Shield, Mail } from 'lucide-react';
+import { ArrowLeft, Users, CheckCircle2, MessageSquare, FileText, BarChart3, Clock, Shield, Calendar, Mail } from 'lucide-react';
+
+const DEMO_LINK = 'https://calendly.com/samba-paywatch/demo';
 
 export const metadata = {
   title: 'PayWatch voor Hulporganisaties | Meer impact, minder administratie',
@@ -12,91 +14,115 @@ const FEATURES = [
   { icon: FileText, title: 'Digitale dossiervoering', body: 'Automatische registratie van contactmomenten, betalingen en mijlpalen.' },
   { icon: Clock, title: 'Tijdsbesparing', body: 'Gemiddeld 5 uur minder administratie per cliënt per week door automatische gegevensverzameling.' },
   { icon: Shield, title: 'AVG-proof delen', body: 'Cliënten geven expliciete toestemming voor elke koppeling. Volledige controle over hun eigen data.' },
-  { icon: CheckCircle2, title: 'Voortgangsmonitoring', body: 'Zet doelen, volg voortgang en vier successen samen met uw cliënt.' },
+  { icon: CheckCircle2, title: 'Voortgangsmonitoring', body: 'Stel doelen in, volg voortgang en vier successen samen met je cliënt.' },
 ];
 
 const OUTCOMES = [
   { value: '5 uur', label: 'bespaard per cliënt/week' },
   { value: '89%', label: 'cliënttevredenheid' },
   { value: '3×', label: 'snellere dossieropbouw' },
-  { value: '61%', label: 'hogere slagingsgraad traject' },
+  { value: '61%', label: 'hogere slagingsgraad' },
 ];
 
 export default function HulporganisatiePage() {
   return (
-    <div>
-      <div className="px-6 pt-8">
+    <div className="bg-[var(--bg)]">
+
+      <div className="px-4 sm:px-6 pt-6">
         <div className="max-w-6xl mx-auto">
-          <Link href="/b2b" className="inline-flex items-center gap-2 text-[14px] font-medium hover:opacity-70 transition-opacity" style={{ color: 'var(--text)' }}>
+          <Link href="/b2b" className="inline-flex items-center gap-2 text-[14px] font-medium text-[var(--muted)] hover:text-[var(--navy)] transition-colors">
             <ArrowLeft className="h-4 w-4" /> Terug naar overzicht
           </Link>
         </div>
       </div>
 
-      <section className="pt-10 pb-20 px-6">
+      <section className="px-4 sm:px-6 pt-8 pb-16">
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white" style={{ background: 'var(--purple)' }}>
-              <Users className="h-4 w-4" />
+          <div className="flex items-center gap-2 mb-5">
+            <div className="w-8 h-8 rounded-lg bg-[var(--purple)] flex items-center justify-center">
+              <Users className="h-4 w-4 text-white" />
             </div>
-            <span className="text-[13px] font-bold uppercase tracking-widest" style={{ color: 'var(--purple)' }}>Hulporganisaties</span>
+            <span className="text-[12px] font-bold uppercase tracking-widest text-[var(--purple)]">Hulporganisaties</span>
           </div>
-          <h1 className="text-[48px] md:text-[60px] font-extrabold leading-[1.05] tracking-tight mb-6" style={{ color: 'var(--navy)' }}>
+          <h1 className="text-[38px] sm:text-[52px] font-extrabold text-[var(--navy)] leading-[1.05] tracking-tight mb-5">
             Meer tijd voor<br />
-            <span style={{ color: 'var(--purple)' }}>het echte werk.</span>
+            <span className="text-[var(--purple)]">het echte werk.</span>
           </h1>
-          <p className="text-[18px] leading-relaxed mb-10 max-w-2xl" style={{ color: 'var(--text)', opacity: 0.7 }}>
-            PayWatch neemt de administratie van schuldhulpcoaches over. Geen papieren dossiers, geen handmatige data-invoer — alleen realtime inzicht en directe communicatie met uw cliënt.
+          <p className="text-[17px] text-[var(--muted)] leading-relaxed mb-10 max-w-2xl">
+            PayWatch neemt de administratie van schuldhulpcoaches over. Geen papieren dossiers, geen handmatige data-invoer — alleen realtime inzicht en directe communicatie met je cliënt.
           </p>
-          <div className="flex flex-wrap gap-4">
-            <Link href="mailto:info@paywatch.nl" className="inline-flex items-center gap-2 font-semibold px-6 py-3.5 rounded-xl text-[15px] text-white hover:opacity-90 transition-opacity" style={{ background: 'var(--purple)' }}>
-              Gesprek inplannen <ArrowRight className="h-4 w-4" />
+          <div className="flex flex-wrap gap-3">
+            <Link href={DEMO_LINK} target="_blank"
+              className="inline-flex items-center gap-2 bg-[var(--purple)] text-white font-semibold px-6 py-3 rounded-xl text-[15px] hover:opacity-90 transition-opacity">
+              <Calendar className="h-4 w-4" /> Demo inplannen
             </Link>
-            <Link href="https://b2b.paywatch.app" className="inline-flex items-center gap-2 font-semibold px-6 py-3.5 rounded-xl border text-[15px]" style={{ borderColor: 'var(--border, #E2E8F0)', color: 'var(--navy)' }}>
+            <Link href="https://b2b.paywatch.app"
+              className="inline-flex items-center gap-2 bg-[var(--surface)] border border-[var(--border)] text-[var(--navy)] font-semibold px-6 py-3 rounded-xl text-[15px] hover:border-[var(--purple)] transition-colors">
               Platform bekijken
             </Link>
           </div>
         </div>
       </section>
 
-      <section className="py-12 px-6 border-y" style={{ borderColor: 'var(--border, #E2E8F0)', background: 'var(--purple-light)' }}>
+      <section className="border-y border-[var(--border)] bg-[var(--purple-light)] py-10 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
-          {OUTCOMES.map((o) => (
+          {OUTCOMES.map(o => (
             <div key={o.label}>
-              <p className="text-[36px] font-extrabold tracking-tight" style={{ color: 'var(--navy)' }}>{o.value}</p>
-              <p className="text-[13px] mt-1" style={{ color: 'var(--text)', opacity: 0.6 }}>{o.label}</p>
+              <p className="text-[34px] font-extrabold text-[var(--navy)] tracking-tight">{o.value}</p>
+              <p className="text-[13px] text-[var(--muted)] mt-1">{o.label}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="py-20 px-6">
+      <section className="py-16 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-[28px] font-extrabold tracking-tight mb-2" style={{ color: 'var(--navy)' }}>Tools voor elke coach</h2>
-          <p className="text-[15px] mb-12" style={{ color: 'var(--text)', opacity: 0.6 }}>Van kredietbank tot buurtteam — PayWatch past zich aan uw werkwijze aan.</p>
-          <div className="grid md:grid-cols-3 gap-6">
+          <h2 className="text-[26px] font-extrabold text-[var(--navy)] tracking-tight mb-2">Tools voor elke coach</h2>
+          <p className="text-[14px] text-[var(--muted)] mb-10">Van kredietbank tot buurtteam — PayWatch past zich aan jullie werkwijze aan.</p>
+          <div className="grid md:grid-cols-3 gap-5">
             {FEATURES.map(({ icon: Icon, title, body }) => (
-              <div key={title} className="rounded-2xl p-6" style={{ background: 'var(--purple-light)' }}>
-                <div className="w-9 h-9 rounded-lg flex items-center justify-center mb-4" style={{ background: 'rgba(124,58,237,0.12)' }}>
-                  <Icon className="h-4 w-4" style={{ color: 'var(--purple)' }} />
+              <div key={title} className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
+                <div className="w-9 h-9 rounded-lg bg-[var(--purple-light)] flex items-center justify-center mb-4">
+                  <Icon className="h-4 w-4 text-[var(--purple)]" />
                 </div>
-                <h3 className="text-[15px] font-bold mb-2" style={{ color: 'var(--navy)' }}>{title}</h3>
-                <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text)', opacity: 0.7 }}>{body}</p>
+                <h3 className="text-[14px] font-bold text-[var(--navy)] mb-2">{title}</h3>
+                <p className="text-[13px] text-[var(--muted)] leading-relaxed">{body}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-20 px-6 text-center">
-        <div className="max-w-xl mx-auto">
-          <h2 className="text-[32px] font-extrabold tracking-tight mb-4" style={{ color: 'var(--navy)' }}>Wil uw organisatie meedoen?</h2>
-          <p className="text-[15px] mb-8" style={{ color: 'var(--text)', opacity: 0.6 }}>We bieden een gratis pilot voor organisaties die willen testen hoe PayWatch werkt in de praktijk.</p>
-          <Link href="mailto:info@paywatch.nl" className="inline-flex items-center gap-2 font-semibold px-6 py-3.5 rounded-xl text-[15px] text-white hover:opacity-90 transition-opacity" style={{ background: 'var(--purple)' }}>
-            <Mail className="h-4 w-4" /> info@paywatch.nl
-          </Link>
+      <section className="py-10 px-4 sm:px-6 bg-[var(--surface)] border-t border-[var(--border)]">
+        <div className="max-w-6xl mx-auto">
+          <p className="text-[13px] text-[var(--muted)] mb-4 font-medium">Passend voor organisaties zoals</p>
+          <div className="flex flex-wrap gap-2.5">
+            {['Kredietbank Nederland', 'Schuldhulpmaatje', 'Sociaal raadslieden', 'Voedselbanken', 'Buurtteams', 'MEE'].map(org => (
+              <span key={org} className="bg-[var(--bg)] border border-[var(--border)] text-[var(--text)] text-[13px] font-medium px-4 py-1.5 rounded-full">{org}</span>
+            ))}
+          </div>
         </div>
       </section>
+
+      <section className="py-12 px-4 sm:px-6 bg-[var(--navy)]">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+          <div>
+            <h2 className="text-[22px] font-extrabold text-white tracking-tight mb-1">Gratis pilot beschikbaar</h2>
+            <p className="text-[14px] text-white/60">Test PayWatch 30 dagen gratis binnen je organisatie.</p>
+          </div>
+          <div className="flex gap-3">
+            <Link href={DEMO_LINK} target="_blank"
+              className="inline-flex items-center gap-2 bg-[var(--purple)] text-white font-semibold px-5 py-2.5 rounded-xl text-[14px] hover:opacity-90 transition-opacity whitespace-nowrap">
+              <Calendar className="h-4 w-4" /> Demo inplannen
+            </Link>
+            <Link href="mailto:info@paywatch.nl"
+              className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white font-semibold px-5 py-2.5 rounded-xl text-[14px] hover:bg-white/20 transition-colors">
+              <Mail className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
     </div>
   );
 }
