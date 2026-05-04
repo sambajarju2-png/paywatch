@@ -22,10 +22,10 @@ export async function GET() {
     planCounts[u.plan] = (planCounts[u.plan] || 0) + 1;
   }
 
-  // Revenue estimate based on plan (hardcoded prices for now — will come from Stripe later)
+  // Revenue estimate — actual Stripe prices
   const PRICES: Record<string, number> = {
-    pro_monthly: 499, pro_yearly: Math.round(4990/12),
-    premium_monthly: 999, premium_yearly: Math.round(9990/12),
+    pro_monthly: 400, pro_yearly: Math.round(4000/12),
+    premium_monthly: 800, premium_yearly: Math.round(8000/12),
   };
   const revenue = Object.entries(planCounts).reduce((sum, [plan, count]) => {
     return sum + (PRICES[plan] || 0) * count;
@@ -43,7 +43,7 @@ export async function PATCH(req: NextRequest) {
   if (!plan_id) return NextResponse.json({ error: "plan_id required" }, { status: 400 });
 
   const allowed = [
-    "voice_seconds_per_month", "chat_messages_per_day",
+    "voice_seconds_per_month", "chat_messages_per_day", "dispute_letters_per_month",
     "ai_insights_enabled", "ai_chat_enabled", "dispute_letters_enabled",
     "bank_sync_enabled", "export_reports_enabled",
     "enforce_voice_limits", "enforce_chat_limits",
