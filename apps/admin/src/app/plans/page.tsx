@@ -26,6 +26,11 @@ interface PlanRule {
   voice_seconds_per_month: number;
   chat_messages_per_day: number;
   dispute_letters_per_month: number;
+  ai_insights_per_month: number;
+  email_inboxes: number;
+  scan_photos_per_month: number;
+  payment_confirmations_per_month: number;
+  bank_accounts_limit: number;
   ai_insights_enabled: boolean;
   ai_chat_enabled: boolean;
   dispute_letters_enabled: boolean;
@@ -189,9 +194,95 @@ export default function PlansPage() {
                       className="w-full text-[12px] font-semibold px-2.5 py-1.5 rounded-xl border border-[#E2E8F0] outline-none bg-[#F8FAFC] text-[#0A2540] focus:border-[#2563EB]"
                     >
                       <option value={0}>0</option>
+                      <option value={2}>2</option>
                       <option value={3}>3</option>
                       <option value={5}>5</option>
+                      <option value={8}>8</option>
                       <option value={10}>10</option>
+                      <option value={12}>12</option>
+                      <option value={-1}>Onbeperkt</option>
+                    </select>
+                  </div>
+                  {/* AI Inzichten */}
+                  <div>
+                    <label className="text-[10px] font-semibold text-[#94A3B8] uppercase tracking-wider block mb-1">AI inzichten/mo</label>
+                    <select
+                      value={rule.ai_insights_per_month ?? 0}
+                      onChange={e => updateNumber(rule.plan_id, "ai_insights_per_month", parseInt(e.target.value))}
+                      disabled={saving?.startsWith(rule.plan_id)}
+                      className="w-full text-[12px] font-semibold px-2.5 py-1.5 rounded-xl border border-[#E2E8F0] outline-none bg-[#F8FAFC] text-[#0A2540] focus:border-[#2563EB]"
+                    >
+                      <option value={0}>0</option>
+                      <option value={2}>2</option>
+                      <option value={4}>4</option>
+                      <option value={6}>6</option>
+                      <option value={8}>8</option>
+                      <option value={12}>12</option>
+                      <option value={15}>15</option>
+                      <option value={-1}>Onbeperkt</option>
+                    </select>
+                  </div>
+                  {/* Scan foto's */}
+                  <div>
+                    <label className="text-[10px] font-semibold text-[#94A3B8] uppercase tracking-wider block mb-1">Scans/mo</label>
+                    <select
+                      value={rule.scan_photos_per_month ?? 0}
+                      onChange={e => updateNumber(rule.plan_id, "scan_photos_per_month", parseInt(e.target.value))}
+                      disabled={saving?.startsWith(rule.plan_id)}
+                      className="w-full text-[12px] font-semibold px-2.5 py-1.5 rounded-xl border border-[#E2E8F0] outline-none bg-[#F8FAFC] text-[#0A2540] focus:border-[#2563EB]"
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                      <option value={-1}>Onbeperkt</option>
+                    </select>
+                  </div>
+                  {/* Betalingsbewijzen */}
+                  <div>
+                    <label className="text-[10px] font-semibold text-[#94A3B8] uppercase tracking-wider block mb-1">Bewijzen/mo</label>
+                    <select
+                      value={rule.payment_confirmations_per_month ?? 0}
+                      onChange={e => updateNumber(rule.plan_id, "payment_confirmations_per_month", parseInt(e.target.value))}
+                      disabled={saving?.startsWith(rule.plan_id)}
+                      className="w-full text-[12px] font-semibold px-2.5 py-1.5 rounded-xl border border-[#E2E8F0] outline-none bg-[#F8FAFC] text-[#0A2540] focus:border-[#2563EB]"
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={25}>25</option>
+                      <option value={-1}>Onbeperkt</option>
+                    </select>
+                  </div>
+                  {/* E-mail inboxen */}
+                  <div>
+                    <label className="text-[10px] font-semibold text-[#94A3B8] uppercase tracking-wider block mb-1">E-mail inboxen</label>
+                    <select
+                      value={rule.email_inboxes ?? 1}
+                      onChange={e => updateNumber(rule.plan_id, "email_inboxes", parseInt(e.target.value))}
+                      disabled={saving?.startsWith(rule.plan_id)}
+                      className="w-full text-[12px] font-semibold px-2.5 py-1.5 rounded-xl border border-[#E2E8F0] outline-none bg-[#F8FAFC] text-[#0A2540] focus:border-[#2563EB]"
+                    >
+                      <option value={1}>1</option>
+                      <option value={2}>2</option>
+                      <option value={3}>3</option>
+                      <option value={4}>4</option>
+                      <option value={6}>6</option>
+                      <option value={-1}>Onbeperkt</option>
+                    </select>
+                  </div>
+                  {/* Bankrekeningen */}
+                  <div>
+                    <label className="text-[10px] font-semibold text-[#94A3B8] uppercase tracking-wider block mb-1">Bankrekeningen</label>
+                    <select
+                      value={rule.bank_accounts_limit ?? 0}
+                      onChange={e => updateNumber(rule.plan_id, "bank_accounts_limit", parseInt(e.target.value))}
+                      disabled={saving?.startsWith(rule.plan_id)}
+                      className="w-full text-[12px] font-semibold px-2.5 py-1.5 rounded-xl border border-[#E2E8F0] outline-none bg-[#F8FAFC] text-[#0A2540] focus:border-[#2563EB]"
+                    >
+                      <option value={0}>0</option>
+                      <option value={1}>1</option>
+                      <option value={2}>2</option>
+                      <option value={3}>3</option>
                       <option value={-1}>Onbeperkt</option>
                     </select>
                   </div>

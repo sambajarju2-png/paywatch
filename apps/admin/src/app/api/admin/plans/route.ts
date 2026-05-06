@@ -44,6 +44,8 @@ export async function PATCH(req: NextRequest) {
 
   const allowed = [
     "voice_seconds_per_month", "chat_messages_per_day", "dispute_letters_per_month",
+    "ai_insights_per_month", "email_inboxes", "scan_photos_per_month",
+    "payment_confirmations_per_month", "bank_accounts_limit",
     "ai_insights_enabled", "ai_chat_enabled", "dispute_letters_enabled",
     "bank_sync_enabled", "export_reports_enabled",
     "enforce_voice_limits", "enforce_chat_limits",
