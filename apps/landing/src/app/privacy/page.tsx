@@ -27,7 +27,13 @@ const privacyContent = {
       },
       {
         title: "5. Delen met derden",
-        body: "Wij delen je gegevens alleen met verwerkers die noodzakelijk zijn voor onze dienstverlening. Alle gevoelige gegevens (e-mails, rekeningen, foto's) worden verwerkt via onze eigen AI-engine gehost bij Scaleway in Parijs, Frankrijk. Je data verlaat de EU niet voor scan- en analysedoeleinden. Zie onze pagina Gegevensverwerking voor een complete lijst. Wij verkopen nooit je gegevens aan derden.",
+        body: `Wij delen je gegevens alleen met verwerkers die noodzakelijk zijn voor onze dienstverlening.
+
+Voor het scannen en analyseren van foto's van rekeningen gebruiken wij Mistral AI Small (vision-model), gehost via Scaleway in Parijs, Frankrijk — dit is een self-hosted installatie op onze eigen serverinfrastructuur. Je foto wordt nergens anders naartoe gestuurd en wij zien de afbeeldingen zelf niet. Foto's worden direct na verwerking verwijderd.
+
+Alle overige gevoelige gegevens (e-mails, rekeningen) worden verwerkt via onze eigen AI-engine gehost bij Scaleway in Amsterdam/Parijs, Nederland/Frankrijk. Je data verlaat de EU niet voor scan- en analysedoeleinden.
+
+Wij verkopen nooit je gegevens aan derden.`,
       },
       {
         title: "6. Beveiliging",
@@ -72,7 +78,13 @@ const privacyContent = {
       },
       {
         title: "5. Sharing with third parties",
-        body: "We only share your data with processors necessary for our service delivery. All sensitive data (emails, bills, photos) is processed via our own AI engine hosted at Scaleway in Paris, France. Your data does not leave the EU for scanning purposes. See our Data Processing page for a complete list. We never sell your data to third parties.",
+        body: `We only share your data with processors necessary for our service delivery.
+
+For scanning and analysing photos of bills, we use Mistral AI Small (vision model), hosted via Scaleway in Paris, France — this is a self-hosted installation on our own server infrastructure. Your photo is not sent anywhere else and we cannot see the images ourselves. Photos are deleted immediately after processing.
+
+All other sensitive data (emails, bills) is processed via our own AI engine hosted at Scaleway in Amsterdam/Paris, the Netherlands/France. Your data does not leave the EU for scanning or analysis purposes.
+
+We never sell your data to third parties.`,
       },
       {
         title: "6. Security",
