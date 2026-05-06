@@ -13,7 +13,7 @@ export default async function MembersPage() {
   const supabase = createSupabaseAdmin();
   const { data: members } = await supabase
     .from("organization_members")
-    .select("id, role, invite_email, invite_status, created_at, user_id, permissions")
+    .select("id, role, invite_email, full_name, invite_status, created_at, user_id, permissions")
     .eq("organization_id", tenant.orgId)
     .order("created_at");
 

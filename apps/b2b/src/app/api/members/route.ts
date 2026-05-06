@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   );
 
   const body = await request.json();
-  const { email, role, organization_id } = body;
+  const { email, role, organization_id, full_name } = body;
 
   if (!email || !role || !organization_id) {
     return NextResponse.json({ error: "email, role en organization_id zijn verplicht" }, { status: 400 });
@@ -130,6 +130,7 @@ export async function POST(request: NextRequest) {
     user_id: targetUserId,
     role,
     invite_email: email,
+    full_name: full_name || null,
     invite_status: existingUser ? "accepted" : "pending",
     invited_by: user.id,
     permissions,

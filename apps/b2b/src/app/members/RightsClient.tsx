@@ -34,6 +34,7 @@ interface Member {
   created_at: string;
   user_id: string | null;
   permissions: Record<string, boolean> | null;
+  full_name: string | null;
 }
 
 interface Props {
@@ -56,6 +57,8 @@ export default function RightsClient({ members: initial, orgId, canManage }: Pro
   const [expanded, setExpanded] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
+  const [resetting, setResetting] = useState<string | null>(null);
+  const [resetMsg, setResetMsg] = useState<{ id: string; msg: string; ok: boolean } | null>(null);
 
   async function updateMember(memberId: string, patch: { role?: string; permissions?: Record<string, boolean> }) {
     setSaving(memberId);
@@ -90,6 +93,39 @@ export default function RightsClient({ members: initial, orgId, canManage }: Pro
 
   function getPermissions(m: Member): Record<string, boolean> {
     return m.permissions || DEFAULT_PERMISSIONS[m.role] || DEFAULT_PERMISSIONS.viewer;
+  }
+
+  async function resetPassword(memberId: string) {
+    setResetting(memberId);
+    setResetMsg(null);
+    try {
+      const res = await fetch("/api/members/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ member_id: memberId, organization_id: orgId }),
+      });
+      const data = await res.json();
+      setResetMsg({ id: memberId, msg: data.message || (res.ok ? "Reset-e-mail verstuurd" : data.error || "Fout"), ok: res.ok });
+      setTimeout(() => setResetMsg(null), 6000);
+    } catch {
+      setResetMsg({ id: memberId, msg: "Fout bij versturen", ok: false });
+    } finally {
+      setResetting(null);
+    }
+  }
+
+  function displayName(m: Member): string {
+    return m.full_name || m.invite_email;
+  }
+
+  function avatarInitials(m: Member): string {
+    if (m.full_name) {
+      const parts = m.full_name.trim().split(/\s+/);
+      return parts.length >= 2
+        ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+        : m.full_name.substring(0, 2).toUpperCase();
+    }
+    return (m.invite_email || "?").substring(0, 2).toUpperCase();
   }
 
   return (
@@ -159,11 +195,11 @@ export default function RightsClient({ members: initial, orgId, canManage }: Pro
                 <div className="col-span-4 flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center text-[11px] font-bold flex-shrink-0 text-white"
                     style={{ background: rc.color }}>
-                    {(m.invite_email || "?").substring(0, 2).toUpperCase()}
+                    {avatarInitials(m)}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-sm font-semibold text-pw-navy truncate">{m.invite_email || "—"}</div>
-                    <div className="text-[11px] text-pw-muted">{new Date(m.created_at).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })}</div>
+                    <div className="text-sm font-semibold text-pw-navy truncate">{displayName(m)}</div>
+                    <div className="text-[11px] text-pw-muted truncate">{m.full_name ? m.invite_email : new Date(m.created_at).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })}</div>
                   </div>
                 </div>
 
@@ -257,13 +293,28 @@ export default function RightsClient({ members: initial, orgId, canManage }: Pro
                         >
                           Herstel standaard voor {rc.label}
                         </button>
-                        <button
-                          onClick={() => removeMember(m.id)}
-                          disabled={isRemoving}
-                          className="text-[11px] font-semibold text-pw-red hover:opacity-80 transition-opacity disabled:opacity-50"
-                        >
-                          {isRemoving ? "Bezig..." : "Verwijder teamlid"}
-                        </button>
+                        <div className="flex items-center gap-3">
+                          {/* Password reset */}
+                          <button
+                            onClick={() => resetPassword(m.id)}
+                            disabled={resetting === m.id}
+                            className="text-[11px] font-semibold text-pw-blue hover:opacity-80 transition-opacity disabled:opacity-50"
+                          >
+                            {resetting === m.id ? "Versturen..." : "Stuur reset-link"}
+                          </button>
+                          {resetMsg?.id === m.id && (
+                            <span className={`text-[11px] font-medium ${resetMsg.ok ? "text-pw-green" : "text-pw-red"}`}>
+                              {resetMsg.msg}
+                            </span>
+                          )}
+                          <button
+                            onClick={() => removeMember(m.id)}
+                            disabled={isRemoving}
+                            className="text-[11px] font-semibold text-pw-red hover:opacity-80 transition-opacity disabled:opacity-50"
+                          >
+                            {isRemoving ? "Bezig..." : "Verwijder teamlid"}
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
