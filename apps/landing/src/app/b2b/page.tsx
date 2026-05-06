@@ -1,13 +1,19 @@
 import Link from 'next/link';
 import { ArrowRight, Building2, Users, Landmark, CheckCircle2, TrendingDown, Clock, Shield, BarChart3, Calendar, Mail } from 'lucide-react';
 
+const DEMO_LINK = 'https://calendly.com/samba-paywatch/demo';
+
 export const metadata = {
   title: 'PayWatch voor organisaties | Grip op schulden van je klanten',
   description: 'PayWatch helpt incassobureaus, gemeentes en hulporganisaties bij het voorkomen en oplossen van schulden. Realtime inzicht, slimme tools, betere uitkomsten.',
+  alternates: { canonical: 'https://paywatch.app/b2b' },
+  openGraph: {
+    title: 'PayWatch voor organisaties',
+    description: 'Realtime inzicht in schulden van je klanten. Voor incassobureaus, gemeentes en hulporganisaties.',
+    url: 'https://paywatch.app/b2b',
+    type: 'website',
+  },
 };
-
-// 👉 Replace with your Calendly/Cal.com link
-const DEMO_LINK = 'https://calendly.com/samba-paywatch/demo';
 
 const SEGMENTS = [
   {
@@ -43,8 +49,58 @@ const HOW = [
 ];
 
 export default function B2BPage() {
+  // ── Structured Data ──────────────────────────────────────────────────────
+  const orgSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'PayWatch',
+    url: 'https://paywatch.app',
+    logo: 'https://paywatch.app/icons/icon-192.png',
+    description: 'PayWatch helpt incassobureaus, gemeentes en hulporganisaties bij het voorkomen en oplossen van schulden.',
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'Rotterdam',
+      addressCountry: 'NL',
+    },
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'sales',
+      email: 'info@paywatch.nl',
+    },
+    sameAs: ['https://app.paywatch.app', 'https://b2b.paywatch.app'],
+  };
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'PayWatch', item: 'https://paywatch.app' },
+      { '@type': 'ListItem', position: 2, name: 'Voor organisaties', item: 'https://paywatch.app/b2b' },
+    ],
+  };
+
+  const serviceSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: 'PayWatch B2B Platform',
+    description: 'SaaS platform voor incassobureaus, gemeentes en hulporganisaties voor schuldbeheer en vroegsignalering.',
+    provider: { '@type': 'Organization', name: 'PayWatch', url: 'https://paywatch.app' },
+    areaServed: { '@type': 'Country', name: 'Netherlands' },
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'PayWatch B2B diensten',
+      itemListElement: SEGMENTS.map(s => ({
+        '@type': 'Offer',
+        itemOffered: { '@type': 'Service', name: `PayWatch voor ${s.label}`, url: `https://paywatch.app${s.href}` },
+      })),
+    },
+  };
+
   return (
     <div className="bg-[var(--bg)]">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }} />
 
       {/* Hero */}
       <section className="px-4 sm:px-6 pt-12 sm:pt-20 pb-16">
@@ -200,7 +256,6 @@ export default function B2BPage() {
           </div>
         </div>
       </section>
-
     </div>
   );
 }

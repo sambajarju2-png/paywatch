@@ -5,7 +5,14 @@ const DEMO_LINK = 'https://calendly.com/samba-paywatch/demo';
 
 export const metadata = {
   title: 'PayWatch voor Gemeentes | Vroegsignalering en schuldhulp voor inwoners',
-  description: 'Help inwoners met financiële problemen sneller de juiste weg te vinden. PayWatch koppelt automatisch door naar gemeentelijke schuldhulpverlening.',
+  description: 'Help inwoners met financiële problemen sneller de juiste weg te vinden. PayWatch koppelt automatisch door naar gemeentelijke schuldhulpverlening. AVG-proof en conform Wgs.',
+  alternates: { canonical: 'https://paywatch.app/b2b/gemeente' },
+  openGraph: {
+    title: 'PayWatch voor Gemeentes',
+    description: '68% eerder gesignaleerd. Vroegsignalering conform artikel 3 Wgs. Automatische doorverwijzing naar schuldhulp.',
+    url: 'https://paywatch.app/b2b/gemeente',
+    type: 'website',
+  },
 };
 
 const FEATURES = [
@@ -25,8 +32,63 @@ const OUTCOMES = [
 ];
 
 export default function GemeentePage() {
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'PayWatch', item: 'https://paywatch.app' },
+      { '@type': 'ListItem', position: 2, name: 'Voor organisaties', item: 'https://paywatch.app/b2b' },
+      { '@type': 'ListItem', position: 3, name: 'Gemeentes', item: 'https://paywatch.app/b2b/gemeente' },
+    ],
+  };
+
+  const serviceSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: 'PayWatch voor Gemeentes',
+    description: 'Vroegsignalering, toeslagencheck en doorverwijzing voor gemeentelijke schuldhulpverlening. Conform Wet gemeentelijke schuldhulpverlening (Wgs).',
+    provider: { '@type': 'Organization', name: 'PayWatch', url: 'https://paywatch.app' },
+    areaServed: { '@type': 'Country', name: 'Netherlands' },
+    audience: { '@type': 'Audience', audienceType: 'Gemeentes' },
+    url: 'https://paywatch.app/b2b/gemeente',
+  };
+
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'Voldoet PayWatch aan de Wet gemeentelijke schuldhulpverlening (Wgs)?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Ja. PayWatch ondersteunt vroegsignalering conform artikel 3 Wgs en het minnelijk traject. Alle gegevensverwerking is AVG-compliant met expliciete toestemming van inwoners.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Hoe werkt de doorverwijzing naar schuldhulp via PayWatch?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Inwoners met financiële problemen worden automatisch doorverwezen naar de schuldhulpverlening in hun gemeente. Gemiddeld duurt dit 3 minuten vanaf aanmelding.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Kan PayWatch worden geïntegreerd met bestaande gemeentelijke systemen?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Ja. PayWatch biedt een API en coach-dashboard dat aansluit op bestaande werkprocessen. Integratie via uitnodigingslink of code — geen IT-project vereist.',
+        },
+      },
+    ],
+  };
+
   return (
     <div className="bg-[var(--bg)]">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
       <div className="px-4 sm:px-6 pt-6">
         <div className="max-w-6xl mx-auto">
@@ -117,6 +179,23 @@ export default function GemeentePage() {
         </div>
       </section>
 
+      <section className="py-14 px-4 sm:px-6 bg-[var(--surface)] border-t border-[var(--border)]">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-[22px] font-extrabold text-[var(--navy)] tracking-tight mb-8">Veelgestelde vragen</h2>
+          <div className="space-y-5">
+            {[
+              { q: 'Voldoet PayWatch aan de Wet gemeentelijke schuldhulpverlening?', a: 'Ja. PayWatch ondersteunt vroegsignalering conform artikel 3 Wgs en het minnelijk traject. Alle gegevensverwerking is AVG-compliant met expliciete toestemming van inwoners.' },
+              { q: 'Hoe werkt de doorverwijzing naar schuldhulp?', a: 'Inwoners met financiële problemen worden automatisch doorverwezen naar de schuldhulpverlening in hun gemeente. Gemiddeld duurt dit 3 minuten vanaf aanmelding.' },
+              { q: 'Kan PayWatch worden geïntegreerd met bestaande gemeentelijke systemen?', a: 'Ja. PayWatch biedt een coach-dashboard dat aansluit op bestaande werkprocessen. Integratie via uitnodigingslink of code — geen IT-project vereist.' },
+            ].map(({ q, a }) => (
+              <div key={q} className="border-b border-[var(--border)] pb-5">
+                <p className="text-[15px] font-bold text-[var(--navy)] mb-2">{q}</p>
+                <p className="text-[14px] text-[var(--muted)] leading-relaxed">{a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

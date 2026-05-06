@@ -5,7 +5,14 @@ const DEMO_LINK = 'https://calendly.com/samba-paywatch/demo';
 
 export const metadata = {
   title: 'PayWatch voor Hulporganisaties | Meer impact, minder administratie',
-  description: 'Geef schuldhulpcoaches realtime inzicht in de situatie van cliënten. Minder papierwerk, betere begeleiding, hogere slagingsgraad.',
+  description: 'Geef schuldhulpcoaches realtime inzicht in de situatie van cliënten. 5 uur minder administratie per cliënt per week. Minder papierwerk, betere begeleiding.',
+  alternates: { canonical: 'https://paywatch.app/b2b/hulporganisatie' },
+  openGraph: {
+    title: 'PayWatch voor Hulporganisaties',
+    description: '5 uur bespaard per cliënt/week. 89% cliënttevredenheid. Digitaal dossier en directe communicatie voor schuldhulpcoaches.',
+    url: 'https://paywatch.app/b2b/hulporganisatie',
+    type: 'website',
+  },
 };
 
 const FEATURES = [
@@ -25,8 +32,63 @@ const OUTCOMES = [
 ];
 
 export default function HulporganisatiePage() {
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'PayWatch', item: 'https://paywatch.app' },
+      { '@type': 'ListItem', position: 2, name: 'Voor organisaties', item: 'https://paywatch.app/b2b' },
+      { '@type': 'ListItem', position: 3, name: 'Hulporganisaties', item: 'https://paywatch.app/b2b/hulporganisatie' },
+    ],
+  };
+
+  const serviceSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: 'PayWatch voor Hulporganisaties',
+    description: 'Digitaal cliëntdossier, directe communicatie en voortgangsmonitoring voor schuldhulpcoaches bij kredietbanken, schuldhulpmaatje en buurtteams.',
+    provider: { '@type': 'Organization', name: 'PayWatch', url: 'https://paywatch.app' },
+    areaServed: { '@type': 'Country', name: 'Netherlands' },
+    audience: { '@type': 'Audience', audienceType: 'Hulporganisaties schuldhulpverlening' },
+    url: 'https://paywatch.app/b2b/hulporganisatie',
+  };
+
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'Hoeveel tijd bespaart PayWatch coaches?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Gemiddeld 5 uur per cliënt per week. Automatische registratie van contactmomenten, betalingen en documentatie vervangt handmatige invoer.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Is er een gratis pilot beschikbaar voor hulporganisaties?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Ja. We bieden een gratis pilot van 30 dagen aan voor organisaties die PayWatch willen testen. Plan een demo om de mogelijkheden te bespreken.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Voor welke hulporganisaties is PayWatch geschikt?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'PayWatch is geschikt voor kredietbanken, Schuldhulpmaatje, sociaal raadslieden, buurtteams, voedselbanken, MEE en andere organisaties die schuldhulpverlening bieden.',
+        },
+      },
+    ],
+  };
+
   return (
     <div className="bg-[var(--bg)]">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
       <div className="px-4 sm:px-6 pt-6">
         <div className="max-w-6xl mx-auto">
@@ -104,6 +166,24 @@ export default function HulporganisatiePage() {
         </div>
       </section>
 
+      <section className="py-14 px-4 sm:px-6 bg-[var(--surface)] border-t border-[var(--border)]">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-[22px] font-extrabold text-[var(--navy)] tracking-tight mb-8">Veelgestelde vragen</h2>
+          <div className="space-y-5">
+            {[
+              { q: 'Hoeveel tijd bespaart PayWatch coaches?', a: 'Gemiddeld 5 uur per cliënt per week. Automatische registratie van contactmomenten, betalingen en documentatie vervangt handmatige invoer.' },
+              { q: 'Is er een gratis pilot beschikbaar?', a: 'Ja. We bieden een gratis pilot van 30 dagen aan voor organisaties die PayWatch willen testen. Plan een demo om de mogelijkheden te bespreken.' },
+              { q: 'Voor welke hulporganisaties is PayWatch geschikt?', a: 'PayWatch is geschikt voor kredietbanken, Schuldhulpmaatje, sociaal raadslieden, buurtteams, voedselbanken, MEE en andere organisaties die schuldhulpverlening bieden.' },
+            ].map(({ q, a }) => (
+              <div key={q} className="border-b border-[var(--border)] pb-5">
+                <p className="text-[15px] font-bold text-[var(--navy)] mb-2">{q}</p>
+                <p className="text-[14px] text-[var(--muted)] leading-relaxed">{a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="py-12 px-4 sm:px-6 bg-[var(--navy)]">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div>
@@ -122,7 +202,6 @@ export default function HulporganisatiePage() {
           </div>
         </div>
       </section>
-
     </div>
   );
 }

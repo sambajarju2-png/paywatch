@@ -6,6 +6,13 @@ const DEMO_LINK = 'https://calendly.com/samba-paywatch/demo';
 export const metadata = {
   title: 'PayWatch voor Incassobureaus | Hogere terugbetaalrate, minder escalaties',
   description: 'PayWatch helpt incassobureaus bij het oplossen van betalingsachterstanden. Klanten begrijpen hun schuld en nemen actie — voordat juridische stappen nodig zijn.',
+  alternates: { canonical: 'https://paywatch.app/b2b/incasso' },
+  openGraph: {
+    title: 'PayWatch voor Incassobureaus',
+    description: '34% minder escalaties. 2.4× hogere terugbetaalrate. Realtime inzicht in de betalingscapaciteit van je klanten.',
+    url: 'https://paywatch.app/b2b/incasso',
+    type: 'website',
+  },
 };
 
 const FEATURES = [
@@ -25,8 +32,63 @@ const OUTCOMES = [
 ];
 
 export default function IncassoPage() {
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'PayWatch', item: 'https://paywatch.app' },
+      { '@type': 'ListItem', position: 2, name: 'Voor organisaties', item: 'https://paywatch.app/b2b' },
+      { '@type': 'ListItem', position: 3, name: 'Incassobureaus', item: 'https://paywatch.app/b2b/incasso' },
+    ],
+  };
+
+  const serviceSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: 'PayWatch voor Incassobureaus',
+    description: 'Realtime inzicht in de financiële situatie van debiteuren. Verhoog de terugbetaalrate en verminder juridische escalaties.',
+    provider: { '@type': 'Organization', name: 'PayWatch', url: 'https://paywatch.app' },
+    areaServed: { '@type': 'Country', name: 'Netherlands' },
+    audience: { '@type': 'Audience', audienceType: 'Incassobureaus' },
+    url: 'https://paywatch.app/b2b/incasso',
+  };
+
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'Hoe helpt PayWatch incassobureaus bij het verlagen van escalaties?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'PayWatch geeft debiteuren realtime inzicht in hun financiële situatie. Ze begrijpen wat ze kunnen betalen en nemen eerder actie. Dit leidt tot 34% minder juridische escalaties.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Is PayWatch AVG-compliant voor incassobureaus?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Ja. Klanten geven expliciete toestemming voor elke koppeling. Alle gegevens staan op EU-servers en worden nooit zonder toestemming gedeeld.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Hoe snel is PayWatch operationeel voor een incassobureau?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Binnen één werkdag. Maak een organisatieprofiel aan, nodig coaches uit en stuur klanten een uitnodigingslink. Geen lange implementatie.',
+        },
+      },
+    ],
+  };
+
   return (
     <div className="bg-[var(--bg)]">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
       <div className="px-4 sm:px-6 pt-6">
         <div className="max-w-6xl mx-auto">
@@ -93,6 +155,25 @@ export default function IncassoPage() {
         </div>
       </section>
 
+      {/* FAQ — renders in Google rich results */}
+      <section className="py-14 px-4 sm:px-6 bg-[var(--surface)] border-t border-[var(--border)]">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-[22px] font-extrabold text-[var(--navy)] tracking-tight mb-8">Veelgestelde vragen</h2>
+          <div className="space-y-5">
+            {[
+              { q: 'Hoe helpt PayWatch bij het verlagen van escalaties?', a: 'PayWatch geeft debiteuren realtime inzicht in hun financiële situatie. Ze begrijpen wat ze kunnen betalen en nemen eerder actie. Dit leidt tot 34% minder juridische escalaties.' },
+              { q: 'Is PayWatch AVG-compliant?', a: 'Ja. Klanten geven expliciete toestemming voor elke koppeling. Alle gegevens staan op EU-servers en worden nooit zonder toestemming gedeeld.' },
+              { q: 'Hoe snel is PayWatch operationeel?', a: 'Binnen één werkdag. Maak een organisatieprofiel aan, nodig coaches uit en stuur klanten een uitnodigingslink. Geen lange implementatie.' },
+            ].map(({ q, a }) => (
+              <div key={q} className="border-b border-[var(--border)] pb-5">
+                <p className="text-[15px] font-bold text-[var(--navy)] mb-2">{q}</p>
+                <p className="text-[14px] text-[var(--muted)] leading-relaxed">{a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="py-12 px-4 sm:px-6 bg-[var(--navy)]">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div>
@@ -111,7 +192,6 @@ export default function IncassoPage() {
           </div>
         </div>
       </section>
-
     </div>
   );
 }
