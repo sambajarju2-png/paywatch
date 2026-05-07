@@ -87,7 +87,7 @@ export default function Footer() {
           {/* Social icons + App Store */}
           <div className="flex items-center gap-4">
             {/* App Store badge */}
-            <a href="#" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity" aria-label="Download on the App Store">
+            <a href="https://apps.apple.com/nl/app/paywatch/id6763662036" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity" aria-label="Download on the App Store">
               <svg width="120" height="40" viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/svg">
                 <rect width="120" height="40" rx="6" fill="var(--navy, #0A2540)"/>
                 <g fill="#fff">
