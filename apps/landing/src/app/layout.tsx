@@ -73,6 +73,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="nl" suppressHydrationWarning>
       <head>
+        {/* Smart App Banner — shows native iOS download banner in Safari */}
+        <meta name="apple-itunes-app" content="app-id=6763662036, app-argument=https://app.paywatch.app" />
         {/* JSON-LD — Organization */}
         <script
           type="application/ld+json"
