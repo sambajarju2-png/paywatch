@@ -24,7 +24,13 @@ export default function CookieBanner() {
       <div className="mx-auto max-w-2xl rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-lg flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <div className="flex items-start gap-3 flex-1">
           <span className="text-lg flex-shrink-0">🍪</span>
-          <p className="text-sm text-[var(--muted)] leading-relaxed">{t.cookie.message}</p>
+          <div>
+            <p className="text-sm text-[var(--muted)] leading-relaxed">{t.cookie.message}</p>
+            <p className="text-xs text-[var(--muted)] mt-1 opacity-70">
+              Verwerkers: Supabase (EU), Vercel (EU edge), Anthropic (DPA), ElevenLabs (EU), Resend (DPA), Scaleway (EU).{" "}
+              <a href="/privacy" className="underline text-[var(--blue)]">Privacybeleid</a>
+            </p>
+          </div>
         </div>
         <button
           onClick={dismiss}

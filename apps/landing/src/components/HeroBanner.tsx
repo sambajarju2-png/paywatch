@@ -7,15 +7,15 @@ const FEATURES = {
   nl: [
     { num: "01", title: "Overzicht", desc: "Al je rekeningen, schulden en financieel overzicht in één oogopslag.", badge: "Dashboard", bc: "var(--blue)" },
     { num: "02", title: "Betalingen", desc: "Beheer elke rekening. Bekijk details, escalatiefase en betaal direct.", badge: "Smart Bills", bc: "var(--green)" },
-    { num: "03", title: "Financieel Inzicht", desc: "Categoriseer je transacties. Zie waar je geld naartoe gaat per maand.", badge: "Analytics", bc: "var(--purple)" },
-    { num: "04", title: "Abonnementen", desc: "Detecteer terugkerende betalingen automatisch. Bespaar op vaste lasten.", badge: "Bespaar", bc: "var(--amber)" },
+    { num: "03", title: "Financieel Inzicht", desc: "Categoriseer je transacties, ontdek abonnementen en zie waar je geld naartoe gaat.", badge: "Analytics", bc: "var(--purple)" },
+    { num: "04", title: "PayBuddy", desc: "Bel met je AI-assistent. Stel vragen over rekeningen, schuldhulp en bezwaarschriften.", badge: "AI Voice", bc: "var(--amber)" },
     { num: "05", title: "Community", desc: "Deel ervaringen, stel vragen en steun elkaar. Anoniem of met naam.", badge: "Samen", bc: "var(--green)" },
   ],
   en: [
     { num: "01", title: "Overview", desc: "All your bills, debts and financial overview at a glance.", badge: "Dashboard", bc: "var(--blue)" },
     { num: "02", title: "Payments", desc: "Manage every bill. View details, escalation stage and pay directly.", badge: "Smart Bills", bc: "var(--green)" },
-    { num: "03", title: "Financial Insight", desc: "Categorize your transactions. See where your money goes each month.", badge: "Analytics", bc: "var(--purple)" },
-    { num: "04", title: "Subscriptions", desc: "Automatically detect recurring payments. Save on fixed costs.", badge: "Save", bc: "var(--amber)" },
+    { num: "03", title: "Financial Insight", desc: "Categorize your transactions, discover subscriptions and see where your money goes.", badge: "Analytics", bc: "var(--purple)" },
+    { num: "04", title: "PayBuddy", desc: "Call your AI assistant. Ask about bills, debt help and dispute letters.", badge: "AI Voice", bc: "var(--amber)" },
     { num: "05", title: "Community", desc: "Share experiences, ask questions and support each other.", badge: "Together", bc: "var(--green)" },
   ],
 };
@@ -112,7 +112,7 @@ export default function HeroBanner() {
                   {i === 0 && <ScrOverview n={n} />}
                   {i === 1 && <ScrPayments n={n} />}
                   {i === 2 && <ScrAnalytics n={n} />}
-                  {i === 3 && <ScrAbonnementen n={n} />}
+                  {i === 3 && <ScrBuddy n={n} />}
                   {i === 4 && <ScrCommunity n={n} />}
                 </div>
               </div>
@@ -284,44 +284,66 @@ function ScrAnalytics({ n }: { n: boolean }) {
           <div className="flex items-center gap-2"><span className="text-[7px] text-[var(--muted)]">{cat.pct}%</span><span className="text-[8px] font-bold text-[var(--navy)]">{cat.v}</span></div>
         </div>))}
     </div>
+    {/* Compact subscriptions summary */}
+    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2 mt-1">
+      <div className="flex items-center justify-between mb-1.5">
+        <p className="text-[9px] font-bold text-[var(--navy)]">{n?"Abonnementen":"Subscriptions"}</p>
+        <span className="text-[7px] text-[var(--amber)] font-bold">€ 1.374/{n?"maand":"mo"}</span>
+      </div>
+      {[{name:"Woonstad Rotterdam",amount:"€ 850",cat:n?"Huur":"Rent"},{name:"Vattenfall",amount:"€ 185",cat:n?"Energie":"Energy"},{name:"KPN",amount:"€ 89",cat:"Telecom"}].map((sub)=>(
+        <div key={sub.name} className="flex items-center justify-between py-0.5">
+          <div className="flex items-center gap-1.5"><span className="text-[7px] font-medium text-[var(--text)]">{sub.name}</span><span className="text-[6px] px-1 rounded bg-[var(--bg)] text-[var(--muted)]">{sub.cat}</span></div>
+          <span className="text-[7px] font-bold text-[var(--navy)]">{sub.amount}</span>
+        </div>))}
+    </div>
   </div>);
 }
 
-function ScrAbonnementen({ n }: { n: boolean }) {
+function ScrBuddy({ n }: { n: boolean }) {
   return (<div className="flex flex-col gap-2">
-    <p className="text-[15px] font-extrabold text-[var(--navy)] tracking-tight">{n?"Abonnementen":"Subscriptions"}</p>
-    <p className="text-[8px] text-[var(--muted)]">{n?"Inzicht in je terugkerende kosten":"Insight into your recurring costs"}</p>
-    <div className="rounded-lg p-2.5" style={{background:"var(--navy)"}}>
-      <p className="text-[8px] text-white opacity-70">{n?"Totaal per maand":"Total per month"}</p>
-      <div className="flex items-end justify-between mt-0.5">
-        <span className="text-[18px] font-extrabold text-white">€ 1.374</span>
-        <span className="text-[8px] text-white opacity-60">€ 16.494 / {n?"jaar":"year"}</span>
+    <p className="text-[15px] font-extrabold text-[var(--navy)] tracking-tight">PayBuddy</p>
+    <p className="text-[8px] text-[var(--muted)]">{n?"Je persoonlijke financiële assistent":"Your personal financial assistant"}</p>
+    {/* Active call simulation */}
+    <div className="rounded-xl p-3 flex flex-col items-center gap-3" style={{background:"linear-gradient(135deg, #0F172A, #1E293B)"}}>
+      {/* Waveform animation (static representation) */}
+      <div className="flex items-center gap-0.5 h-8">
+        {[3,5,8,12,16,20,16,12,8,5,3,5,8,14,18,14,8,5,3].map((h,i)=>(
+          <div key={i} className="rounded-full" style={{width:2,height:h,background:`color-mix(in srgb, #3B82F6 ${60+i*2}%, #818CF8)`,opacity:0.8+i*0.01}}/>
+        ))}
+      </div>
+      <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{background:"linear-gradient(135deg, #2563EB, #1D4ED8)",boxShadow:"0 4px 20px rgba(37,99,235,0.4)"}}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+      </div>
+      <p className="text-[10px] font-semibold text-white opacity-90">{n?"Luisteren...":"Listening..."}</p>
+      <p className="text-[7px] text-white opacity-50">02:34</p>
+    </div>
+    {/* Transcript */}
+    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2 flex flex-col gap-1.5">
+      <div className="flex gap-1.5">
+        <div className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center text-[7px]" style={{background:"color-mix(in srgb, var(--blue) 12%, transparent)"}}>🤖</div>
+        <div className="rounded-lg rounded-tl-sm px-2 py-1.5" style={{background:"color-mix(in srgb, var(--blue) 6%, transparent)"}}>
+          <p className="text-[8px] text-[var(--text)] leading-snug">{n?"Hoi! Ik zie dat je een factuur van Vattenfall hebt van €185. Wil je dat ik kijk of je te veel betaalt?":"Hi! I see you have a €185 Vattenfall bill. Want me to check if you're overpaying?"}</p>
+        </div>
+      </div>
+      <div className="flex gap-1.5 justify-end">
+        <div className="rounded-lg rounded-tr-sm px-2 py-1.5 bg-[var(--blue)]">
+          <p className="text-[8px] text-white leading-snug">{n?"Ja graag! En kan je ook een bezwaarbrief maken?":"Yes please! And can you also draft a dispute letter?"}</p>
+        </div>
+        <div className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center text-[7px]" style={{background:"color-mix(in srgb, var(--green) 12%, transparent)"}}>👤</div>
+      </div>
+      <div className="flex gap-1.5">
+        <div className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center text-[7px]" style={{background:"color-mix(in srgb, var(--blue) 12%, transparent)"}}>🤖</div>
+        <div className="rounded-lg rounded-tl-sm px-2 py-1.5" style={{background:"color-mix(in srgb, var(--blue) 6%, transparent)"}}>
+          <p className="text-[8px] text-[var(--text)] leading-snug">{n?"Komt voor elkaar! Ik stel nu een bezwaarbrief op...":"On it! I'm drafting a dispute letter now..."}</p>
+        </div>
       </div>
     </div>
-    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] divide-y divide-[var(--border)]">
-      {[{name:"Woonstad Rotterdam",cat:n?"Huur":"Rent",amount:"€ 850",yr:"€ 10.200/jr",freq:n?"Maandelijks":"Monthly"},
-        {name:"Vattenfall",cat:n?"Energie":"Energy",amount:"€ 185",yr:"€ 2.220/jr",freq:n?"Maandelijks":"Monthly",save:true},
-        {name:"KPN",cat:"Telecom",amount:"€ 89",yr:"€ 1.068/jr",freq:n?"Maandelijks":"Monthly",save:true},
-        {name:"Netflix",cat:"Streaming",amount:"€ 17,99",yr:"€ 216/jr",freq:n?"Maandelijks":"Monthly"}
-      ].map((sub)=>(<div key={sub.name}>
-        <div className="px-2.5 py-2 flex items-center justify-between">
-          <div><p className="text-[9px] font-bold text-[var(--text)]">{sub.name}</p>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-[7px] text-[var(--muted)]">{sub.freq}</span>
-              <span className="text-[7px] text-[var(--muted)]">·</span>
-              <span className="text-[7px] px-1 py-px rounded bg-[var(--bg)] text-[var(--muted)]">{sub.cat}</span>
-            </div></div>
-          <div className="text-right"><p className="text-[9px] font-bold text-[var(--text)]">{sub.amount}</p><p className="text-[7px] text-[var(--muted)]">{sub.yr}</p></div>
-        </div>
-        {sub.save&&(<div className="mx-2 mb-2 px-2 py-1.5 rounded-md flex items-center justify-between" style={{background:"color-mix(in srgb, var(--green) 6%, transparent)",border:"1px solid color-mix(in srgb, var(--green) 15%, transparent)"}}>
-          <div><p className="text-[7px] font-bold text-[var(--green)]">{n?`Bespaar op ${sub.cat==="Telecom"?"telecom":"energie"}`:`Save on ${sub.cat==="Telecom"?"telecom":"energy"}`}</p></div>
-          <div className="bg-[var(--green)] text-white text-[7px] font-bold px-1.5 py-0.5 rounded">{n?"Vergelijk":"Compare"}</div>
-        </div>)}
-      </div>))}
-    </div>
-    <div className="rounded-lg border border-[var(--border)] bg-[var(--bg)] p-2">
-      <p className="text-[8px] font-bold text-[var(--text)] mb-0.5">{n?"Inzicht":"Insight"}</p>
-      <p className="text-[7px] text-[var(--muted)] leading-snug">{n?"Je betaalt €16.494 per jaar aan 10 terugkerende betalingen.":"You pay €16,494/year on 10 recurring payments."}</p>
+    {/* Quick actions */}
+    <div className="flex gap-1.5">
+      {(n?["📊 Financieel overzicht","📝 Bezwaarbrief","🏛️ Schuldhulp"]:["📊 Overview","📝 Dispute","🏛️ Debt help"]).map((a)=>(
+        <div key={a} className="flex-1 rounded-md border border-[var(--border)] bg-[var(--surface)] px-1.5 py-1.5 text-center">
+          <p className="text-[6.5px] font-medium text-[var(--muted)]">{a}</p>
+        </div>))}
     </div>
   </div>);
 }
