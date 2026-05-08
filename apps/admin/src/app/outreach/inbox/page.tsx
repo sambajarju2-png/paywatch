@@ -523,10 +523,14 @@ export default function InboxPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-pw-muted uppercase tracking-wider mb-1">Aan</label>
-                <input type="email" value={composeTo} onChange={e => setComposeTo(e.target.value)}
-                  placeholder="naam@organisatie.nl" autoFocus
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-pw-border focus:outline-none focus:border-pw-blue" />
+                <label className="block text-xs font-semibold text-pw-muted uppercase tracking-wider mb-1">Aan <span className="normal-case font-normal">(meerdere: scheid met komma of nieuwe regel)</span></label>
+                <textarea value={composeTo} onChange={e => setComposeTo(e.target.value)}
+                  placeholder={"naam@organisatie.nl\nandere@organisatie.nl"}
+                  rows={2}
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-pw-border focus:outline-none focus:border-pw-blue resize-none" />
+                {composeTo.split(/[,;\n]+/).filter(e => e.trim().includes("@")).length > 1 && (
+                  <p className="text-[10px] text-pw-blue mt-1 font-medium">{composeTo.split(/[,;\n]+/).filter(e => e.trim().includes("@")).length} ontvangers</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-semibold text-pw-muted uppercase tracking-wider mb-1">Onderwerp</label>

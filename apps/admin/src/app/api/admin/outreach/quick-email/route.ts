@@ -93,6 +93,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Support multiple recipients: comma, semicolon, or newline separated
+    const recipients = to_email
+      .split(/[,;\n]+/)
+      .map((e: string) => e.trim().toLowerCase())
+      .filter((e: string) => e.includes("@"));
+
+    if (recipients.length === 0) {
+      return NextResponse.json({ error: "No valid email addresses" }, { status: 400 });
+    }
+    if (recipients.length > 50) {
+      return NextResponse.json({ error: "Maximum 50 recipients per batch" }, { status: 400 });
+    }
+
     // Limit: max 5 attachments, 10MB each
     for (const att of attachments) {
       if (att.size > 10 * 1024 * 1024) {
@@ -123,51 +136,62 @@ export async function POST(req: NextRequest) {
     const signature = SIGNATURES[sender] || "";
     const fullHtml = `<div style="font-family: 'Plus Jakarta Sans', Arial, sans-serif; font-size: 14px; color: #0F172A; line-height: 1.6;">${body_html}${signature}</div>`;
 
-    // Pre-generate email log ID for reply tracking
-    const emailLogId = crypto.randomUUID();
+    // Send to each recipient
+    const results: { email: string; success: boolean; messageId?: string }[] = [];
 
-    // Send via Mailgun EU
-    const form = new FormData();
-    form.append("from", `${account.display_name} <${account.email}>`);
-    form.append("to", to_name ? `${to_name} <${to_email}>` : to_email);
-    form.append("subject", subject);
-    form.append("html", fullHtml);
-    form.append("h:Reply-To", `${account.display_name} <${account.email}>`);
-    form.append("o:tracking-opens", "yes");
-    form.append("o:tracking-clicks", "htmlonly");
-    form.append("o:tag", "quick-email");
-    form.append("v:email_log_id", emailLogId);
+    for (const recipientEmail of recipients) {
+      const emailLogId = crypto.randomUUID();
 
-    // Add attachments
-    for (const att of attachments) {
-      form.append("attachment", att, att.name);
-    }
+      const form = new FormData();
+      form.append("from", `${account.display_name} <${account.email}>`);
+      form.append("to", to_name ? `${to_name} <${recipientEmail}>` : recipientEmail);
+      form.append("subject", subject);
+      form.append("html", fullHtml);
+      form.append("h:Reply-To", `${account.display_name} <${account.email}>`);
+      form.append("o:tracking-opens", "yes");
+      form.append("o:tracking-clicks", "htmlonly");
+      form.append("o:tag", "quick-email");
+      form.append("v:email_log_id", emailLogId);
 
-    const res = await fetch(
-      `https://api.eu.mailgun.net/v3/${account.domain}/messages`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Basic ${Buffer.from(`api:${MAILGUN_API_KEY}`).toString("base64")}`,
-        },
-        body: form,
+      for (const att of attachments) {
+        form.append("attachment", att, att.name);
       }
-    );
 
-    if (!res.ok) {
-      const errText = await res.text();
-      return NextResponse.json({ error: `Mailgun error: ${errText}` }, { status: 500 });
-    }
+      const res = await fetch(
+        `https://api.eu.mailgun.net/v3/${account.domain}/messages`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Basic ${Buffer.from(`api:${MAILGUN_API_KEY}`).toString("base64")}`,
+          },
+          body: form,
+        }
+      );
 
-    const data = await res.json();
+      if (!res.ok) {
+        results.push({ email: recipientEmail, success: false });
+        continue;
+      }
 
-    // Log in b2b_email_log if contact_id is provided
-    if (contact_id) {
-      const { error: logError } = await supabase.from("b2b_email_log").insert({
+      const data = await res.json();
+      results.push({ email: recipientEmail, success: true, messageId: data.id });
+
+      // Always log to b2b_email_log (find contact_id if available)
+      let resolvedContactId = contact_id;
+      if (!resolvedContactId) {
+        const { data: contactMatch } = await supabase
+          .from("b2b_contacts")
+          .select("id")
+          .eq("email", recipientEmail)
+          .single();
+        resolvedContactId = contactMatch?.id || null;
+      }
+
+      await supabase.from("b2b_email_log").insert({
         id: emailLogId,
-        contact_id,
+        contact_id: resolvedContactId,
         direction: "outbound",
-        to_email,
+        to_email: recipientEmail,
         to_name: to_name || null,
         from_email: account.email,
         from_name: account.display_name,
@@ -177,32 +201,34 @@ export async function POST(req: NextRequest) {
         sent_at: new Date().toISOString(),
         mailtrap_message_id: data.id || null,
         sequence_step: 0,
+      }).then(({ error }) => {
+        if (error) console.error("[Quick Email] Log failed:", error.message);
       });
-      if (logError) {
-        console.error("[Quick Email] Failed to log email:", logError.message);
-      }
 
-      // Post activity to ClickUp (fire-and-forget)
-      const CLICKUP_API_KEY = process.env.CLICKUP_API_KEY;
-      if (CLICKUP_API_KEY) {
-        const { data: contactData } = await supabase
-          .from("b2b_contacts")
-          .select("clickup_task_id")
-          .eq("id", contact_id)
-          .single();
-        if (contactData?.clickup_task_id) {
-          fetch(`https://api.clickup.com/api/v2/task/${contactData.clickup_task_id}/comment`, {
-            method: "POST",
-            headers: { Authorization: CLICKUP_API_KEY, "Content-Type": "application/json" },
-            body: JSON.stringify({
-              comment_text: `📧 ${account.email} emailed on ${new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} — Subject: "${subject}"`,
-            }),
-          }).catch((err) => console.error("[ClickUp Comment]", err));
+      // Post to ClickUp if contact found
+      if (resolvedContactId) {
+        const CLICKUP_API_KEY = process.env.CLICKUP_API_KEY;
+        if (CLICKUP_API_KEY) {
+          const { data: contactData } = await supabase
+            .from("b2b_contacts")
+            .select("clickup_task_id")
+            .eq("id", resolvedContactId)
+            .single();
+          if (contactData?.clickup_task_id) {
+            fetch(`https://api.clickup.com/api/v2/task/${contactData.clickup_task_id}/comment`, {
+              method: "POST",
+              headers: { Authorization: CLICKUP_API_KEY, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                comment_text: `📧 ${account.email} emailed on ${new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} — Subject: "${subject}"`,
+              }),
+            }).catch((err) => console.error("[ClickUp Comment]", err));
+          }
         }
       }
     }
 
-    // Update daily sends
+    // Update daily sends count
+    const totalSent = results.filter(r => r.success).length;
     const today = new Date().toISOString().split("T")[0];
     const { data: existing } = await supabase
       .from("b2b_daily_sends")
@@ -214,22 +240,22 @@ export async function POST(req: NextRequest) {
     if (existing) {
       await supabase
         .from("b2b_daily_sends")
-        .update({ emails_sent: existing.emails_sent + 1 })
+        .update({ emails_sent: existing.emails_sent + totalSent })
         .eq("id", existing.id);
     } else {
       await supabase.from("b2b_daily_sends").insert({
         account_id: account.id,
-        emails_sent: 1,
+        emails_sent: totalSent,
         date: today,
       });
     }
 
+    const failed = results.filter(r => !r.success);
     return NextResponse.json({
       success: true,
-      messageId: data.id,
-      from: `${account.display_name} <${account.email}>`,
-      to: to_email,
-      subject,
+      sent: totalSent,
+      failed: failed.length,
+      recipients: results,
     });
   } catch (err) {
     console.error("[Quick Email]", err);
