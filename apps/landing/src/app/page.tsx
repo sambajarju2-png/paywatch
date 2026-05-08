@@ -31,9 +31,20 @@ export default function HomePage() {
             <p className="text-center text-base sm:text-lg text-[var(--muted)] mt-4 max-w-2xl mx-auto leading-relaxed">{t.hero.subtitle}</p>
           </ScrollReveal>
           <ScrollReveal delay={300}>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
-              <Link href={`https://${siteConfig.appDomain}`} className="rounded bg-[var(--blue)] px-6 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity w-full sm:w-auto text-center">{t.hero.cta}</Link>
-              <Link href="/features" className="rounded border border-[var(--border)] bg-[var(--surface)] px-6 py-3 text-sm font-semibold text-[var(--text)] hover:border-[var(--muted)] transition-colors w-full sm:w-auto text-center">{t.hero.secondary}</Link>
+            <div className="flex flex-col items-center justify-center gap-4 mt-8">
+              {/* Primary CTAs */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
+                <a href="https://apps.apple.com/nl/app/paywatch/id6763662036" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2.5 rounded-xl bg-black px-5 py-3 hover:bg-gray-900 transition-colors w-full sm:w-auto justify-center">
+                  <svg width="20" height="24" viewBox="0 0 814 1000" fill="white"><path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76.5 0-103.7 40.8-165.9 40.8s-105.6-57.8-155.5-127.4c-58.8-82.8-109.3-211.1-109.3-332.6 0-195.3 126.9-298.8 251.8-298.8 66.3 0 121.6 43.5 163.3 43.5 39.8 0 101.7-46.2 177.5-46.2 28.7 0 131.7 2.6 199.3 96.5zM554.1 159.4c31.1-36.9 53.1-88.1 53.1-139.3 0-7.1-.6-14.3-1.9-20.1-50.6 1.9-110.8 33.7-147.1 75.8-28.7 32.4-56.4 83.6-56.4 135.5 0 7.8.6 15.7 1.3 18.2 2.6.6 6.4 1.3 10.2 1.3 45.4 0 102.5-30.4 140.8-71.4z"/></svg>
+                  <div className="flex flex-col items-start">
+                    <span className="text-[10px] text-white/70 leading-none">{t.hero.cta === 'Start gratis' ? 'Download in de' : 'Download on the'}</span>
+                    <span className="text-[15px] font-semibold text-white leading-tight">App Store</span>
+                  </div>
+                </a>
+                <Link href={`https://${siteConfig.appDomain}`} className="rounded-xl bg-[var(--blue)] px-6 py-3.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity w-full sm:w-auto text-center">{t.hero.cta === 'Start gratis' ? 'Of start via de browser' : 'Or start in browser'}</Link>
+              </div>
+              {/* Secondary */}
+              <Link href="/features" className="text-sm font-medium text-[var(--muted)] hover:text-[var(--text)] transition-colors underline underline-offset-4">{t.hero.secondary}</Link>
             </div>
             <p className="text-center text-xs text-[var(--muted)] mt-4">{t.hero.trust}</p>
           </ScrollReveal>
