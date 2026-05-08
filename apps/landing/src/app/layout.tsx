@@ -6,7 +6,7 @@ import SanityContentProvider from "@/components/SanityContentProvider";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CookieBanner from "@/components/CookieBanner";
-import { Analytics } from '@vercel/analytics/react';
+import { PostHogProvider, PostHogPageView } from '@/components/PostHogProvider';
 import AnalyticsTracker from "@/components/AnalyticsTracker";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -74,6 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="nl" suppressHydrationWarning>
       <head>
         {/* Smart App Banner — shows native iOS download banner in Safari */}
+        <link rel="dns-prefetch" href="https://eu.i.posthog.com" />
         <meta name="apple-itunes-app" content="app-id=6763662036, app-argument=https://app.paywatch.app" />
         {/* JSON-LD — Organization */}
         <script
@@ -120,6 +121,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className={`${jakarta.variable} font-sans`}>
+        <PostHogProvider>
         <AppProvider>
           <SanityContentProvider>
             <Header />
@@ -128,7 +130,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <CookieBanner />
           </SanityContentProvider>
         </AppProvider>
-      <Analytics />
+        <PostHogPageView />
+        </PostHogProvider>
         <AnalyticsTracker />
 </body>
     </html>

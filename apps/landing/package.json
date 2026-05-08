@@ -26,7 +26,8 @@
     "react-dom": "^19.0.0",
     "resend": "^3.2.0",
     "sanity": "^5.17.1",
-    "styled-components": "^6.1.15"
+    "styled-components": "^6.1.15",
+    "posthog-js": "^1.236.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
