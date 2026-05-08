@@ -1,548 +1,486 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, BarChart, Bar,
 } from "recharts";
 import {
-  Eye, Users, Globe, Monitor, Smartphone, Tablet,
-  Activity, RefreshCw, ArrowRight, Clock, MousePointerClick,
-  TrendingUp, BarChart3, Zap, ArrowDown, ArrowUp,
-  LogIn, LogOut,
+  Eye, Users, Activity, RefreshCw, Clock, MousePointerClick,
+  TrendingUp, Globe, Monitor, Smartphone, ExternalLink,
+  ArrowUpRight, ArrowDownRight, LogIn, LogOut, BarChart3,
 } from "lucide-react";
 
 /* ── Types ── */
-interface Analytics {
-  live: number;
-  livePages: { path: string; visitors: number }[];
+interface PostHogData {
   overview: {
-    total_views: number; unique_sessions: number; unique_visitors: number;
-    today_views: number; today_sessions: number; bounce_rate: number;
-    avg_pages_per_session: number; avg_session_duration_sec: number;
-    new_visitors: number; returning_visitors: number;
+    pageviews: number; visitors: number; sessions: number;
+    bounceRate: number; avgDuration: number; pagesPerSession: number;
   };
-  chart: { day: string; views: number; visitors: number }[];
-  topPages: { path: string; views: number; visitors: number }[];
-  entryPages: { path: string; sessions: number }[];
-  exitPages: { path: string; sessions: number }[];
-  referrers: { referrer: string; views: number }[];
-  devices: { device_type: string; count: number }[];
-  browsers: { browser: string; count: number }[];
-  utm: { source: string; medium: string; campaign: string; visits: number }[];
-  countries: { country: string; visitors: number }[];
-  pageFlow: { from_page: string; to_page: string; transitions: number }[];
-  events: { event_name: string; count: number }[];
-  scrollDepth: { path: string; avg_depth: number; samples: number }[];
+  daily: { day: string; pageviews: number; visitors: number }[];
+  topPages: { page: string; views: number; unique: number }[];
+  referrers: { referrer: string; visits: number; unique: number }[];
+  countries: { code: string; name: string; visitors: number }[];
+  browsers: { browser: string; users: number }[];
+  devices: { device: string; users: number }[];
+  os: { os: string; users: number }[];
+  heatmap: { dow: number; hour: number; views: number }[];
+  entryPages: { page: string; entries: number }[];
+  exitPages: { page: string; exits: number }[];
+  utm: { source: string; medium: string; campaign: string; visitors: number }[];
+  days: number;
 }
 
-const C = {
-  blue: "#2563EB", green: "#059669", amber: "#D97706",
-  red: "#DC2626", purple: "#7C3AED", navy: "#0A2540",
-  muted: "#64748B", cyan: "#0891B2",
-};
+type Tab = "overview" | "content" | "acquisition" | "sessions";
 
-const PIE_COLORS = [C.blue, C.green, C.amber, C.purple, C.cyan, C.red];
+const TABS: { id: Tab; label: string }[] = [
+  { id: "overview", label: "Overview" },
+  { id: "content", label: "Content" },
+  { id: "acquisition", label: "Acquisition" },
+  { id: "sessions", label: "Sessions" },
+];
 
-const COUNTRY_FLAGS: Record<string, string> = {
+const FLAGS: Record<string, string> = {
   NL: "🇳🇱", DE: "🇩🇪", BE: "🇧🇪", US: "🇺🇸", GB: "🇬🇧",
   FR: "🇫🇷", ES: "🇪🇸", IT: "🇮🇹", PL: "🇵🇱", SE: "🇸🇪",
   NO: "🇳🇴", DK: "🇩🇰", AT: "🇦🇹", CH: "🇨🇭", PT: "🇵🇹",
-  IE: "🇮🇪", FI: "🇫🇮", CZ: "🇨🇿", RO: "🇷🇴", HU: "🇭🇺",
+  TR: "🇹🇷", RO: "🇷🇴", IE: "🇮🇪", CZ: "🇨🇿", HU: "🇭🇺",
+  FI: "🇫🇮", GR: "🇬🇷", HR: "🇭🇷", BG: "🇧🇬", SK: "🇸🇰",
+  LT: "🇱🇹", LV: "🇱🇻", EE: "🇪🇪", LU: "🇱🇺", SI: "🇸🇮",
+  CY: "🇨🇾", MT: "🇲🇹", IN: "🇮🇳", BR: "🇧🇷", JP: "🇯🇵",
+  CA: "🇨🇦", AU: "🇦🇺", MX: "🇲🇽", KR: "🇰🇷", ZA: "🇿🇦",
+  RU: "🇷🇺", CN: "🇨🇳", NG: "🇳🇬", EG: "🇪🇬", MA: "🇲🇦",
+  GM: "🇬🇲", SN: "🇸🇳", GH: "🇬🇭", KE: "🇰🇪", SR: "🇸🇷",
 };
 
-const DEVICE_ICON: Record<string, React.ReactNode> = {
-  desktop: <Monitor className="w-4 h-4" />,
-  mobile: <Smartphone className="w-4 h-4" />,
-  tablet: <Tablet className="w-4 h-4" />,
-};
+const DOW_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-const TABS = [
-  { id: "overview", label: "Overzicht", icon: BarChart3 },
-  { id: "content", label: "Content", icon: Eye },
-  { id: "acquisition", label: "Acquisitie", icon: TrendingUp },
-  { id: "behavior", label: "Gedrag", icon: MousePointerClick },
-];
+function fmtDuration(sec: number): string {
+  if (sec < 60) return `${sec}s`;
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return s > 0 ? `${m}m ${s}s` : `${m}m`;
+}
 
-export default function AnalyticsPage() {
-  const [data, setData] = useState<Analytics | null>(null);
-  const [period, setPeriod] = useState<"24h" | "7d" | "30d">("7d");
-  const [tab, setTab] = useState("overview");
-  const [loading, setLoading] = useState(true);
-  const [lastRefresh, setLastRefresh] = useState(new Date());
+function fmtNum(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return String(n);
+}
 
-  const fetchData = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/admin/analytics?period=${period}`);
-      if (res.ok) { setData(await res.json()); setLastRefresh(new Date()); }
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
-  }, [period]);
-
-  useEffect(() => { setLoading(true); fetchData(); }, [fetchData]);
-  useEffect(() => { const i = setInterval(fetchData, 30_000); return () => clearInterval(i); }, [fetchData]);
-
-  if (loading && !data) return <Loading />;
-  if (!data) return null;
-
-  const o = data.overview;
-  const fmtDay = (d: string) => new Date(d).toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
-  const fmtDur = (s: number) => s < 60 ? `${Math.round(s)}s` : `${Math.floor(s / 60)}m ${Math.round(s % 60)}s`;
-
+/* ── Custom Tooltip ── */
+function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) {
+  if (!active || !payload?.length) return null;
   return (
-    <div className="max-w-7xl mx-auto space-y-5">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Website Analytics</h1>
-          <p className="text-sm text-gray-400 mt-0.5">paywatch.app &middot; {lastRefresh.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={fetchData} className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50"><RefreshCw className="w-4 h-4 text-gray-500" /></button>
-          {(["24h", "7d", "30d"] as const).map(p => (
-            <button key={p} onClick={() => setPeriod(p)}
-              className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${period === p ? "bg-blue-600 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}
-            >{p === "24h" ? "24 uur" : p === "7d" ? "7 dagen" : "30 dagen"}</button>
-          ))}
-        </div>
-      </div>
-
-      {/* Live banner */}
-      <div className="flex items-center gap-3 p-3 rounded-xl border border-green-200 bg-green-50">
-        <span className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-sm font-bold text-green-800">{data.live} live bezoeker{data.live !== 1 ? "s" : ""}</span>
-        </span>
-        {data.livePages.length > 0 && (
-          <span className="text-xs text-green-600 ml-2">
-            op {data.livePages.map(p => p.path).slice(0, 3).join(", ")}
-          </span>
-        )}
-      </div>
-
-      {/* Metric cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <Metric label="Weergaven" value={o.total_views} icon={<Eye className="w-4 h-4" />} color="blue" />
-        <Metric label="Bezoekers" value={o.unique_visitors || o.unique_sessions} icon={<Users className="w-4 h-4" />} color="purple" />
-        <Metric label="Vandaag" value={o.today_views} sub={`${o.today_sessions} sessies`} icon={<Zap className="w-4 h-4" />} color="amber" />
-        <Metric label="Bounce rate" value={`${o.bounce_rate}%`} icon={<ArrowDown className="w-4 h-4" />} color={Number(o.bounce_rate) > 70 ? "red" : "green"} />
-        <Metric label="Pagina's/sessie" value={o.avg_pages_per_session} icon={<BarChart3 className="w-4 h-4" />} color="cyan" />
-        <Metric label="Gem. duur" value={fmtDur(Number(o.avg_session_duration_sec))} icon={<Clock className="w-4 h-4" />} color="navy" />
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-1 p-1 rounded-xl bg-gray-100">
-        {TABS.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all flex-1 justify-center ${tab === t.id ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
-            <t.icon className="w-4 h-4" />{t.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Tab content */}
-      {tab === "overview" && <OverviewTab data={data} fmtDay={fmtDay} />}
-      {tab === "content" && <ContentTab data={data} />}
-      {tab === "acquisition" && <AcquisitionTab data={data} />}
-      {tab === "behavior" && <BehaviorTab data={data} />}
+    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-lg text-[12px]">
+      {label && <p className="text-slate-400 mb-1">{label}</p>}
+      {payload.map((p, i) => (
+        <p key={i} style={{ color: p.color }}>
+          {p.name}: <strong>{fmtNum(p.value)}</strong>
+        </p>
+      ))}
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════════════════
-   TAB: OVERVIEW
-   ═══════════════════════════════════════════════════════ */
-function OverviewTab({ data, fmtDay }: { data: Analytics; fmtDay: (d: string) => string }) {
-  return (
-    <div className="space-y-4">
-      {/* Chart */}
-      <Card title="Verkeer over tijd">
-        <ResponsiveContainer width="100%" height={280}>
-          <LineChart data={data.chart}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-            <XAxis dataKey="day" tickFormatter={fmtDay} fontSize={12} tick={{ fill: C.muted }} axisLine={false} tickLine={false} />
-            <YAxis fontSize={12} tick={{ fill: C.muted }} axisLine={false} tickLine={false} allowDecimals={false} />
-            <Tooltip labelFormatter={v => new Date(v).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long" })}
-              contentStyle={{ borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 13 }} />
-            <Line type="monotone" dataKey="views" stroke={C.blue} strokeWidth={2.5} dot={{ r: 3 }} name="Weergaven" />
-            <Line type="monotone" dataKey="visitors" stroke={C.green} strokeWidth={2} dot={{ r: 3 }} name="Bezoekers" strokeDasharray="5 5" />
-          </LineChart>
-        </ResponsiveContainer>
-      </Card>
-
-      <div className="grid lg:grid-cols-3 gap-4">
-        {/* Top pages */}
-        <Card title="Top pagina's" className="lg:col-span-1">
-          <RankList items={data.topPages.slice(0, 10).map(p => ({ label: p.path, value: p.views, sub: `${p.visitors} uniek` }))} />
-        </Card>
-        {/* Referrers */}
-        <Card title="Referrers" className="lg:col-span-1">
-          <BarList items={data.referrers.slice(0, 8)} labelKey="referrer" valueKey="views" />
-        </Card>
-        {/* Countries */}
-        <Card title="Landen" className="lg:col-span-1">
-          <div className="space-y-2">
-            {data.countries.slice(0, 8).map(c => (
-              <div key={c.country} className="flex items-center gap-2 text-sm">
-                <span className="text-base">{COUNTRY_FLAGS[c.country] || "🌍"}</span>
-                <span className="flex-1 text-gray-700">{c.country}</span>
-                <span className="font-semibold tabular-nums text-gray-900">{c.visitors}</span>
-              </div>
-            ))}
-            {data.countries.length === 0 && <Empty />}
-          </div>
-        </Card>
-      </div>
-
-      {/* New vs returning */}
-      <div className="grid lg:grid-cols-2 gap-4">
-        <Card title="Nieuw vs. terugkerend">
-          <div className="flex gap-6 items-center">
-            <ResponsiveContainer width={120} height={120}>
-              <PieChart>
-                <Pie data={[
-                  { name: "Nieuw", value: data.overview.new_visitors || 0 },
-                  { name: "Terugkerend", value: data.overview.returning_visitors || 0 },
-                ]} cx="50%" cy="50%" innerRadius={35} outerRadius={55} dataKey="value" strokeWidth={0}>
-                  <Cell fill={C.blue} /><Cell fill={C.green} />
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-blue-600" /><span className="text-sm text-gray-700">Nieuw: <b>{data.overview.new_visitors}</b></span></div>
-              <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-green-600" /><span className="text-sm text-gray-700">Terugkerend: <b>{data.overview.returning_visitors}</b></span></div>
-            </div>
-          </div>
-        </Card>
-        <Card title="Apparaten &amp; Browsers">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Apparaat</p>
-              {data.devices.map(d => {
-                const total = data.devices.reduce((s, x) => s + x.count, 0) || 1;
-                return (
-                  <div key={d.device_type} className="flex items-center gap-2 text-sm">
-                    {DEVICE_ICON[d.device_type] || <Monitor className="w-4 h-4" />}
-                    <span className="flex-1 capitalize text-gray-700">{d.device_type}</span>
-                    <span className="font-semibold tabular-nums">{Math.round(d.count / total * 100)}%</span>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Browser</p>
-              {data.browsers.slice(0, 5).map(b => (
-                <div key={b.browser} className="flex items-center justify-between text-sm">
-                  <span className="text-gray-700">{b.browser}</span>
-                  <span className="font-semibold tabular-nums">{b.count}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Card>
-      </div>
-    </div>
-  );
+/* ── Shimmer Skeleton ── */
+function Skeleton({ className = "" }: { className?: string }) {
+  return <div className={`animate-pulse rounded-lg bg-slate-100 ${className}`} />;
 }
 
-/* ═══════════════════════════════════════════════════════
-   TAB: CONTENT
-   ═══════════════════════════════════════════════════════ */
-function ContentTab({ data }: { data: Analytics }) {
-  return (
-    <div className="space-y-4">
-      <div className="grid lg:grid-cols-2 gap-4">
-        <Card title="Entry pagina's" sub="Eerste pagina van een sessie" icon={<LogIn className="w-4 h-4 text-green-600" />}>
-          <RankList items={data.entryPages.map(p => ({ label: p.path, value: p.sessions }))} />
-        </Card>
-        <Card title="Exit pagina's" sub="Laatste pagina voor vertrek" icon={<LogOut className="w-4 h-4 text-red-500" />}>
-          <RankList items={data.exitPages.map(p => ({ label: p.path, value: p.sessions }))} color="red" />
-        </Card>
-      </div>
-
-      <Card title="Scroll diepte per pagina" sub="Hoe ver lezen bezoekers gemiddeld">
-        {data.scrollDepth.length > 0 ? (
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={data.scrollDepth} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis type="number" domain={[0, 100]} tickFormatter={v => `${v}%`} fontSize={12} tick={{ fill: C.muted }} />
-              <YAxis type="category" dataKey="path" width={180} fontSize={11} tick={{ fill: C.muted }} />
-              <Tooltip formatter={(v: number) => `${v}%`} contentStyle={{ borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 13 }} />
-              <Bar dataKey="avg_depth" fill={C.blue} radius={[0, 4, 4, 0]} name="Gem. scroll %" />
-            </BarChart>
-          </ResponsiveContainer>
-        ) : <Empty text="Nog geen scroll data — komt vanzelf als bezoekers pagina's scrollen" />}
-      </Card>
-
-      <Card title="Alle pagina's">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100">
-                <th className="text-left py-2 text-xs font-semibold text-gray-400 uppercase">#</th>
-                <th className="text-left py-2 text-xs font-semibold text-gray-400 uppercase">Pagina</th>
-                <th className="text-right py-2 text-xs font-semibold text-gray-400 uppercase">Weergaven</th>
-                <th className="text-right py-2 text-xs font-semibold text-gray-400 uppercase">Uniek</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.topPages.map((p, i) => (
-                <tr key={p.path} className="border-b border-gray-50 hover:bg-gray-50">
-                  <td className="py-2 text-gray-400 w-8">{i + 1}</td>
-                  <td className="py-2 text-gray-700 font-mono text-xs">{p.path}</td>
-                  <td className="py-2 text-right font-semibold tabular-nums">{p.views}</td>
-                  <td className="py-2 text-right text-gray-500 tabular-nums">{p.visitors}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {data.topPages.length === 0 && <Empty />}
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════
-   TAB: ACQUISITION
-   ═══════════════════════════════════════════════════════ */
-function AcquisitionTab({ data }: { data: Analytics }) {
-  return (
-    <div className="space-y-4">
-      <div className="grid lg:grid-cols-2 gap-4">
-        <Card title="Referrers">
-          <BarList items={data.referrers} labelKey="referrer" valueKey="views" />
-        </Card>
-        <Card title="Landen">
-          <div className="space-y-2.5">
-            {data.countries.map(c => {
-              const max = data.countries[0]?.visitors || 1;
-              return (
-                <div key={c.country} className="space-y-1">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2">
-                      <span>{COUNTRY_FLAGS[c.country] || "🌍"}</span>
-                      <span className="text-gray-700">{c.country}</span>
-                    </span>
-                    <span className="font-semibold tabular-nums">{c.visitors}</span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                    <div className="h-full rounded-full bg-purple-500" style={{ width: `${(c.visitors / max) * 100}%` }} />
-                  </div>
-                </div>
-              );
-            })}
-            {data.countries.length === 0 && <Empty />}
-          </div>
-        </Card>
-      </div>
-
-      <Card title="UTM Campagnes" sub="Verkeer via utm_source / utm_medium / utm_campaign">
-        {data.utm.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100">
-                  <th className="text-left py-2 text-xs font-semibold text-gray-400 uppercase">Source</th>
-                  <th className="text-left py-2 text-xs font-semibold text-gray-400 uppercase">Medium</th>
-                  <th className="text-left py-2 text-xs font-semibold text-gray-400 uppercase">Campaign</th>
-                  <th className="text-right py-2 text-xs font-semibold text-gray-400 uppercase">Sessies</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.utm.map((u, i) => (
-                  <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
-                    <td className="py-2 text-gray-700">{u.source}</td>
-                    <td className="py-2 text-gray-500">{u.medium}</td>
-                    <td className="py-2 text-gray-500">{u.campaign}</td>
-                    <td className="py-2 text-right font-semibold tabular-nums">{u.visits}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : <Empty text="Nog geen UTM data — voeg ?utm_source=...&utm_medium=... toe aan je links" />}
-      </Card>
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════
-   TAB: BEHAVIOR
-   ═══════════════════════════════════════════════════════ */
-function BehaviorTab({ data }: { data: Analytics }) {
-  return (
-    <div className="space-y-4">
-      <Card title="Paginastromen" sub="Hoe bezoekers door je site navigeren">
-        {data.pageFlow.length > 0 ? (
-          <div className="space-y-2">
-            {data.pageFlow.slice(0, 12).map((f, i) => (
-              <div key={i} className="flex items-center gap-2 text-sm py-1.5 border-b border-gray-50">
-                <span className="font-mono text-xs text-gray-600 truncate max-w-[180px]">{f.from_page}</span>
-                <ArrowRight className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
-                <span className="font-mono text-xs text-gray-600 truncate max-w-[180px]">{f.to_page}</span>
-                <span className="ml-auto font-semibold tabular-nums text-gray-900">{f.transitions}</span>
-              </div>
-            ))}
-          </div>
-        ) : <Empty text="Nog geen flow data — verschijnt als bezoekers meerdere pagina's bekijken" />}
-      </Card>
-
-      <Card title="CTA &amp; Click Events" sub="Klikken op knoppen, externe links en CTA's">
-        {data.events.length > 0 ? (
-          <div className="space-y-2">
-            {data.events.map(e => {
-              const max = data.events[0]?.count || 1;
-              const isCta = e.event_name.startsWith("cta:");
-              const isOutbound = e.event_name.startsWith("outbound:");
-              return (
-                <div key={e.event_name} className="space-y-1">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2">
-                      {isCta && <MousePointerClick className="w-3.5 h-3.5 text-blue-500" />}
-                      {isOutbound && <ArrowUp className="w-3.5 h-3.5 text-amber-500" />}
-                      {!isCta && !isOutbound && <Zap className="w-3.5 h-3.5 text-purple-500" />}
-                      <span className="text-gray-700 text-xs truncate max-w-[300px]">
-                        {e.event_name.replace(/^(cta|outbound):/, "")}
-                      </span>
-                    </span>
-                    <span className="font-semibold tabular-nums">{e.count}</span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                    <div className="h-full rounded-full bg-blue-500" style={{ width: `${(e.count / max) * 100}%` }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : <Empty text="Nog geen click events — verschijnt als bezoekers op CTA's klikken" />}
-      </Card>
-
-      <div className="grid lg:grid-cols-2 gap-4">
-        <Card title="Live bezoekers" sub="Actieve pagina's in de laatste 5 minuten">
-          {data.livePages.length > 0 ? (
-            <div className="space-y-2">
-              {data.livePages.map(p => (
-                <div key={p.path} className="flex items-center gap-2 text-sm">
-                  <Activity className="w-3.5 h-3.5 text-green-500" />
-                  <span className="font-mono text-xs text-gray-700 flex-1 truncate">{p.path}</span>
-                  <span className="font-semibold tabular-nums">{p.visitors}</span>
-                </div>
-              ))}
-            </div>
-          ) : <Empty text="Geen live bezoekers op dit moment" />}
-        </Card>
-        <Card title="Scroll diepte" sub="Hoe ver lezen bezoekers gemiddeld">
-          {data.scrollDepth.length > 0 ? (
-            <div className="space-y-2">
-              {data.scrollDepth.map(s => (
-                <div key={s.path} className="space-y-1">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-mono text-xs text-gray-600 truncate max-w-[200px]">{s.path}</span>
-                    <span className="font-semibold tabular-nums">{s.avg_depth}%</span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                    <div className="h-full rounded-full bg-green-500" style={{ width: `${s.avg_depth}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : <Empty text="Nog geen scroll data" />}
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════
-   SHARED COMPONENTS
-   ═══════════════════════════════════════════════════════ */
-function Card({ title, sub, icon, className, children }: {
-  title: string; sub?: string; icon?: React.ReactNode; className?: string; children: React.ReactNode;
+/* ── KPI Card ── */
+function KpiCard({ icon: Icon, label, value, sub, color = "#2563EB" }: {
+  icon: typeof Eye; label: string; value: string; sub?: string; color?: string;
 }) {
   return (
-    <div className={`rounded-xl border border-gray-200 bg-white p-5 ${className || ""}`}>
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-shadow hover:shadow-md">
       <div className="flex items-center gap-2 mb-3">
-        {icon}
-        <div>
-          <h2 className="text-sm font-semibold text-gray-900">{title}</h2>
-          {sub && <p className="text-xs text-gray-400">{sub}</p>}
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: `${color}12` }}>
+          <Icon className="h-4 w-4" style={{ color }} strokeWidth={1.8} />
         </div>
+        <span className="text-[12px] font-medium text-slate-500">{label}</span>
       </div>
+      <p className="text-[28px] font-bold tracking-tight text-slate-900 leading-none">{value}</p>
+      {sub && <p className="mt-1.5 text-[11px] text-slate-400">{sub}</p>}
+    </div>
+  );
+}
+
+/* ── Horizontal Bar ── */
+function HBar({ data, total, color = "#2563EB" }: {
+  data: { label: string; value: number }[]; total: number; color?: string;
+}) {
+  return (
+    <div className="space-y-2.5">
+      {data.map((d) => {
+        const pct = total > 0 ? Math.round((d.value / total) * 100) : 0;
+        return (
+          <div key={d.label}>
+            <div className="flex items-center justify-between text-[12px] mb-1">
+              <span className="text-slate-700 font-medium truncate pr-2">{d.label}</span>
+              <span className="text-slate-400 tabular-nums flex-shrink-0">{fmtNum(d.value)}</span>
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-slate-100">
+              <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: color }} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── Activity Heatmap ── */
+function Heatmap({ data }: { data: PostHogData["heatmap"] }) {
+  const maxVal = Math.max(...data.map(d => d.views), 1);
+
+  // Build grid: 7 rows (Mon-Sun) x 24 cols (hours)
+  const grid: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0));
+  data.forEach(d => {
+    const row = d.dow - 1; // PostHog: 1=Mon
+    if (row >= 0 && row < 7 && d.hour >= 0 && d.hour < 24) {
+      grid[row][d.hour] = d.views;
+    }
+  });
+
+  return (
+    <div className="overflow-x-auto">
+      <div className="min-w-[600px]">
+        {/* Hour labels */}
+        <div className="flex ml-10 mb-1">
+          {Array.from({ length: 24 }, (_, i) => (
+            <div key={i} className="flex-1 text-center text-[9px] text-slate-400">{i}</div>
+          ))}
+        </div>
+        {/* Grid */}
+        {grid.map((row, ri) => (
+          <div key={ri} className="flex items-center gap-0.5 mb-0.5">
+            <span className="w-9 text-right text-[10px] text-slate-400 pr-1.5">{DOW_LABELS[ri]}</span>
+            {row.map((val, ci) => {
+              const intensity = val > 0 ? Math.max(0.1, val / maxVal) : 0;
+              return (
+                <div
+                  key={ci}
+                  className="flex-1 aspect-square rounded-[3px] transition-colors"
+                  style={{
+                    background: val > 0 ? `rgba(37, 99, 235, ${intensity})` : "#f1f5f9",
+                  }}
+                  title={`${DOW_LABELS[ri]} ${ci}:00 - ${val} views`}
+                />
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Section Card ── */
+function Section({ title, icon: Icon, children, className = "" }: {
+  title: string; icon?: typeof Eye; children: React.ReactNode; className?: string;
+}) {
+  return (
+    <div className={`rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] ${className}`}>
+      {(title || Icon) && (
+        <div className="flex items-center gap-2 mb-4">
+          {Icon && <Icon className="h-4 w-4 text-slate-400" strokeWidth={1.8} />}
+          <h3 className="text-[14px] font-semibold text-slate-900">{title}</h3>
+        </div>
+      )}
       {children}
     </div>
   );
 }
 
-function Metric({ label, value, sub, icon, color }: {
-  label: string; value: string | number; sub?: string; icon: React.ReactNode;
-  color: "blue" | "green" | "amber" | "red" | "purple" | "navy" | "cyan";
-}) {
-  const bg: Record<string, string> = { blue: "bg-blue-50 text-blue-600", green: "bg-green-50 text-green-600", amber: "bg-amber-50 text-amber-600", red: "bg-red-50 text-red-600", purple: "bg-purple-50 text-purple-600", navy: "bg-slate-100 text-slate-700", cyan: "bg-cyan-50 text-cyan-600" };
-  return (
-    <div className="rounded-xl border border-gray-200 bg-white p-3.5">
-      <div className={`w-8 h-8 rounded-lg ${bg[color]} flex items-center justify-center mb-2`}>{icon}</div>
-      <p className="text-xl font-bold text-gray-900 tabular-nums">{typeof value === "number" ? value.toLocaleString("nl-NL") : value}</p>
-      <p className="text-xs text-gray-500 mt-0.5">{label}</p>
-      {sub && <p className="text-xs text-gray-400">{sub}</p>}
-    </div>
-  );
-}
+/* ═══════════════════════════════════════════════════════════════
+   MAIN PAGE
+   ═══════════════════════════════════════════════════════════════ */
+export default function AnalyticsPage() {
+  const [data, setData] = useState<PostHogData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [days, setDays] = useState(30);
+  const [tab, setTab] = useState<Tab>("overview");
 
-function RankList({ items, color = "blue" }: { items: { label: string; value: number; sub?: string }[]; color?: string }) {
-  const max = items[0]?.value || 1;
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/api/posthog?days=${days}`)
+      .then(r => r.json())
+      .then(d => setData(d))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [days]);
+
+  const deviceTotal = useMemo(() => data?.devices.reduce((a, d) => a + d.users, 0) || 1, [data]);
+  const browserTotal = useMemo(() => data?.browsers.reduce((a, d) => a + d.users, 0) || 1, [data]);
+  const osTotal = useMemo(() => data?.os.reduce((a, d) => a + d.users, 0) || 1, [data]);
+
   return (
-    <div className="space-y-2">
-      {items.map((item, i) => (
-        <div key={item.label} className="space-y-1">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-xs text-gray-400 w-5">{i + 1}</span>
-            <span className="flex-1 font-mono text-xs text-gray-700 truncate">{item.label}</span>
-            <span className="font-semibold tabular-nums text-gray-900">{item.value}</span>
-            {item.sub && <span className="text-xs text-gray-400">{item.sub}</span>}
+    <div className="min-h-screen bg-slate-50/50 pb-12">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-200/80 px-6 pt-6 pb-4">
+        <div className="max-w-[1200px] mx-auto">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-[22px] font-bold text-slate-900 tracking-tight">Analytics</h1>
+              <p className="text-[13px] text-slate-400 mt-0.5">
+                {data ? `${fmtNum(data.overview.visitors)} visitors in the last ${days} days` : "Loading..."}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Time range picker */}
+              {[7, 14, 30].map(d => (
+                <button
+                  key={d}
+                  onClick={() => setDays(d)}
+                  className={`rounded-lg px-3 py-1.5 text-[12px] font-medium transition-colors ${
+                    days === d
+                      ? "bg-slate-900 text-white"
+                      : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                  }`}
+                >
+                  {d}d
+                </button>
+              ))}
+              <button
+                onClick={() => { setLoading(true); fetch(`/api/posthog?days=${days}`).then(r => r.json()).then(setData).finally(() => setLoading(false)); }}
+                className="ml-1 rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} strokeWidth={1.8} />
+              </button>
+            </div>
           </div>
-          <div className="h-1 rounded-full bg-gray-100 overflow-hidden ml-7">
-            <div className={`h-full rounded-full ${color === "red" ? "bg-red-400" : "bg-blue-400"}`} style={{ width: `${(item.value / max) * 100}%` }} />
+
+          {/* Tabs */}
+          <div className="flex gap-1">
+            {TABS.map(t => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`rounded-lg px-3.5 py-2 text-[13px] font-medium transition-colors ${
+                  tab === t.id
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-500 hover:bg-slate-100"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
           </div>
         </div>
-      ))}
-      {items.length === 0 && <Empty />}
-    </div>
-  );
-}
-
-function BarList({ items, labelKey, valueKey }: { items: Record<string, unknown>[]; labelKey: string; valueKey: string }) {
-  const max = Number(items[0]?.[valueKey]) || 1;
-  return (
-    <div className="space-y-2.5">
-      {items.map(r => (
-        <div key={String(r[labelKey])} className="space-y-1">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-700 text-xs truncate">{String(r[labelKey])}</span>
-            <span className="font-semibold tabular-nums ml-2">{Number(r[valueKey])}</span>
-          </div>
-          <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
-            <div className="h-full rounded-full bg-blue-500" style={{ width: `${(Number(r[valueKey]) / max) * 100}%` }} />
-          </div>
-        </div>
-      ))}
-      {items.length === 0 && <Empty />}
-    </div>
-  );
-}
-
-function Empty({ text = "Nog geen data" }: { text?: string }) {
-  return <p className="text-sm text-gray-400 py-4 text-center">{text}</p>;
-}
-
-function Loading() {
-  return (
-    <div className="max-w-7xl mx-auto space-y-5">
-      <h1 className="text-2xl font-bold text-gray-900">Website Analytics</h1>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-24 rounded-xl border border-gray-200 bg-white animate-pulse" />)}
       </div>
-      <div className="h-80 rounded-xl border border-gray-200 bg-white animate-pulse" />
+
+      <div className="max-w-[1200px] mx-auto px-6 pt-6">
+        {/* Loading state */}
+        {loading && !data && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-3 gap-4 lg:grid-cols-6">
+              {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-[120px]" />)}
+            </div>
+            <Skeleton className="h-[300px]" />
+          </div>
+        )}
+
+        {data && tab === "overview" && (
+          <div className="space-y-6">
+            {/* KPI Cards */}
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+              <KpiCard icon={Eye} label="Pageviews" value={fmtNum(data.overview.pageviews)} color="#2563EB" />
+              <KpiCard icon={Users} label="Visitors" value={fmtNum(data.overview.visitors)} color="#059669" />
+              <KpiCard icon={Activity} label="Sessions" value={fmtNum(data.overview.sessions)} color="#7C3AED" />
+              <KpiCard icon={ArrowDownRight} label="Bounce Rate" value={`${data.overview.bounceRate}%`} color="#DC2626" />
+              <KpiCard icon={MousePointerClick} label="Pages/Session" value={String(data.overview.pagesPerSession)} color="#D97706" />
+              <KpiCard icon={Clock} label="Avg Duration" value={fmtDuration(data.overview.avgDuration)} color="#0891B2" />
+            </div>
+
+            {/* Traffic Chart */}
+            <Section title="Traffic" icon={TrendingUp}>
+              <ResponsiveContainer width="100%" height={280}>
+                <AreaChart data={data.daily}>
+                  <defs>
+                    <linearGradient id="gradPV" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#2563EB" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="gradV" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#059669" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="#059669" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={false} tickLine={false}
+                    tickFormatter={v => new Date(v + "T00:00:00").toLocaleDateString("en", { month: "short", day: "numeric" })} />
+                  <YAxis tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={false} tickLine={false} width={36} />
+                  <Tooltip content={<ChartTooltip />} />
+                  <Area type="monotone" dataKey="pageviews" name="Pageviews" stroke="#2563EB" strokeWidth={2} fill="url(#gradPV)" dot={false} />
+                  <Area type="monotone" dataKey="visitors" name="Visitors" stroke="#059669" strokeWidth={2} fill="url(#gradV)" dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+              <div className="flex justify-center gap-6 mt-2">
+                {[["Pageviews", "#2563EB"], ["Visitors", "#059669"]].map(([l, c]) => (
+                  <div key={l} className="flex items-center gap-1.5">
+                    <div className="h-2.5 w-2.5 rounded-sm" style={{ background: c }} />
+                    <span className="text-[11px] text-slate-400">{l}</span>
+                  </div>
+                ))}
+              </div>
+            </Section>
+
+            {/* Activity Heatmap */}
+            <Section title="Activity Heatmap" icon={Clock}>
+              <Heatmap data={data.heatmap} />
+            </Section>
+
+            {/* Bottom grid: Devices / Browsers / OS */}
+            <div className="grid gap-4 md:grid-cols-3">
+              <Section title="Devices" icon={Monitor}>
+                <HBar data={data.devices.map(d => ({ label: d.device || "Unknown", value: d.users }))} total={deviceTotal} color="#2563EB" />
+              </Section>
+              <Section title="Browsers" icon={Globe}>
+                <HBar data={data.browsers.map(d => ({ label: d.browser, value: d.users }))} total={browserTotal} color="#7C3AED" />
+              </Section>
+              <Section title="Operating Systems" icon={Smartphone}>
+                <HBar data={data.os.map(d => ({ label: d.os, value: d.users }))} total={osTotal} color="#059669" />
+              </Section>
+            </div>
+          </div>
+        )}
+
+        {data && tab === "content" && (
+          <div className="space-y-6">
+            {/* Top Pages */}
+            <Section title="Top Pages" icon={Eye}>
+              <div className="divide-y divide-slate-100">
+                {data.topPages.map((p, i) => (
+                  <div key={p.page} className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <span className="text-[11px] text-slate-300 w-5 text-right tabular-nums">{i + 1}</span>
+                      <span className="text-[13px] text-slate-700 truncate">{p.page}</span>
+                    </div>
+                    <div className="flex items-center gap-4 flex-shrink-0 ml-4">
+                      <span className="text-[12px] text-slate-400 tabular-nums">{fmtNum(p.unique)} unique</span>
+                      <span className="text-[13px] font-semibold text-slate-900 tabular-nums w-12 text-right">{fmtNum(p.views)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Section>
+
+            {/* Entry / Exit pages side by side */}
+            <div className="grid gap-4 md:grid-cols-2">
+              <Section title="Entry Pages" icon={LogIn}>
+                <div className="divide-y divide-slate-100">
+                  {data.entryPages.map(p => (
+                    <div key={p.page} className="flex items-center justify-between py-2 first:pt-0 last:pb-0">
+                      <span className="text-[12px] text-slate-600 truncate pr-3">{p.page}</span>
+                      <span className="text-[12px] font-medium text-slate-900 tabular-nums">{p.entries}</span>
+                    </div>
+                  ))}
+                </div>
+              </Section>
+              <Section title="Exit Pages" icon={LogOut}>
+                <div className="divide-y divide-slate-100">
+                  {data.exitPages.map(p => (
+                    <div key={p.page} className="flex items-center justify-between py-2 first:pt-0 last:pb-0">
+                      <span className="text-[12px] text-slate-600 truncate pr-3">{p.page}</span>
+                      <span className="text-[12px] font-medium text-slate-900 tabular-nums">{p.exits}</span>
+                    </div>
+                  ))}
+                </div>
+              </Section>
+            </div>
+          </div>
+        )}
+
+        {data && tab === "acquisition" && (
+          <div className="space-y-6">
+            {/* Referrers */}
+            <Section title="Referrers" icon={ExternalLink}>
+              <div className="divide-y divide-slate-100">
+                {data.referrers.map(r => (
+                  <div key={r.referrer} className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
+                    <span className="text-[13px] text-slate-700 truncate pr-3">{r.referrer}</span>
+                    <div className="flex items-center gap-4 flex-shrink-0">
+                      <span className="text-[12px] text-slate-400 tabular-nums">{r.unique} unique</span>
+                      <span className="text-[13px] font-semibold text-slate-900 tabular-nums w-10 text-right">{r.visits}</span>
+                    </div>
+                  </div>
+                ))}
+                {data.referrers.length === 0 && <p className="text-[13px] text-slate-400 py-4 text-center">No referrer data yet</p>}
+              </div>
+            </Section>
+
+            {/* Countries */}
+            <Section title="Countries" icon={Globe}>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {data.countries.map(c => (
+                  <div key={c.code} className="flex items-center gap-2.5 rounded-lg bg-slate-50 px-3 py-2.5">
+                    <span className="text-[16px]">{FLAGS[c.code] || "🌍"}</span>
+                    <span className="text-[13px] text-slate-700 flex-1">{c.name}</span>
+                    <span className="text-[13px] font-semibold text-slate-900 tabular-nums">{c.visitors}</span>
+                  </div>
+                ))}
+                {data.countries.length === 0 && <p className="text-[13px] text-slate-400 py-4 text-center col-span-2">No country data yet</p>}
+              </div>
+            </Section>
+
+            {/* UTM campaigns */}
+            {data.utm.length > 0 && (
+              <Section title="UTM Campaigns" icon={BarChart3}>
+                <div className="divide-y divide-slate-100">
+                  {data.utm.map((u, i) => (
+                    <div key={i} className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
+                      <div className="min-w-0 flex-1">
+                        <span className="text-[13px] font-medium text-slate-700">{u.source}</span>
+                        {u.medium && <span className="text-[11px] text-slate-400 ml-2">/ {u.medium}</span>}
+                        {u.campaign && <span className="text-[11px] text-slate-400 ml-1">/ {u.campaign}</span>}
+                      </div>
+                      <span className="text-[13px] font-semibold text-slate-900 tabular-nums ml-3">{u.visitors}</span>
+                    </div>
+                  ))}
+                </div>
+              </Section>
+            )}
+          </div>
+        )}
+
+        {data && tab === "sessions" && (
+          <div className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-3">
+              <KpiCard icon={Activity} label="Total Sessions" value={fmtNum(data.overview.sessions)} color="#7C3AED" />
+              <KpiCard icon={ArrowDownRight} label="Bounce Rate" value={`${data.overview.bounceRate}%`} sub="Single-page sessions" color="#DC2626" />
+              <KpiCard icon={Clock} label="Avg Duration" value={fmtDuration(data.overview.avgDuration)} sub={`${data.overview.pagesPerSession} pages per session`} color="#0891B2" />
+            </div>
+
+            {/* Session duration distribution as bar chart */}
+            <Section title="Devices by Sessions" icon={Monitor}>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={data.devices.map(d => ({ name: d.device || "Unknown", sessions: d.users }))}>
+                  <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#64748b" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={false} tickLine={false} width={36} />
+                  <Tooltip content={<ChartTooltip />} />
+                  <Bar dataKey="sessions" name="Sessions" fill="#7C3AED" radius={[6, 6, 0, 0]} opacity={0.85} />
+                </BarChart>
+              </ResponsiveContainer>
+            </Section>
+
+            {/* OS breakdown */}
+            <Section title="Operating Systems" icon={Smartphone}>
+              <HBar data={data.os.map(d => ({ label: d.os, value: d.users }))} total={osTotal} color="#059669" />
+            </Section>
+          </div>
+        )}
+
+        {/* PostHog attribution */}
+        <p className="text-center text-[11px] text-slate-300 mt-8">
+          PostHog EU · Last {days} days ·{" "}
+          <button onClick={() => { setLoading(true); fetch(`/api/posthog?days=${days}`).then(r => r.json()).then(setData).finally(() => setLoading(false)); }}
+            className="underline hover:text-slate-400 transition-colors">
+            Refresh
+          </button>
+        </p>
+      </div>
     </div>
   );
 }
