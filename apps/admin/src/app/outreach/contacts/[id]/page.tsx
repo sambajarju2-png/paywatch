@@ -27,6 +27,8 @@ import {
   FileText,
   X,
   Paperclip,
+  Copy,
+  ClipboardCheck,
 } from "lucide-react";
 
 /* ── types ── */
@@ -400,6 +402,11 @@ export default function ContactDetailPage() {
         )}
       </div>
 
+      {/* ── Template Variables ── */}
+      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 mb-4 md:mb-6">
+        <TemplateVariables contact={contact} />
+      </div>
+
       {/* ── Tabs ── */}
       <div className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-700 mb-6">
         {(["timeline", "emails", "details"] as const).map((t) => (
@@ -702,6 +709,81 @@ export default function ContactDetailPage() {
           onSent={() => { setShowEmailCompose(false); fetchData(); }}
         />
       )}
+    </div>
+  );
+}
+
+/* ── Template Variables ── */
+function TemplateVariables({ contact }: { contact: Contact }) {
+  const [copied, setCopied] = useState<string | null>(null);
+  const [copiedAll, setCopiedAll] = useState(false);
+
+  const vars: { key: string; value: string }[] = [
+    { key: "{{voornaam}}", value: contact.first_name || contact.contact_person?.split(" ")[0] || "" },
+    { key: "{{achternaam}}", value: contact.last_name || contact.contact_person?.split(" ").slice(1).join(" ") || "" },
+    { key: "{{volledige_naam}}", value: contact.contact_person || `${contact.first_name || ""} ${contact.last_name || ""}`.trim() },
+    { key: "{{bedrijf}}", value: contact.organization_name },
+    { key: "{{email}}", value: contact.contact_email || contact.general_email || "" },
+    { key: "{{website}}", value: contact.website || "" },
+    { key: "{{functie}}", value: contact.contact_role || "" },
+    { key: "{{stad}}", value: contact.city || "" },
+  ].filter(v => v.value);
+
+  function copyVar(key: string, value: string) {
+    navigator.clipboard.writeText(value);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 1500);
+  }
+
+  function copyAllVars() {
+    const text = vars.map(v => `${v.key} = ${v.value}`).join("\n");
+    navigator.clipboard.writeText(text);
+    setCopiedAll(true);
+    setTimeout(() => setCopiedAll(false), 1500);
+  }
+
+  function copyFilledTemplate() {
+    // Copy a pre-filled email body with all variables replaced
+    const template = `Beste ${vars.find(v => v.key === "{{voornaam}}")?.value || ""},\n\n[Je bericht hier]\n\nGroet,\nSamba Jarju\nCo-founder & CTO, PayWatch\npaywatch.app`;
+    navigator.clipboard.writeText(template);
+    setCopiedAll(true);
+    setTimeout(() => setCopiedAll(false), 1500);
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Copy className="w-3.5 h-3.5 text-blue-500" />
+          <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Template variables</h3>
+        </div>
+        <button
+          onClick={copyAllVars}
+          className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 rounded-lg transition-colors dark:bg-blue-900/30 dark:text-blue-300"
+        >
+          {copiedAll ? <ClipboardCheck className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+          {copiedAll ? "Copied!" : "Copy all"}
+        </button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {vars.map(v => (
+          <button
+            key={v.key}
+            onClick={() => copyVar(v.key, v.value)}
+            className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all cursor-pointer"
+            title={`Click to copy: ${v.value}`}
+          >
+            <code className="text-[11px] font-mono text-blue-600 dark:text-blue-400">{v.key}</code>
+            <span className="text-[11px] text-slate-400">=</span>
+            <span className="text-[11px] font-medium text-slate-700 dark:text-slate-300 max-w-[150px] truncate">{v.value}</span>
+            {copied === v.key ? (
+              <ClipboardCheck className="w-3 h-3 text-green-500 shrink-0" />
+            ) : (
+              <Copy className="w-3 h-3 text-slate-300 group-hover:text-blue-400 shrink-0 transition-colors" />
+            )}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
