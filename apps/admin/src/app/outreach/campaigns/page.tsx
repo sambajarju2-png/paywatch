@@ -27,6 +27,9 @@ interface Campaign {
   from_email: string;
   from_accounts: string[];
   campaign_brief: string;
+  campaign_mode?: string;
+  email_subject?: string;
+  email_body?: string;
   tone: string;
   language: string;
   sequence_steps: { day: number; type: string }[];
@@ -85,6 +88,8 @@ export default function OutreachCampaigns() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
+  const [sendingId, setSendingId] = useState<string | null>(null);
+  const [sendResult, setSendResult] = useState<{ sent: number; failed: number } | null>(null);
   const [genResult, setGenResult] = useState<{
     generated: number;
     errors: number;
@@ -146,6 +151,31 @@ export default function OutreachCampaigns() {
     }
   }
 
+  async function handleBulkSend(campaignId: string) {
+    if (!confirm("Send this campaign to all matching contacts now?")) return;
+    setSendingId(campaignId);
+    setSendResult(null);
+    try {
+      const res = await fetch("/api/admin/outreach/campaigns/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ campaign_id: campaignId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSendResult({ sent: data.sent, failed: data.failed });
+        fetchCampaigns();
+        setTimeout(() => setSendResult(null), 5000);
+      } else {
+        alert(data.error || "Send failed");
+      }
+    } catch {
+      alert("Bulk send failed");
+    } finally {
+      setSendingId(null);
+    }
+  }
+
   async function handleGenerate(campaignId: string) {
     setGeneratingId(campaignId);
     setGenResult(null);
@@ -178,6 +208,18 @@ export default function OutreachCampaigns() {
           </span>
           {genResult.errors > 0 && (
             <span className="text-pw-red">({genResult.errors} errors)</span>
+          )}
+        </div>
+      )}
+
+      {sendResult && (
+        <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-2.5 text-xs">
+          <Send size={14} className="text-emerald-600" />
+          <span className="text-emerald-700 font-semibold">
+            Sent {sendResult.sent} emails
+          </span>
+          {sendResult.failed > 0 && (
+            <span className="text-pw-red">({sendResult.failed} failed)</span>
           )}
         </div>
       )}
@@ -256,19 +298,35 @@ export default function OutreachCampaigns() {
                     )}
                   </div>
                   <div className="flex gap-1">
-                    <button
-                      onClick={() => handleGenerate(c.id)}
-                      disabled={isGenerating}
-                      className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-semibold rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors disabled:opacity-50"
-                      title="Generate emails with Claude"
-                    >
-                      {isGenerating ? (
-                        <Loader2 size={10} className="animate-spin" />
-                      ) : (
-                        <Sparkles size={10} />
-                      )}
-                      {isGenerating ? "Generating..." : "Generate"}
-                    </button>
+                    {c.campaign_mode === "manual" ? (
+                      <button
+                        onClick={() => handleBulkSend(c.id)}
+                        disabled={sendingId === c.id}
+                        className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-semibold rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors disabled:opacity-50"
+                        title="Send to all matching contacts"
+                      >
+                        {sendingId === c.id ? (
+                          <Loader2 size={10} className="animate-spin" />
+                        ) : (
+                          <Send size={10} />
+                        )}
+                        {sendingId === c.id ? "Sending..." : "Send Now"}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleGenerate(c.id)}
+                        disabled={isGenerating}
+                        className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-semibold rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors disabled:opacity-50"
+                        title="Generate emails with Claude"
+                      >
+                        {isGenerating ? (
+                          <Loader2 size={10} className="animate-spin" />
+                        ) : (
+                          <Sparkles size={10} />
+                        )}
+                        {isGenerating ? "Generating..." : "Generate"}
+                      </button>
+                    )}
                     {c.status === "draft" && (
                       <button
                         onClick={() => handleStatusChange(c.id, "active")}
@@ -410,7 +468,10 @@ function NewCampaignModal({
     target_type: "",
     target_tags: [] as string[],
     from_accounts: [accounts[0]?.email || "samba@paywatch.nl"],
+    campaign_mode: "manual" as "ai" | "manual",
     campaign_brief: "",
+    email_subject: "",
+    email_body: "",
     tone: "professional_warm",
     language: "nl",
     steps: [
@@ -488,8 +549,9 @@ function NewCampaignModal({
   }
 
   async function handleCreate() {
-    if (!form.name || !form.campaign_brief || form.from_accounts.length === 0)
-      return;
+    if (!form.name || form.from_accounts.length === 0) return;
+    if (form.campaign_mode === "ai" && !form.campaign_brief) return;
+    if (form.campaign_mode === "manual" && (!form.email_subject || !form.email_body)) return;
     setSaving(true);
     try {
       const primaryEmail = form.from_accounts[0];
@@ -506,10 +568,13 @@ function NewCampaignModal({
           from_email: primaryEmail,
           from_name: primaryAccount?.display_name || "Samba Jarju",
           reply_to: primaryEmail,
-          campaign_brief: form.campaign_brief,
+          campaign_mode: form.campaign_mode,
+          campaign_brief: form.campaign_mode === "ai" ? form.campaign_brief : null,
+          email_subject: form.campaign_mode === "manual" ? form.email_subject : null,
+          email_body: form.campaign_mode === "manual" ? form.email_body : null,
           tone: form.tone,
           language: form.language,
-          sequence_steps: form.steps,
+          sequence_steps: form.campaign_mode === "ai" ? form.steps : [],
         }),
       });
       if (res.ok) onCreated();
@@ -715,42 +780,111 @@ function NewCampaignModal({
             )}
           </div>
 
-          {/* Tone */}
+          {/* Mode toggle */}
           <div>
-            <label className={labelClass}>Tone</label>
-            <select
-              value={form.tone}
-              onChange={(e) => setForm({ ...form, tone: e.target.value })}
-              className={selectClass}
-            >
-              {TONES.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
+            <label className={labelClass}>Campaign type</label>
+            <div className="flex gap-1 p-1 bg-gray-100 rounded-lg">
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, campaign_mode: "manual" })}
+                className={`flex-1 px-3 py-2 text-xs font-semibold rounded-md transition-all ${
+                  form.campaign_mode === "manual"
+                    ? "bg-white text-pw-navy shadow-sm"
+                    : "text-pw-muted hover:text-pw-text"
+                }`}
+              >
+                ✉️ Manual template
+              </button>
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, campaign_mode: "ai" })}
+                className={`flex-1 px-3 py-2 text-xs font-semibold rounded-md transition-all ${
+                  form.campaign_mode === "ai"
+                    ? "bg-white text-pw-navy shadow-sm"
+                    : "text-pw-muted hover:text-pw-text"
+                }`}
+              >
+                <Sparkles size={10} className="inline mr-1 text-purple-500" />
+                AI generated
+              </button>
+            </div>
           </div>
 
-          {/* Campaign brief */}
-          <div>
-            <label className={labelClass}>
-              <Sparkles size={10} className="inline mr-1 text-purple-500" />
-              AI Campaign Brief
-            </label>
-            <textarea
-              value={form.campaign_brief}
-              onChange={(e) =>
-                setForm({ ...form, campaign_brief: e.target.value })
-              }
-              rows={4}
-              placeholder="Tell Claude what you want to achieve. E.g.: 'Introduce PayWatch to tech journalists as a Dutch fintech solving debt escalation. Mention our AI email scanning, 10k+ users, and social impact angle. Ask if they'd be open to a quick chat or demo.'"
-              className={`${inputClass} resize-none`}
-            />
-            <p className="text-[10px] text-pw-muted mt-1">
-              Claude will use this + each contact&apos;s AI research to write
-              personalized emails
-            </p>
-          </div>
+          {form.campaign_mode === "manual" ? (
+            <>
+              {/* Subject template */}
+              <div>
+                <label className={labelClass}>Email subject</label>
+                <input
+                  value={form.email_subject}
+                  onChange={(e) => setForm({ ...form, email_subject: e.target.value })}
+                  placeholder="e.g. Kort gesprek over financiële toegankelijkheid, {{voornaam}}?"
+                  className={inputClass}
+                />
+              </div>
+
+              {/* Body template */}
+              <div>
+                <label className={labelClass}>Email body</label>
+                <textarea
+                  value={form.email_body}
+                  onChange={(e) => setForm({ ...form, email_body: e.target.value })}
+                  rows={8}
+                  placeholder={"Beste {{voornaam}},\n\nIk zou graag met je in gesprek gaan over iets dat ik bouw bij {{bedrijf}}...\n\nGroet,\nSamba"}
+                  className={`${inputClass} resize-none`}
+                />
+                <p className="text-[10px] text-pw-muted mt-1">
+                  Variables: <code className="text-blue-500">{"{{voornaam}}"}</code>{" "}
+                  <code className="text-blue-500">{"{{achternaam}}"}</code>{" "}
+                  <code className="text-blue-500">{"{{bedrijf}}"}</code>{" "}
+                  <code className="text-blue-500">{"{{email}}"}</code>{" "}
+                  <code className="text-blue-500">{"{{functie}}"}</code>{" "}
+                  <code className="text-blue-500">{"{{stad}}"}</code>{" "}
+                  <code className="text-blue-500">{"{{website}}"}</code>{" "}
+                  — auto-replaced per contact on send
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Tone */}
+              <div>
+                <label className={labelClass}>Tone</label>
+                <select
+                  value={form.tone}
+                  onChange={(e) => setForm({ ...form, tone: e.target.value })}
+                  className={selectClass}
+                >
+                  {TONES.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Campaign brief */}
+              <div>
+                <label className={labelClass}>
+                  <Sparkles size={10} className="inline mr-1 text-purple-500" />
+                  AI Campaign Brief
+                </label>
+                <textarea
+                  value={form.campaign_brief}
+                  onChange={(e) =>
+                    setForm({ ...form, campaign_brief: e.target.value })
+                  }
+                  rows={4}
+                  placeholder="Tell Claude what you want to achieve. E.g.: 'Introduce PayWatch to tech journalists...'"
+                  className={`${inputClass} resize-none`}
+                />
+                <p className="text-[10px] text-pw-muted mt-1">
+                  Claude will use this + each contact&apos;s AI research to write
+                  personalized emails
+                </p>
+              </div>
+            </>
+          )}
 
           {/* Email sequence */}
           <div>
