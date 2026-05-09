@@ -1006,12 +1006,29 @@ function EmailComposeModal({ contact, onClose, onSent }: {
     setSending(true);
     setError(null);
     try {
-      const html = bodyHtml.replace(/\n/g, "<br/>");
+      // Replace template variables
+      const vars: Record<string, string> = {
+        "{{voornaam}}": contact.first_name || contact.contact_person?.split(" ")[0] || "",
+        "{{achternaam}}": contact.last_name || contact.contact_person?.split(" ").slice(1).join(" ") || "",
+        "{{volledige_naam}}": contact.contact_person || `${contact.first_name || ""} ${contact.last_name || ""}`.trim(),
+        "{{bedrijf}}": contact.organization_name || "",
+        "{{email}}": contact.contact_email || contact.general_email || "",
+        "{{website}}": contact.website || "",
+        "{{functie}}": contact.contact_role || "",
+        "{{stad}}": contact.city || "",
+      };
+      let filledBody = bodyHtml;
+      let filledSubject = subject.trim();
+      for (const [key, val] of Object.entries(vars)) {
+        filledBody = filledBody.split(key).join(val);
+        filledSubject = filledSubject.split(key).join(val);
+      }
+      const html = filledBody.replace(/\n/g, "<br/>");
       const formData = new FormData();
       formData.append("sender", sender);
       formData.append("to_email", toEmail);
       if (toName) formData.append("to_name", toName);
-      formData.append("subject", subject.trim());
+      formData.append("subject", filledSubject);
       formData.append("body_html", html);
       if (contact.id) formData.append("contact_id", contact.id);
       for (const file of attachments) {
@@ -1123,7 +1140,10 @@ function EmailComposeModal({ contact, onClose, onSent }: {
                 <textarea value={bodyHtml} onChange={(e) => setBodyHtml(e.target.value)}
                   rows={8}
                   className="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:outline-none focus:border-blue-500 resize-none text-slate-900 dark:text-white"
-                  placeholder="Write your message..." />
+                  placeholder="Write your message... Use {{voornaam}}, {{bedrijf}} etc." />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Variables: <code className="text-blue-500">{"{{voornaam}}"}</code> <code className="text-blue-500">{"{{achternaam}}"}</code> <code className="text-blue-500">{"{{bedrijf}}"}</code> <code className="text-blue-500">{"{{email}}"}</code> <code className="text-blue-500">{"{{functie}}"}</code> <code className="text-blue-500">{"{{stad}}"}</code> <code className="text-blue-500">{"{{website}}"}</code> — auto-replaced on send
+                </p>
               </div>
 
               {/* Attachments */}
