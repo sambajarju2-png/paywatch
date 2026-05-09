@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   Plus,
   Send,
@@ -15,6 +15,9 @@ import {
   MessageSquare,
   Tag,
   Check,
+  Link2,
+  Bold,
+  Paperclip,
 } from "lucide-react";
 
 interface Campaign {
@@ -462,6 +465,9 @@ function NewCampaignModal({
   onCreated: () => void;
 }) {
   const [saving, setSaving] = useState(false);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -472,6 +478,7 @@ function NewCampaignModal({
     campaign_brief: "",
     email_subject: "",
     email_body: "",
+    attachments: [] as { name: string; path: string; size: number }[],
     tone: "professional_warm",
     language: "nl",
     steps: [
@@ -572,6 +579,7 @@ function NewCampaignModal({
           campaign_brief: form.campaign_mode === "ai" ? form.campaign_brief : null,
           email_subject: form.campaign_mode === "manual" ? form.email_subject : null,
           email_body: form.campaign_mode === "manual" ? form.email_body : null,
+          attachments: form.attachments.length > 0 ? form.attachments : [],
           tone: form.tone,
           language: form.language,
           sequence_steps: form.campaign_mode === "ai" ? form.steps : [],
@@ -823,16 +831,122 @@ function NewCampaignModal({
                 />
               </div>
 
-              {/* Body template */}
+              {/* Body template with toolbar */}
               <div>
                 <label className={labelClass}>Email body</label>
+                {/* Toolbar */}
+                <div className="flex items-center gap-1 mb-1.5 border border-pw-border rounded-t-lg px-2 py-1.5 bg-gray-50">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const url = prompt("URL (e.g. https://paywatch.app):");
+                      if (!url) return;
+                      const text = prompt("Link text:", url) || url;
+                      const link = `[${text}](${url})`;
+                      const el = bodyRef.current;
+                      if (el) {
+                        const start = el.selectionStart;
+                        const end = el.selectionEnd;
+                        const val = form.email_body;
+                        setForm({ ...form, email_body: val.slice(0, start) + link + val.slice(end) });
+                        setTimeout(() => { el.focus(); el.setSelectionRange(start + link.length, start + link.length); }, 50);
+                      } else {
+                        setForm({ ...form, email_body: form.email_body + link });
+                      }
+                    }}
+                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-pw-muted hover:text-pw-blue hover:bg-blue-50 rounded transition-colors"
+                    title="Insert link"
+                  >
+                    <Link2 size={12} /> Link
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const el = bodyRef.current;
+                      if (!el) return;
+                      const start = el.selectionStart;
+                      const end = el.selectionEnd;
+                      const selected = form.email_body.slice(start, end);
+                      const bold = `**${selected || "tekst"}**`;
+                      const val = form.email_body;
+                      setForm({ ...form, email_body: val.slice(0, start) + bold + val.slice(end) });
+                      setTimeout(() => { el.focus(); }, 50);
+                    }}
+                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-pw-muted hover:text-pw-blue hover:bg-blue-50 rounded transition-colors"
+                    title="Bold text"
+                  >
+                    <Bold size={12} /> Bold
+                  </button>
+                  <div className="flex-1" />
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.gif,.csv,.xlsx"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const files = Array.from(e.target.files || []);
+                      if (files.length === 0) return;
+                      setUploadingFiles(true);
+                      const newAttachments = [...form.attachments];
+                      for (const file of files) {
+                        if (newAttachments.length >= 5) break;
+                        try {
+                          const formData = new FormData();
+                          formData.append("file", file);
+                          const res = await fetch("/api/admin/outreach/upload-attachment", {
+                            method: "POST",
+                            body: formData,
+                          });
+                          if (res.ok) {
+                            const data = await res.json();
+                            newAttachments.push({ name: file.name, path: data.path, size: file.size });
+                          }
+                        } catch { console.error("Upload failed:", file.name); }
+                      }
+                      setForm({ ...form, attachments: newAttachments });
+                      setUploadingFiles(false);
+                      if (fileRef.current) fileRef.current.value = "";
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    disabled={uploadingFiles || form.attachments.length >= 5}
+                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-pw-muted hover:text-pw-blue hover:bg-blue-50 rounded transition-colors disabled:opacity-40"
+                    title="Attach file"
+                  >
+                    {uploadingFiles ? <Loader2 size={12} className="animate-spin" /> : <Paperclip size={12} />}
+                    Attach
+                  </button>
+                </div>
                 <textarea
+                  ref={bodyRef}
                   value={form.email_body}
                   onChange={(e) => setForm({ ...form, email_body: e.target.value })}
                   rows={8}
-                  placeholder={"Beste {{voornaam}},\n\nIk zou graag met je in gesprek gaan over iets dat ik bouw bij {{bedrijf}}...\n\nGroet,\nSamba"}
-                  className={`${inputClass} resize-none`}
+                  placeholder={"Beste {{voornaam}},\n\nIk zou graag met je in gesprek gaan over iets dat ik bouw bij {{bedrijf}}...\n\nBekijk onze website: [PayWatch](https://paywatch.app)\n\nGroet,\nSamba"}
+                  className={`${inputClass} resize-none rounded-t-none border-t-0`}
                 />
+                {/* Attachments list */}
+                {form.attachments.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {form.attachments.map((att, i) => (
+                      <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-50 border border-gray-200 text-[10px]">
+                        <Paperclip size={10} className="text-blue-500" />
+                        <span className="text-pw-text font-medium truncate max-w-[120px]">{att.name}</span>
+                        <span className="text-pw-muted">{(att.size / 1024).toFixed(0)}KB</span>
+                        <button
+                          type="button"
+                          onClick={() => setForm({ ...form, attachments: form.attachments.filter((_, idx) => idx !== i) })}
+                          className="text-pw-muted hover:text-red-500 transition-colors"
+                        >
+                          <X size={10} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <p className="text-[10px] text-pw-muted mt-1">
                   Variables: <code className="text-blue-500">{"{{voornaam}}"}</code>{" "}
                   <code className="text-blue-500">{"{{achternaam}}"}</code>{" "}
@@ -841,7 +955,8 @@ function NewCampaignModal({
                   <code className="text-blue-500">{"{{functie}}"}</code>{" "}
                   <code className="text-blue-500">{"{{stad}}"}</code>{" "}
                   <code className="text-blue-500">{"{{website}}"}</code>{" "}
-                  — auto-replaced per contact on send
+                  · Links: <code className="text-blue-500">[text](url)</code>{" "}
+                  · Bold: <code className="text-blue-500">**text**</code>
                 </p>
               </div>
             </>

@@ -75,6 +75,7 @@ export async function POST(req: NextRequest) {
         campaign_mode: body.campaign_mode || "ai",
         email_subject: body.email_subject || null,
         email_body: body.email_body || null,
+        attachments: body.attachments || [],
         sequence_steps: body.sequence_steps || [],
         status: "draft",
         total_contacts: count || 0,

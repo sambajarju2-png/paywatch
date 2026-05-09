@@ -33,6 +33,17 @@ function replaceVars(template: string, contact: Record<string, unknown>): string
   return result;
 }
 
+function markdownToHtml(text: string): string {
+  let html = text;
+  // Convert [text](url) to <a> tags
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color:#2563EB;text-decoration:underline;">$1</a>');
+  // Convert **text** to <strong>
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  // Convert newlines to <br/>
+  html = html.replace(/\n/g, "<br/>");
+  return html;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const supabase = createServiceRoleClient();
@@ -115,13 +126,28 @@ export async function POST(req: NextRequest) {
     let sent = 0;
     let failed = 0;
 
+    // Download attachments from storage once (reuse for all contacts)
+    const attachmentBuffers: { name: string; buffer: Buffer; type: string }[] = [];
+    const campaignAttachments = (campaign.attachments || []) as { name: string; path: string }[];
+    for (const att of campaignAttachments) {
+      try {
+        const { data, error } = await supabase.storage
+          .from("email-attachments")
+          .download(att.path);
+        if (data && !error) {
+          const buffer = Buffer.from(await data.arrayBuffer());
+          attachmentBuffers.push({ name: att.name, buffer, type: data.type || "application/octet-stream" });
+        }
+      } catch { console.error("Failed to download attachment:", att.path); }
+    }
+
     // 5. Send emails with delay
     for (const contact of toSend) {
       const toEmail = contact.contact_email || contact.general_email;
       if (!toEmail) { failed++; continue; }
 
       const filledSubject = replaceVars(campaign.email_subject, contact);
-      const filledBody = replaceVars(campaign.email_body, contact).replace(/\n/g, "<br/>");
+      const filledBody = markdownToHtml(replaceVars(campaign.email_body, contact));
       const fullHtml = `<div style="font-family:'Plus Jakarta Sans',Arial,sans-serif;font-size:14px;color:#0F172A;line-height:1.6;">${filledBody}${signature}</div>`;
 
       const emailLogId = crypto.randomUUID();
@@ -138,6 +164,11 @@ export async function POST(req: NextRequest) {
       form.append("o:tag", `campaign-${campaign_id}`);
       form.append("v:email_log_id", emailLogId);
       form.append("v:contact_id", contact.id);
+
+      // Add attachments
+      for (const att of attachmentBuffers) {
+        form.append("attachment", new Blob([att.buffer], { type: att.type }), att.name);
+      }
 
       try {
         const res = await fetch(
