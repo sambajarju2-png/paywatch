@@ -52,6 +52,7 @@ export async function GET(req: NextRequest) {
     heatmapRes,
     entryPagesRes,
     exitPagesRes,
+    pageFlowsRes,
     utmRes,
   ] = await Promise.all([
     // 1. Overview metrics
@@ -199,7 +200,26 @@ export async function GET(req: NextRequest) {
       ) GROUP BY page ORDER BY exits DESC LIMIT 10
     `),
 
-    // 13. UTM
+    // 13. Page flows (from → to)
+    phQuery(`
+      SELECT
+        replaceRegexpAll(from_page, '\\?.*', '') as from_path,
+        replaceRegexpAll(to_page, '\\?.*', '') as to_path,
+        count() as flow_count
+      FROM (
+        SELECT
+          properties.\$session_id as sid,
+          properties.\$pathname as to_page,
+          lagInFrame(properties.\$pathname, 1) OVER (PARTITION BY properties.\$session_id ORDER BY timestamp) as from_page
+        FROM events
+        WHERE event = '\$pageview' AND timestamp > now() - ${interval}
+          AND properties.\$session_id IS NOT NULL
+      )
+      WHERE from_page IS NOT NULL AND from_page != to_page
+      GROUP BY from_path, to_path ORDER BY flow_count DESC LIMIT 15
+    `),
+
+    // 14. UTM
     phQuery(`
       SELECT
         properties.utm_source as source,
@@ -271,6 +291,11 @@ export async function GET(req: NextRequest) {
     exitPages: exitPagesRes.results.map(r => ({
       page: String(r[0]),
       exits: Number(r[1]),
+    })),
+    pageFlows: pageFlowsRes.results.map(r => ({
+      from: String(r[0]),
+      to: String(r[1]),
+      count: Number(r[2]),
     })),
     utm: utmRes.results.map(r => ({
       source: String(r[0]),
