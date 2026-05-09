@@ -1067,9 +1067,10 @@ function NewCampaignModal({
             onClick={handleCreate}
             disabled={
               !form.name ||
-              !form.campaign_brief ||
               form.from_accounts.length === 0 ||
-              saving
+              saving ||
+              (form.campaign_mode === "ai" && !form.campaign_brief) ||
+              (form.campaign_mode === "manual" && (!form.email_subject || !form.email_body))
             }
             className="flex-1 px-3 py-2.5 text-xs font-semibold rounded-lg bg-pw-blue text-white hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
           >
