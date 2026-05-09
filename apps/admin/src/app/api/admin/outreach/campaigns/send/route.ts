@@ -167,7 +167,7 @@ export async function POST(req: NextRequest) {
 
       // Add attachments
       for (const att of attachmentBuffers) {
-        form.append("attachment", new Blob([att.buffer], { type: att.type }), att.name);
+        form.append("attachment", new Blob([new Uint8Array(att.buffer)], { type: att.type }), att.name);
       }
 
       try {
