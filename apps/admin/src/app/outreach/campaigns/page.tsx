@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import Link from "next/link";
 import {
   Plus,
   Send,
@@ -296,9 +297,9 @@ export default function OutreachCampaigns() {
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-sm font-bold text-pw-navy">
+                      <Link href={`/outreach/campaigns/${c.id}`} className="text-sm font-bold text-pw-navy hover:text-pw-blue transition-colors">
                         {c.name}
-                      </h3>
+                      </Link>
                       <span
                         className={`px-2 py-0.5 rounded text-[10px] font-semibold ${style.bg} ${style.text}`}
                       >
