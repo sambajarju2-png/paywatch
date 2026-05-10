@@ -125,6 +125,9 @@ export async function POST(req: NextRequest) {
     const signature = SIGNATURES[senderEmail] || "";
     let sent = 0;
     let failed = 0;
+    const BATCH_SIZE = 10; // Send 10 per API call to stay under Vercel timeout
+    const DELAY_MS = 5000; // 5 seconds between emails (12/min)
+    const batch = toSend.slice(0, BATCH_SIZE);
 
     // Download attachments from storage once (reuse for all contacts)
     const attachmentBuffers: { name: string; buffer: Buffer; type: string }[] = [];
@@ -141,8 +144,8 @@ export async function POST(req: NextRequest) {
       } catch { console.error("Failed to download attachment:", att.path); }
     }
 
-    // 5. Send emails with delay
-    for (const contact of toSend) {
+    // 5. Send emails with delay (batch of 10)
+    for (const contact of batch) {
       const toEmail = contact.contact_email || contact.general_email;
       if (!toEmail) { failed++; continue; }
 
@@ -206,8 +209,10 @@ export async function POST(req: NextRequest) {
         failed++;
       }
 
-      // Rate limit: 200ms between emails
-      await new Promise(r => setTimeout(r, 200));
+      // Rate limit: 5 seconds between emails (12/min)
+      if (batch.indexOf(contact) < batch.length - 1) {
+        await new Promise(r => setTimeout(r, DELAY_MS));
+      }
     }
 
     // 6. Update campaign totals
@@ -221,11 +226,15 @@ export async function POST(req: NextRequest) {
       })
       .eq("id", campaign_id);
 
+    const remaining = toSend.length - batch.length;
+
     return NextResponse.json({
       sent,
       failed,
       skipped: alreadySent.size,
-      total: toSend.length,
+      total: batch.length,
+      remaining,
+      complete: remaining === 0,
     });
   } catch (err) {
     console.error("[Campaign Bulk Send]", err);

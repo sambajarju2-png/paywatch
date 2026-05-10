@@ -155,23 +155,32 @@ export default function OutreachCampaigns() {
   }
 
   async function handleBulkSend(campaignId: string) {
-    if (!confirm("Send this campaign to all matching contacts now?")) return;
+    if (!confirm("Send this campaign to all matching contacts? Emails will be sent at ~12 per minute to avoid spam filters.")) return;
     setSendingId(campaignId);
     setSendResult(null);
+    let totalSent = 0;
+    let totalFailed = 0;
+
     try {
-      const res = await fetch("/api/admin/outreach/campaigns/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ campaign_id: campaignId }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setSendResult({ sent: data.sent, failed: data.failed });
+      let hasMore = true;
+      while (hasMore) {
+        const res = await fetch("/api/admin/outreach/campaigns/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ campaign_id: campaignId }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          if (totalSent === 0) alert(data.error || "Send failed");
+          break;
+        }
+        totalSent += data.sent || 0;
+        totalFailed += data.failed || 0;
+        setSendResult({ sent: totalSent, failed: totalFailed });
         fetchCampaigns();
-        setTimeout(() => setSendResult(null), 5000);
-      } else {
-        alert(data.error || "Send failed");
+        hasMore = !data.complete && (data.remaining || 0) > 0;
       }
+      setTimeout(() => setSendResult(null), 8000);
     } catch {
       alert("Bulk send failed");
     } finally {
@@ -301,12 +310,12 @@ export default function OutreachCampaigns() {
                     )}
                   </div>
                   <div className="flex gap-1">
-                    {c.campaign_mode === "manual" ? (
+                    {c.campaign_mode === "manual" && c.total_sent < c.total_contacts ? (
                       <button
                         onClick={() => handleBulkSend(c.id)}
                         disabled={sendingId === c.id}
                         className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-semibold rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors disabled:opacity-50"
-                        title="Send to all matching contacts"
+                        title="Send to all matching contacts (1 per minute)"
                       >
                         {sendingId === c.id ? (
                           <Loader2 size={10} className="animate-spin" />
@@ -315,6 +324,10 @@ export default function OutreachCampaigns() {
                         )}
                         {sendingId === c.id ? "Sending..." : "Send Now"}
                       </button>
+                    ) : c.campaign_mode === "manual" && c.total_sent >= c.total_contacts ? (
+                      <span className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-semibold rounded-lg bg-emerald-50 text-emerald-700">
+                        <Check size={10} /> All sent
+                      </span>
                     ) : (
                       <button
                         onClick={() => handleGenerate(c.id)}
