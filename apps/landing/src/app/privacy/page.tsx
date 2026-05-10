@@ -7,7 +7,7 @@ import { siteConfig } from "@/lib/config";
 /* ── Tab 1: Existing Privacy Policy ── */
 const privacyContent = {
   nl: {
-    lastUpdated: "Laatst bijgewerkt: 25 april 2026",
+    lastUpdated: "Laatst bijgewerkt: 10 mei 2026",
     sections: [
       {
         title: "1. Wie zijn wij?",
@@ -49,7 +49,7 @@ Wij verkopen nooit je gegevens aan derden.`,
       },
       {
         title: "9. Cookies en tracking",
-        body: "PayWatch gebruikt geen tracking cookies en geen advertentiecookies. We slaan alleen je taalvoorkeur en thema-instelling op in localStorage. Dit zijn geen cookies en worden niet naar onze servers gestuurd.",
+        body: "PayWatch gebruikt geen tracking cookies en geen advertentiecookies. We slaan alleen je taalvoorkeur en thema-instelling op in localStorage. Dit zijn geen cookies en worden niet naar onze servers gestuurd. Op onze landingspagina (paywatch.app) gebruiken wij PostHog voor geanonimiseerde bezoekersstatistieken. PostHog draait in de EU en verzamelt geen persoonsgegevens. In de app zelf (app.paywatch.app) wordt geen analytics-tracking gebruikt.",
       },
       {
         title: "10. Wijzigingen",
@@ -58,7 +58,7 @@ Wij verkopen nooit je gegevens aan derden.`,
     ],
   },
   en: {
-    lastUpdated: "Last updated: April 25, 2026",
+    lastUpdated: "Last updated: May 10, 2026",
     sections: [
       {
         title: "1. Who are we?",
@@ -100,7 +100,7 @@ We never sell your data to third parties.`,
       },
       {
         title: "9. Cookies and tracking",
-        body: "PayWatch does not use tracking cookies or advertising cookies. We only store your language preference and theme setting in localStorage. These are not cookies and are not sent to our servers.",
+        body: "PayWatch does not use tracking cookies or advertising cookies. We only store your language preference and theme setting in localStorage. These are not cookies and are not sent to our servers. On our landing page (paywatch.app), we use PostHog for anonymized visitor statistics. PostHog runs in the EU and does not collect personal data. In the app itself (app.paywatch.app), no analytics tracking is used.",
       },
       {
         title: "10. Changes",
@@ -124,7 +124,7 @@ type DataSection = {
 
 const dataProcessingContent: Record<string, { lastUpdated: string; badge: string; sections: DataSection[]; flowTitle: string; flow: [string, "blue" | "red", string][] }> = {
   nl: {
-    lastUpdated: "Laatst bijgewerkt: 26 maart 2026",
+    lastUpdated: "Laatst bijgewerkt: 10 mei 2026",
     badge: "Het gebruik van informatie ontvangen via Google API's door PayWatch voldoet aan het Google API Services User Data Policy, inclusief de Limited Use-vereisten.",
     flowTitle: "Samenvatting gegevensstroom Gmail",
     flow: [
@@ -224,6 +224,8 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
               "Resend (e-mail) — alleen voor transactionele e-mails (wachtwoord reset, verificatie)",
               "Apple Push Notification service (APNs) — voor pushmeldingen op iOS-apparaten",
               "ElevenLabs (spraak-AI) — voor de PayBuddy spraakassistent, alleen wanneer je de spraakfunctie actief gebruikt",
+              "PostHog (website-analytics) — alleen op paywatch.app (de landingspagina). PostHog draait in de EU (eu.posthog.com). Wij tracken geen gebruikers in de app (app.paywatch.app). Er worden geen persoonsgegevens verzameld, alleen geanonimiseerde paginabezoeken",
+              "RevenueCat (abonnementenbeheer) — voor het beheren van iOS-abonnementen via de App Store. Wij ontvangen alleen abonnementsstatus, geen betalingsgegevens",
             ],
           },
         ],
@@ -301,7 +303,7 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
     ],
   },
   en: {
-    lastUpdated: "Last updated: March 26, 2026",
+    lastUpdated: "Last updated: May 10, 2026",
     badge: "PayWatch's use of information received from Google APIs adheres to the Google API Services User Data Policy, including the Limited Use requirements.",
     flowTitle: "Gmail data flow summary",
     flow: [
@@ -401,6 +403,8 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
               "Resend (email) — only for transactional emails (password reset, verification)",
               "Apple Push Notification service (APNs) — for push notifications on iOS devices",
               "ElevenLabs (voice AI) — for the PayBuddy voice assistant, only when you actively use the voice feature",
+              "PostHog (website analytics) — only on paywatch.app (the landing page). PostHog runs in the EU (eu.posthog.com). We do not track users in the app (app.paywatch.app). No personal data is collected, only anonymized page visits",
+              "RevenueCat (subscription management) — for managing iOS subscriptions via the App Store. We only receive subscription status, no payment details",
             ],
           },
         ],
