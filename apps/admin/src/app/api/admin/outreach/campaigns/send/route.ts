@@ -189,7 +189,6 @@ export async function POST(req: NextRequest) {
             id: emailLogId,
             contact_id: contact.id,
             campaign_id: campaign_id,
-            account_id: account.id,
             direction: "outbound",
             from_email: account.email,
             from_name: account.display_name,
