@@ -12,7 +12,7 @@ const T = {
       {
         id: "definities",
         title: "1. Definities",
-        body: `In deze voorwaarden wordt verstaan onder:\n\n"PayWatch": PayWatch, handelend onder Samba Finance, gevestigd te Rotterdam, KVK: ${siteConfig.company.kvk}.\n"Dienst": de PayWatch-applicatie (web en iOS), alle bijbehorende functionaliteiten, API's en het B2B-portaal.\n"Gebruiker": iedere natuurlijke persoon die een account aanmaakt en de Dienst gebruikt.\n"Organisatie": iedere rechtspersoon (gemeente, incassobureau, hulporganisatie) die het B2B-portaal gebruikt.\n"Persoonsgegevens": alle informatie die direct of indirect herleidbaar is tot een natuurlijk persoon, zoals bedoeld in de AVG.`,
+        body: `In deze voorwaarden wordt verstaan onder:\n\n"PayWatch": PayWatch, gevestigd te Rotterdam, KVK: ${siteConfig.company.kvk}.\n"Dienst": de PayWatch-applicatie (web en iOS), alle bijbehorende functionaliteiten, API's en het B2B-portaal.\n"Gebruiker": iedere natuurlijke persoon die een account aanmaakt en de Dienst gebruikt.\n"Organisatie": iedere rechtspersoon (gemeente, incassobureau, hulporganisatie) die het B2B-portaal gebruikt.\n"Persoonsgegevens": alle informatie die direct of indirect herleidbaar is tot een natuurlijk persoon, zoals bedoeld in de AVG.`,
       },
       {
         id: "toepasselijkheid",
@@ -47,7 +47,7 @@ const T = {
       {
         id: "ai-verwerking",
         title: "8. AI-verwerking en privacy",
-        body: "PayWatch maakt gebruik van AI-modellen voor het herkennen, classificeren en analyseren van rekeningen. Voor het scannen van foto's en e-mails gebruiken wij Mistral AI, zelf gehost via Scaleway in de EU (Parijs/Amsterdam). Je gegevens verlaten de Europese Unie niet voor scan- en analysedoeleinden. Wij trainen geen AI-modellen met jouw persoonlijke gegevens. AI-modellen ontvangen alleen de minimaal benodigde gegevens per verzoek.",
+        body: "PayWatch maakt gebruik van AI-modellen voor het herkennen, classificeren en analyseren van rekeningen. Voor het scannen van foto's en e-mails gebruiken wij Mistral AI Small, volledig zelf gehost op onze eigen serverinfrastructuur bij Scaleway in de EU (Parijs, Frankrijk). Dit betekent dat je gegevens onze eigen servers nooit verlaten. Er wordt geen gebruik gemaakt van externe AI-API's voor het verwerken van je foto's of e-mails. Je gegevens verlaten de Europese Unie niet. Wij trainen geen AI-modellen met jouw persoonlijke gegevens. AI-modellen ontvangen alleen de minimaal benodigde gegevens per verzoek. Na verwerking worden foto's en e-mailinhoud direct verwijderd en niet opgeslagen.",
       },
       {
         id: "abonnementen",
@@ -102,7 +102,7 @@ const T = {
       {
         id: "contact",
         title: "19. Contact",
-        body: `Voor vragen over deze voorwaarden kun je contact opnemen via:\n\nE-mail: ${siteConfig.company.emails.privacy}\nAdres: PayWatch (Samba Finance), Rotterdam, Nederland\nKVK: ${siteConfig.company.kvk}`,
+        body: `Voor vragen over deze voorwaarden kun je contact opnemen via:\n\nE-mail: ${siteConfig.company.emails.privacy}\nAdres: PayWatch, Rotterdam, Nederland\nKVK: ${siteConfig.company.kvk}`,
       },
     ],
   },
@@ -113,7 +113,7 @@ const T = {
       {
         id: "definitions",
         title: "1. Definitions",
-        body: `In these terms:\n\n"PayWatch": PayWatch, trading as Samba Finance, registered in Rotterdam, KVK: ${siteConfig.company.kvk}.\n"Service": the PayWatch application (web and iOS), all associated functionalities, APIs, and the B2B portal.\n"User": any natural person who creates an account and uses the Service.\n"Organization": any legal entity (municipality, collection agency, aid organization) that uses the B2B portal.\n"Personal data": all information that can be directly or indirectly traced to a natural person, as defined in the GDPR.`,
+        body: `In these terms:\n\n"PayWatch": PayWatch, registered in Rotterdam, KVK: ${siteConfig.company.kvk}.\n"Service": the PayWatch application (web and iOS), all associated functionalities, APIs, and the B2B portal.\n"User": any natural person who creates an account and uses the Service.\n"Organization": any legal entity (municipality, collection agency, aid organization) that uses the B2B portal.\n"Personal data": all information that can be directly or indirectly traced to a natural person, as defined in the GDPR.`,
       },
       {
         id: "applicability",
@@ -148,7 +148,7 @@ const T = {
       {
         id: "ai-processing",
         title: "8. AI processing and privacy",
-        body: "PayWatch uses AI models to recognize, classify, and analyze bills. For scanning photos and emails, we use Mistral AI, self-hosted via Scaleway in the EU (Paris/Amsterdam). Your data does not leave the European Union for scanning and analysis purposes. We do not train AI models with your personal data. AI models only receive the minimum data required per request.",
+        body: "PayWatch uses AI models to recognize, classify, and analyze bills. For scanning photos and emails, we use Mistral AI Small, fully self-hosted on our own server infrastructure at Scaleway in the EU (Paris, France). This means your data never leaves our own servers. No external AI APIs are used to process your photos or emails. Your data does not leave the European Union. We do not train AI models with your personal data. AI models only receive the minimum data required per request. After processing, photos and email content are immediately deleted and not stored.",
       },
       {
         id: "subscriptions",
@@ -203,7 +203,7 @@ const T = {
       {
         id: "contact",
         title: "19. Contact",
-        body: `For questions about these terms, contact us at:\n\nEmail: ${siteConfig.company.emails.privacy}\nAddress: PayWatch (Samba Finance), Rotterdam, Netherlands\nKVK: ${siteConfig.company.kvk}`,
+        body: `For questions about these terms, contact us at:\n\nEmail: ${siteConfig.company.emails.privacy}\nAddress: PayWatch, Rotterdam, Netherlands\nKVK: ${siteConfig.company.kvk}`,
       },
     ],
   },
@@ -310,7 +310,7 @@ export default function TermsPage() {
         </div>
 
         <p className="text-xs text-[var(--muted)] text-center mt-12">
-          © {new Date().getFullYear()} PayWatch — Samba Finance, Rotterdam, Netherlands
+          © {new Date().getFullYear()} PayWatch — PayWatch, Rotterdam, Netherlands
         </p>
       </div>
     </div>

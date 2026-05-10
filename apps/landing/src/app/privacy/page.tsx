@@ -630,7 +630,7 @@ export default function PrivacyPage() {
 
         {/* Footer */}
         <p className="text-xs text-[var(--muted)] text-center mt-12">
-          © {new Date().getFullYear()} PayWatch — Samba Finance, Rotterdam, Netherlands
+          © {new Date().getFullYear()} PayWatch — PayWatch, Rotterdam, Netherlands
           <br />
           <a href={`mailto:${siteConfig.company.emails.privacy}`} className="text-[var(--blue)] hover:underline">
             {siteConfig.company.emails.privacy}
