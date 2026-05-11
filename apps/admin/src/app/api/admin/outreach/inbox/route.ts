@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
         subject, body_html, status, sent_at, delivered_at, opened_at,
         clicked_at, replied_at, reply_body, reply_from, reply_subject,
         contact_id, campaign_id, sequence_step, created_at,
-        attachments
+        attachments, starred
       `, { count: "exact" })
       .order("sent_at", { ascending: false, nullsFirst: false });
 
