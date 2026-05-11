@@ -212,16 +212,17 @@ export default function AnalyticsPage() {
   const [days, setDays] = useState(30);
   const [tab, setTab] = useState<Tab>("overview");
 
-  const refresh = () => {
+  const refresh = (overrideDays?: number) => {
+    const d = overrideDays ?? days;
     setLoading(true);
-    fetch(`/api/posthog?days=${days}`)
+    fetch(`/api/posthog?days=${d}`)
       .then(r => r.json())
       .then(d => setData(d))
       .catch(console.error)
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { refresh(); }, [days]);
+  useEffect(() => { refresh(days); }, [days]);
 
   const deviceTotal = useMemo(() => data?.devices.reduce((a, d) => a + d.users, 0) || 1, [data]);
   const browserTotal = useMemo(() => data?.browsers.reduce((a, d) => a + d.users, 0) || 1, [data]);
