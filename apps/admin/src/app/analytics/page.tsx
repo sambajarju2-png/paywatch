@@ -256,7 +256,7 @@ export default function AnalyticsPage() {
                 </button>
               ))}
               <button
-                onClick={refresh}
+                onClick={() => refresh()}
                 className="ml-1.5 rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all"
               >
                 <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} strokeWidth={2} />
@@ -527,7 +527,7 @@ export default function AnalyticsPage() {
         {/* Footer */}
         <p className="text-center text-[11px] text-slate-300 mt-10 font-medium">
           PostHog EU · Last {days} days ·{" "}
-          <button onClick={refresh} className="underline hover:text-slate-400 transition-colors">Refresh</button>
+          <button onClick={() => refresh()} className="underline hover:text-slate-400 transition-colors">Refresh</button>
         </p>
       </div>
     </div>
