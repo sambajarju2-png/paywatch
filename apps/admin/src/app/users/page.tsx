@@ -175,14 +175,14 @@ export default function UsersPage() {
               <th style={{ width: 44, padding: "12px 16px", borderBottom: "1px solid " + C.border }}>
                 <input type="checkbox" checked={allSelected} onChange={toggleAll} style={{ cursor: "pointer" }} />
               </th>
-              {["Naam","Gemeente","Plan","Rekeningen","Onboarding","Actief",""].map(h => (
+              {["Naam","Email","Gemeente","Plan","Rekeningen","Onboarding","Actief",""].map(h => (
                 <th key={h} style={{ textAlign: "left", padding: "12px 14px", fontSize: 11, fontWeight: 600, color: C.muted, textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "1px solid " + C.border }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {loading ? <TableSkeleton rows={10} cols={7} /> : filtered.length === 0 ? (
-              <tr><td colSpan={7} style={{ padding: 40, textAlign: "center", color: C.muted }}>Geen gebruikers gevonden</td></tr>
+            {loading ? <TableSkeleton rows={10} cols={8} /> : filtered.length === 0 ? (
+              <tr><td colSpan={8} style={{ padding: 40, textAlign: "center", color: C.muted }}>Geen gebruikers gevonden</td></tr>
             ) : filtered.map((u, i) => (
               <tr key={u.user_id} style={{ borderBottom: i < filtered.length - 1 ? "1px solid #F8FAFC" : "none", background: selected.has(u.user_id) ? "#EFF6FF" : u.likely_bot ? "#FEF2F2" : "transparent" }}>
                 <td style={{ padding: "12px 16px" }}><input type="checkbox" checked={selected.has(u.user_id)} onChange={() => toggleOne(u.user_id)} style={{ cursor: "pointer" }} /></td>
@@ -198,6 +198,7 @@ export default function UsersPage() {
                     </div>
                   </div>
                 </td>
+                <td style={{ padding: "12px 14px", fontSize: 12, color: C.muted }}>{u.email || "—"}</td>
                 <td style={{ padding: "12px 14px", color: C.muted, fontSize: 12 }}>{u.gemeente || "—"}</td>
                 <td style={{ padding: "12px 14px" }}>
                   {editingPlan === u.user_id ? (
