@@ -86,7 +86,7 @@ export default function AboutPage() {
                   <SanityImage
                     imageKey={`about-${person.name.toLowerCase()}`}
                     placeholderLabel={person.name}
-                    className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" style={{ objectFit: "cover", objectPosition: "center top" }}
+                    className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105 [object-position:center_top]"
                   />
                   {/* Gradient overlay always present */}
                   <div className="absolute inset-0 bg-gradient-to-t from-[var(--navy)]/80 via-[var(--navy)]/20 to-transparent" />
