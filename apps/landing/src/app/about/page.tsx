@@ -17,6 +17,12 @@ const TAGS: Record<string, { nl: string[]; en: string[] }> = {
   },
 };
 
+// What PayWatch serves
+const SERVE_TAGS = {
+  nl: ["Consumenten", "Incassobureaus", "Hulpinstanties", "Nutsvoorzieningen"],
+  en: ["Consumers", "Collection agencies", "Aid organizations", "Utilities"],
+};
+
 const LinkedInIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
     <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
@@ -50,9 +56,9 @@ export default function AboutPage() {
             </p>
             <h1 className="text-4xl sm:text-6xl font-extrabold text-[var(--navy)] tracking-tight leading-[1.05]">
               {lang === "nl" ? (
-                <>Twee mensen,<br />één missie.</>
+                <>Gebouwd voor<br />Nederland.</>
               ) : (
-                <>Two people,<br />one mission.</>
+                <>Built for<br />the Netherlands.</>
               )}
             </h1>
           </div>
@@ -66,7 +72,7 @@ export default function AboutPage() {
 
       {/* ── Founders ── */}
       <section className="mx-auto max-w-6xl px-4 sm:px-6 pb-16 sm:pb-24">
-        <div className="grid sm:grid-cols-2 gap-5 sm:gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 auto-rows-fr">
           {founders.map((person, idx) => {
             const tags = TAGS[person.name]?.[lang] || [];
             return (
@@ -76,11 +82,11 @@ export default function AboutPage() {
                 className="group relative rounded-3xl overflow-hidden bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--blue)]/40 transition-all duration-500 hover:shadow-2xl hover:shadow-[var(--blue)]/10 hover:-translate-y-1"
               >
                 {/* Photo area */}
-                <div className="relative overflow-hidden" style={{ height: "420px" }}>
+                <div className="relative overflow-hidden" style={{ height: "480px" }}>
                   <SanityImage
                     imageKey={`about-${person.name.toLowerCase()}`}
                     placeholderLabel={person.name}
-                    className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                    className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" style={{ objectFit: "cover", objectPosition: "center top" }}
                   />
                   {/* Gradient overlay always present */}
                   <div className="absolute inset-0 bg-gradient-to-t from-[var(--navy)]/80 via-[var(--navy)]/20 to-transparent" />
@@ -180,15 +186,9 @@ export default function AboutPage() {
       {/* ── Numbers strip ── */}
       <section className="mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-16">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[var(--border)] rounded-2xl overflow-hidden border border-[var(--border)]">
-          {[
-            { num: "335+", label: lang === "nl" ? "Gemeenten" : "Municipalities" },
-            { num: "270+", label: lang === "nl" ? "Incasso-bureaus" : "Collection agencies" },
-            { num: "2026", label: lang === "nl" ? "Opgericht" : "Founded" },
-            { num: "EU", label: lang === "nl" ? "AI-infrastructuur" : "AI infrastructure" },
-          ].map((stat) => (
-            <div key={stat.num} className="bg-[var(--surface)] px-6 py-8 text-center">
-              <p className="text-3xl font-extrabold text-[var(--navy)] tracking-tight mb-1">{stat.num}</p>
-              <p className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">{stat.label}</p>
+          {(SERVE_TAGS[lang] || SERVE_TAGS.nl).map((tag) => (
+            <div key={tag} className="bg-[var(--surface)] px-6 py-8 text-center">
+              <p className="text-base font-extrabold text-[var(--navy)] tracking-tight leading-tight">{tag}</p>
             </div>
           ))}
         </div>
