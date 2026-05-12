@@ -56,9 +56,9 @@ export default function AboutPage() {
             </p>
             <h1 className="text-4xl sm:text-6xl font-extrabold text-[var(--navy)] tracking-tight leading-[1.05]">
               {lang === "nl" ? (
-                <>Gebouwd voor<br />Nederland.</>
+                <>Nederland<br />schuldenvrij.</>
               ) : (
-                <>Built for<br />the Netherlands.</>
+                <>A debt-free<br />Netherlands.</>
               )}
             </h1>
           </div>
@@ -82,12 +82,14 @@ export default function AboutPage() {
                 className="group relative rounded-3xl overflow-hidden bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--blue)]/40 transition-all duration-500 hover:shadow-2xl hover:shadow-[var(--blue)]/10 hover:-translate-y-1"
               >
                 {/* Photo area */}
-                <div className="relative overflow-hidden" style={{ height: "480px" }}>
-                  <SanityImage
-                    imageKey={`about-${person.name.toLowerCase()}`}
-                    placeholderLabel={person.name}
-                    className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105 [object-position:center_top]"
-                  />
+                <div className="relative overflow-hidden aspect-[3/4]">
+                  <div className="absolute inset-0 [&_img]:object-cover [&_img]:object-top [&_img]:w-full [&_img]:h-full">
+                    <SanityImage
+                      imageKey={`about-${person.name.toLowerCase()}`}
+                      placeholderLabel={person.name}
+                      className="w-full h-full transition-transform duration-700 group-hover:scale-105"
+                    />
+                  </div>
                   {/* Gradient overlay always present */}
                   <div className="absolute inset-0 bg-gradient-to-t from-[var(--navy)]/80 via-[var(--navy)]/20 to-transparent" />
 
@@ -103,7 +105,7 @@ export default function AboutPage() {
                     {tags.map((tag) => (
                       <span
                         key={tag}
-                        className="px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-[10px] font-bold uppercase tracking-wider text-white"
+                        className="px-3 py-1.5 rounded-full bg-white/25 backdrop-blur-md text-[11px] font-bold uppercase tracking-wider text-white shadow-sm"
                       >
                         {tag}
                       </span>

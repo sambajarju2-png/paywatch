@@ -136,7 +136,7 @@ const translations = {
     about: {
       title: "Over PayWatch",
       subtitle: "Twee Rotterdammers met een missie: niemand onnodig in de schulden.",
-      story: "PayWatch is geboren uit frustratie. Te veel mensen in Nederland betalen onnodig honderden euro's extra aan incassokosten — simpelweg omdat ze het overzicht kwijt zijn. Wij willen dat veranderen.",
+      story: "PayWatch is geboren uit frustratie. Te veel mensen in Nederland betalen onnodig honderden euro's extra aan incassokosten, simpelweg omdat ze het overzicht kwijt zijn. Wij willen dat veranderen.",
       missionTitle: "Onze missie",
       mission: "Iedereen verdient grip op z'n rekeningen. Zonder schaamte, zonder stress, zonder onnodige kosten.",
     },
@@ -316,7 +316,7 @@ const translations = {
     about: {
       title: "About PayWatch",
       subtitle: "Two Rotterdammers on a mission: stop unnecessary debt.",
-      story: "PayWatch was born from frustration. Too many people in the Netherlands pay hundreds of euros in unnecessary collection costs — simply because they lost track. We want to change that.",
+      story: "PayWatch was born from frustration. Too many people in the Netherlands pay hundreds of euros in unnecessary collection costs, simply because they lost track. We want to change that.",
       missionTitle: "Our mission",
       mission: "Everyone deserves to be in control of their bills. Without shame, without stress, without unnecessary costs.",
     },
