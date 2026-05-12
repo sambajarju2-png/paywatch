@@ -18,14 +18,12 @@ export async function GET() {
   try {
     const supabase = getAdmin();
 
-    const [usersRes, billCountsRes, authRes] = await Promise.all([
+    const [usersRes, billCountsRes] = await Promise.all([
       supabase
         .from("user_settings")
         .select("user_id, display_name, first_name, last_name, language, onboarding_complete, gemeente, dark_mode, created_at, last_active_at, plan, voice_seconds_used")
         .order("created_at", { ascending: false }),
-      // Count bills per user (detect bots = 0 bills)
       supabase.from("bills").select("user_id").limit(10000),
-      supabase.auth.admin.listUsers({ perPage: 1000 }),
     ]);
 
     const billCounts: Record<string, number> = {};
@@ -34,9 +32,9 @@ export async function GET() {
     });
 
     const emailMap: Record<string, string> = {};
-    (authRes.data?.users || []).forEach((u: any) => {
-      emailMap[u.id] = u.email || "";
-    });
+    // Use RPC to get emails from auth.users (more reliable than admin.listUsers)
+    const { data: emailRows } = await supabase.rpc("get_user_emails");
+    (emailRows || []).forEach((u: any) => { emailMap[u.id] = u.email || ""; });
 
     const users = (usersRes.data || []).map((u: any) => ({
       ...u,
