@@ -23,9 +23,10 @@ export async function GET(req: NextRequest) {
     const supabase = createServiceRoleClient();
     const { searchParams } = new URL(req.url);
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
-    const perPage = Math.min(100, Math.max(1, parseInt(searchParams.get("per_page") || "50", 10)));
+    const perPage = Math.min(200, Math.max(1, parseInt(searchParams.get("per_page") || "100", 10)));
     const direction = searchParams.get("direction") || "all";
     const search = searchParams.get("search");
+    const starredOnly = searchParams.get("starred") === "true";
 
     const from = (page - 1) * perPage;
     const to = from + perPage - 1;
@@ -42,7 +43,8 @@ export async function GET(req: NextRequest) {
       .order("sent_at", { ascending: false, nullsFirst: false });
 
     if (direction !== "all") query = query.eq("direction", direction);
-    
+    if (starredOnly) query = query.eq("starred", true);
+
     const mailbox = searchParams.get("mailbox");
     if (mailbox && mailbox !== "all") {
       const addr = `${mailbox}@paywatch.nl`;

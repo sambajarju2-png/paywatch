@@ -164,10 +164,11 @@ export default function InboxPage() {
     try {
       const params = new URLSearchParams();
       params.set("page", String(page));
-      params.set("per_page", "50");
+      params.set("per_page", "100");
       if (direction !== "all") params.set("direction", direction);
       if (mailbox !== "all") params.set("mailbox", mailbox);
       if (search) params.set("search", search);
+      if (showStarredOnly) params.set("starred", "true");
       const res = await fetch(`/api/admin/outreach/inbox?${params}`);
       if (res.ok) {
         const data = await res.json();
@@ -177,10 +178,10 @@ export default function InboxPage() {
       }
     } catch { console.error("Inbox fetch failed"); }
     finally { setLoading(false); }
-  }, [page, direction, mailbox, search]);
+  }, [page, direction, mailbox, search, showStarredOnly]);
 
   useEffect(() => { fetchEmails(); }, [fetchEmails]);
-  useEffect(() => { setPage(1); }, [direction, mailbox, search]);
+  useEffect(() => { setPage(1); }, [direction, mailbox, search, showStarredOnly]);
 
   return (
     <div className="space-y-4">
@@ -263,7 +264,7 @@ export default function InboxPage() {
           </div>
         ) : (
           <div className="divide-y divide-pw-border">
-            {emails.filter(e => !showStarredOnly || e.starred).map((email) => {
+            {emails.map((email) => {
               const isInbound = email.direction === "inbound";
               const isExpanded = expandedId === email.id;
               const statusConfig = STATUS_ICON[email.status] || STATUS_ICON.sent;
