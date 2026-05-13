@@ -94,9 +94,9 @@ export default function LoginPage() {
         <div className="relative z-10 p-12 pt-0">
           <div className="grid grid-cols-3 gap-4 pt-6 border-t border-white/10">
             {[
-              { value: "150+", label: "Organisaties" },
-              { value: "10K+", label: "Gebruikers" },
-              { value: "89%", label: "Succesrate" },
+              { value: "Gemeentes", label: "" },
+              { value: "Incassobureaus", label: "" },
+              { value: "Hulporganisaties", label: "" },
             ].map((s) => (
               <div key={s.label}>
                 <div className="text-[24px] font-extrabold text-white">{s.value}</div>
