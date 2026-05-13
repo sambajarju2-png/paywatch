@@ -50,7 +50,19 @@ export async function GET(req: NextRequest) {
     }
 
     if (search) {
-      query = query.or(`subject.ilike.%${search}%,to_email.ilike.%${search}%,from_email.ilike.%${search}%`);
+      // Also find contact IDs matching org name/person for broader search
+      const { data: matchingContacts } = await supabase
+        .from("b2b_contacts")
+        .select("id")
+        .or(`organization_name.ilike.%${search}%,contact_person.ilike.%${search}%`)
+        .limit(50);
+      const matchIds = (matchingContacts || []).map(c => c.id);
+
+      if (matchIds.length > 0) {
+        query = query.or(`subject.ilike.%${search}%,to_email.ilike.%${search}%,from_email.ilike.%${search}%,to_name.ilike.%${search}%,from_name.ilike.%${search}%,reply_from.ilike.%${search}%,contact_id.in.(${matchIds.join(",")})`);
+      } else {
+        query = query.or(`subject.ilike.%${search}%,to_email.ilike.%${search}%,from_email.ilike.%${search}%,to_name.ilike.%${search}%,from_name.ilike.%${search}%,reply_from.ilike.%${search}%`);
+      }
     }
 
     const { data: emails, error, count } = await query.range(from, to);

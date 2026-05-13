@@ -218,7 +218,7 @@ export default function InboxPage() {
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-pw-muted" />
-          <input type="text" placeholder="Search subject, email..." value={search}
+          <input type="text" placeholder="Zoek op naam, email, bedrijf of onderwerp..." value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue" />
         </div>
