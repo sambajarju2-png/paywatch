@@ -23,7 +23,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^2.15.4",
-    "resend": "^3.5.0"
+    "resend": "^3.5.0",
+    "@livekit/components-styles": "^1.1.4"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
