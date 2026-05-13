@@ -9,6 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@livekit/components-react": "^2.6.6",
+    "@livekit/client": "^2.9.5",
+    "livekit-server-sdk": "^2.10.0",
     "@paywatch/config": "workspace:*",
     "@paywatch/database": "workspace:*",
     "@paywatch/ui": "workspace:*",

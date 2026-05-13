@@ -2,6 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { Phone } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const CallRoom = dynamic(() => import("@/components/CallRoom"), { ssr: false });
 
 interface Client {
   buddyId: string;
@@ -21,6 +25,8 @@ interface Message {
   content: string;
   is_read: boolean;
   created_at: string;
+  message_type?: string;
+  metadata?: { room_name?: string; expires_at?: string } | null;
 }
 
 function relativeTime(d: string | null) {
@@ -49,6 +55,8 @@ function ChatPanel({
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [callState, setCallState] = useState<{ token: string; roomName: string; livekitUrl: string } | null>(null);
+  const [startingCall, setStartingCall] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -73,6 +81,26 @@ function ChatPanel({
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  async function startCall() {
+    setStartingCall(true);
+    try {
+      const res = await fetch("/api/call", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ buddy_id: client.buddyId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCallState(data);
+      } else {
+        alert("Kon gesprek niet starten. Controleer LiveKit instellingen.");
+      }
+    } catch {
+      alert("Verbindingsfout bij starten gesprek.");
+    }
+    setStartingCall(false);
+  }
 
   async function sendMessage() {
     const content = input.trim();
@@ -116,6 +144,17 @@ function ChatPanel({
           >
             Dossier
           </Link>
+          <button
+            onClick={startingCall ? undefined : startCall}
+            disabled={startingCall}
+            title="Video- of audiogesprek starten"
+            className="flex items-center justify-center w-8 h-8 rounded-lg bg-pw-navy/10 hover:bg-pw-navy/20 transition-colors disabled:opacity-50"
+          >
+            {startingCall
+              ? <div className="w-3.5 h-3.5 border-2 border-pw-navy border-t-transparent rounded-full animate-spin" />
+              : <Phone className="w-3.5 h-3.5 text-pw-navy" strokeWidth={2} />
+            }
+          </button>
           <button onClick={onClose} className="text-pw-muted hover:text-pw-navy transition-colors">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -142,6 +181,22 @@ function ChatPanel({
           ) : (
             messages.map((msg) => {
               const isMe = msg.sender_id === coachUserId;
+
+              // Call invite message — show as a special card
+              if (msg.message_type === "call_invite") {
+                return (
+                  <div key={msg.id} className="flex justify-center">
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-pw-blue/5 border border-pw-blue/15 text-sm text-pw-blue">
+                      <Phone className="w-3.5 h-3.5" strokeWidth={2} />
+                      <span className="font-medium">Videogesprek gestart</span>
+                      <span className="text-[10px] text-pw-muted">
+                        {new Date(msg.created_at).toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                   <div
@@ -166,7 +221,18 @@ function ChatPanel({
           <div ref={bottomRef} />
         </div>
 
-        {/* Input */}
+        {/* Active call overlay */}
+      {callState && (
+        <CallRoom
+          roomName={callState.roomName}
+          token={callState.token}
+          livekitUrl={callState.livekitUrl}
+          participantName={client.name}
+          onLeave={() => setCallState(null)}
+        />
+      )}
+
+      {/* Input */}
         <div className="px-4 py-3 border-t border-pw-border flex items-end gap-2 flex-shrink-0">
           <textarea
             value={input}

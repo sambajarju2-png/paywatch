@@ -51,7 +51,7 @@ export async function GET(
 
   const { data: messages, error } = await supabaseAdmin
     .from("b2b_buddy_messages")
-    .select("id, sender_id, content, is_read, created_at")
+    .select("id, sender_id, content, is_read, created_at, message_type, metadata")
     .eq("buddy_link_id", buddy_id)
     .order("created_at", { ascending: true })
     .limit(100);
