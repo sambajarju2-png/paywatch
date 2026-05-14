@@ -109,6 +109,35 @@ export async function POST(req: NextRequest) {
       console.error("[Call] hulp_messages bridge error:", bridgeErr);
     }
 
+    // Fire push notification to consumer (web + iOS)
+    try {
+      const pushSecret = process.env.INTERNAL_API_SECRET;
+      const consumerUrl = process.env.CONSUMER_APP_URL || "https://app.paywatch.app";
+      if (pushSecret) {
+        const { data: coachMember } = await db
+          .from("organization_members")
+          .select("full_name")
+          .eq("user_id", coach.id)
+          .eq("organization_id", buddy.organization_id)
+          .single();
+
+        fetch(`${consumerUrl}/api/push/call-notify`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-secret": pushSecret,
+          },
+          body: JSON.stringify({
+            user_id: buddy.user_id,
+            caller_name: coachMember?.full_name || coach.email?.split("@")[0] || "Coach",
+          }),
+        }).catch((err) => console.error("[Call] Push notify error:", err));
+        // fire-and-forget — don't block the call response
+      }
+    } catch (pushErr) {
+      console.error("[Call] Push error:", pushErr);
+    }
+
     return NextResponse.json({ token, roomName, livekitUrl: LK_WSS_URL });
   } catch (err) {
     console.error("[Call create]", err);
