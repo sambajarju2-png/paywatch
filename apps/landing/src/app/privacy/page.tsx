@@ -7,53 +7,59 @@ import { siteConfig } from "@/lib/config";
 /* ── Tab 1: Existing Privacy Policy ── */
 const privacyContent = {
   nl: {
-    lastUpdated: "Laatst bijgewerkt: 10 mei 2026",
+    lastUpdated: "Laatst bijgewerkt: 14 mei 2026",
     sections: [
       {
         title: "1. Wie zijn wij?",
-        body: `PayWatch (KVK: ${siteConfig.company.kvk}) is verantwoordelijk voor de verwerking van persoonsgegevens zoals beschreven in dit privacybeleid. Ons kantoor is gevestigd in Rotterdam, Nederland. Voor vragen over privacy kunt u contact opnemen via ${siteConfig.company.emails.privacy}.`,
+        body: `PayWatch is een Nederlandse app die je helpt grip te krijgen op je rekeningen en schulden. We zijn opgericht in Rotterdam en ingeschreven bij de KvK onder nummer ${siteConfig.company.kvk}.\n\nWij zijn de verwerkingsverantwoordelijke voor je persoonsgegevens. Dat betekent dat wij bepalen waarvoor en hoe je gegevens worden verwerkt — en dat we daarvoor verantwoordelijk zijn.\n\nVragen over je privacy? Mail naar ${siteConfig.company.emails.privacy}.`,
       },
       {
-        title: "2. Welke gegevens verzamelen wij?",
-        body: `Wij verzamelen alleen wat nodig is:\n\n• Accountgegevens: naam en e-mailadres\n• Rekeninggegevens: bedrijfsnaam, bedrag, vervaldatum, IBAN en referentie — geëxtraheerd uit je e-mails of gescande rekeningen\n• E-mailmetadata: afzender, onderwerp en datum — tijdelijk verwerkt via Gmail (read-only) of Outlook (read-only), uitsluitend voor het herkennen van rekeningen\n• Gebruiksgegevens: inlogmomenten en gebruikte functies\n\nWat wij NIET opslaan:\n• Geen volledige e-mailteksten of bijlagen\n• Geen foto's of afbeeldingen van je rekeningen\n• Geen adresgegevens of BSN\n• Geen bankwachtwoorden of inloggegevens\n• Geen locatiegegevens`,
+        title: "2. Welke gegevens verzamelen wij — en waarom?",
+        body: "We verzamelen zo min mogelijk. Hieronder staat precies wat we nodig hebben, waarom, en of het verplicht of optioneel is.\n\nVERPLICHT (nodig om de app te laten werken)\n• E-mailadres — om in te loggen en je account te beveiligen\n• Naam — om je persoonlijk aan te spreken in de app\n\nOPTIONEEL (je kiest zelf of je dit gebruikt)\n• Gmail/Outlook-koppeling — we scannen je inbox op rekeningen. We lezen alléén afzender, onderwerp en datum. We slaan geen e-mailteksten of bijlagen op.\n• Bankkoppeling (via Enable Banking) — we zien je transacties (bedrijfsnaam, bedrag, datum). We kunnen nooit geld overmaken. Zie sectie 3.\n• Foto\'s van rekeningen — de foto wordt direct verwerkt door AI en daarna verwijderd. We bewaren de foto niet.\n• Inkomen en vaste lasten — voor de beslagvrije voet-berekening en toeslagen-check.\n• Spraakgesprekken met PayBuddy — onze AI-assistent. Gesprekken worden niet opgenomen of opgeslagen.\n• Videogesprekken met je coach — via LiveKit. Versleuteld, niet opgenomen. Wij kunnen niet meekijken of meeluisteren.\n\nWAT WE NIET VERZAMELEN\n• Geen BSN of identiteitsbewijs\n• Geen adresgegevens\n• Geen bankwachtwoorden of inlogcodes\n• Geen locatiegegevens\n• Geen volledige e-mailteksten",
       },
       {
-        title: "3. Waarvoor gebruiken wij je gegevens?",
-        body: "Wij verwerken je gegevens uitsluitend voor: het leveren van onze dienst (rekeningen herkennen, bijhouden en waarschuwen bij escalatie), het berekenen van financiële overzichten (toeslagen, beslagvrije voet), het versturen van service-gerelateerde e-mails, en het naleven van wettelijke verplichtingen.",
+        title: "3. Bankkoppeling — hoe werkt dat?",
+        body: "Als je je bankrekening koppelt, gebeurt dat via Enable Banking — een Europese PSD2-dienstverlener met vergunning van de Finse toezichthouder (FIN-FSA).\n\n• Je logt in bij je eigen bank (via de beveiligde omgeving van je bank)\n• Enable Banking geeft ons alleen-lezen toegang tot je transacties\n• We kunnen nooit geld overmaken of betalingen doen\n• Wij zien je bankwachtwoord niet\n• Elke 90 dagen moet je de toestemming opnieuw bevestigen\n• Je kunt de koppeling op elk moment intrekken\n\nWat we uit je transacties halen: bedrijfsnaam, bedrag en datum. Dit gebruiken we om je rekeningen automatisch te herkennen en bij te houden.",
       },
       {
-        title: "4. Rechtsgronden",
-        body: "Wij verwerken je gegevens op basis van: uitvoering van de overeenkomst (het leveren van de PayWatch-dienst), toestemming (voor Gmail/Outlook-koppeling), en gerechtvaardigd belang (voor dienstverlening en verbetering).",
+        title: "4. Bijzondere persoonsgegevens",
+        body: "Dit is een belangrijk onderwerp. Onder de AVG zijn \"bijzondere persoonsgegevens\" extra beschermd — denk aan gegevens over je gezondheid, religie, politieke overtuiging, seksuele geaardheid, of vakbondslidmaatschap.\n\nHOE WIJ HIERMEE OMGAAN\nPayWatch verzamelt, verwerkt of bewaart géén bijzondere persoonsgegevens. Wij weten niet waarom je een rekening hebt betaald — alleen dát je hebt betaald.\n\nConcreet voorbeeld: als je via je bankrekening een betaling hebt gedaan aan een zorginstelling, zien wij alleen:\n• Bedrijfsnaam (bijv. \"Kliniek XYZ\")\n• Bedrag (bijv. \u20ac120,00)\n• Datum\n\nWij zien niet:\n• Welke behandeling je hebt gehad\n• Welke diagnose je hebt\n• Waarom je hebt betaald\n\nOnze AI is getraind om rekeningen te herkennen (bedrijf, bedrag, vervaldatum) — niet om transacties medisch of anderszins te categoriseren. We bouwen geen gezondheidsprofielen, politieke profielen of andere gevoelige profielen.\n\nEXTRA WAARBORGEN\n• Transactiecategorisering is puur financieel (bijv. \"zorgverzekering\", \"energie\") — nooit medisch of persoonlijk\n• Je kunt op elk moment een transactie verwijderen uit je overzicht\n• Stopt je bankkoppeling? Transactiegegevens worden binnen 30 dagen verwijderd\n• Geen medewerker van PayWatch heeft handmatige toegang tot individuele transacties",
       },
       {
-        title: "5. Delen met derden",
-        body: `Wij delen je gegevens alleen met verwerkers die noodzakelijk zijn voor onze dienstverlening.
-
-Voor het scannen en analyseren van foto's van rekeningen gebruiken wij Mistral AI Small (vision-model), gehost via Scaleway in Parijs, Frankrijk — dit is een self-hosted installatie op onze eigen serverinfrastructuur. Je foto wordt nergens anders naartoe gestuurd en wij zien de afbeeldingen zelf niet. Foto's worden direct na verwerking verwijderd.
-
-Alle overige gevoelige gegevens (e-mails, rekeningen) worden verwerkt via onze eigen AI-engine gehost bij Scaleway in Amsterdam/Parijs, Nederland/Frankrijk. Je data verlaat de EU niet voor scan- en analysedoeleinden.
-
-Wij verkopen nooit je gegevens aan derden.`,
+        title: "5. Waarvoor gebruiken wij je gegevens?",
+        body: "Wij gebruiken je gegevens alléén voor:\n\n• Rekeningen herkennen en bijhouden\n• Waarschuwen bij escalatie — als een rekening overgaat naar aanmaning, incasso of deurwaarder\n• Financiële berekeningen — beslagvrije voet, toeslagen-check, cashflow-overzicht\n• Service-e-mails — bevestigingen en waarschuwingen\n• App verbeteren — geanonimiseerde gebruiksstatistieken\n\nWij gebruiken je gegevens NOOIT voor:\n• Reclame of advertenties\n• Verkoop aan derden\n• Het beoordelen van je kredietwaardigheid\n• Profilering voor commerciële doeleinden",
       },
       {
-        title: "6. Beveiliging",
-        body: "Wij nemen de bescherming van je gegevens serieus. We gebruiken AES-256 encryptie, TLS 1.3, Row Level Security, en OAuth 2.0 met read-only scope. Onze AI-analyse draait op servers in de EU (Parijs, Frankrijk) — je financiële gegevens verlaten Europa niet. Foto's van rekeningen worden direct na verwerking verwijderd en niet opgeslagen.",
+        title: "6. Rechtsgronden (AVG)",
+        body: "We verwerken je gegevens op basis van:\n\n• Uitvoering van de overeenkomst — zonder je basisgegevens kunnen we de dienst niet leveren\n• Toestemming — voor Gmail/Outlook- en bankkoppeling. Je kunt deze altijd intrekken\n• Gerechtvaardigd belang — voor het verbeteren van de app en voorkomen van fraude",
       },
       {
-        title: "7. Bewaartermijnen",
-        body: "Accountgegevens: zolang je account actief is + 6 maanden na verwijdering. E-mailinhoud: wordt niet opgeslagen, alleen tijdelijk verwerkt tijdens scanning. Rekeninggegevens: zolang je account actief is. Gebruiksgegevens: maximaal 12 maanden.",
+        title: "7. AI-verwerking",
+        body: "PayWatch gebruikt AI op drie plekken. In alle gevallen geldt: je gegevens verlaten de EU niet.\n\n1. Rekeningen herkennen uit e-mail — Onze AI leest alleen de relevante velden: afzender, bedrag, vervaldatum. De volledige e-mailtekst wordt niet opgeslagen.\n\n2. Foto\'s van rekeningen scannen — Mistral AI, gehost op onze eigen servers bij Scaleway in Parijs. Je foto wordt direct na verwerking verwijderd.\n\n3. PayBuddy spraakassistent — ElevenLabs verwerkt je spraak. Gesprekken worden niet opgenomen of opgeslagen.\n\nGeen van deze AI-diensten wordt getraind op jouw data.",
       },
       {
-        title: "8. Jouw rechten",
-        body: `Je hebt het recht op inzage, rectificatie, verwijdering, beperking van verwerking, dataportabiliteit, en het recht om bezwaar te maken. Neem contact op via ${siteConfig.company.emails.privacy} om je rechten uit te oefenen. We reageren binnen 30 dagen.`,
+        title: "8. Delen met derden",
+        body: `Wij delen je gegevens alleen met dienstverleners die nodig zijn om PayWatch te laten werken:\n\n• Supabase (EU) — database en authenticatie\n• Scaleway (Parijs) — AI-verwerking van foto's\n• Enable Banking (Finland, EU) — bankkoppeling via PSD2\n• ElevenLabs — spraakverwerking voor PayBuddy\n• Vercel (EU) — hosting\n• LiveKit (EU) — videogesprekken met je coach\n• Resend — service-e-mails\n\nMet al deze partijen hebben wij verwerkersovereenkomsten. Wij verkopen nooit je gegevens.`,
       },
       {
-        title: "9. Cookies en tracking",
-        body: "PayWatch gebruikt geen tracking cookies en geen advertentiecookies. We slaan alleen je taalvoorkeur en thema-instelling op in localStorage. Dit zijn geen cookies en worden niet naar onze servers gestuurd. Op onze landingspagina (paywatch.app) gebruiken wij PostHog voor geanonimiseerde bezoekersstatistieken. PostHog draait in de EU en verzamelt geen persoonsgegevens. In de app zelf (app.paywatch.app) wordt geen analytics-tracking gebruikt.",
+        title: "9. Beveiliging",
+        body: "• AES-256 encryptie voor data in rust\n• TLS 1.3 voor data in transit\n• Row Level Security — je ziet alleen je eigen gegevens\n• OAuth 2.0 met read-only scope voor e-mailkoppelingen\n• Alle AI-verwerking binnen de EU\n• Foto's direct na scan verwijderd\n• Videogesprekken end-to-end versleuteld",
       },
       {
-        title: "10. Wijzigingen",
-        body: "Wij kunnen dit privacybeleid van tijd tot tijd wijzigen. Bij belangrijke wijzigingen stellen wij je op de hoogte via e-mail of een melding in de app.",
+        title: "10. Bewaartermijnen",
+        body: "• Accountgegevens — zolang je account actief is + 6 maanden na verwijdering\n• Rekeninggegevens — zolang je account actief is\n• Banktransacties — zolang koppeling actief + 30 dagen na intrekking\n• E-mailinhoud — niet opgeslagen, alleen tijdelijk verwerkt\n• Foto's — direct na scan verwijderd\n• Spraak- en videogesprekken — niet opgeslagen\n• Gebruiksgegevens — maximaal 12 maanden",
+      },
+      {
+        title: "11. Jouw rechten",
+        body: `Onder de AVG heb je deze rechten:\n\n• Inzage — opvragen welke gegevens wij van je hebben\n• Correctie — onjuiste gegevens laten aanpassen\n• Verwijdering — je account en alle gegevens laten verwijderen\n• Beperking — verwerking tijdelijk stopzetten\n• Overdracht — je gegevens in leesbaar formaat ontvangen\n• Bezwaar — bezwaar maken tegen verwerking\n• Toestemming intrekken — voor e-mail- of bankkoppeling, op elk moment\n\nMail naar ${siteConfig.company.emails.privacy}. We reageren binnen 30 dagen.\n\nNiet tevreden? Je kunt een klacht indienen bij de Autoriteit Persoonsgegevens (autoriteitpersoonsgegevens.nl).`,
+      },
+      {
+        title: "12. Cookies en tracking",
+        body: "PayWatch gebruikt geen tracking cookies en geen advertentiecookies.\n\nIn de app slaan we alleen je taalvoorkeur en thema-instelling op (localStorage). Dit wordt niet naar onze servers gestuurd.\n\nOp onze website gebruiken wij PostHog (EU, Frankfurt) voor geanonimiseerde bezoekersstatistieken. In de app wordt geen analytics-tracking gebruikt.",
+      },
+      {
+        title: "13. Wijzigingen",
+        body: "Wij kunnen dit privacybeleid wijzigen. Bij belangrijke wijzigingen stellen wij je op de hoogte via e-mail of een melding in de app.",
       },
     ],
   },
