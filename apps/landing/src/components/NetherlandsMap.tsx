@@ -104,7 +104,7 @@ export default function NetherlandsMap() {
     available: isNl ? "beschikbaar" : "available",
     municipalities: isNl ? "Gemeenten" : "Municipalities",
     free: isNl ? "Gratis" : "Free",
-    always: "24/7",
+    always: "Beschikbaar",
     gemeenteHelp: isNl ? "Gemeentelijke schuldhulp" : "Municipal debt help",
     partnerOrg: isNl ? "Partnerorganisatie" : "Partner organization",
     localOrg: isNl ? "Lokale hulporganisatie" : "Local help organization",

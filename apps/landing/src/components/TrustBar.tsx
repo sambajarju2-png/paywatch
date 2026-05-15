@@ -23,7 +23,7 @@ export default function TrustBar() {
             <span className="text-xs font-semibold text-[var(--navy)] tracking-wide uppercase">{t.trustBar.gdpr}</span>
           </div>
 
-          {/* SOC 2 — check-circle icon */}
+          {/* PSD2 — check-circle icon */}
           <div className="flex items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" strokeWidth="1.5" className="opacity-70">
               <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />

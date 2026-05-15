@@ -38,7 +38,7 @@ const translations = {
     trustBar: {
       eu: "EU Product",
       gdpr: "AVG/GDPR",
-      soc2: "SOC 2",
+      soc2: "PSD2",
       encryption: "AES-256",
     },
     howItWorks: {
@@ -218,7 +218,7 @@ const translations = {
     trustBar: {
       eu: "EU Product",
       gdpr: "AVG/GDPR",
-      soc2: "SOC 2",
+      soc2: "PSD2",
       encryption: "AES-256",
     },
     howItWorks: {
