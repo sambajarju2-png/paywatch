@@ -499,19 +499,19 @@ function isNeverLine(text: string) {
 function PrivacyContent() {
   const { lang, t } = useApp();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<"privacy" | "data" | "dpia">("privacy");
+  const [activeTab, setActiveTab] = useState<"privacy" | "data" | "dpia">("dpia");
 
   useEffect(() => {
     const tab = searchParams.get("tab");
-    if (tab === "dpia" || tab === "data") setActiveTab(tab);
+    if (tab === "privacy" || tab === "data" || tab === "dpia") setActiveTab(tab);
   }, [searchParams]);
 
   const privacy = privacyContent[lang];
   const data = dataProcessingContent[lang];
 
   const tabs = {
-    nl: { privacy: "Privacybeleid", data: "Gegevensverwerking", dpia: "DPIA" },
-    en: { privacy: "Privacy Policy", data: "Data Processing", dpia: "DPIA" },
+    nl: { dpia: "DPIA", privacy: "Privacybeleid", data: "Gegevensverwerking" },
+    en: { dpia: "DPIA", privacy: "Privacy Policy", data: "Data Processing" },
   };
 
   return (
@@ -525,6 +525,16 @@ function PrivacyContent() {
         {/* ── Tab Switcher ── */}
         <div className="mt-8 flex justify-center">
           <div className="inline-flex rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--border)_30%,transparent)] p-1 gap-1">
+            <button
+              onClick={() => setActiveTab("dpia")}
+              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                activeTab === "dpia"
+                  ? "bg-[var(--surface)] text-[var(--navy)] shadow-sm"
+                  : "text-[var(--muted)] hover:text-[var(--text)]"
+              }`}
+            >
+              {tabs[lang].dpia}
+            </button>
             <button
               onClick={() => setActiveTab("privacy")}
               className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
@@ -544,16 +554,6 @@ function PrivacyContent() {
               }`}
             >
               {tabs[lang].data}
-            </button>
-            <button
-              onClick={() => setActiveTab("dpia")}
-              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
-                activeTab === "dpia"
-                  ? "bg-[var(--surface)] text-[var(--navy)] shadow-sm"
-                  : "text-[var(--muted)] hover:text-[var(--text)]"
-              }`}
-            >
-              {tabs[lang].dpia}
             </button>
           </div>
         </div>
@@ -651,14 +651,6 @@ function PrivacyContent() {
           </div>
         )}
 
-        {/* Footer */}
-        <p className="text-xs text-[var(--muted)] text-center mt-12">
-          © {new Date().getFullYear()} PayWatch — PayWatch, Rotterdam, Netherlands
-          <br />
-          <a href={`mailto:${siteConfig.company.emails.privacy}`} className="text-[var(--blue)] hover:underline">
-            {siteConfig.company.emails.privacy}
-          </a>
-        </p>
 
         {/* ── Tab 3: DPIA ── */}
         {activeTab === "dpia" && (
@@ -747,12 +739,59 @@ function PrivacyContent() {
                 <p className="text-sm text-[var(--text)] leading-relaxed whitespace-pre-line">{"Technisch:\n• Row Level Security op alle gebruikerstabellen\n• AES-256 encryptie in rust, TLS 1.3 in transit\n• delete_all_user_data() voor complete verwijdering (52 tabellen)\n• Admin audit log voor alle beheerdersacties\n• Admin kan geen individuele rekeningen of transacties inzien\n• is_restricted vlag voor accountbevriezing (GDPR beperking)\n• Alle AI-verwerking binnen de EU\n\nOrganisatorisch:\n• Privacyverantwoordelijke aangesteld (Samba Jarju, CTO)\n• GDPR-verzoeksysteem met automatische verwerking en 30-dagen deadline monitoring\n• Granulaire B2B-toestemming (gebruiker kiest per scope)\n• Geautomatiseerde deadline-herinneringen voor openstaande verzoeken"}</p>
               </div>
 
+              <div className="border-t border-[var(--border)] pt-6">
+                <h2 className="text-base font-bold text-[var(--navy)] mb-2">7. Verwerkersregister</h2>
+                <p className="text-sm text-[var(--muted)] mb-3">Overzicht van alle partijen die persoonsgegevens verwerken namens PayWatch.</p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead><tr className="bg-[var(--bg)]">
+                      <th className="text-left p-2 font-semibold text-[var(--navy)] border-b border-[var(--border)]">Verwerker</th>
+                      <th className="text-left p-2 font-semibold text-[var(--navy)] border-b border-[var(--border)]">Doel</th>
+                      <th className="text-left p-2 font-semibold text-[var(--navy)] border-b border-[var(--border)]">Regio</th>
+                      <th className="text-left p-2 font-semibold text-[var(--navy)] border-b border-[var(--border)]">VEO</th>
+                    </tr></thead>
+                    <tbody className="text-[var(--text)]">
+                      {[
+                        ["Supabase", "Database, authenticatie", "EU (Frankfurt)", "✅"],
+                        ["Anthropic (Claude)", "Classificatie e-mails", "EU", "✅"],
+                        ["Google (Gemini)", "Extractie rekeninggegevens", "EU", "✅"],
+                        ["Mistral / Scaleway", "OCR foto\u2019s", "Frankrijk", "✅ Self-hosted"],
+                        ["ElevenLabs", "Spraakassistent", "EU", "✅"],
+                        ["Enable Banking", "PSD2 bankkoppeling", "Finland (EU)", "✅"],
+                        ["LiveKit", "Videogesprekken", "EU", "✅"],
+                        ["Vercel", "Hosting", "EU (London)", "✅"],
+                        ["Resend", "Transactionele e-mail", "EU/US (SCC)", "✅"],
+                        ["Mailgun", "Outreach e-mail", "EU", "✅"],
+                        ["PostHog", "Analytics (geanonimiseerd)", "EU (Frankfurt)", "✅"],
+                      ].map((row, i) => (
+                        <tr key={i}><td className="p-2 border-b border-[var(--border)]">{row[0]}</td><td className="p-2 border-b border-[var(--border)]">{row[1]}</td><td className="p-2 border-b border-[var(--border)]">{row[2]}</td><td className="p-2 border-b border-[var(--border)]">{row[3]}</td></tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="border-t border-[var(--border)] pt-6">
+                <h2 className="text-base font-bold text-[var(--navy)] mb-2">8. Datalekprocedure</h2>
+                <p className="text-sm text-[var(--text)] leading-relaxed whitespace-pre-line">{"PayWatch heeft een vastgestelde procedure voor het omgaan met datalekken conform Art. 33/34 AVG.\n\nBij een datalek:\n• Binnen 4 uur: classificatie (kritiek/hoog/middel/laag)\n• Binnen 72 uur: melding bij de Autoriteit Persoonsgegevens als er risico is voor betrokkenen\n• Zonder onredelijke vertraging: melding bij betrokkenen als er hoog risico is\n\nMeldkanalen naar betrokkenen:\n• E-mail via Resend\n• In-app notificatie\n\nAlle incidenten worden gelogd in het admin audit log met datum, beschrijving, classificatie, en getroffen maatregelen.\n\nVerantwoordelijke: Samba Jarju (CTO) — privacy@paywatch.nl"}</p>
+              </div>
+
               <div className="border-t border-[var(--border)] pt-6 text-center">
                 <p className="text-xs text-[var(--muted)]">Volgende herziening: november 2026</p>
               </div>
             </div>
           </div>
         )}
+
+        {/* Footer */}
+        <p className="text-xs text-[var(--muted)] text-center mt-12">
+          © {new Date().getFullYear()} PayWatch — PayWatch, Rotterdam, Netherlands
+          <br />
+          <a href={`mailto:${siteConfig.company.emails.privacy}`} className="text-[var(--blue)] hover:underline">
+            {siteConfig.company.emails.privacy}
+          </a>
+        </p>
+
       </div>
     </div>
   );
