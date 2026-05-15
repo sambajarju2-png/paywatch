@@ -11,7 +11,7 @@ function getAdmin() {
   );
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const admin = await verifyAdmin();
   if (!admin.isAdmin) return admin.response;
 
@@ -31,22 +31,40 @@ export async function GET() {
       billCounts[b.user_id] = (billCounts[b.user_id] || 0) + 1;
     });
 
-    const emailMap: Record<string, string> = {};
-    // Use RPC to get emails from auth.users (more reliable than admin.listUsers)
-    const { data: emailRows } = await supabase.rpc("get_user_emails");
-    (emailRows || []).forEach((u: any) => { emailMap[u.id] = u.email || ""; });
+    // Privacy by design: anonymize user data in admin view
+    // Admin sees patterns (gemeente, plan, bill_count) but not identities
+    const users = (usersRes.data || []).map((u: any) => {
+      const hash = u.user_id.slice(0, 6).toUpperCase();
+      const hasName = !!(u.display_name || u.first_name || u.last_name);
+      return {
+        user_id: u.user_id,
+        display_name: hasName ? `Gebruiker #${hash}` : "",
+        first_name: "",
+        last_name: "",
+        email: "",
+        language: u.language,
+        onboarding_complete: u.onboarding_complete,
+        gemeente: u.gemeente,
+        dark_mode: u.dark_mode,
+        created_at: u.created_at,
+        last_active_at: u.last_active_at,
+        plan: u.plan,
+        voice_seconds_used: u.voice_seconds_used,
+        bill_count: billCounts[u.user_id] || 0,
+        likely_bot:
+          !u.display_name && !u.first_name && !u.last_name &&
+          !u.onboarding_complete &&
+          (billCounts[u.user_id] || 0) === 0 &&
+          new Date(u.created_at) < new Date(Date.now() - 7 * 86400000),
+      };
+    });
 
-    const users = (usersRes.data || []).map((u: any) => ({
-      ...u,
-      email: emailMap[u.user_id] || "",
-      bill_count: billCounts[u.user_id] || 0,
-      // Bot heuristic: no name, onboarding incomplete, no bills, older than 7 days
-      likely_bot:
-        !u.display_name && !u.first_name && !u.last_name &&
-        !u.onboarding_complete &&
-        (billCounts[u.user_id] || 0) === 0 &&
-        new Date(u.created_at) < new Date(Date.now() - 7 * 86400000),
-    }));
+    // Audit log
+    await supabase.from("admin_data_access_log").insert({
+      admin_email: admin.email || "unknown",
+      action: "view_users_anonymized",
+      metadata: { user_count: users.length },
+    });
 
     return NextResponse.json({ users });
   } catch (err) {
@@ -104,6 +122,13 @@ export async function DELETE(request: NextRequest) {
       errors++;
     }
   }
+
+  // Audit log
+  await supabase.from("admin_data_access_log").insert({
+    admin_email: admin.email || "unknown",
+    action: "bulk_delete_users",
+    metadata: { user_ids: userIds, deleted, errors },
+  });
 
   console.log(`[Admin] Bulk delete: ${deleted} deleted, ${errors} errors — by ${admin.email}`);
   return NextResponse.json({ ok: true, deleted, errors });

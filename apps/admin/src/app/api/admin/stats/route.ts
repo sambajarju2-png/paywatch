@@ -158,7 +158,7 @@ export async function GET() {
         unsubscribed: unsubscribed.length,
         unsubscribedUsers: unsubscribed.map((u) => ({
           user_id: u.user_id,
-          name: u.display_name || [u.first_name, u.last_name].filter(Boolean).join(" ") || "Onbekend",
+          name: `Gebruiker #${u.user_id.slice(0, 6).toUpperCase()}`,
         })),
         feedback: (unsubFeedback || []).map((f) => ({
           user_id: f.user_id,
