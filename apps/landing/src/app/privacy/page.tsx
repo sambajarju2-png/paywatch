@@ -36,7 +36,7 @@ const privacyContent = {
       },
       {
         title: "7. AI-verwerking",
-        body: "PayWatch gebruikt AI op drie plekken. In alle gevallen geldt: je gegevens verlaten de EU niet.\n\n1. Rekeningen herkennen en extraheren — Mistral AI (gehost op onze eigen servers bij Scaleway in Parijs) scant je e-mails op rekeningen, extraheert bedrijfsnaam, bedrag en vervaldatum, en verwerkt foto\'s van rekeningen. E-mailteksten en foto\'s worden niet opgeslagen.\n\n2. Financiële samenvattingen — Anthropic Claude genereert inzichten op basis van je rekeningtotalen. Claude ontvangt geen persoonlijke gegevens — alleen samenvattingen zoals totaalbedragen en aantallen.\n\n3. PayBuddy spraakassistent — ElevenLabs verwerkt je spraak. Gesprekken worden niet opgenomen of opgeslagen.\n\nGeen van deze AI-diensten wordt getraind op jouw data.",
+        body: "PayWatch gebruikt AI op drie plekken. In alle gevallen geldt: je gegevens verlaten de EU niet.\n\n1. Rekeningen herkennen en extraheren — Mistral AI (gehost op onze eigen servers bij Scaleway in Parijs) scant je e-mails op rekeningen, extraheert bedrijfsnaam, bedrag en vervaldatum, en verwerkt foto\'s van rekeningen. E-mailteksten en foto\'s worden niet opgeslagen. Niet-relevante e-mails worden niet geanalyseerd, opgeslagen of gebruikt voor profilering.\n\n2. Financiële samenvattingen — Anthropic Claude genereert inzichten op basis van je rekeningtotalen. Claude ontvangt geen persoonlijke gegevens — alleen samenvattingen zoals totaalbedragen en aantallen.\n\n3. PayBuddy spraakassistent — ElevenLabs verwerkt je spraak. Gesprekken worden niet opgenomen of opgeslagen.\n\nGeen van deze AI-diensten wordt getraind op jouw data.",
       },
       {
         title: "8. Delen met derden",
@@ -686,7 +686,7 @@ function PrivacyContent() {
 
               <div className="border-t border-[var(--border)] pt-6">
                 <h2 className="text-base font-bold text-[var(--navy)] mb-2">3. Bijzondere persoonsgegevens</h2>
-                <p className="text-sm text-[var(--text)] leading-relaxed whitespace-pre-line">{"PayWatch is niet gericht op het verwerken van bijzondere persoonsgegevens (Art. 9 AVG). Het valt echter niet uit te sluiten dat banktransacties indirect bijzondere persoonsgegevens onthullen — bijvoorbeeld betalingen aan zorginstellingen of politieke partijen.\n\nMaatregelen:\n• Categorisering is uitsluitend financieel — nooit medisch of politiek\n• Geen gezondheids- of andere gevoelige profielen\n• Gebruikers kunnen individuele transacties verwijderen\n• Geen medewerker heeft toegang tot individuele transacties\n• Geen geautomatiseerde besluitvorming (Art. 22 AVG)"}</p>
+                <p className="text-sm text-[var(--text)] leading-relaxed whitespace-pre-line">{"PayWatch is niet gericht op het verwerken van bijzondere persoonsgegevens (Art. 9 AVG). Het valt echter niet uit te sluiten dat banktransacties indirect bijzondere persoonsgegevens onthullen — bijvoorbeeld betalingen aan zorginstellingen of politieke partijen.\n\nMaatregelen:\n• Categorisering is uitsluitend financieel — nooit medisch of politiek\n• Geen gezondheids- of andere gevoelige profielen\n• Gebruikers kunnen individuele transacties verwijderen\n• Geen medewerker heeft toegang tot individuele transacties\n• Geen geautomatiseerde besluitvorming (Art. 22 AVG)\n\nVoor zover betaalgegevens indirect bijzondere persoonsgegevens kunnen onthullen, beperkt PayWatch deze verwerking strikt tot wat technisch noodzakelijk is voor de door de gebruiker gevraagde financiële dienstverlening."}</p>
               </div>
 
               <div className="border-t border-[var(--border)] pt-6">
@@ -776,7 +776,7 @@ function PrivacyContent() {
               </div>
 
               <div className="border-t border-[var(--border)] pt-6 text-center">
-                <p className="text-xs text-[var(--muted)]">Volgende herziening: november 2026</p>
+                <p className="text-xs text-[var(--muted)]">Na implementatie van bovenstaande maatregelen blijft een beperkt restrisico bestaan vanwege de aard van financiële transactiedata. Dit risico wordt geaccepteerd gezien het maatschappelijk doel (schuldpreventie) en de getroffen waarborgen.\n\nVolgende herziening: november 2026</p>
               </div>
             </div>
           </div>
