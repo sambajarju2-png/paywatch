@@ -12,6 +12,7 @@ interface GdprRequest {
   status: string;
   details: any;
   action_taken: string | null;
+  fulfilled_by: string | null;
   completed_at: string | null;
   created_at: string;
   days_open: number;
