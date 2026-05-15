@@ -30,8 +30,6 @@ export default function GdprPage() {
   const [requests, setRequests] = useState<GdprRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [completing, setCompleting] = useState<string | null>(null);
-  const [note, setNote] = useState("");
-  const [showNoteFor, setShowNoteFor] = useState<string | null>(null);
 
   async function load() {
     const res = await fetch("/api/admin/gdpr");
@@ -44,17 +42,23 @@ export default function GdprPage() {
 
   useEffect(() => { load(); }, []);
 
-  async function complete(requestId: string) {
+  async function complete(requestId: string, completionNote?: string) {
     setCompleting(requestId);
-    const res = await fetch("/api/admin/gdpr", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ request_id: requestId, note: note || undefined }),
-    });
-    if (res.ok) {
-      setNote("");
-      setShowNoteFor(null);
-      await load();
+    try {
+      const res = await fetch("/api/admin/gdpr", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ request_id: requestId, note: completionNote }),
+      });
+      if (res.ok) {
+        await load();
+        alert("Verzoek afgerond — e-mail verstuurd naar gebruiker.");
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert("Fout: " + (err.error || res.statusText));
+      }
+    } catch (err) {
+      alert("Netwerkfout bij afronden.");
     }
     setCompleting(null);
   }
@@ -110,29 +114,18 @@ export default function GdprPage() {
                           </div>
                         )}
                       </div>
-                      <div className="flex-shrink-0">
-                        {showNoteFor === r.id ? (
-                          <div className="space-y-2 w-56">
-                            <textarea value={note} onChange={(e) => setNote(e.target.value)}
-                              placeholder="Toelichting (optioneel)..."
-                              className="w-full rounded-lg border border-pw-border bg-pw-bg px-3 py-2 text-[12px] resize-none" rows={2} />
-                            <div className="flex gap-2">
-                              <button onClick={() => complete(r.id)} disabled={completing === r.id}
-                                className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white text-[11px] font-medium rounded-lg disabled:opacity-50">
-                                {completing === r.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
-                                Afronden
-                              </button>
-                              <button onClick={() => { setShowNoteFor(null); setNote(""); }}
-                                className="px-3 py-1.5 text-[11px] text-pw-muted">Annuleer</button>
-                            </div>
-                          </div>
-                        ) : (
-                          <button onClick={() => setShowNoteFor(r.id)}
-                            className="flex items-center gap-1 px-3 py-1.5 bg-emerald-50 text-emerald-700 text-[11px] font-medium rounded-lg border border-emerald-200 hover:bg-emerald-100">
-                            <CheckCircle2 className="w-3 h-3" />
-                            Markeer als afgerond
-                          </button>
-                        )}
+                      <div className="flex-shrink-0 mt-2 sm:mt-0">
+                        <button
+                          onClick={() => {
+                            const userNote = prompt("Toelichting bij afronding (optioneel):");
+                            if (userNote === null) return; // cancelled
+                            complete(r.id, userNote || undefined);
+                          }}
+                          disabled={completing === r.id}
+                          className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-[12px] font-medium rounded-lg disabled:opacity-50 active:scale-95 w-full sm:w-auto justify-center">
+                          {completing === r.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                          Afronden
+                        </button>
                       </div>
                     </div>
                   </div>
