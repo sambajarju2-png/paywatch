@@ -36,11 +36,11 @@ const privacyContent = {
       },
       {
         title: "7. AI-verwerking",
-        body: "PayWatch gebruikt AI op drie plekken. In alle gevallen geldt: je gegevens verlaten de EU niet.\n\n1. Rekeningen herkennen uit e-mail — Onze AI analyseert e-mails die over rekeningen gaan om bedrijfsnaam, bedrag en vervaldatum te herkennen. De e-mailtekst wordt tijdelijk verwerkt maar niet opgeslagen.\n\n2. Foto\'s van rekeningen scannen — Mistral AI, gehost op onze eigen servers bij Scaleway in Parijs. Je foto wordt direct na verwerking verwijderd.\n\n3. PayBuddy spraakassistent — ElevenLabs verwerkt je spraak. Gesprekken worden niet opgenomen of opgeslagen.\n\nGeen van deze AI-diensten wordt getraind op jouw data.",
+        body: "PayWatch gebruikt AI op drie plekken. In alle gevallen geldt: je gegevens verlaten de EU niet.\n\n1. Rekeningen herkennen en extraheren — Mistral AI (gehost op onze eigen servers bij Scaleway in Parijs) scant je e-mails op rekeningen, extraheert bedrijfsnaam, bedrag en vervaldatum, en verwerkt foto\'s van rekeningen. E-mailteksten en foto\'s worden niet opgeslagen.\n\n2. Financiële samenvattingen — Anthropic Claude genereert inzichten op basis van je rekeningtotalen. Claude ontvangt geen persoonlijke gegevens — alleen samenvattingen zoals totaalbedragen en aantallen.\n\n3. PayBuddy spraakassistent — ElevenLabs verwerkt je spraak. Gesprekken worden niet opgenomen of opgeslagen.\n\nGeen van deze AI-diensten wordt getraind op jouw data.",
       },
       {
         title: "8. Delen met derden",
-        body: `Wij delen je gegevens alleen met dienstverleners die nodig zijn om PayWatch te laten werken:\n\n• Supabase (EU) — database en authenticatie\n• Scaleway (Parijs) — AI-verwerking van foto's\n• Enable Banking (Finland, EU) — bankkoppeling via PSD2\n• ElevenLabs — spraakverwerking voor PayBuddy\n• Vercel (EU) — hosting\n• LiveKit (EU) — videogesprekken met je coach\n• Resend — service-e-mails\n\nMet al deze partijen hebben wij verwerkersovereenkomsten. Wij verkopen nooit je gegevens.`,
+        body: `Wij delen je gegevens alleen met dienstverleners die nodig zijn om PayWatch te laten werken:\n\n• Supabase (EU) — database en authenticatie\n• Mistral AI / Scaleway (Parijs) — e-mail classificatie, rekeningextractie, OCR foto's\n• Enable Banking (Finland, EU) — bankkoppeling via PSD2\n• ElevenLabs — spraakverwerking voor PayBuddy\n• Vercel (EU) — hosting\n• LiveKit (EU) — videogesprekken met je coach\n• Resend — service-e-mails\n\nMet al deze partijen hebben wij verwerkersovereenkomsten. Wij verkopen nooit je gegevens.`,
       },
       {
         title: "9. Beveiliging",
@@ -182,8 +182,8 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
           {
             title: "Welke AI-diensten wij gebruiken",
             items: [
-              "Onze eigen scan-engine (Mistral, gehost bij Scaleway in Parijs, Frankrijk): classificeert e-mails, extraheert rekeninggegevens en verwerkt camerafoto's — volledig binnen de EU",
-              "Anthropic Claude Haiku: genereert financiële inzichten en conceptbrieven op basis van geanonimiseerde rekeninggegevens",
+              "Mistral AI (gehost bij Scaleway in Parijs, Frankrijk): classificeert e-mails, extraheert rekeninggegevens (bedrijf, bedrag, datum) en verwerkt camerafoto's — volledig binnen de EU",
+              "Anthropic Claude: genereert financiële samenvattingen op basis van rekeningtotalen — ontvangt geen individuele persoonsgegevens",
               "AI-modellen ontvangen alleen de minimaal benodigde data per verzoek",
               "Wij trainen GEEN AI-modellen met jouw gegevens",
               "Gevoelige gegevens (e-mails, foto's, IBAN's) verlaten de EU niet",
@@ -224,7 +224,7 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
             items: [
               "Supabase (database en authenticatie) — EU-gehost, GDPR-compliant",
               "Scaleway Generative API (AI-scan en extractie) — gehost in Parijs, Frankrijk, volledig binnen de EU",
-              "Anthropic Claude API (AI-inzichten en brieven) — alleen geanonimiseerde rekeninggegevens",
+              "Anthropic Claude — financiële samenvattingen op basis van rekeningtotalen (geen individuele persoonsgegevens)",
               "Microsoft Graph API (Outlook e-mail scanning) — alleen-lezen toegang via Mail.Read scope",
               "Enable Banking (PSD2 open banking) — banksynchronisatie via beveiligde PSD2-verbinding, alleen-lezen toegang tot transacties en saldo. Wij kunnen NOOIT geld overboeken of je saldo wijzigen. Verbindingen verlopen automatisch na 90 dagen",
               "Vercel (hosting) — verwerkt geen gebruikersgegevens direct",
@@ -361,8 +361,8 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
           {
             title: "Which AI services we use",
             items: [
-              "Our own scanning engine (Mistral, hosted at Scaleway in Paris, France): classifies emails, extracts bill data, and processes camera photos — fully within the EU",
-              "Anthropic Claude Haiku: generates financial insights and draft letters based on anonymized bill data",
+              "Mistral AI (hosted at Scaleway in Paris, France): classifies emails, extracts bill data (vendor, amount, date), and processes camera photos — fully within the EU",
+              "Anthropic Claude: generates financial summaries based on bill totals — receives no individual personal data",
               "AI models only receive the minimum data required per request",
               "We do NOT train AI models with your data",
               "Sensitive data (emails, photos, IBANs) never leaves the EU",
@@ -403,7 +403,7 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
             items: [
               "Supabase (database and authentication) — EU-hosted, GDPR-compliant",
               "Scaleway Generative API (AI scanning and extraction) — hosted in Paris, France, fully within the EU",
-              "Anthropic Claude API (AI insights and letters) — only anonymized bill data is sent",
+              "Anthropic Claude — financial summaries based on bill totals (no individual personal data)",
               "Microsoft Graph API (Outlook email scanning) — read-only access via Mail.Read scope",
               "Enable Banking (PSD2 open banking) — bank sync via secure PSD2 connection, read-only access to transactions and balance. We can NEVER transfer money or modify your balance. Connections expire automatically after 90 days",
               "Vercel (hosting) — does not process user data directly",
@@ -700,9 +700,9 @@ function PrivacyContent() {
                     </tr></thead>
                     <tbody className="text-[var(--text)]">
                       <tr><td className="p-2 border-b border-[var(--border)]">Supabase</td><td className="p-2 border-b border-[var(--border)]">Database, authenticatie</td><td className="p-2 border-b border-[var(--border)]">EU (Frankfurt)</td></tr>
-                      <tr><td className="p-2 border-b border-[var(--border)]">Anthropic (Claude)</td><td className="p-2 border-b border-[var(--border)]">Classificatie e-mails</td><td className="p-2 border-b border-[var(--border)]">EU</td></tr>
-                      <tr><td className="p-2 border-b border-[var(--border)]">Google (Gemini)</td><td className="p-2 border-b border-[var(--border)]">Extractie rekeninggegevens</td><td className="p-2 border-b border-[var(--border)]">EU</td></tr>
-                      <tr><td className="p-2 border-b border-[var(--border)]">Mistral / Scaleway</td><td className="p-2 border-b border-[var(--border)]">OCR foto's</td><td className="p-2 border-b border-[var(--border)]">Frankrijk</td></tr>
+                      <tr><td className="p-2 border-b border-[var(--border)]">Anthropic (Claude)</td><td className="p-2 border-b border-[var(--border)]">Financiële samenvattingen (alleen totalen)</td><td className="p-2 border-b border-[var(--border)]">EU</td></tr>
+                      <tr><td className="p-2 border-b border-[var(--border)]">Mistral AI (Scaleway)</td><td className="p-2 border-b border-[var(--border)]">E-mail scan, extractie, OCR foto's</td><td className="p-2 border-b border-[var(--border)]">Frankrijk (EU)</td></tr>
+                      
                       <tr><td className="p-2 border-b border-[var(--border)]">ElevenLabs</td><td className="p-2 border-b border-[var(--border)]">Spraakassistent</td><td className="p-2 border-b border-[var(--border)]">EU</td></tr>
                       <tr><td className="p-2 border-b border-[var(--border)]">Enable Banking</td><td className="p-2 border-b border-[var(--border)]">PSD2 bankkoppeling</td><td className="p-2 border-b border-[var(--border)]">Finland (EU)</td></tr>
                       <tr><td className="p-2 border-b border-[var(--border)]">LiveKit</td><td className="p-2 border-b border-[var(--border)]">Videogesprekken</td><td className="p-2 border-b border-[var(--border)]">EU</td></tr>
@@ -753,9 +753,8 @@ function PrivacyContent() {
                     <tbody className="text-[var(--text)]">
                       {[
                         ["Supabase", "Database, authenticatie", "EU (Frankfurt)", "✅"],
-                        ["Anthropic (Claude)", "Classificatie e-mails", "EU", "✅"],
-                        ["Google (Gemini)", "Extractie rekeninggegevens", "EU", "✅"],
-                        ["Mistral / Scaleway", "OCR foto\u2019s", "Frankrijk", "✅ Self-hosted"],
+                        ["Anthropic (Claude)", "Financiële samenvattingen (alleen totalen)", "EU", "✅"],
+                        ["Mistral AI (Scaleway)", "E-mail scan, extractie, OCR", "Frankrijk (EU)", "✅ Self-hosted"],
                         ["ElevenLabs", "Spraakassistent", "EU", "✅"],
                         ["Enable Banking", "PSD2 bankkoppeling", "Finland (EU)", "✅"],
                         ["LiveKit", "Videogesprekken", "EU", "✅"],
