@@ -11,7 +11,7 @@ const privacyContent = {
     sections: [
       {
         title: "1. Wie zijn wij?",
-        body: `PayWatch is een Nederlandse app die je helpt grip te krijgen op je rekeningen en schulden. We zijn opgericht in Rotterdam en ingeschreven bij de KvK onder nummer ${siteConfig.company.kvk}.\n\nWij zijn de verwerkingsverantwoordelijke voor je persoonsgegevens. Dat betekent dat wij bepalen waarvoor en hoe je gegevens worden verwerkt — en dat we daarvoor verantwoordelijk zijn.\n\nVragen over je privacy? Mail naar ${siteConfig.company.emails.privacy}.`,
+        body: `PayWatch is een Nederlandse app die je helpt grip te krijgen op je rekeningen en schulden. We zijn opgericht in Rotterdam en ingeschreven bij de KvK onder nummer ${siteConfig.company.kvk}.\n\nWij zijn de verwerkingsverantwoordelijke voor je persoonsgegevens. Dat betekent dat wij bepalen waarvoor en hoe je gegevens worden verwerkt — en dat we daarvoor verantwoordelijk zijn.\n\nOnze privacyverantwoordelijke is Samba Jarju (CTO). Vragen over je privacy? Mail naar ${siteConfig.company.emails.privacy}.`,
       },
       {
         title: "2. Welke gegevens verzamelen wij — en waarom?",

@@ -103,7 +103,27 @@ export default async function UserDetailPage({
   const consents = consentResult.data || [];
   const auditLog = auditResult.data || [];
 
-  const hasConsent = consents.some((c) => c.granted && (c.scope === "full_access" || c.scope === "view_bills"));
+  // Build granular consent scope map
+  const grantedScopes = new Set(
+    consents.filter((c: any) => c.granted).map((c: any) => c.scope)
+  );
+  const hasFullAccess = grantedScopes.has("full_access");
+  const consentFlags = {
+    contact_info: true, // always visible if user connected to org
+    view_bills: hasFullAccess || grantedScopes.has("view_bills"),
+    financial_overview: hasFullAccess || grantedScopes.has("financial_overview"),
+    payment_plans: hasFullAccess || grantedScopes.has("payment_plans"),
+    messaging: hasFullAccess || grantedScopes.has("messaging"),
+  };
+  // Legacy fallback: if old consent format (no granular scopes), treat as full access
+  const hasAnyConsent = consents.some((c: any) => c.granted);
+  if (hasAnyConsent && !hasFullAccess && grantedScopes.size <= 1) {
+    // Old-style consent without granular scopes — allow everything
+    consentFlags.view_bills = true;
+    consentFlags.financial_overview = true;
+    consentFlags.payment_plans = true;
+    consentFlags.messaging = true;
+  }
 
   const name =
     settings?.display_name ||
@@ -137,10 +157,12 @@ export default async function UserDetailPage({
           language={settings?.language || "nl"}
           onboardingComplete={settings?.onboarding_complete || false}
           coachEmail={coachEmail}
-          hasConsent={hasConsent}
-          finances={hasConsent ? finances : null}
-          bills={hasConsent ? bills : []}
-          paymentPlans={hasConsent ? paymentPlans : []}
+          consent={consentFlags}
+          finances={consentFlags.financial_overview ? finances : null}
+          bills={consentFlags.view_bills ? bills : []}
+          paymentPlans={consentFlags.payment_plans ? paymentPlans : []}
+          auditLog={auditLog}
+        />
           auditLog={auditLog}
         />
       </div>

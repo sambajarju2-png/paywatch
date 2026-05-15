@@ -71,7 +71,7 @@ interface Props {
   language: string;
   onboardingComplete: boolean;
   coachEmail: string | null;
-  hasConsent: boolean;
+  consent: { contact_info: boolean; view_bills: boolean; financial_overview: boolean; payment_plans: boolean; messaging: boolean };
   finances: Finances | null;
   bills: Bill[];
   paymentPlans: PaymentPlan[];
@@ -103,7 +103,7 @@ const STATUS_MAP: Record<string, { label: string; variant: "success" | "warning"
 
 export default function UserDetailClient({
   name, email, status, externalId, onboardedAt, lastActive,
-  gemeente, language, onboardingComplete, coachEmail, hasConsent,
+  gemeente, language, onboardingComplete, coachEmail, consent,
   finances, bills, paymentPlans, auditLog,
 }: Props) {
   const st = STATUS_MAP[status] || STATUS_MAP.active;
@@ -144,7 +144,7 @@ export default function UserDetailClient({
       </div>
 
       {/* No consent banner */}
-      {!hasConsent && (
+      {!consent.view_bills && !consent.financial_overview && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5 flex items-start gap-3">
           <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -157,7 +157,7 @@ export default function UserDetailClient({
       )}
 
       {/* KPI row */}
-      {hasConsent && (
+      {(consent.view_bills || consent.financial_overview) && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
           <div className="bg-white border border-pw-border rounded-xl p-4">
             <p className="text-[11px] font-bold text-pw-muted uppercase tracking-wider mb-1">Openstaand</p>
@@ -187,9 +187,9 @@ export default function UserDetailClient({
         <div className="lg:col-span-2 bg-white border border-pw-border rounded-2xl overflow-hidden">
           <div className="px-5 py-4 border-b border-pw-border flex items-center justify-between">
             <h2 className="text-sm font-bold text-pw-navy">Rekeningen</h2>
-            {hasConsent && <span className="text-xs text-pw-muted">{bills.length} totaal</span>}
+            {consent.view_bills && <span className="text-xs text-pw-muted">{bills.length} totaal</span>}
           </div>
-          {!hasConsent ? (
+          {!consent.view_bills ? (
             <div className="py-10 text-center text-sm text-pw-muted">Geen toestemming</div>
           ) : bills.length === 0 ? (
             <div className="py-10 text-center text-sm text-pw-muted">Geen rekeningen gevonden</div>
@@ -229,8 +229,8 @@ export default function UserDetailClient({
             <div className="px-5 py-4 border-b border-pw-border">
               <h2 className="text-sm font-bold text-pw-navy">Financieel overzicht</h2>
             </div>
-            {!hasConsent || !finances ? (
-              <div className="py-8 text-center text-sm text-pw-muted">{hasConsent ? "Niet ingevuld" : "Geen toestemming"}</div>
+            {!consent.financial_overview || !finances ? (
+              <div className="py-8 text-center text-sm text-pw-muted">{consent.financial_overview ? "Niet ingevuld" : "Geen toestemming"}</div>
             ) : (
               <div className="divide-y divide-pw-border">
                 {[
@@ -255,7 +255,7 @@ export default function UserDetailClient({
           </div>
 
           {/* Payment plans */}
-          {hasConsent && paymentPlans.length > 0 && (
+          {consent.payment_plans && paymentPlans.length > 0 && (
             <div className="bg-white border border-pw-border rounded-2xl overflow-hidden">
               <div className="px-5 py-4 border-b border-pw-border">
                 <h2 className="text-sm font-bold text-pw-navy">Betalingsregelingen</h2>
