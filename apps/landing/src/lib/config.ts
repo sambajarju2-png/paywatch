@@ -51,6 +51,7 @@ export const footerColumns = {
     { labelNl: "Privacybeleid", labelEn: "Privacy Policy", href: "/privacy" },
     { labelNl: "Voorwaarden", labelEn: "Terms of Service", href: "/terms" },
     { labelNl: "Gegevensverwerking", labelEn: "Data Processing", href: "/data-processing" },
+    { labelNl: "DPIA", labelEn: "DPIA", href: "/privacy?tab=dpia" },
   ],
   support: [
     { labelNl: "Artikelen", labelEn: "Resources", href: "/resources" },

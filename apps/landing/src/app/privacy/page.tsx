@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useApp } from "@/components/AppProvider";
 import { siteConfig } from "@/lib/config";
 
@@ -495,16 +496,22 @@ function isNeverLine(text: string) {
 }
 
 /* ── Component ── */
-export default function PrivacyPage() {
+function PrivacyContent() {
   const { lang, t } = useApp();
-  const [activeTab, setActiveTab] = useState<"privacy" | "data">("privacy");
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState<"privacy" | "data" | "dpia">("privacy");
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "dpia" || tab === "data") setActiveTab(tab);
+  }, [searchParams]);
 
   const privacy = privacyContent[lang];
   const data = dataProcessingContent[lang];
 
   const tabs = {
-    nl: { privacy: "Privacybeleid", data: "Gegevensverwerking" },
-    en: { privacy: "Privacy Policy", data: "Data Processing" },
+    nl: { privacy: "Privacybeleid", data: "Gegevensverwerking", dpia: "DPIA" },
+    en: { privacy: "Privacy Policy", data: "Data Processing", dpia: "DPIA" },
   };
 
   return (
@@ -537,6 +544,16 @@ export default function PrivacyPage() {
               }`}
             >
               {tabs[lang].data}
+            </button>
+            <button
+              onClick={() => setActiveTab("dpia")}
+              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                activeTab === "dpia"
+                  ? "bg-[var(--surface)] text-[var(--navy)] shadow-sm"
+                  : "text-[var(--muted)] hover:text-[var(--text)]"
+              }`}
+            >
+              {tabs[lang].dpia}
             </button>
           </div>
         </div>
@@ -642,7 +659,109 @@ export default function PrivacyPage() {
             {siteConfig.company.emails.privacy}
           </a>
         </p>
+
+        {/* ── Tab 3: DPIA ── */}
+        {activeTab === "dpia" && (
+          <div className="mt-6">
+            <p className="text-xs text-[var(--muted)] text-center mb-6">Versie 1.0 — 15 mei 2026</p>
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-10 space-y-8">
+              <div>
+                <h2 className="text-base font-bold text-[var(--navy)] mb-2">1. Beschrijving van de verwerking</h2>
+                <p className="text-sm text-[var(--text)] leading-relaxed whitespace-pre-line">{"PayWatch helpt Nederlandse huishoudens om grip te krijgen op hun rekeningen en schulden te voorkomen. De app herkent rekeningen uit e-mail en bankgegevens, volgt escalatiefases (factuur → herinnering → aanmaning → incasso → deurwaarder), en biedt hulptools.\n\nBetrokkenen: consumenten (app-gebruikers, waarvan een deel in een kwetsbare financiële situatie) en B2B-gebruikers (coaches en medewerkers van gemeenten en hulporganisaties).\n\nVerantwoordelijke: PayWatch (KVK 83474889), Rotterdam. Privacyverantwoordelijke: Samba Jarju (CTO)."}</p>
+              </div>
+
+              <div className="border-t border-[var(--border)] pt-6">
+                <h2 className="text-base font-bold text-[var(--navy)] mb-2">2. Categorieën persoonsgegevens</h2>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead><tr className="bg-[var(--bg)]">
+                      <th className="text-left p-2 font-semibold text-[var(--navy)] border-b border-[var(--border)]">Categorie</th>
+                      <th className="text-left p-2 font-semibold text-[var(--navy)] border-b border-[var(--border)]">Bron</th>
+                      <th className="text-left p-2 font-semibold text-[var(--navy)] border-b border-[var(--border)]">Bewaartermijn</th>
+                    </tr></thead>
+                    <tbody className="text-[var(--text)]">
+                      <tr><td className="p-2 border-b border-[var(--border)]">Naam, e-mailadres</td><td className="p-2 border-b border-[var(--border)]">Registratie</td><td className="p-2 border-b border-[var(--border)]">Account + 6 mnd</td></tr>
+                      <tr><td className="p-2 border-b border-[var(--border)]">Rekeninggegevens (bedrijf, bedrag, datum)</td><td className="p-2 border-b border-[var(--border)]">E-mail scan, foto, handmatig</td><td className="p-2 border-b border-[var(--border)]">Actief account</td></tr>
+                      <tr><td className="p-2 border-b border-[var(--border)]">Banktransacties</td><td className="p-2 border-b border-[var(--border)]">Enable Banking PSD2</td><td className="p-2 border-b border-[var(--border)]">Koppeling + 30 dgn</td></tr>
+                      <tr><td className="p-2 border-b border-[var(--border)]">Financieel profiel</td><td className="p-2 border-b border-[var(--border)]">Handmatig ingevoerd</td><td className="p-2 border-b border-[var(--border)]">Actief account</td></tr>
+                      <tr><td className="p-2 border-b border-[var(--border)]">E-mailinhoud</td><td className="p-2 border-b border-[var(--border)]">Gmail/Outlook</td><td className="p-2 border-b border-[var(--border)]">Niet opgeslagen</td></tr>
+                      <tr><td className="p-2 border-b border-[var(--border)]">Foto's van rekeningen</td><td className="p-2 border-b border-[var(--border)]">Camera</td><td className="p-2 border-b border-[var(--border)]">Direct verwijderd</td></tr>
+                      <tr><td className="p-2">Spraak en video</td><td className="p-2">In-app</td><td className="p-2">Niet opgeslagen</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="border-t border-[var(--border)] pt-6">
+                <h2 className="text-base font-bold text-[var(--navy)] mb-2">3. Bijzondere persoonsgegevens</h2>
+                <p className="text-sm text-[var(--text)] leading-relaxed whitespace-pre-line">{"PayWatch is niet gericht op het verwerken van bijzondere persoonsgegevens (Art. 9 AVG). Het valt echter niet uit te sluiten dat banktransacties indirect bijzondere persoonsgegevens onthullen — bijvoorbeeld betalingen aan zorginstellingen of politieke partijen.\n\nMaatregelen:\n• Categorisering is uitsluitend financieel — nooit medisch of politiek\n• Geen gezondheids- of andere gevoelige profielen\n• Gebruikers kunnen individuele transacties verwijderen\n• Geen medewerker heeft toegang tot individuele transacties\n• Geen geautomatiseerde besluitvorming (Art. 22 AVG)"}</p>
+              </div>
+
+              <div className="border-t border-[var(--border)] pt-6">
+                <h2 className="text-base font-bold text-[var(--navy)] mb-2">4. Verwerkers</h2>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead><tr className="bg-[var(--bg)]">
+                      <th className="text-left p-2 font-semibold text-[var(--navy)] border-b border-[var(--border)]">Verwerker</th>
+                      <th className="text-left p-2 font-semibold text-[var(--navy)] border-b border-[var(--border)]">Doel</th>
+                      <th className="text-left p-2 font-semibold text-[var(--navy)] border-b border-[var(--border)]">Regio</th>
+                    </tr></thead>
+                    <tbody className="text-[var(--text)]">
+                      <tr><td className="p-2 border-b border-[var(--border)]">Supabase</td><td className="p-2 border-b border-[var(--border)]">Database, authenticatie</td><td className="p-2 border-b border-[var(--border)]">EU (Frankfurt)</td></tr>
+                      <tr><td className="p-2 border-b border-[var(--border)]">Anthropic (Claude)</td><td className="p-2 border-b border-[var(--border)]">Classificatie e-mails</td><td className="p-2 border-b border-[var(--border)]">EU</td></tr>
+                      <tr><td className="p-2 border-b border-[var(--border)]">Google (Gemini)</td><td className="p-2 border-b border-[var(--border)]">Extractie rekeninggegevens</td><td className="p-2 border-b border-[var(--border)]">EU</td></tr>
+                      <tr><td className="p-2 border-b border-[var(--border)]">Mistral / Scaleway</td><td className="p-2 border-b border-[var(--border)]">OCR foto's</td><td className="p-2 border-b border-[var(--border)]">Frankrijk</td></tr>
+                      <tr><td className="p-2 border-b border-[var(--border)]">ElevenLabs</td><td className="p-2 border-b border-[var(--border)]">Spraakassistent</td><td className="p-2 border-b border-[var(--border)]">EU</td></tr>
+                      <tr><td className="p-2 border-b border-[var(--border)]">Enable Banking</td><td className="p-2 border-b border-[var(--border)]">PSD2 bankkoppeling</td><td className="p-2 border-b border-[var(--border)]">Finland (EU)</td></tr>
+                      <tr><td className="p-2 border-b border-[var(--border)]">LiveKit</td><td className="p-2 border-b border-[var(--border)]">Videogesprekken</td><td className="p-2 border-b border-[var(--border)]">EU</td></tr>
+                      <tr><td className="p-2 border-b border-[var(--border)]">Vercel</td><td className="p-2 border-b border-[var(--border)]">Hosting</td><td className="p-2 border-b border-[var(--border)]">EU (London)</td></tr>
+                      <tr><td className="p-2">Resend</td><td className="p-2">E-mail</td><td className="p-2">EU/US (SCC)</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="border-t border-[var(--border)] pt-6">
+                <h2 className="text-base font-bold text-[var(--navy)] mb-2">5. Risicobeoordeling</h2>
+                <div className="space-y-3">
+                  {[
+                    { risk: "Onbevoegde toegang tot financiële gegevens", chance: "Laag", impact: "Hoog", measure: "Row Level Security, AES-256, TLS 1.3, OAuth 2.0 read-only" },
+                    { risk: "AI-hallucination bij classificatie", chance: "Middel", impact: "Middel", measure: "Dual-AI pipeline, gebruiker kan corrigeren, geen geautomatiseerde besluiten" },
+                    { risk: "Bijzondere persoonsgegevens via banktransacties", chance: "Middel", impact: "Hoog", measure: "Alleen financiële categorisering, geen profiling, individuele verwijdering, admin geen toegang" },
+                    { risk: "Onvolledige verwijdering bij accountdeletie", chance: "Zeer laag", impact: "Hoog", measure: "delete_all_user_data() dekt 52 tabellen in één atomaire operatie" },
+                  ].map((r, i) => (
+                    <div key={i} className="rounded-lg border border-[var(--border)] p-3">
+                      <p className="text-sm font-semibold text-[var(--navy)]">{r.risk}</p>
+                      <div className="flex gap-4 mt-1 text-xs text-[var(--muted)]">
+                        <span>Kans: <strong>{r.chance}</strong></span>
+                        <span>Impact: <strong>{r.impact}</strong></span>
+                      </div>
+                      <p className="text-xs text-[var(--text)] mt-1">{r.measure}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="border-t border-[var(--border)] pt-6">
+                <h2 className="text-base font-bold text-[var(--navy)] mb-2">6. Maatregelen en waarborgen</h2>
+                <p className="text-sm text-[var(--text)] leading-relaxed whitespace-pre-line">{"Technisch:\n• Row Level Security op alle gebruikerstabellen\n• AES-256 encryptie in rust, TLS 1.3 in transit\n• delete_all_user_data() voor complete verwijdering (52 tabellen)\n• Admin audit log voor alle beheerdersacties\n• Admin kan geen individuele rekeningen of transacties inzien\n• is_restricted vlag voor accountbevriezing (GDPR beperking)\n• Alle AI-verwerking binnen de EU\n\nOrganisatorisch:\n• Privacyverantwoordelijke aangesteld (Samba Jarju, CTO)\n• GDPR-verzoeksysteem met automatische verwerking en 30-dagen deadline monitoring\n• Granulaire B2B-toestemming (gebruiker kiest per scope)\n• Geautomatiseerde deadline-herinneringen voor openstaande verzoeken"}</p>
+              </div>
+
+              <div className="border-t border-[var(--border)] pt-6 text-center">
+                <p className="text-xs text-[var(--muted)]">Volgende herziening: november 2026</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
+  );
+}
+
+export default function PrivacyPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[var(--bg)]" />}>
+      <PrivacyContent />
+    </Suspense>
   );
 }
