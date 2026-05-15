@@ -1,5 +1,7 @@
 {
-  "regions": ["lhr1"],
+  "regions": [
+    "lhr1"
+  ],
   "crons": [
     {
       "path": "/api/admin/outreach/send",
@@ -8,6 +10,10 @@
     {
       "path": "/api/admin/ai-mentions/cron",
       "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/admin/gdpr/deadline-check",
+      "schedule": "0 9 * * *"
     }
   ]
 }
