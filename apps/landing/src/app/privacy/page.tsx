@@ -198,7 +198,7 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
             title: "Database",
             items: [
               "Alle gegevens worden opgeslagen in Supabase (PostgreSQL), gehost in de EU (eu-west-1, Ierland)",
-              "Row Level Security (RLS) is ingeschakeld op alle tabellen — je kunt alleen je eigen gegevens zien",
+              "Strikte toegangscontrole is ingeschakeld op alle tabellen — je kunt alleen je eigen gegevens zien",
               "Betalingsbewijzen worden opgeslagen in een privé Supabase Storage-bucket met getekende URL's (signed URLs)",
               "Wachtwoorden worden gehasht opgeslagen (nooit in platte tekst)",
             ],
@@ -377,7 +377,7 @@ const dataProcessingContent: Record<string, { lastUpdated: string; badge: string
             title: "Database",
             items: [
               "All data is stored in Supabase (PostgreSQL), hosted in the EU (eu-west-1, Ireland)",
-              "Row Level Security (RLS) is enabled on all tables — you can only see your own data",
+              "Strikte toegangscontrole is enabled on all tables — you can only see your own data",
               "Payment proofs are stored in a private Supabase Storage bucket with signed URLs",
               "Passwords are stored hashed (never in plain text)",
             ],
@@ -717,10 +717,10 @@ function PrivacyContent() {
                 <h2 className="text-base font-bold text-[var(--navy)] mb-2">5. Risicobeoordeling</h2>
                 <div className="space-y-3">
                   {[
-                    { risk: "Onbevoegde toegang tot financiële gegevens", chance: "Laag", impact: "Hoog", measure: "Row Level Security, AES-256, TLS 1.3, OAuth 2.0 read-only" },
-                    { risk: "AI-hallucination bij classificatie", chance: "Middel", impact: "Middel", measure: "Dual-AI pipeline, gebruiker kan corrigeren, geen geautomatiseerde besluiten" },
+                    { risk: "Onbevoegde toegang tot financiële gegevens", chance: "Laag", impact: "Hoog", measure: "Strikte toegangscontrole, bankgraad encryptie, alleen-lezen e-mailtoegang" },
+                    { risk: "AI-hallucination bij classificatie", chance: "Middel", impact: "Middel", measure: "Dubbele AI-controle, gebruiker kan corrigeren, geen geautomatiseerde besluiten" },
                     { risk: "Bijzondere persoonsgegevens via banktransacties", chance: "Middel", impact: "Hoog", measure: "Alleen financiële categorisering, geen profiling, individuele verwijdering, admin geen toegang" },
-                    { risk: "Onvolledige verwijdering bij accountdeletie", chance: "Zeer laag", impact: "Hoog", measure: "delete_all_user_data() dekt 52 tabellen in één atomaire operatie" },
+                    { risk: "Onvolledige verwijdering bij accountdeletie", chance: "Zeer laag", impact: "Hoog", measure: "Geautomatiseerd verwijderingsproces wist alle gebruikersgegevens in één actie" },
                   ].map((r, i) => (
                     <div key={i} className="rounded-lg border border-[var(--border)] p-3">
                       <p className="text-sm font-semibold text-[var(--navy)]">{r.risk}</p>
@@ -736,7 +736,7 @@ function PrivacyContent() {
 
               <div className="border-t border-[var(--border)] pt-6">
                 <h2 className="text-base font-bold text-[var(--navy)] mb-2">6. Maatregelen en waarborgen</h2>
-                <p className="text-sm text-[var(--text)] leading-relaxed whitespace-pre-line">{"Technisch:\n• Row Level Security op alle gebruikerstabellen\n• AES-256 encryptie in rust, TLS 1.3 in transit\n• delete_all_user_data() voor complete verwijdering (52 tabellen)\n• Admin audit log voor alle beheerdersacties\n• Admin kan geen individuele rekeningen of transacties inzien\n• is_restricted vlag voor accountbevriezing (GDPR beperking)\n• Alle AI-verwerking binnen de EU\n\nOrganisatorisch:\n• Privacyverantwoordelijke aangesteld (Samba Jarju, CTO)\n• GDPR-verzoeksysteem met automatische verwerking en 30-dagen deadline monitoring\n• Granulaire B2B-toestemming (gebruiker kiest per scope)\n• Geautomatiseerde deadline-herinneringen voor openstaande verzoeken"}</p>
+                <p className="text-sm text-[var(--text)] leading-relaxed whitespace-pre-line">{"Technisch:\n• Strikte toegangscontrole: elke gebruiker ziet alleen eigen gegevens\n• Bankgraad encryptie voor opslag en verzending\n• Geautomatiseerd verwijderingsproces voor complete wissing van alle gebruikersgegevens\n• Auditlog voor alle beheerdersacties\n• Admin kan geen individuele rekeningen of transacties inzien\n• Accountbevriezing bij GDPR-beperkingsverzoek\n• Alle AI-verwerking binnen de EU\n\nOrganisatorisch:\n• Privacyverantwoordelijke aangesteld (Samba Jarju, CTO)\n• GDPR-verzoeksysteem met automatische verwerking en 30-dagen deadline monitoring\n• Granulaire B2B-toestemming (gebruiker kiest per scope)\n• Geautomatiseerde deadline-herinneringen voor openstaande verzoeken"}</p>
               </div>
 
               <div className="border-t border-[var(--border)] pt-6">
