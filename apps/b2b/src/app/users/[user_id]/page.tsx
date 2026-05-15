@@ -163,8 +163,6 @@ export default async function UserDetailPage({
           paymentPlans={consentFlags.payment_plans ? paymentPlans : []}
           auditLog={auditLog}
         />
-          auditLog={auditLog}
-        />
       </div>
     </PageShell>
   );
