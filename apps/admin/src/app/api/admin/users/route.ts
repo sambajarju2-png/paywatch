@@ -31,33 +31,21 @@ export async function GET(req: NextRequest) {
       billCounts[b.user_id] = (billCounts[b.user_id] || 0) + 1;
     });
 
-    // Privacy by design: anonymize user data in admin view
-    // Admin sees patterns (gemeente, plan, bill_count) but not identities
-    const users = (usersRes.data || []).map((u: any) => {
-      const hash = u.user_id.slice(0, 6).toUpperCase();
-      const hasName = !!(u.display_name || u.first_name || u.last_name);
-      return {
-        user_id: u.user_id,
-        display_name: hasName ? `Gebruiker #${hash}` : "",
-        first_name: "",
-        last_name: "",
-        email: "",
-        language: u.language,
-        onboarding_complete: u.onboarding_complete,
-        gemeente: u.gemeente,
-        dark_mode: u.dark_mode,
-        created_at: u.created_at,
-        last_active_at: u.last_active_at,
-        plan: u.plan,
-        voice_seconds_used: u.voice_seconds_used,
-        bill_count: billCounts[u.user_id] || 0,
-        likely_bot:
-          !u.display_name && !u.first_name && !u.last_name &&
-          !u.onboarding_complete &&
-          (billCounts[u.user_id] || 0) === 0 &&
-          new Date(u.created_at) < new Date(Date.now() - 7 * 86400000),
-      };
-    });
+    const emailMap: Record<string, string> = {};
+    const { data: emailRows } = await supabase.rpc("get_user_emails");
+    (emailRows || []).forEach((u: any) => { emailMap[u.id] = u.email || ""; });
+
+    // Admin can see name + email for user management, but NOT individual bills/transactions
+    const users = (usersRes.data || []).map((u: any) => ({
+      ...u,
+      email: emailMap[u.user_id] || "",
+      bill_count: billCounts[u.user_id] || 0,
+      likely_bot:
+        !u.display_name && !u.first_name && !u.last_name &&
+        !u.onboarding_complete &&
+        (billCounts[u.user_id] || 0) === 0 &&
+        new Date(u.created_at) < new Date(Date.now() - 7 * 86400000),
+    }));
 
     // Audit log
     await supabase.from("admin_data_access_log").insert({
