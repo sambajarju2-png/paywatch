@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CheckCircle2, Clock, Loader2, Shield, AlertCircle } from "lucide-react";
+import { CheckCircle2, Clock, Loader2, Shield, AlertCircle, Trash2, Pause, Play, Download, FileText } from "lucide-react";
 
 interface GdprRequest {
   id: string;
@@ -11,25 +11,69 @@ interface GdprRequest {
   request_type: string;
   status: string;
   details: any;
+  action_taken: string | null;
   completed_at: string | null;
   created_at: string;
+  days_open: number;
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  inzage: "Inzage", overdracht: "Overdracht", toestemming_intrekken: "Toestemming intrekken",
-  rectificatie: "Correctie", beperking: "Beperking", bezwaar: "Bezwaar", verwijdering: "Verwijdering",
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  processing: "bg-amber-50 text-amber-700 border-amber-200",
-  pending: "bg-gray-50 text-gray-600 border-gray-200",
+const TYPE_CONFIG: Record<string, { label: string; icon: any; actions: { key: string; label: string; icon: any; color: string; confirm: string }[] }> = {
+  verwijdering: {
+    label: "Verwijdering",
+    icon: Trash2,
+    actions: [
+      { key: "delete_account", label: "Account verwijderen", icon: Trash2, color: "bg-red-600 text-white", confirm: "ALLE gegevens van deze gebruiker worden permanent verwijderd. Dit kan niet ongedaan worden. Doorgaan?" },
+    ],
+  },
+  beperking: {
+    label: "Beperking",
+    icon: Pause,
+    actions: [
+      { key: "restrict_account", label: "Account bevriezen", icon: Pause, color: "bg-amber-600 text-white", confirm: "Account wordt bevroren — verwerking wordt gepauzeerd. Doorgaan?" },
+      { key: "unrestrict_account", label: "Account ontdooien", icon: Play, color: "bg-emerald-600 text-white", confirm: "Account wordt weer actief. Doorgaan?" },
+    ],
+  },
+  inzage: {
+    label: "Inzage",
+    icon: Download,
+    actions: [
+      { key: "generate_export", label: "Data-export genereren", icon: Download, color: "bg-pw-blue text-white", confirm: "Data-export voor deze gebruiker genereren?" },
+    ],
+  },
+  overdracht: {
+    label: "Overdracht",
+    icon: Download,
+    actions: [
+      { key: "generate_export", label: "Data-export genereren", icon: Download, color: "bg-pw-blue text-white", confirm: "Data-export voor deze gebruiker genereren?" },
+    ],
+  },
+  rectificatie: {
+    label: "Correctie",
+    icon: FileText,
+    actions: [
+      { key: "complete", label: "Afronden met toelichting", icon: CheckCircle2, color: "bg-emerald-600 text-white", confirm: "" },
+    ],
+  },
+  bezwaar: {
+    label: "Bezwaar",
+    icon: FileText,
+    actions: [
+      { key: "complete", label: "Afronden met toelichting", icon: CheckCircle2, color: "bg-emerald-600 text-white", confirm: "" },
+    ],
+  },
+  toestemming_intrekken: {
+    label: "Toestemming intrekken",
+    icon: CheckCircle2,
+    actions: [
+      { key: "complete", label: "Bevestig afronding", icon: CheckCircle2, color: "bg-emerald-600 text-white", confirm: "" },
+    ],
+  },
 };
 
 export default function GdprPage() {
   const [requests, setRequests] = useState<GdprRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [completing, setCompleting] = useState<string | null>(null);
+  const [acting, setActing] = useState<string | null>(null);
 
   async function load() {
     const res = await fetch("/api/admin/gdpr");
@@ -42,25 +86,48 @@ export default function GdprPage() {
 
   useEffect(() => { load(); }, []);
 
-  async function complete(requestId: string, completionNote?: string) {
-    setCompleting(requestId);
+  async function executeAction(requestId: string, action: string, confirmMsg: string) {
+    let note: string | undefined;
+
+    if (confirmMsg) {
+      if (!confirm(confirmMsg)) return;
+    }
+
+    if (action === "complete") {
+      const input = prompt("Toelichting bij afronding:");
+      if (input === null) return;
+      note = input || undefined;
+    }
+
+    setActing(requestId);
     try {
       const res = await fetch("/api/admin/gdpr", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ request_id: requestId, note: completionNote }),
+        body: JSON.stringify({ request_id: requestId, action, note }),
       });
+      const data = await res.json();
+
       if (res.ok) {
+        if (data.export) {
+          // Download the export as JSON
+          const blob = new Blob([JSON.stringify(data.export, null, 2)], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `gdpr-export-${requestId.slice(0, 8)}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+        alert(`✓ ${data.message || "Actie uitgevoerd"}\n\n${data.action || ""}`);
         await load();
-        alert("Verzoek afgerond — e-mail verstuurd naar gebruiker.");
       } else {
-        const err = await res.json().catch(() => ({}));
-        alert("Fout: " + (err.error || res.statusText));
+        alert(`Fout: ${data.error || "Onbekende fout"}`);
       }
-    } catch (err) {
-      alert("Netwerkfout bij afronden.");
+    } catch {
+      alert("Netwerkfout bij uitvoeren actie.");
     }
-    setCompleting(null);
+    setActing(null);
   }
 
   const pending = requests.filter(r => r.status !== "completed");
@@ -68,73 +135,92 @@ export default function GdprPage() {
 
   return (
     <div className="max-w-4xl mx-auto py-10 px-6">
-      <div className="flex items-center gap-3 mb-8">
+      <div className="flex items-center gap-3 mb-2">
         <Shield className="w-6 h-6 text-pw-blue" strokeWidth={1.5} />
-        <h1 className="text-2xl font-bold text-pw-navy">Privacyverzoeken (AVG)</h1>
+        <h1 className="text-2xl font-bold text-pw-navy">Privacyverzoeken</h1>
       </div>
+      <p className="text-sm text-pw-muted mb-8">AVG/GDPR verzoeken van gebruikers. Wettelijke deadline: 30 dagen.</p>
 
       {loading ? (
         <div className="flex items-center gap-2 text-pw-muted py-20 justify-center">
-          <Loader2 className="w-5 h-5 animate-spin" />
-          Laden...
+          <Loader2 className="w-5 h-5 animate-spin" /> Laden...
         </div>
       ) : requests.length === 0 ? (
         <div className="text-center py-20">
           <Shield className="w-10 h-10 text-pw-muted/30 mx-auto mb-3" />
-          <p className="text-pw-muted text-sm">Nog geen privacyverzoeken ontvangen.</p>
+          <p className="text-pw-muted text-sm">Nog geen privacyverzoeken.</p>
         </div>
       ) : (
         <>
-          {/* Pending requests */}
           {pending.length > 0 && (
-            <div className="mb-8">
-              <h2 className="text-sm font-semibold text-pw-navy mb-3 flex items-center gap-2">
+            <div className="mb-10">
+              <h2 className="text-sm font-semibold text-pw-navy mb-4 flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-amber-500" />
                 Open verzoeken ({pending.length})
               </h2>
-              <div className="space-y-3">
-                {pending.map(r => (
-                  <div key={r.id} className="rounded-xl border border-amber-200 bg-white p-5">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-bold text-pw-navy">{TYPE_LABELS[r.request_type] || r.request_type}</span>
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${STATUS_COLORS[r.status] || STATUS_COLORS.pending}`}>
-                            {r.status === "processing" ? "In behandeling" : r.status}
-                          </span>
-                          <span className="text-[11px] text-pw-blue font-mono">REF: {r.ref}</span>
-                        </div>
-                        <p className="text-[13px] text-pw-muted mt-1">{r.user_email}</p>
-                        <p className="text-[12px] text-pw-muted mt-0.5">
-                          {new Date(r.created_at).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
-                        </p>
-                        {r.details?.user_details && (
-                          <div className="mt-2 px-3 py-2 bg-pw-bg rounded-lg text-[13px] text-pw-text">
-                            {r.details.user_details}
+              <div className="space-y-4">
+                {pending.map(r => {
+                  const config = TYPE_CONFIG[r.request_type] || TYPE_CONFIG.rectificatie;
+                  const TypeIcon = config.icon;
+                  const isOverdue = r.days_open >= 25;
+                  const isUrgent = r.days_open >= 20;
+
+                  return (
+                    <div key={r.id} className={`rounded-xl border-2 bg-white p-5 ${isOverdue ? "border-red-300" : isUrgent ? "border-amber-300" : "border-amber-200"}`}>
+                      {/* Header */}
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <TypeIcon className="w-4 h-4 text-pw-navy" strokeWidth={2} />
+                            <span className="text-[15px] font-bold text-pw-navy">{config.label}</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full border bg-amber-50 text-amber-700 border-amber-200 font-medium">
+                              In behandeling
+                            </span>
+                            {isOverdue && <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-bold">⚠ DEADLINE NADERT</span>}
                           </div>
-                        )}
+                          <p className="text-[12px] text-pw-blue font-mono mt-1">REF: {r.ref}</p>
+                        </div>
+                        <div className="text-right text-[12px] text-pw-muted flex-shrink-0">
+                          <p>Dag {r.days_open} van 30</p>
+                        </div>
                       </div>
-                      <div className="flex-shrink-0 mt-2 sm:mt-0">
-                        <button
-                          onClick={() => {
-                            const userNote = prompt("Toelichting bij afronding (optioneel):");
-                            if (userNote === null) return; // cancelled
-                            complete(r.id, userNote || undefined);
-                          }}
-                          disabled={completing === r.id}
-                          className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-[12px] font-medium rounded-lg disabled:opacity-50 active:scale-95 w-full sm:w-auto justify-center">
-                          {completing === r.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                          Afronden
-                        </button>
+
+                      {/* User info */}
+                      <div className="flex items-center gap-4 mb-3 text-[13px]">
+                        <span className="text-pw-text font-medium">{r.user_email}</span>
+                        <span className="text-pw-muted">
+                          {new Date(r.created_at).toLocaleDateString("nl-NL", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      </div>
+
+                      {/* User's message */}
+                      {r.details?.user_details && (
+                        <div className="mb-4 px-3 py-2 bg-pw-bg rounded-lg text-[13px] text-pw-text italic">
+                          &ldquo;{r.details.user_details}&rdquo;
+                        </div>
+                      )}
+
+                      {/* Action buttons */}
+                      <div className="flex flex-wrap gap-2">
+                        {config.actions.map(a => (
+                          <button
+                            key={a.key}
+                            onClick={() => executeAction(r.id, a.key, a.confirm)}
+                            disabled={acting === r.id}
+                            className={`flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-semibold rounded-lg active:scale-95 disabled:opacity-50 ${a.color}`}
+                          >
+                            {acting === r.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <a.icon className="w-4 h-4" strokeWidth={2} />}
+                            {a.label}
+                          </button>
+                        ))}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
 
-          {/* Completed requests */}
           {completed.length > 0 && (
             <div>
               <h2 className="text-sm font-semibold text-pw-navy mb-3 flex items-center gap-2">
@@ -142,23 +228,29 @@ export default function GdprPage() {
                 Afgerond ({completed.length})
               </h2>
               <div className="space-y-2">
-                {completed.map(r => (
-                  <div key={r.id} className="rounded-xl border border-pw-border bg-white px-5 py-3 flex items-center gap-4">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-semibold text-pw-navy">{TYPE_LABELS[r.request_type] || r.request_type}</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200 font-medium">Afgerond</span>
-                        <span className="text-[10px] text-pw-blue font-mono">REF: {r.ref}</span>
+                {completed.map(r => {
+                  const config = TYPE_CONFIG[r.request_type] || TYPE_CONFIG.rectificatie;
+                  return (
+                    <div key={r.id} className="rounded-xl border border-pw-border bg-white px-5 py-3">
+                      <div className="flex items-center gap-3">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[13px] font-semibold text-pw-navy">{config.label}</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">Afgerond</span>
+                            <span className="text-[10px] text-pw-blue font-mono">REF: {r.ref}</span>
+                          </div>
+                          <p className="text-[12px] text-pw-muted">{r.user_email}</p>
+                          {r.action_taken && <p className="text-[11px] text-pw-muted mt-0.5">{r.action_taken}</p>}
+                        </div>
+                        <div className="text-[11px] text-pw-muted text-right flex-shrink-0">
+                          {r.completed_at && new Date(r.completed_at).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })}
+                          {r.fulfilled_by && <p className="text-[10px]">door {r.fulfilled_by}</p>}
+                        </div>
                       </div>
-                      <p className="text-[12px] text-pw-muted">{r.user_email} · {new Date(r.created_at).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })}</p>
                     </div>
-                    {r.completed_at && (
-                      <p className="text-[11px] text-pw-muted flex-shrink-0">
-                        Afgerond {new Date(r.completed_at).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })}
-                      </p>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
