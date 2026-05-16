@@ -130,6 +130,9 @@ export default function IncidentsPage() {
                           <Bell className="w-3 h-3 inline mr-1" /> Gebruikers informeren
                         </button>
                       )}
+                      <button onClick={() => act(inc.id, "test_notify")} disabled={acting === inc.id} className="px-3 py-1.5 bg-white border border-amber-400 text-amber-700 rounded-lg text-[12px] font-medium active:scale-95 disabled:opacity-50">
+                        📧 Test e-mail
+                      </button>
                       <select onChange={e => { if (e.target.value) { const note = prompt("Toelichting (optioneel):"); act(inc.id, "update_status", { status: e.target.value, action_taken: note || "" }); e.target.value = ""; } }} className="px-3 py-1.5 bg-white border rounded-lg text-[12px]" defaultValue="">
                         <option value="" disabled>Status wijzigen...</option>
                         <option value="investigating">Onderzoek</option>

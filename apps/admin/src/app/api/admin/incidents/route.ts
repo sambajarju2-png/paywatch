@@ -1,10 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { verifyAdmin } from "@/lib/admin-auth";
-import { Resend } from "resend";
 
 function db() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+}
+
+function buildNotificationHtml(incident: any) {
+  return `<div style="font-family:-apple-system,sans-serif;max-width:540px;margin:0 auto;padding:32px">
+    <p style="font-size:12px;font-weight:800;color:#0A2540">PayWatch — Beveiligingsmelding</p>
+    <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:16px 20px;margin:16px 0">
+      <p style="margin:0;font-size:15px;font-weight:600;color:#DC2626">Beveiligingsincident</p>
+      <p style="margin:8px 0 0;font-size:13px;color:#0A2540">${incident.title}</p>
+      <p style="margin:8px 0 0;font-size:13px;color:#0A2540">${incident.description || ""}</p>
+    </div>
+    <p style="font-size:14px;color:#0A2540;line-height:1.7">Wij informeren je over een beveiligingsincident bij PayWatch. Wij nemen je privacy serieus en willen je transparant informeren.</p>
+    <p style="font-size:14px;color:#0A2540;line-height:1.7">${incident.action_taken ? `<strong>Genomen maatregelen:</strong> ${incident.action_taken}` : ""}</p>
+    <p style="font-size:14px;color:#0A2540;line-height:1.7">Voor vragen kun je contact opnemen via <a href="mailto:privacy@paywatch.nl" style="color:#2563EB">privacy@paywatch.nl</a>.</p>
+    <hr style="border:none;border-top:1px solid #E2E8F0;margin:24px 0">
+    <p style="font-size:11px;color:#94A3B8">Dit bericht is verstuurd conform Art. 34 AVG. PayWatch · Rotterdam · KVK 83474889</p>
+  </div>`;
 }
 
 /** GET — list all incidents */
@@ -127,46 +142,74 @@ export async function PATCH(req: NextRequest) {
         return NextResponse.json({ ok: true, message: "AP-melding geregistreerd" });
       }
 
-      case "notify_users": {
-        // Send breach notification to all affected users
-        if (!process.env.RESEND_API_KEY) {
-          return NextResponse.json({ error: "RESEND_API_KEY not configured" }, { status: 500 });
+      case "test_notify": {
+        // Send a test notification to admin only — preview what users would receive
+        const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY;
+        if (!MAILGUN_API_KEY) {
+          return NextResponse.json({ error: "MAILGUN_API_KEY not configured" }, { status: 500 });
         }
 
-        const resend = new Resend(process.env.RESEND_API_KEY);
+        const testHtml = buildNotificationHtml(incident);
+        const form = new FormData();
+        form.append("from", "PayWatch <noreply@paywatch.nl>");
+        form.append("to", "sambajarju2@gmail.com");
+        form.append("subject", `[TEST] Belangrijk: beveiligingsmelding van PayWatch`);
+        form.append("html", testHtml);
+
+        const mgRes = await fetch("https://api.eu.mailgun.net/v3/paywatch.nl/messages", {
+          method: "POST",
+          headers: { Authorization: `Basic ${Buffer.from(`api:${MAILGUN_API_KEY}`).toString("base64")}` },
+          body: form,
+        });
+
+        if (!mgRes.ok) {
+          const err = await mgRes.text();
+          return NextResponse.json({ error: `Mailgun error: ${err}` }, { status: 500 });
+        }
+
+        return NextResponse.json({ ok: true, message: "Test e-mail verstuurd naar sambajarju2@gmail.com" });
+      }
+
+      case "notify_users": {
+        // Mass notification via Mailgun — supports 200k+ recipients
+        const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY;
+        if (!MAILGUN_API_KEY) {
+          return NextResponse.json({ error: "MAILGUN_API_KEY not configured" }, { status: 500 });
+        }
+
         const { data: emailRows } = await supabase.rpc("get_user_emails");
         const emails = (emailRows || []).map((u: any) => u.email).filter(Boolean);
 
-        const htmlBody = `<div style="font-family:-apple-system,sans-serif;max-width:540px;margin:0 auto;padding:32px">
-                <p style="font-size:12px;font-weight:800;color:#0A2540">PayWatch — Beveiligingsmelding</p>
-                <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:16px 20px;margin:16px 0">
-                  <p style="margin:0;font-size:15px;font-weight:600;color:#DC2626">Beveiligingsincident</p>
-                  <p style="margin:8px 0 0;font-size:13px;color:#0A2540">${incident.title}</p>
-                  <p style="margin:8px 0 0;font-size:13px;color:#0A2540">${incident.description || ""}</p>
-                </div>
-                <p style="font-size:14px;color:#0A2540;line-height:1.7">Wij informeren je over een beveiligingsincident bij PayWatch. Wij nemen je privacy serieus en willen je transparant informeren.</p>
-                <p style="font-size:14px;color:#0A2540;line-height:1.7">${incident.action_taken ? `<strong>Genomen maatregelen:</strong> ${incident.action_taken}` : ""}</p>
-                <p style="font-size:14px;color:#0A2540;line-height:1.7">Voor vragen kun je contact opnemen via <a href="mailto:privacy@paywatch.nl" style="color:#2563EB">privacy@paywatch.nl</a>.</p>
-                <hr style="border:none;border-top:1px solid #E2E8F0;margin:24px 0">
-                <p style="font-size:11px;color:#94A3B8">Dit bericht is verstuurd conform Art. 34 AVG. PayWatch · Rotterdam · KVK 83474889</p>
-              </div>`;
+        const htmlBody = buildNotificationHtml(incident);
 
-        // CRITICAL: Send INDIVIDUAL emails — never put multiple recipients in to: field
-        // Using Resend batch API: each recipient gets their own email, no one sees others
+        // Mailgun supports up to 1000 recipients per call with recipient-variables
+        // Each recipient gets their own individual email — no one sees others
         let sent = 0;
-        const batchSize = 100; // Resend batch.send supports up to 100
+        const batchSize = 1000;
         for (let i = 0; i < emails.length; i += batchSize) {
           const batch = emails.slice(i, i + batchSize);
+          // Build recipient-variables: { "email@x.com": {}, "email@y.com": {} }
+          const recipientVars: Record<string, Record<string, string>> = {};
+          batch.forEach((email: string) => { recipientVars[email] = {}; });
+
+          const form = new FormData();
+          form.append("from", "PayWatch <noreply@paywatch.nl>");
+          batch.forEach((email: string) => form.append("to", email));
+          form.append("subject", "Belangrijk: beveiligingsmelding van PayWatch");
+          form.append("html", htmlBody);
+          form.append("recipient-variables", JSON.stringify(recipientVars));
+
           try {
-            await resend.batch.send(
-              batch.map((email: string) => ({
-                from: "PayWatch <noreply@paywatch.app>",
-                to: [email],
-                subject: `Belangrijk: beveiligingsmelding van PayWatch`,
-                html: htmlBody,
-              }))
-            );
-            sent += batch.length;
+            const mgRes = await fetch("https://api.eu.mailgun.net/v3/paywatch.nl/messages", {
+              method: "POST",
+              headers: { Authorization: `Basic ${Buffer.from(`api:${MAILGUN_API_KEY}`).toString("base64")}` },
+              body: form,
+            });
+            if (mgRes.ok) {
+              sent += batch.length;
+            } else {
+              console.error("[Incident notify] Mailgun error:", await mgRes.text());
+            }
           } catch (err) {
             console.error("[Incident notify] Batch error:", err);
           }
