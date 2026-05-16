@@ -84,11 +84,19 @@ export default function AboutPage() {
                 {/* Photo area */}
                 <div className="relative overflow-hidden aspect-[3/4]">
                   <div className="absolute inset-0 [&_img]:object-cover [&_img]:object-top [&_img]:w-full [&_img]:h-full">
+                    {person.photo ? (
+                      <img
+                        src={person.photo}
+                        alt={person.fullName}
+                        className="w-full h-full transition-transform duration-700 group-hover:scale-105 object-cover object-top"
+                      />
+                    ) : (
                     <SanityImage
                       imageKey={`about-${person.name.toLowerCase()}`}
                       placeholderLabel={person.name}
                       className="w-full h-full transition-transform duration-700 group-hover:scale-105"
                     />
+                    )}
                   </div>
                   {/* Gradient overlay always present */}
                   <div className="absolute inset-0 bg-gradient-to-t from-[var(--navy)]/80 via-[var(--navy)]/20 to-transparent" />
@@ -96,7 +104,7 @@ export default function AboutPage() {
                   {/* Top badge */}
                   <div className="absolute top-5 left-5 flex items-center gap-2.5">
                     <span className="text-[10px] font-bold tracking-[0.2em] text-white/70 uppercase">
-                      {String(idx + 1).padStart(2, "0")} · CO-FOUNDER
+                      {String(idx + 1).padStart(2, "0")} · {(lang === "nl" ? person.role.nl : person.role.en).toUpperCase()}
                     </span>
                   </div>
 

@@ -108,6 +108,40 @@ export const founders = [
     linkedin: "https://www.linkedin.com/in/hadja-mariama-sesay-3a5392228/",
     email: "mariama@paywatch.nl",
   },
+  {
+    name: "Shah",
+    slug: "shah-farooq",
+    fullName: "Shah Farooq",
+    role: { nl: "Data Engineer & Developer", en: "Data Engineer & Developer" },
+    bio: {
+      nl: "Data engineer en ontwikkelaar die zorgt dat de technische ruggengraat van PayWatch snel, betrouwbaar en schaalbaar is.",
+      en: "Data engineer and developer who ensures PayWatch's technical backbone is fast, reliable and scalable.",
+    },
+    fullBio: {
+      nl: "Shah is data engineer en ontwikkelaar bij PayWatch. Hij werkt aan de systemen die ervoor zorgen dat financiële data veilig verwerkt wordt en dat de app altijd beschikbaar is. Met een achtergrond in data engineering brengt hij de technische diepgang die nodig is om complexe datastromen betrouwbaar te laten werken op schaal.",
+      en: "Shah is a data engineer and developer at PayWatch. He works on the systems that ensure financial data is processed securely and that the app is always available. With a background in data engineering, he brings the technical depth needed to make complex data flows work reliably at scale.",
+    },
+    photo: "/team-shah.jpg",
+    linkedin: "https://www.linkedin.com/in/shahmfarooq/",
+    email: "",
+  },
+  {
+    name: "Ahsan",
+    slug: "ahsan-ramzan",
+    fullName: "Ahsan Ramzan",
+    role: { nl: "Developer", en: "Developer" },
+    bio: {
+      nl: "Full-stack developer die features bouwt die het verschil maken voor gebruikers in een kwetsbare financiële situatie.",
+      en: "Full-stack developer who builds features that make a difference for users in vulnerable financial situations.",
+    },
+    fullBio: {
+      nl: "Ahsan is developer bij PayWatch en werkt aan zowel de front-end als de back-end van het platform. Hij vertaalt ontwerpen en specificaties naar werkende code die elke dag wordt gebruikt door mensen die grip willen krijgen op hun rekeningen. Zijn focus ligt op het bouwen van betrouwbare, snelle interfaces die ook werken op oudere telefoons en langzame verbindingen.",
+      en: "Ahsan is a developer at PayWatch working on both the front-end and back-end of the platform. He translates designs and specifications into working code used daily by people who want to get a grip on their bills. His focus is on building reliable, fast interfaces that also work on older phones and slow connections.",
+    },
+    photo: "/team-ahsan.jpg",
+    linkedin: "https://www.linkedin.com/in/ahsanramzan/",
+    email: "",
+  },
 ];
 
 /* ─── Pricing ─── */
