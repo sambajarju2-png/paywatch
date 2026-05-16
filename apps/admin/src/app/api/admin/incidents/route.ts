@@ -137,16 +137,7 @@ export async function PATCH(req: NextRequest) {
         const { data: emailRows } = await supabase.rpc("get_user_emails");
         const emails = (emailRows || []).map((u: any) => u.email).filter(Boolean);
 
-        let sent = 0;
-        const batchSize = 50;
-        for (let i = 0; i < emails.length; i += batchSize) {
-          const batch = emails.slice(i, i + batchSize);
-          try {
-            await resend.emails.send({
-              from: "PayWatch <noreply@paywatch.app>",
-              to: batch,
-              subject: `Belangrijk: beveiligingsmelding van PayWatch`,
-              html: `<div style="font-family:-apple-system,sans-serif;max-width:540px;margin:0 auto;padding:32px">
+        const htmlBody = `<div style="font-family:-apple-system,sans-serif;max-width:540px;margin:0 auto;padding:32px">
                 <p style="font-size:12px;font-weight:800;color:#0A2540">PayWatch — Beveiligingsmelding</p>
                 <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:16px 20px;margin:16px 0">
                   <p style="margin:0;font-size:15px;font-weight:600;color:#DC2626">Beveiligingsincident</p>
@@ -158,8 +149,23 @@ export async function PATCH(req: NextRequest) {
                 <p style="font-size:14px;color:#0A2540;line-height:1.7">Voor vragen kun je contact opnemen via <a href="mailto:privacy@paywatch.nl" style="color:#2563EB">privacy@paywatch.nl</a>.</p>
                 <hr style="border:none;border-top:1px solid #E2E8F0;margin:24px 0">
                 <p style="font-size:11px;color:#94A3B8">Dit bericht is verstuurd conform Art. 34 AVG. PayWatch · Rotterdam · KVK 83474889</p>
-              </div>`,
-            });
+              </div>`;
+
+        // CRITICAL: Send INDIVIDUAL emails — never put multiple recipients in to: field
+        // Using Resend batch API: each recipient gets their own email, no one sees others
+        let sent = 0;
+        const batchSize = 100; // Resend batch.send supports up to 100
+        for (let i = 0; i < emails.length; i += batchSize) {
+          const batch = emails.slice(i, i + batchSize);
+          try {
+            await resend.batch.send(
+              batch.map((email: string) => ({
+                from: "PayWatch <noreply@paywatch.app>",
+                to: [email],
+                subject: `Belangrijk: beveiligingsmelding van PayWatch`,
+                html: htmlBody,
+              }))
+            );
             sent += batch.length;
           } catch (err) {
             console.error("[Incident notify] Batch error:", err);

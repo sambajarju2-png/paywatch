@@ -33,11 +33,19 @@ export default function TeamMemberContent({ slug }: { slug: string }) {
         <ScrollReveal>
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8">
             {/* Photo */}
+            {person.photo ? (
+              <img
+                src={person.photo}
+                alt={person.fullName}
+                className="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl object-cover object-top border-2 border-[var(--border)] shrink-0"
+              />
+            ) : (
             <SanityImage
               imageKey={`about-${person.name.toLowerCase()}`}
               placeholderLabel={person.name}
               className="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl object-cover border-2 border-[var(--border)] shrink-0 overflow-hidden"
             />
+            )}
 
             <div className="text-center sm:text-left">
               <h1 className="text-3xl sm:text-4xl font-extrabold text-[var(--navy)] tracking-tight mb-1">
@@ -96,11 +104,15 @@ export default function TeamMemberContent({ slug }: { slug: string }) {
               href={`/about/${other.slug}`}
               className="flex items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 hover:border-[var(--blue)] hover:shadow-md transition-all group"
             >
+              {other.photo ? (
+                <img src={other.photo} alt={other.fullName} className="w-12 h-12 rounded-xl object-cover object-top border border-[var(--border)] shrink-0" />
+              ) : (
               <SanityImage
                 imageKey={`about-${other.name.toLowerCase()}`}
                 placeholderLabel={other.name}
                 className="w-12 h-12 rounded-xl object-cover border border-[var(--border)] shrink-0 overflow-hidden"
               />
+              )}
               <div className="flex-1">
                 <p className="text-sm font-bold text-[var(--text)] group-hover:text-[var(--blue)] transition-colors">{other.fullName}</p>
                 <p className="text-xs text-[var(--muted)]">{other.role[lang]}</p>
