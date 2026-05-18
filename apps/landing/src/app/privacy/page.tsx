@@ -12,7 +12,7 @@ const privacyContent = {
     sections: [
       {
         title: "1. Wie zijn wij?",
-        body: `PayWatch is een Nederlandse app die je helpt grip te krijgen op je rekeningen en schulden. We zijn opgericht in Rotterdam en ingeschreven bij de KvK onder nummer ${siteConfig.company.kvk}.\n\nWij zijn de verwerkingsverantwoordelijke voor je persoonsgegevens. Dat betekent dat wij bepalen waarvoor en hoe je gegevens worden verwerkt — en dat we daarvoor verantwoordelijk zijn.\n\nOnze privacyverantwoordelijke is Samba Jarju (CTO). Vragen over je privacy? Mail naar ${siteConfig.company.emails.privacy}.`,
+        body: `PayWatch is een Nederlandse app die je helpt grip te krijgen op je rekeningen en schulden. We zijn opgericht in Rotterdam en ingeschreven bij de KvK onder nummer ${siteConfig.company.kvk}.\n\nWij zijn de verwerkingsverantwoordelijke voor je persoonsgegevens. Dat betekent dat wij bepalen waarvoor en hoe je gegevens worden verwerkt — en dat we daarvoor verantwoordelijk zijn.\n\nOnze privacyverantwoordelijke is Samba Jarju (CTO). Wanneer je je account verwijdert, worden je gegevens direct uit onze actieve databases gewist. Vanwege technische back-ups kan het tot 30 dagen duren voordat je gegevens volledig uit onze archieven zijn vernietigd. Vragen over je privacy? Mail naar ${siteConfig.company.emails.privacy}.`,
       },
       {
         title: "2. Welke gegevens verzamelen wij — en waarom?",
@@ -36,7 +36,7 @@ const privacyContent = {
       },
       {
         title: "7. AI-verwerking",
-        body: "PayWatch gebruikt AI op drie plekken. In alle gevallen geldt: je gegevens verlaten de EU niet.\n\n1. Rekeningen herkennen en extraheren — Mistral AI (gehost op onze eigen servers bij Scaleway in Parijs) scant je e-mails op rekeningen, extraheert bedrijfsnaam, bedrag en vervaldatum, en verwerkt foto\'s van rekeningen. E-mailteksten en foto\'s worden niet opgeslagen. Niet-relevante e-mails worden niet geanalyseerd, opgeslagen of gebruikt voor profilering.\n\n2. Financiële samenvattingen — Anthropic Claude genereert inzichten op basis van je rekeningtotalen. Claude ontvangt geen persoonlijke gegevens — alleen samenvattingen zoals totaalbedragen en aantallen.\n\n3. PayBuddy spraakassistent — ElevenLabs verwerkt je spraak. Gesprekken worden niet opgenomen of opgeslagen.\n\nGeen van deze AI-diensten wordt getraind op jouw data.",
+        body: "PayWatch gebruikt AI op drie plekken. In alle gevallen geldt: je gegevens verlaten de EU niet.\n\n1. Rekeningen herkennen en extraheren — Mistral AI (gehost op onze eigen servers bij Scaleway in Parijs) scant je e-mails op rekeningen, extraheert bedrijfsnaam, bedrag en vervaldatum, en verwerkt foto\'s van rekeningen. E-mailteksten en foto\'s worden niet opgeslagen. PayWatch voert een beperkte geautomatiseerde inspectie uit om te bepalen of een e-mail een rekening bevat. E-mails die niet relevant zijn voor facturering worden niet opgeslagen, geprofileerd of voor enig ander doel gebruikt.\n\n2. Financiële samenvattingen — Anthropic Claude genereert inzichten op basis van je rekeningtotalen. Claude ontvangt geen persoonlijke gegevens — alleen samenvattingen zoals totaalbedragen en aantallen.\n\n3. PayBuddy spraakassistent — ElevenLabs verwerkt je spraak. Gesprekken worden niet opgenomen of opgeslagen.\n\nGeen van deze AI-diensten wordt getraind op jouw data.",
       },
       {
         title: "8. Delen met derden",
@@ -663,7 +663,30 @@ function PrivacyContent() {
               </div>
 
               <div className="border-t border-[var(--border)] pt-6">
-                <h2 className="text-base font-bold text-[var(--navy)] mb-2">2. Categorieën persoonsgegevens</h2>
+                <h2 className="text-base font-bold text-[var(--navy)] mb-2">2. Rechtsgronden per verwerking</h2>
+                <div className="overflow-x-auto mb-6">
+                  <table className="w-full text-sm border-collapse">
+                    <thead><tr className="bg-[var(--bg)]">
+                      <th className="text-left p-2 font-semibold text-[var(--navy)] border-b border-[var(--border)]">Verwerking</th>
+                      <th className="text-left p-2 font-semibold text-[var(--navy)] border-b border-[var(--border)]">Rechtsgrond</th>
+                      <th className="text-left p-2 font-semibold text-[var(--navy)] border-b border-[var(--border)]">Doel</th>
+                    </tr></thead>
+                    <tbody className="text-[var(--text)]">
+                      <tr><td className="p-2 border-b border-[var(--border)]">Accountbeheer</td><td className="p-2 border-b border-[var(--border)]">Art. 6(1)(b) overeenkomst</td><td className="p-2 border-b border-[var(--border)]">Dienstverlening</td></tr>
+                      <tr><td className="p-2 border-b border-[var(--border)]">Gmail/Outlook scan</td><td className="p-2 border-b border-[var(--border)]">Art. 6(1)(a) toestemming</td><td className="p-2 border-b border-[var(--border)]">Rekeningen herkennen</td></tr>
+                      <tr><td className="p-2 border-b border-[var(--border)]">PSD2 bankkoppeling</td><td className="p-2 border-b border-[var(--border)]">PSD2 + Art. 6(1)(b)</td><td className="p-2 border-b border-[var(--border)]">Betalingen volgen</td></tr>
+                      <tr><td className="p-2 border-b border-[var(--border)]">AI-samenvattingen</td><td className="p-2 border-b border-[var(--border)]">Art. 6(1)(b) overeenkomst</td><td className="p-2 border-b border-[var(--border)]">Financieel inzicht</td></tr>
+                      <tr><td className="p-2 border-b border-[var(--border)]">B2B data-deling</td><td className="p-2 border-b border-[var(--border)]">Art. 6(1)(a) toestemming</td><td className="p-2 border-b border-[var(--border)]">Hulpverlening</td></tr>
+                      <tr><td className="p-2 border-b border-[var(--border)]">Beveiligingslogs</td><td className="p-2 border-b border-[var(--border)]">Art. 6(1)(f) gerechtvaardigd belang</td><td className="p-2 border-b border-[var(--border)]">Beveiliging</td></tr>
+                      <tr><td className="p-2">GDPR-verzoeken</td><td className="p-2">Art. 6(1)(c) wettelijke verplichting</td><td className="p-2">Wettelijke naleving</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+
+              </div>
+
+              <div className="border-t border-[var(--border)] pt-6">
+                <h2 className="text-base font-bold text-[var(--navy)] mb-2">3. Categorieën persoonsgegevens</h2>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm border-collapse">
                     <thead><tr className="bg-[var(--bg)]">
@@ -685,12 +708,12 @@ function PrivacyContent() {
               </div>
 
               <div className="border-t border-[var(--border)] pt-6">
-                <h2 className="text-base font-bold text-[var(--navy)] mb-2">3. Bijzondere persoonsgegevens</h2>
+                <h2 className="text-base font-bold text-[var(--navy)] mb-2">4. Bijzondere persoonsgegevens</h2>
                 <p className="text-sm text-[var(--text)] leading-relaxed whitespace-pre-line">{"PayWatch is niet gericht op het verwerken van bijzondere persoonsgegevens (Art. 9 AVG). Het valt echter niet uit te sluiten dat banktransacties indirect bijzondere persoonsgegevens onthullen — bijvoorbeeld betalingen aan zorginstellingen of politieke partijen.\n\nMaatregelen:\n• Categorisering is uitsluitend financieel — nooit medisch of politiek\n• Geen gezondheids- of andere gevoelige profielen\n• Gebruikers kunnen individuele transacties verwijderen\n• Geen medewerker heeft toegang tot individuele transacties\n• Geen geautomatiseerde besluitvorming (Art. 22 AVG)\n\nVoor zover betaalgegevens indirect bijzondere persoonsgegevens kunnen onthullen, beperkt PayWatch deze verwerking strikt tot wat technisch noodzakelijk is voor de door de gebruiker gevraagde financiële dienstverlening."}</p>
               </div>
 
               <div className="border-t border-[var(--border)] pt-6">
-                <h2 className="text-base font-bold text-[var(--navy)] mb-2">4. Verwerkers</h2>
+                <h2 className="text-base font-bold text-[var(--navy)] mb-2">5. Verwerkers</h2>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm border-collapse">
                     <thead><tr className="bg-[var(--bg)]">
@@ -714,7 +737,7 @@ function PrivacyContent() {
               </div>
 
               <div className="border-t border-[var(--border)] pt-6">
-                <h2 className="text-base font-bold text-[var(--navy)] mb-2">5. Risicobeoordeling</h2>
+                <h2 className="text-base font-bold text-[var(--navy)] mb-2">6. Risicobeoordeling</h2>
                 <div className="space-y-3">
                   {[
                     { risk: "Onbevoegde toegang tot financiële gegevens", chance: "Laag", impact: "Hoog", measure: "Strikte toegangscontrole, bankgraad encryptie, alleen-lezen e-mailtoegang" },
@@ -735,12 +758,12 @@ function PrivacyContent() {
               </div>
 
               <div className="border-t border-[var(--border)] pt-6">
-                <h2 className="text-base font-bold text-[var(--navy)] mb-2">6. Maatregelen en waarborgen</h2>
+                <h2 className="text-base font-bold text-[var(--navy)] mb-2">7. Maatregelen en waarborgen</h2>
                 <p className="text-sm text-[var(--text)] leading-relaxed whitespace-pre-line">{"Technisch:\n• Strikte toegangscontrole: elke gebruiker ziet alleen eigen gegevens\n• Bankgraad encryptie voor opslag en verzending\n• Geautomatiseerd verwijderingsproces voor complete wissing van alle gebruikersgegevens\n• Auditlog voor alle beheerdersacties\n• Admin kan geen individuele rekeningen of transacties inzien\n• Accountbevriezing bij GDPR-beperkingsverzoek\n• Alle AI-verwerking binnen de EU\n\nOrganisatorisch:\n• Privacyverantwoordelijke aangesteld (Samba Jarju, CTO)\n• GDPR-verzoeksysteem met automatische verwerking en 30-dagen deadline monitoring\n• Granulaire B2B-toestemming (gebruiker kiest per scope)\n• Geautomatiseerde deadline-herinneringen voor openstaande verzoeken"}</p>
               </div>
 
               <div className="border-t border-[var(--border)] pt-6">
-                <h2 className="text-base font-bold text-[var(--navy)] mb-2">7. Verwerkersregister</h2>
+                <h2 className="text-base font-bold text-[var(--navy)] mb-2">8. Verwerkersregister</h2>
                 <p className="text-sm text-[var(--muted)] mb-3">Overzicht van alle partijen die persoonsgegevens verwerken namens PayWatch.</p>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm border-collapse">
@@ -771,7 +794,7 @@ function PrivacyContent() {
               </div>
 
               <div className="border-t border-[var(--border)] pt-6">
-                <h2 className="text-base font-bold text-[var(--navy)] mb-2">8. Datalekprocedure</h2>
+                <h2 className="text-base font-bold text-[var(--navy)] mb-2">9. Datalekprocedure</h2>
                 <p className="text-sm text-[var(--text)] leading-relaxed whitespace-pre-line">{"PayWatch heeft een vastgestelde procedure voor het omgaan met datalekken conform Art. 33/34 AVG.\n\nBij een datalek:\n• Binnen 4 uur: classificatie (kritiek/hoog/middel/laag)\n• Binnen 72 uur: melding bij de Autoriteit Persoonsgegevens als er risico is voor betrokkenen\n• Zonder onredelijke vertraging: melding bij betrokkenen als er hoog risico is\n\nMeldkanalen naar betrokkenen:\n• E-mail via Resend\n• In-app notificatie\n\nAlle incidenten worden gelogd in het admin audit log met datum, beschrijving, classificatie, en getroffen maatregelen.\n\nVerantwoordelijke: Samba Jarju (CTO) — privacy@paywatch.nl"}</p>
               </div>
 
