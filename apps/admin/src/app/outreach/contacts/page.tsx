@@ -62,6 +62,7 @@ const TYPE_LABELS: Record<string, string> = {
   bewindvoerder: "Bewindvoerder",
   kredietbank: "Kredietbank",
   journalist: "Journalist",
+  influencer: "Influencer",
 };
 
 const TYPE_OPTIONS = [
@@ -72,6 +73,7 @@ const TYPE_OPTIONS = [
   { value: "bewindvoerder", label: "Bewindvoerder" },
   { value: "kredietbank", label: "Kredietbank" },
   { value: "journalist", label: "Journalist" },
+  { value: "influencer", label: "Influencer" },
 ];
 
 const STATUS_OPTIONS = [
