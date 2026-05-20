@@ -81,8 +81,6 @@ export default function Footer() {
             <span className="font-bold text-[var(--navy)]">{siteConfig.name}</span>
             <span className="hidden sm:inline">·</span>
             <span>{t.footer.copyright}</span>
-            <span className="hidden sm:inline">·</span>
-            <span>Daisycon-420734</span>
           </div>
           {/* Social icons + App Store */}
           <div className="flex items-center gap-4">
