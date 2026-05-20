@@ -31,8 +31,8 @@ const menuLinks = [
     image: "/menu/schuldhulp.png",
   },
   {
-    href: "/roadmap",
-    label: { nl: "Roadmap", en: "Roadmap" },
+    href: "/pricing",
+    label: { nl: "Prijzen", en: "Pricing" },
     image: "/menu/roadmap.png",
   },
 ];
