@@ -150,3 +150,29 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }
+
+/**
+ * DELETE /api/admin/outreach/inbox
+ * Delete one or more emails.
+ * Body: { ids: string[] }
+ */
+export async function DELETE(req: NextRequest) {
+  try {
+    const supabase = createServiceRoleClient();
+    const { ids } = await req.json();
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json({ error: "Missing ids array" }, { status: 400 });
+    }
+
+    const { error } = await supabase
+      .from("b2b_email_log")
+      .delete()
+      .in("id", ids);
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true, deleted: ids.length });
+  } catch (err) {
+    console.error("[Inbox DELETE]", err);
+    return NextResponse.json({ error: "Failed" }, { status: 500 });
+  }
+}

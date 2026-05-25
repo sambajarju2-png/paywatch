@@ -16,6 +16,7 @@ import {
   Eye,
   AlertTriangle,
   X,
+  Trash2,
 } from "lucide-react";
 
 type InboxEmail = {
@@ -77,6 +78,55 @@ export default function InboxPage() {
   const [mailbox, setMailbox] = useState("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showStarredOnly, setShowStarredOnly] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
+
+  function toggleSelect(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === emails.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(emails.map(e => e.id)));
+    }
+  }
+
+  async function deleteSelected() {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`${selectedIds.size} email(s) verwijderen?`)) return;
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/admin/outreach/inbox", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selectedIds) }),
+      });
+      if (res.ok) {
+        setSelectedIds(new Set());
+        await fetchEmails();
+      }
+    } catch { console.error("Delete failed"); }
+    finally { setDeleting(false); }
+  }
+
+  async function deleteSingle(id: string) {
+    if (!confirm("Dit email verwijderen?")) return;
+    try {
+      await fetch("/api/admin/outreach/inbox", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [id] }),
+      });
+      setSelectedIds(prev => { const n = new Set(prev); n.delete(id); return n; });
+      await fetchEmails();
+    } catch { console.error("Delete failed"); }
+  }
 
   // One-off compose modal
   const [showCompose, setShowCompose] = useState(false);
@@ -253,6 +303,27 @@ export default function InboxPage() {
         </div>
       </div>
 
+      {/* Bulk action bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-2.5">
+          <span className="text-sm font-semibold text-red-700">{selectedIds.size} geselecteerd</span>
+          <button
+            onClick={deleteSelected}
+            disabled={deleting}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+          >
+            {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+            Verwijderen
+          </button>
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            className="text-xs text-red-600 hover:underline ml-auto"
+          >
+            Deselecteer alles
+          </button>
+        </div>
+      )}
+
       {/* Email list */}
       <div className="bg-white rounded-xl border border-pw-border overflow-hidden">
         {loading && emails.length === 0 ? (
@@ -264,6 +335,18 @@ export default function InboxPage() {
           </div>
         ) : (
           <div className="divide-y divide-pw-border">
+            {/* Select all row */}
+            <div className="flex items-center gap-3 px-4 py-2 bg-gray-50/50 border-b border-pw-border">
+              <input
+                type="checkbox"
+                checked={emails.length > 0 && selectedIds.size === emails.length}
+                onChange={toggleSelectAll}
+                className="w-3.5 h-3.5 rounded border-gray-300 accent-pw-blue cursor-pointer"
+              />
+              <span className="text-[11px] text-pw-muted">
+                {selectedIds.size === emails.length && emails.length > 0 ? "Deselecteer alles" : "Selecteer alles"}
+              </span>
+            </div>
             {emails.map((email) => {
               const isInbound = email.direction === "inbound";
               const isExpanded = expandedId === email.id;
@@ -272,14 +355,21 @@ export default function InboxPage() {
 
               return (
                 <div key={email.id}>
-                  {/* Row — Gmail style */}
+                  {/* Row */}
                   <div
                     onClick={() => setExpandedId(isExpanded ? null : email.id)}
                     className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50/80 transition-colors ${
                       isExpanded ? "bg-blue-50/30" : ""
                     } ${email.status === "received" || email.replied_at ? "bg-blue-50/20" : ""}`}>
 
-                    {/* Star button */}
+                    {/* Checkbox */}
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(email.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={() => toggleSelect(email.id)}
+                      className="w-3.5 h-3.5 rounded border-gray-300 accent-pw-blue cursor-pointer shrink-0"
+                    />
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleStar(email.id, !!email.starred); }}
                       className="shrink-0 text-pw-muted hover:text-amber-500 transition-colors"
@@ -446,6 +536,10 @@ export default function InboxPage() {
                           <button onClick={(e) => { e.stopPropagation(); setReplyingToId(email.id); setReplySender(email.direction === "inbound" ? email.to_email : email.from_email); }}
                             className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-pw-blue bg-blue-50 rounded-lg hover:bg-blue-100 active:bg-blue-200 transition-colors">
                             <MessageSquare className="w-3.5 h-3.5" /> Reply
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); deleteSingle(email.id); }}
+                            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 active:bg-red-200 transition-colors">
+                            <Trash2 className="w-3.5 h-3.5" /> Verwijderen
                           </button>
                         </div>
                       ) : (
