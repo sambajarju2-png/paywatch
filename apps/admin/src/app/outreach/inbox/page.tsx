@@ -346,6 +346,15 @@ export default function InboxPage() {
               <span className="text-[11px] text-pw-muted">
                 {selectedIds.size === emails.length && emails.length > 0 ? "Deselecteer alles" : "Selecteer alles"}
               </span>
+              <button
+                onClick={() => {
+                  const unstarred = emails.filter(e => !e.starred).map(e => e.id);
+                  setSelectedIds(new Set(unstarred));
+                }}
+                className="text-[11px] text-red-500 hover:text-red-700 hover:underline ml-2"
+              >
+                Selecteer zonder ster ({emails.filter(e => !e.starred).length})
+              </button>
             </div>
             {emails.map((email) => {
               const isInbound = email.direction === "inbound";
