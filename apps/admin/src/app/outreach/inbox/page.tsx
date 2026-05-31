@@ -94,6 +94,7 @@ export default function InboxPage() {
   const [labelFilter, setLabelFilter] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
+  const [expandedThreadMsgs, setExpandedThreadMsgs] = useState<Set<string>>(new Set());
 
   function toggleSelect(id: string) {
     setSelectedIds(prev => {
@@ -437,7 +438,7 @@ export default function InboxPage() {
                 <div key={email.id}>
                   {/* Row */}
                   <div
-                    onClick={() => setExpandedId(isExpanded ? null : email.id)}
+                    onClick={() => { setExpandedId(isExpanded ? null : email.id); setExpandedThreadMsgs(new Set()); }}
                     className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50/80 transition-colors ${
                       isExpanded ? "bg-blue-50/30" : ""
                     } ${email.status === "received" || email.replied_at ? "bg-blue-50/20" : ""}`}>
@@ -569,45 +570,101 @@ export default function InboxPage() {
                         })}
                       </div>
 
-                      {/* Thread messages */}
+                      {/* Thread messages - Gmail-style expandable */}
                       {(() => {
                         const tid = email.thread_id || email.id;
                         const thread = threadMap.get(tid);
-                        if (!thread || thread.length <= 1) return null;
+
+                        // Single message: show full body directly
+                        if (!thread || thread.length <= 1) {
+                          return (
+                            <div className="bg-white rounded-lg border border-pw-border p-4 mb-3">
+                              <h3 className="text-sm font-semibold text-pw-navy mb-3">{email.subject}</h3>
+                              <div className="text-sm text-pw-text leading-relaxed prose prose-sm max-w-none"
+                                dangerouslySetInnerHTML={{ __html: email.body_html || "<em>No content</em>" }} />
+                            </div>
+                          );
+                        }
+
+                        // Thread: show all messages, newest expanded by default
                         return (
-                          <div className="mb-3">
-                            <p className="text-[11px] font-semibold text-pw-muted mb-2">Thread ({thread.length} berichten)</p>
-                            <div className="space-y-2">
-                              {thread.map((msg, idx) => (
-                                <div key={msg.id}
-                                  className={`p-3 rounded-lg border text-xs ${msg.id === email.id ? "border-pw-blue bg-blue-50/30" : "border-pw-border bg-white"}`}>
-                                  <div className="flex items-center justify-between mb-1">
-                                    <span className="font-semibold text-pw-text">
-                                      {msg.direction === "inbound" ? (msg.from_name || msg.from_email) : `${msg.from_name || "Jij"} → ${msg.to_name || msg.to_email}`}
-                                    </span>
-                                    <span className="text-pw-muted">{msg.sent_at ? new Date(msg.sent_at).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}</span>
+                          <div className="space-y-1.5 mb-3">
+                            <p className="text-[11px] font-semibold text-pw-muted mb-1">Thread ({thread.length} berichten)</p>
+                            {thread.map((msg, idx) => {
+                              const isNewest = idx === thread.length - 1;
+                              const isOpen = expandedThreadMsgs.has(msg.id) || (isNewest && !expandedThreadMsgs.has("_collapsed_" + msg.id));
+
+                              return (
+                                <div key={msg.id} className={`rounded-lg border overflow-hidden ${msg.direction === "inbound" ? "border-emerald-200" : "border-pw-border"}`}>
+                                  {/* Header - always visible, clickable */}
+                                  <div
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setExpandedThreadMsgs(prev => {
+                                        const next = new Set(prev);
+                                        if (isOpen) {
+                                          next.delete(msg.id);
+                                          if (isNewest) next.add("_collapsed_" + msg.id);
+                                        } else {
+                                          next.add(msg.id);
+                                          next.delete("_collapsed_" + msg.id);
+                                        }
+                                        return next;
+                                      });
+                                    }}
+                                    className={`flex items-center justify-between px-3 py-2 cursor-pointer transition-colors ${
+                                      isOpen ? "bg-gray-50" : "bg-white hover:bg-gray-50/50"
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${msg.direction === "inbound" ? "bg-emerald-100" : "bg-blue-100"}`}>
+                                        {msg.direction === "inbound"
+                                          ? <Mail className="w-2.5 h-2.5 text-emerald-600" />
+                                          : <Send className="w-2.5 h-2.5 text-blue-600" />}
+                                      </div>
+                                      <span className="text-xs font-semibold text-pw-text truncate">
+                                        {msg.direction === "inbound" ? (msg.from_name || msg.from_email) : (msg.from_name || "Jij")}
+                                      </span>
+                                      {!isOpen && (
+                                        <span className="text-[11px] text-pw-muted truncate">
+                                          {msg.body_html?.replace(/<[^>]+>/g, " ").slice(0, 80)}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                                      {msg.attachments && msg.attachments.length > 0 && <span className="text-[10px]">📎</span>}
+                                      <span className="text-[10px] text-pw-muted">
+                                        {msg.sent_at ? new Date(msg.sent_at).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}
+                                      </span>
+                                      {isOpen
+                                        ? <ChevronUp className="w-3 h-3 text-pw-muted" />
+                                        : <ChevronDown className="w-3 h-3 text-pw-muted" />}
+                                    </div>
                                   </div>
-                                  <div className="text-pw-muted line-clamp-2" dangerouslySetInnerHTML={{ __html: msg.body_html?.replace(/<[^>]+>/g, " ").slice(0, 200) || "" }} />
-                                  {msg.attachments && msg.attachments.length > 0 && (
-                                    <div className="flex gap-1 mt-1">
-                                      {msg.attachments.map((att: any, i: number) => (
-                                        <span key={i} className="text-[10px] text-pw-blue">📎 {att.name}</span>
-                                      ))}
+
+                                  {/* Body - only when expanded */}
+                                  {isOpen && (
+                                    <div className="px-3 pb-3 border-t border-pw-border/50">
+                                      <div className="text-sm text-pw-text leading-relaxed prose prose-sm max-w-none pt-3"
+                                        dangerouslySetInnerHTML={{ __html: msg.body_html || "<em>No content</em>" }} />
+                                      {msg.attachments && msg.attachments.length > 0 && (
+                                        <div className="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-pw-border/30">
+                                          {msg.attachments.map((att: any, i: number) => (
+                                            <a key={i} href={att.url || "#"} target="_blank" rel="noopener"
+                                              className="inline-flex items-center gap-1 px-2 py-1 text-[11px] bg-blue-50 text-pw-blue rounded-md hover:bg-blue-100">
+                                              📎 {att.name} <span className="text-pw-muted">({(att.size / 1024).toFixed(0)}KB)</span>
+                                            </a>
+                                          ))}
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                 </div>
-                              ))}
-                            </div>
+                              );
+                            })}
                           </div>
                         );
                       })()}
-
-                      {/* Email body */}
-                      <div className="bg-white rounded-lg border border-pw-border p-4">
-                        <h3 className="text-sm font-semibold text-pw-navy mb-3">{email.subject}</h3>
-                        <div className="text-sm text-pw-text leading-relaxed prose prose-sm max-w-none"
-                          dangerouslySetInnerHTML={{ __html: email.body_html || "<em>No content</em>" }} />
-                      </div>
 
                       {/* Attachments */}
                       {email.attachments && email.attachments.length > 0 && (
