@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import {
   Send,
@@ -42,7 +42,20 @@ type InboxEmail = {
   contact_type?: string;
   starred?: boolean;
   attachments?: Array<{ name: string; size: number; type: string; path: string; url: string | null }>;
-};
+  labels?: string[];
+  thread_id?: string;
+}
+
+const LABEL_OPTIONS = [
+  { value: "ugc", label: "UGC", color: "#8B5CF6" },
+  { value: "pr", label: "PR", color: "#EC4899" },
+  { value: "incasso", label: "Incasso", color: "#F59E0B" },
+  { value: "gemeente", label: "Gemeente", color: "#3B82F6" },
+  { value: "hulporg", label: "Hulporg", color: "#10B981" },
+  { value: "follow-up", label: "Follow-up", color: "#EF4444" },
+  { value: "partner", label: "Partner", color: "#6366F1" },
+  { value: "investor", label: "Investor", color: "#0EA5E9" },
+];;
 
 const STATUS_ICON: Record<string, { icon: typeof Send; color: string }> = {
   sent: { icon: Send, color: "text-blue-500" },
@@ -78,6 +91,7 @@ export default function InboxPage() {
   const [mailbox, setMailbox] = useState("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showStarredOnly, setShowStarredOnly] = useState(false);
+  const [labelFilter, setLabelFilter] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
 
@@ -157,6 +171,7 @@ export default function InboxPage() {
       form.append("subject", email.subject?.startsWith("Re:") ? email.subject : `Re: ${email.subject}`);
       form.append("body_html", replyBody.replace(/\n/g, "<br/>"));
       if (email.contact_id) form.append("contact_id", email.contact_id);
+      form.append("thread_id", email.thread_id || email.id);
       for (const f of replyFiles) form.append("attachment", f);
       const res = await fetch("/api/admin/outreach/quick-email", {
         method: "POST",
@@ -221,6 +236,7 @@ export default function InboxPage() {
       if (mailbox !== "all") params.set("mailbox", mailbox);
       if (search) params.set("search", search);
       if (showStarredOnly) params.set("starred", "true");
+      if (labelFilter) params.set("label", labelFilter);
       const res = await fetch(`/api/admin/outreach/inbox?${params}`);
       if (res.ok) {
         const data = await res.json();
@@ -230,10 +246,38 @@ export default function InboxPage() {
       }
     } catch { console.error("Inbox fetch failed"); }
     finally { setLoading(false); }
-  }, [page, direction, mailbox, search, showStarredOnly]);
+  }, [page, direction, mailbox, search, showStarredOnly, labelFilter]);
 
   useEffect(() => { fetchEmails(); }, [fetchEmails]);
-  useEffect(() => { setPage(1); }, [direction, mailbox, search, showStarredOnly]);
+  useEffect(() => { setPage(1); }, [direction, mailbox, search, showStarredOnly, labelFilter]);
+
+  async function toggleLabel(emailId: string, label: string) {
+    const email = emails.find(e => e.id === emailId);
+    if (!email) return;
+    const has = (email.labels || []).includes(label);
+    // Optimistic update
+    setEmails(prev => prev.map(e => e.id === emailId ? { ...e, labels: has ? (e.labels || []).filter(l => l !== label) : [...(e.labels || []), label] } : e));
+    await fetch("/api/admin/outreach/inbox", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: emailId, [has ? "remove_label" : "add_label"]: label }),
+    });
+  }
+
+  // Group emails into threads
+  const threadMap = useMemo(() => {
+    const map = new Map<string, InboxEmail[]>();
+    for (const e of emails) {
+      const tid = e.thread_id || e.id;
+      if (!map.has(tid)) map.set(tid, []);
+      map.get(tid)!.push(e);
+    }
+    // Sort each thread by sent_at ascending (oldest first within thread)
+    for (const [, thread] of map) {
+      thread.sort((a, b) => new Date(a.sent_at || a.created_at).getTime() - new Date(b.sent_at || b.created_at).getTime());
+    }
+    return map;
+  }, [emails]);
 
   return (
     <div className="space-y-4">
@@ -253,6 +297,16 @@ export default function InboxPage() {
             </svg>
             Starred
           </button>
+          <select
+            value={labelFilter}
+            onChange={(e) => setLabelFilter(e.target.value)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${labelFilter ? "bg-purple-50 border-purple-200 text-purple-700" : "bg-white border-pw-border text-pw-muted"}`}
+          >
+            <option value="">Alle labels</option>
+            {LABEL_OPTIONS.map(l => (
+              <option key={l.value} value={l.value}>{l.label}</option>
+            ))}
+          </select>
           <button
             onClick={() => setShowCompose(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-pw-navy text-white hover:bg-blue-800 transition-colors"
@@ -413,16 +467,31 @@ export default function InboxPage() {
                       </p>
                     </div>
 
-                    {/* Subject + preview */}
+                    {/* Subject + preview + labels */}
                     <div className="flex-1 min-w-0 hidden sm:block">
-                      <span className="text-xs font-medium text-pw-text">{email.subject || "(no subject)"}</span>
-                      {email.attachments && email.attachments.length > 0 && (
-                        <span className="text-xs text-pw-muted ml-1">📎</span>
-                      )}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-xs font-medium text-pw-text">{email.subject || "(no subject)"}</span>
+                        {email.attachments && email.attachments.length > 0 && (
+                          <span className="text-xs text-pw-muted">📎</span>
+                        )}
+                        {(() => {
+                          const tid = email.thread_id || email.id;
+                          const thread = threadMap.get(tid);
+                          return thread && thread.length > 1 ? (
+                            <span className="text-[10px] font-semibold bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{thread.length}</span>
+                          ) : null;
+                        })()}
+                        {(email.labels || []).map(l => {
+                          const cfg = LABEL_OPTIONS.find(o => o.value === l);
+                          return cfg ? (
+                            <span key={l} className="text-[9px] font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: cfg.color + "18", color: cfg.color }}>{cfg.label}</span>
+                          ) : null;
+                        })}
+                      </div>
                       {email.body_html && (
-                        <span className="text-xs text-pw-muted ml-2">
-                          — {email.body_html.replace(/<[^>]+>/g, "").slice(0, 80)}
-                        </span>
+                        <p className="text-[11px] text-pw-muted truncate mt-0.5">
+                          {email.body_html.replace(/<[^>]+>/g, "").slice(0, 80)}
+                        </p>
                       )}
                     </div>
 
@@ -464,6 +533,59 @@ export default function InboxPage() {
                           </Link>
                         )}
                       </div>
+
+                      {/* Labels */}
+                      <div className="flex flex-wrap items-center gap-1.5 py-2 border-b border-pw-border mb-3">
+                        <span className="text-[11px] text-pw-muted mr-1">Labels:</span>
+                        {LABEL_OPTIONS.map(l => {
+                          const active = (email.labels || []).includes(l.value);
+                          return (
+                            <button key={l.value}
+                              onClick={(e) => { e.stopPropagation(); toggleLabel(email.id, l.value); }}
+                              className="text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-all"
+                              style={{
+                                backgroundColor: active ? l.color + "18" : "transparent",
+                                color: active ? l.color : "#94A3B8",
+                                borderColor: active ? l.color + "40" : "#E2E8F0",
+                              }}>
+                              {l.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Thread messages */}
+                      {(() => {
+                        const tid = email.thread_id || email.id;
+                        const thread = threadMap.get(tid);
+                        if (!thread || thread.length <= 1) return null;
+                        return (
+                          <div className="mb-3">
+                            <p className="text-[11px] font-semibold text-pw-muted mb-2">Thread ({thread.length} berichten)</p>
+                            <div className="space-y-2">
+                              {thread.map((msg, idx) => (
+                                <div key={msg.id}
+                                  className={`p-3 rounded-lg border text-xs ${msg.id === email.id ? "border-pw-blue bg-blue-50/30" : "border-pw-border bg-white"}`}>
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="font-semibold text-pw-text">
+                                      {msg.direction === "inbound" ? (msg.from_name || msg.from_email) : `${msg.from_name || "Jij"} → ${msg.to_name || msg.to_email}`}
+                                    </span>
+                                    <span className="text-pw-muted">{msg.sent_at ? new Date(msg.sent_at).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}</span>
+                                  </div>
+                                  <div className="text-pw-muted line-clamp-2" dangerouslySetInnerHTML={{ __html: msg.body_html?.replace(/<[^>]+>/g, " ").slice(0, 200) || "" }} />
+                                  {msg.attachments && msg.attachments.length > 0 && (
+                                    <div className="flex gap-1 mt-1">
+                                      {msg.attachments.map((att: any, i: number) => (
+                                        <span key={i} className="text-[10px] text-pw-blue">📎 {att.name}</span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       {/* Email body */}
                       <div className="bg-white rounded-lg border border-pw-border p-4">

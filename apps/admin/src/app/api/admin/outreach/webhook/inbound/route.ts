@@ -253,6 +253,7 @@ export async function POST(req: NextRequest) {
       mailtrap_message_id: messageId || null,
       sequence_step: 0,
       attachments: attachments.length > 0 ? attachments : [],
+      thread_id: matchedEmail.id,
     });
 
     // Update contact status to replied

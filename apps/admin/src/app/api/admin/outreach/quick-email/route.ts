@@ -61,6 +61,7 @@ export async function POST(req: NextRequest) {
     // Parse body — FormData or JSON
     let sender: string, to_email: string, to_name: string | null, subject: string, body_html: string, contact_id: string | null;
     let attachments: File[] = [];
+    let thread_id: string | null = null;
 
     const contentType = req.headers.get("content-type") || "";
     if (contentType.includes("multipart/form-data")) {
@@ -71,6 +72,7 @@ export async function POST(req: NextRequest) {
       subject = formData.get("subject") as string || "";
       body_html = formData.get("body_html") as string || "";
       contact_id = formData.get("contact_id") as string || null;
+      thread_id = formData.get("thread_id") as string || null;
       // Collect all attachment files
       const files = formData.getAll("attachment");
       for (const f of files) {
@@ -84,6 +86,7 @@ export async function POST(req: NextRequest) {
       subject = body.subject || "";
       body_html = body.body_html || "";
       contact_id = body.contact_id || null;
+      thread_id = body.thread_id || null;
     }
 
     if (!sender || !to_email || !subject || !body_html) {
@@ -224,6 +227,7 @@ export async function POST(req: NextRequest) {
         mailtrap_message_id: data.id || null,
         sequence_step: 0,
         attachments: attachmentMeta.length > 0 ? attachmentMeta : [],
+        thread_id: thread_id || emailLogId,
       }).then(({ error }) => {
         if (error) console.error("[Quick Email] Log failed:", error.message);
       });

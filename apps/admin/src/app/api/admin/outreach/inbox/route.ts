@@ -38,12 +38,15 @@ export async function GET(req: NextRequest) {
         subject, body_html, status, sent_at, delivered_at, opened_at,
         clicked_at, replied_at, reply_body, reply_from, reply_subject,
         contact_id, campaign_id, sequence_step, created_at,
-        attachments, starred
+        attachments, starred, labels, thread_id
       `, { count: "exact" })
       .order("sent_at", { ascending: false, nullsFirst: false });
 
     if (direction !== "all") query = query.eq("direction", direction);
     if (starredOnly) query = query.eq("starred", true);
+
+    const label = searchParams.get("label");
+    if (label) query = query.contains("labels", [label]);
 
     const mailbox = searchParams.get("mailbox");
     if (mailbox && mailbox !== "all") {
@@ -129,18 +132,55 @@ export async function GET(req: NextRequest) {
 
 /**
  * PATCH /api/admin/outreach/inbox
- * Toggle star on an email.
- * Body: { id: string, starred: boolean }
+ * Update email properties: star, labels
+ * Body: { id: string, starred?: boolean, labels?: string[], add_label?: string, remove_label?: string }
  */
 export async function PATCH(req: NextRequest) {
   try {
     const supabase = createServiceRoleClient();
-    const { id, starred } = await req.json();
+    const body = await req.json();
+    const { id } = body;
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+
+    const update: Record<string, any> = {};
+
+    // Star toggle
+    if (body.starred !== undefined) update.starred = !!body.starred;
+
+    // Replace labels entirely
+    if (body.labels !== undefined) update.labels = body.labels;
+
+    // Add single label
+    if (body.add_label) {
+      const { data: current } = await supabase
+        .from("b2b_email_log")
+        .select("labels")
+        .eq("id", id)
+        .single();
+      const existing = (current?.labels || []) as string[];
+      if (!existing.includes(body.add_label)) {
+        update.labels = [...existing, body.add_label];
+      }
+    }
+
+    // Remove single label
+    if (body.remove_label) {
+      const { data: current } = await supabase
+        .from("b2b_email_log")
+        .select("labels")
+        .eq("id", id)
+        .single();
+      const existing = (current?.labels || []) as string[];
+      update.labels = existing.filter((l: string) => l !== body.remove_label);
+    }
+
+    if (Object.keys(update).length === 0) {
+      return NextResponse.json({ ok: true });
+    }
 
     const { error } = await supabase
       .from("b2b_email_log")
-      .update({ starred: !!starred })
+      .update(update)
       .eq("id", id);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
