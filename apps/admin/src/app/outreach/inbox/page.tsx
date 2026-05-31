@@ -274,7 +274,7 @@ export default function InboxPage() {
     }
     // Sort each thread by sent_at ascending (oldest first within thread)
     for (const [, thread] of map) {
-      thread.sort((a, b) => new Date(a.sent_at || a.created_at).getTime() - new Date(b.sent_at || b.created_at).getTime());
+      thread.sort((a, b) => new Date(a.sent_at || "").getTime() - new Date(b.sent_at || "").getTime());
     }
     return map;
   }, [emails]);
