@@ -142,6 +142,7 @@ export default function InboxPage() {
   const [replySender, setReplySender] = useState("samba@paywatch.nl");
   const [replyBody, setReplyBody] = useState("");
   const [replySending, setReplySending] = useState(false);
+  const [replyFiles, setReplyFiles] = useState<File[]>([]);
 
   async function handleSendReply(email: InboxEmail) {
     if (!replyBody.trim()) return;
@@ -149,21 +150,22 @@ export default function InboxPage() {
     try {
       const toEmail = email.direction === "inbound" ? email.from_email : email.to_email;
       const toName = email.contact_name || email.to_name || "";
+      const form = new FormData();
+      form.append("sender", replySender);
+      form.append("to_email", toEmail);
+      form.append("to_name", toName);
+      form.append("subject", email.subject?.startsWith("Re:") ? email.subject : `Re: ${email.subject}`);
+      form.append("body_html", replyBody.replace(/\n/g, "<br/>"));
+      if (email.contact_id) form.append("contact_id", email.contact_id);
+      for (const f of replyFiles) form.append("attachment", f);
       const res = await fetch("/api/admin/outreach/quick-email", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sender: replySender,
-          to_email: toEmail,
-          to_name: toName,
-          subject: email.subject?.startsWith("Re:") ? email.subject : `Re: ${email.subject}`,
-          body_html: replyBody.replace(/\n/g, "<br/>"),
-          contact_id: email.contact_id || null,
-        }),
+        body: form,
       });
       if (res.ok) {
         setReplyingToId(null);
         setReplyBody("");
+        setReplyFiles([]);
         await fetchEmails();
       }
     } catch { console.error("Reply failed"); }
@@ -566,12 +568,32 @@ export default function InboxPage() {
                           <textarea value={replyBody} onChange={(e) => setReplyBody(e.target.value)}
                             rows={4} autoFocus placeholder="Write your reply..."
                             className="w-full px-3 py-2 text-sm rounded-lg border border-pw-border bg-white focus:outline-none focus:border-pw-blue resize-none" />
+                          {replyFiles.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-1.5">
+                              {replyFiles.map((f, i) => (
+                                <span key={i} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] bg-blue-50 text-pw-blue rounded-md">
+                                  {f.name} ({(f.size / 1024).toFixed(0)}KB)
+                                  <button onClick={() => setReplyFiles(prev => prev.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-600">
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          )}
                           <div className="flex gap-2 mt-2">
                             <button onClick={() => handleSendReply(email)} disabled={replySending || !replyBody.trim()}
                               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-pw-blue rounded-lg hover:bg-blue-600 disabled:opacity-50">
                               {replySending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />} Send Reply
                             </button>
-                            <button onClick={() => { setReplyingToId(null); setReplyBody(""); }}
+                            <label className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-pw-muted bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer border border-pw-border">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                              Bijlage
+                              <input type="file" multiple className="hidden" onChange={(e) => {
+                                if (e.target.files) setReplyFiles(prev => [...prev, ...Array.from(e.target.files!)].slice(0, 5));
+                                e.target.value = "";
+                              }} />
+                            </label>
+                            <button onClick={() => { setReplyingToId(null); setReplyBody(""); setReplyFiles([]); }}
                               className="px-3 py-1.5 text-xs font-semibold text-pw-muted hover:bg-gray-100 rounded-lg">
                               Cancel
                             </button>

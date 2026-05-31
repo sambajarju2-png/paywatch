@@ -187,6 +187,28 @@ export async function POST(req: NextRequest) {
         resolvedContactId = contactMatch?.id || null;
       }
 
+      // Upload attachments to storage for tracking
+      const attachmentMeta: Array<{ name: string; size: number; type: string; path: string }> = [];
+      for (const att of attachments) {
+        try {
+          const bytes = await att.arrayBuffer();
+          const buffer = Buffer.from(bytes);
+          const safeName = att.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+          const storagePath = `outbound/${emailLogId}-${safeName}`;
+          const { error: uploadError } = await supabase.storage
+            .from("email-attachments")
+            .upload(storagePath, buffer, {
+              contentType: att.type || "application/octet-stream",
+              upsert: false,
+            });
+          if (!uploadError) {
+            attachmentMeta.push({ name: att.name, size: att.size, type: att.type, path: storagePath });
+          }
+        } catch (e) {
+          console.error("[Quick Email] Attachment upload failed:", e);
+        }
+      }
+
       await supabase.from("b2b_email_log").insert({
         id: emailLogId,
         contact_id: resolvedContactId,
@@ -201,6 +223,7 @@ export async function POST(req: NextRequest) {
         sent_at: new Date().toISOString(),
         mailtrap_message_id: data.id || null,
         sequence_step: 0,
+        attachments: attachmentMeta.length > 0 ? attachmentMeta : [],
       }).then(({ error }) => {
         if (error) console.error("[Quick Email] Log failed:", error.message);
       });
