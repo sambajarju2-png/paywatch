@@ -104,10 +104,10 @@ export default function InboxPage() {
   }
 
   function toggleSelectAll() {
-    if (selectedIds.size === emails.length) {
+    if (selectedIds.size === threadedEmails.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(emails.map(e => e.id)));
+      setSelectedIds(new Set(threadedEmails.map(e => e.id)));
     }
   }
 
@@ -279,6 +279,21 @@ export default function InboxPage() {
     return map;
   }, [emails]);
 
+  // Gmail-style: one row per thread, sorted by newest message
+  const threadedEmails = useMemo(() => {
+    const seen = new Map<string, InboxEmail>();
+    for (const e of emails) {
+      const tid = e.thread_id || e.id;
+      const existing = seen.get(tid);
+      if (!existing || new Date(e.sent_at || "").getTime() > new Date(existing.sent_at || "").getTime()) {
+        seen.set(tid, e);
+      }
+    }
+    return Array.from(seen.values()).sort(
+      (a, b) => new Date(b.sent_at || "").getTime() - new Date(a.sent_at || "").getTime()
+    );
+  }, [emails]);
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -395,24 +410,24 @@ export default function InboxPage() {
             <div className="flex items-center gap-3 px-4 py-2 bg-gray-50/50 border-b border-pw-border">
               <input
                 type="checkbox"
-                checked={emails.length > 0 && selectedIds.size === emails.length}
+                checked={threadedEmails.length > 0 && selectedIds.size === threadedEmails.length}
                 onChange={toggleSelectAll}
                 className="w-3.5 h-3.5 rounded border-gray-300 accent-pw-blue cursor-pointer"
               />
               <span className="text-[11px] text-pw-muted">
-                {selectedIds.size === emails.length && emails.length > 0 ? "Deselecteer alles" : "Selecteer alles"}
+                {selectedIds.size === threadedEmails.length && threadedEmails.length > 0 ? "Deselecteer alles" : "Selecteer alles"}
               </span>
               <button
                 onClick={() => {
-                  const unstarred = emails.filter(e => !e.starred).map(e => e.id);
+                  const unstarred = threadedEmails.filter(e => !e.starred).map(e => e.id);
                   setSelectedIds(new Set(unstarred));
                 }}
                 className="text-[11px] text-red-500 hover:text-red-700 hover:underline ml-2"
               >
-                Selecteer zonder ster ({emails.filter(e => !e.starred).length})
+                Selecteer zonder ster ({threadedEmails.filter(e => !e.starred).length})
               </button>
             </div>
-            {emails.map((email) => {
+            {threadedEmails.map((email) => {
               const isInbound = email.direction === "inbound";
               const isExpanded = expandedId === email.id;
               const statusConfig = STATUS_ICON[email.status] || STATUS_ICON.sent;
