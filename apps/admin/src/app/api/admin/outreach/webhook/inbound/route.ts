@@ -114,38 +114,54 @@ export async function POST(req: NextRequest) {
 
     // ── Extract attachments ──
     const attachmentCount = parseInt(formData.get("attachment-count") as string || "0", 10);
-    // Bucket is private — store path only, signed URLs generated at read time
     const attachments: Array<{ name: string; size: number; type: string; path: string }> = [];
 
-    for (let i = 1; i <= attachmentCount; i++) {
+    // Collect files from all possible Mailgun forward formats
+    const files: File[] = [];
+
+    // Format 1: numbered fields (attachment-1, attachment-2, ...)
+    for (let i = 1; i <= Math.max(attachmentCount, 10); i++) {
       const file = formData.get(`attachment-${i}`) as File | null;
-      if (!file) continue;
+      if (file && file instanceof File && file.size > 0) files.push(file);
+      else if (!file) break; // stop if no more numbered attachments
+    }
+
+    // Format 2: repeated "attachment" field
+    if (files.length === 0) {
+      for (const f of formData.getAll("attachment")) {
+        if (f instanceof File && f.size > 0) files.push(f);
+      }
+    }
+
+    // Format 3: scan all fields for any File we missed
+    if (files.length === 0) {
+      for (const [, value] of formData.entries()) {
+        if (value instanceof File && value.size > 0) files.push(value);
+      }
+    }
+
+    console.log(`[Inbound] attachment-count header: ${attachmentCount}, files found: ${files.length}, fields: ${Array.from(formData.keys()).filter(k => k.includes('attach') || k.includes('file')).join(", ") || "none"}`);
+
+    for (const file of files) {
       try {
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
         const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
         const storagePath = `inbound/${Date.now()}-${safeName}`;
-
         const { error: uploadError } = await supabase.storage
           .from("email-attachments")
           .upload(storagePath, buffer, {
             contentType: file.type || "application/octet-stream",
             upsert: false,
           });
-
         if (!uploadError) {
-          attachments.push({
-            name: file.name,
-            size: file.size,
-            type: file.type || "application/octet-stream",
-            path: storagePath,
-          });
+          attachments.push({ name: file.name, size: file.size, type: file.type || "application/octet-stream", path: storagePath });
           console.log(`[Inbound] Saved attachment: ${file.name} (${file.size} bytes)`);
         } else {
-          console.error(`[Inbound] Attachment upload failed:`, uploadError);
+          console.error(`[Inbound] Upload failed:`, uploadError);
         }
       } catch (err) {
-        console.error(`[Inbound] Attachment ${i} processing failed:`, err);
+        console.error(`[Inbound] Attachment processing failed:`, err);
       }
     }
 
