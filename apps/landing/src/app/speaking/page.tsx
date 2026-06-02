@@ -264,13 +264,13 @@ export default function SpeakingPage() {
             <div className="max-w-3xl">
               <p className="text-sm text-[var(--muted)] leading-relaxed">
                 {isNl
-                  ? "Samba Jarju (CTO) en Mariama Sesay (CMO) zijn de co-founders van PayWatch, een Nederlandse fintech startup die huishoudens helpt schulden te voorkomen. Samen bouwen ze aan een platform dat rekeningen, abonnementen en escalaties bijhoudt met behulp van AI en open banking. PayWatch wordt gebruikt door consumenten, gemeentes en incassobureaus en is gebouwd vanuit Rotterdam."
-                  : "Samba Jarju (CTO) and Mariama Sesay (CMO) are the co-founders of PayWatch, a Dutch fintech startup helping households prevent debt. Together they build a platform that tracks bills, subscriptions, and escalations using AI and open banking. PayWatch is used by consumers, municipalities, and collection agencies, built from Rotterdam."}
+                  ? "Wij zijn Samba Jarju (CTO) en Mariama Sesay (CMO), de co-founders van PayWatch. We bouwen aan een platform dat huishoudens helpt schulden te voorkomen door rekeningen, abonnementen en escalaties bij te houden met AI en open banking. PayWatch wordt gebruikt door consumenten, gemeentes en incassobureaus en we bouwen het vanuit Rotterdam."
+                  : "We are Samba Jarju (CTO) and Mariama Sesay (CMO), the co-founders of PayWatch. We build a platform that helps households prevent debt by tracking bills, subscriptions, and escalations using AI and open banking. PayWatch is used by consumers, municipalities, and collection agencies, and we build it from Rotterdam."}
               </p>
               <p className="text-sm text-[var(--muted)] leading-relaxed mt-3">
                 {isNl
-                  ? "Samen geven ze gastcolleges bij hogescholen en universiteiten, spreken op startup events en delen hun ervaring als jonge ondernemers in de fintech. Geen opgepoetst succesverhaal, maar een eerlijk verhaal over bouwen, falen en doorzetten."
-                  : "Together they give guest lectures at universities, speak at startup events, and share their experience as young entrepreneurs in fintech. Not a polished success story, but an honest account of building, failing, and persisting."}
+                  ? "We geven gastcolleges bij hogescholen en universiteiten, spreken op startup events en delen onze ervaring als jonge ondernemers in de fintech. Geen opgepoetst succesverhaal, maar een eerlijk verhaal over bouwen, falen en doorzetten."
+                  : "We give guest lectures at universities, speak at startup events, and share our experience as young entrepreneurs in fintech. Not a polished success story, but an honest account of building, failing, and persisting."}
               </p>
             </div>
           </div>

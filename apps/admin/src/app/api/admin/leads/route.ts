@@ -11,24 +11,25 @@ function getAdmin() {
   );
 }
 
-/** GET /api/admin/leads — list all demo requests */
+/** GET /api/admin/leads — list demo requests + speaking requests */
 export async function GET() {
   const admin = await verifyAdmin();
   if (!admin.isAdmin) return admin.response;
 
   try {
     const supabase = getAdmin();
-    const { data, error } = await supabase
-      .from("demo_requests")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const [demosRes, speakingRes] = await Promise.all([
+      supabase.from("demo_requests").select("*").order("created_at", { ascending: false }),
+      supabase.from("speaking_requests").select("*").order("created_at", { ascending: false }),
+    ]);
 
-    if (error) {
-      console.error("Leads fetch error:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    if (demosRes.error) console.error("Demo leads error:", demosRes.error);
+    if (speakingRes.error) console.error("Speaking leads error:", speakingRes.error);
 
-    return NextResponse.json({ leads: data || [] });
+    return NextResponse.json({
+      leads: demosRes.data || [],
+      speaking: speakingRes.data || [],
+    });
   } catch (err) {
     console.error("Leads error:", err);
     return NextResponse.json({ error: "Failed" }, { status: 500 });
@@ -42,27 +43,28 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { id, status, notes } = body;
+    const { id, status, notes, table } = body;
 
     if (!id || !status) {
       return NextResponse.json({ error: "Missing id or status" }, { status: 400 });
     }
 
-    const validStatuses = ["new", "contacted", "demo_scheduled", "onboarded", "declined"];
+    const validStatuses = ["new", "contacted", "demo_scheduled", "onboarded", "confirmed", "completed", "declined"];
     if (!validStatuses.includes(status)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
+    const tableName = table === "speaking" ? "speaking_requests" : "demo_requests";
     const supabase = getAdmin();
     const update: Record<string, any> = {
       status,
-      handled_by: admin.email,
       handled_at: new Date().toISOString(),
     };
+    if (tableName === "demo_requests") update.handled_by = admin.email;
     if (notes !== undefined) update.notes = notes;
 
     const { error } = await supabase
-      .from("demo_requests")
+      .from(tableName)
       .update(update)
       .eq("id", id);
 
