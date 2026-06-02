@@ -107,6 +107,26 @@ function TopicCard({ topic, lang, index }: { topic: typeof TOPICS[0]; lang: "nl"
 export default function SpeakingPage() {
   const { lang } = useApp();
   const isNl = lang === "nl";
+  const [form, setForm] = useState({ name: "", email: "", organization: "", role: "", type: "", topic: "", audience: "", date_preference: "", message: "" });
+  const [formStatus, setFormStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [formTimestamp] = useState(Date.now());
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = async () => {
+    if (!form.name || !form.email || !form.organization) return;
+    setFormStatus("sending");
+    try {
+      const res = await fetch("/api/speaking-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, _t: formTimestamp, website: "" }),
+      });
+      setFormStatus(res.ok ? "sent" : "error");
+    } catch { setFormStatus("error"); }
+  };
 
   return (
     <div className="bg-[var(--bg)] overflow-x-hidden">
@@ -121,17 +141,17 @@ export default function SpeakingPage() {
         <ScrollReveal delay={60}>
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-[var(--navy)] tracking-tight leading-[1.08] max-w-3xl">
             {isNl ? (
-              <>Ik praat over schulden,<br className="hidden sm:block" /> ondernemen en waarom<br className="hidden sm:block" /> het anders moet.</>
+              <>Wij praten over schulden,<br className="hidden sm:block" /> ondernemen en waarom<br className="hidden sm:block" /> het anders moet.</>
             ) : (
-              <>I talk about debt,<br className="hidden sm:block" /> entrepreneurship and why<br className="hidden sm:block" /> things need to change.</>
+              <>We talk about debt,<br className="hidden sm:block" /> entrepreneurship and why<br className="hidden sm:block" /> things need to change.</>
             )}
           </h1>
         </ScrollReveal>
         <ScrollReveal delay={120}>
           <p className="text-base sm:text-lg text-[var(--muted)] mt-5 max-w-2xl leading-relaxed">
             {isNl
-              ? "Mijn naam is Samba Jarju. Ik ben co-founder van PayWatch en geef gastcolleges bij hogescholen, universiteiten en events over schuldenpreventie, maatschappelijk ondernemen en de toekomst van fintech in Nederland."
-              : "My name is Samba Jarju. I'm the co-founder of PayWatch and I give guest lectures at universities and events about debt prevention, social entrepreneurship, and the future of fintech in the Netherlands."}
+              ? "Wij zijn Samba Jarju en Mariama Sesay, co-founders van PayWatch. We geven samen gastcolleges bij hogescholen, universiteiten en events over schuldenpreventie, maatschappelijk ondernemen en de toekomst van fintech in Nederland."
+              : "We are Samba Jarju and Mariama Sesay, co-founders of PayWatch. Together we give guest lectures at universities and events about debt prevention, social entrepreneurship, and the future of fintech in the Netherlands."}
           </p>
         </ScrollReveal>
       </section>
@@ -238,51 +258,117 @@ export default function SpeakingPage() {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               </div>
               <h2 className="text-xl font-extrabold text-[var(--navy)]">
-                {isNl ? "Over Samba" : "About Samba"}
+                {isNl ? "Over Samba & Mariama" : "About Samba & Mariama"}
               </h2>
             </div>
             <div className="max-w-3xl">
               <p className="text-sm text-[var(--muted)] leading-relaxed">
                 {isNl
-                  ? "Samba Jarju is co-founder en CTO van PayWatch, een Nederlandse fintech startup die huishoudens helpt schulden te voorkomen. Samen met co-founder Mariama Sesay bouwt hij aan een platform dat rekeningen, abonnementen en escalaties bijhoudt met behulp van AI en open banking. PayWatch wordt gebruikt door consumenten, gemeentes en incassobureaus en is gebouwd vanuit Rotterdam."
-                  : "Samba Jarju is the co-founder and CTO of PayWatch, a Dutch fintech startup helping households prevent debt. Together with co-founder Mariama Sesay, he builds a platform that tracks bills, subscriptions, and escalations using AI and open banking. PayWatch is used by consumers, municipalities, and collection agencies, built from Rotterdam."}
+                  ? "Samba Jarju (CTO) en Mariama Sesay (CMO) zijn de co-founders van PayWatch, een Nederlandse fintech startup die huishoudens helpt schulden te voorkomen. Samen bouwen ze aan een platform dat rekeningen, abonnementen en escalaties bijhoudt met behulp van AI en open banking. PayWatch wordt gebruikt door consumenten, gemeentes en incassobureaus en is gebouwd vanuit Rotterdam."
+                  : "Samba Jarju (CTO) and Mariama Sesay (CMO) are the co-founders of PayWatch, a Dutch fintech startup helping households prevent debt. Together they build a platform that tracks bills, subscriptions, and escalations using AI and open banking. PayWatch is used by consumers, municipalities, and collection agencies, built from Rotterdam."}
               </p>
               <p className="text-sm text-[var(--muted)] leading-relaxed mt-3">
                 {isNl
-                  ? "Samba geeft gastcolleges bij hogescholen en universiteiten, spreekt op startup events en deelt zijn ervaring als jong ondernemer in de fintech. Geen opgepoetst succesverhaal, maar een eerlijk verhaal over bouwen, falen en doorzetten."
-                  : "Samba gives guest lectures at universities, speaks at startup events, and shares his experience as a young entrepreneur in fintech. Not a polished success story, but an honest account of building, failing, and persisting."}
+                  ? "Samen geven ze gastcolleges bij hogescholen en universiteiten, spreken op startup events en delen hun ervaring als jonge ondernemers in de fintech. Geen opgepoetst succesverhaal, maar een eerlijk verhaal over bouwen, falen en doorzetten."
+                  : "Together they give guest lectures at universities, speak at startup events, and share their experience as young entrepreneurs in fintech. Not a polished success story, but an honest account of building, failing, and persisting."}
               </p>
             </div>
           </div>
         </ScrollReveal>
       </section>
 
-      {/* ── CTA ── */}
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 pb-16 sm:pb-24">
+      {/* ── Booking Form ── */}
+      <section id="boek" className="mx-auto max-w-6xl px-4 sm:px-6 pb-16 sm:pb-24">
         <ScrollReveal>
-          <div className="rounded-2xl bg-gradient-to-br from-[var(--blue)] to-[#1D4ED8] p-8 sm:p-12 text-center text-white">
-            <h2 className="text-2xl sm:text-3xl font-extrabold mb-3">
-              {isNl ? "Boek een gastcollege" : "Book a guest lecture"}
-            </h2>
-            <p className="text-sm sm:text-base text-white/70 max-w-lg mx-auto mb-6">
-              {isNl
-                ? "Wil je dat ik langskom bij jullie opleiding, organisatie of event? Neem contact op en we plannen het in."
-                : "Want me to visit your program, organization, or event? Get in touch and we'll plan it."}
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link
-                href="/contact"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-[var(--blue)] font-semibold text-sm rounded-lg hover:bg-white/90 transition-colors"
-              >
-                {isNl ? "Neem contact op" : "Get in touch"}
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-              </Link>
-              <a
-                href="mailto:samba@paywatch.nl"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white font-semibold text-sm rounded-lg hover:bg-white/20 transition-colors"
-              >
-                samba@paywatch.nl
-              </a>
+          <div className="rounded-2xl border-2 border-[var(--blue)] bg-[var(--surface)] overflow-hidden">
+            <div className="bg-gradient-to-r from-[var(--blue)] to-[#1D4ED8] px-6 sm:px-8 py-5">
+              <h2 className="text-xl sm:text-2xl font-extrabold text-white">
+                {isNl ? "Boek een gastcollege" : "Book a guest lecture"}
+              </h2>
+              <p className="text-sm text-white/70 mt-1">
+                {isNl ? "Vul het formulier in en we nemen binnen 2 werkdagen contact op." : "Fill out the form and we'll get back to you within 2 business days."}
+              </p>
+            </div>
+
+            <div className="p-6 sm:p-8">
+              {formStatus === "sent" ? (
+                <div className="text-center py-8">
+                  <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  </div>
+                  <h3 className="text-lg font-bold text-[var(--navy)]">{isNl ? "Aanvraag ontvangen!" : "Request received!"}</h3>
+                  <p className="text-sm text-[var(--muted)] mt-2">{isNl ? "We nemen zo snel mogelijk contact op." : "We'll be in touch shortly."}</p>
+                </div>
+              ) : (
+                <>
+                  {/* Honeypot */}
+                  <input type="text" name="website" tabIndex={-1} autoComplete="off" style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0, width: 0 }} />
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-[var(--navy)] mb-1">{isNl ? "Naam" : "Name"} <span className="text-red-400">*</span></label>
+                      <input type="text" name="name" value={form.name} onChange={handleChange} className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3.5 py-2.5 text-sm text-[var(--text)] outline-none focus:border-[var(--blue)] transition-colors" placeholder={isNl ? "Jan de Vries" : "Jane Smith"} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[var(--navy)] mb-1">{isNl ? "E-mailadres" : "Email"} <span className="text-red-400">*</span></label>
+                      <input type="email" name="email" value={form.email} onChange={handleChange} className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3.5 py-2.5 text-sm text-[var(--text)] outline-none focus:border-[var(--blue)] transition-colors" placeholder="jan@hogeschool.nl" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[var(--navy)] mb-1">{isNl ? "Organisatie" : "Organization"} <span className="text-red-400">*</span></label>
+                      <input type="text" name="organization" value={form.organization} onChange={handleChange} className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3.5 py-2.5 text-sm text-[var(--text)] outline-none focus:border-[var(--blue)] transition-colors" placeholder={isNl ? "Hogeschool Rotterdam" : "Rotterdam University"} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[var(--navy)] mb-1">{isNl ? "Functie" : "Role"}</label>
+                      <input type="text" name="role" value={form.role} onChange={handleChange} className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3.5 py-2.5 text-sm text-[var(--text)] outline-none focus:border-[var(--blue)] transition-colors" placeholder={isNl ? "Docent / Coordinator" : "Lecturer / Coordinator"} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[var(--navy)] mb-1">{isNl ? "Type" : "Format"}</label>
+                      <select name="type" value={form.type} onChange={handleChange} className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3.5 py-2.5 text-sm text-[var(--text)] outline-none focus:border-[var(--blue)] transition-colors">
+                        <option value="">{isNl ? "Kies een format" : "Choose a format"}</option>
+                        <option value="gastcollege">{isNl ? "Gastcollege (45-90 min)" : "Guest Lecture (45-90 min)"}</option>
+                        <option value="keynote">Keynote (15-30 min)</option>
+                        <option value="panel">{isNl ? "Paneldiscussie" : "Panel Discussion"}</option>
+                        <option value="workshop">Workshop (2-3 {isNl ? "uur" : "hours"})</option>
+                        <option value="anders">{isNl ? "Anders" : "Other"}</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[var(--navy)] mb-1">{isNl ? "Voorkeur onderwerp" : "Preferred topic"}</label>
+                      <select name="topic" value={form.topic} onChange={handleChange} className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3.5 py-2.5 text-sm text-[var(--text)] outline-none focus:border-[var(--blue)] transition-colors">
+                        <option value="">{isNl ? "Kies een onderwerp" : "Choose a topic"}</option>
+                        <option value="schulden">{isNl ? "Schuldenpreventie" : "Debt Prevention"}</option>
+                        <option value="ondernemen">{isNl ? "Maatschappelijk ondernemen" : "Social Entrepreneurship"}</option>
+                        <option value="fintech">{isNl ? "Fintech bouwen" : "Building Fintech"}</option>
+                        <option value="digitaal">{isNl ? "Digitale geletterdheid" : "Digital Literacy"}</option>
+                        <option value="combinatie">{isNl ? "Combinatie / op maat" : "Combination / custom"}</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[var(--navy)] mb-1">{isNl ? "Doelgroep" : "Audience"}</label>
+                      <input type="text" name="audience" value={form.audience} onChange={handleChange} className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3.5 py-2.5 text-sm text-[var(--text)] outline-none focus:border-[var(--blue)] transition-colors" placeholder={isNl ? "Bijv. 2e jaars HBO Social Work" : "E.g. 2nd year Social Work students"} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[var(--navy)] mb-1">{isNl ? "Gewenste datum" : "Preferred date"}</label>
+                      <input type="text" name="date_preference" value={form.date_preference} onChange={handleChange} className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3.5 py-2.5 text-sm text-[var(--text)] outline-none focus:border-[var(--blue)] transition-colors" placeholder={isNl ? "Bijv. september 2026" : "E.g. September 2026"} />
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="block text-xs font-semibold text-[var(--navy)] mb-1">{isNl ? "Toelichting" : "Additional info"}</label>
+                    <textarea name="message" rows={3} value={form.message} onChange={handleChange} className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3.5 py-2.5 text-sm text-[var(--text)] outline-none focus:border-[var(--blue)] transition-colors resize-none" placeholder={isNl ? "Vertel ons meer over wat je zoekt..." : "Tell us more about what you're looking for..."} />
+                  </div>
+
+                  {formStatus === "error" && <p className="text-sm text-red-500 mt-2">{isNl ? "Er ging iets mis. Probeer het opnieuw." : "Something went wrong. Please try again."}</p>}
+
+                  <button
+                    onClick={handleSubmit}
+                    disabled={formStatus === "sending" || !form.name || !form.email || !form.organization}
+                    className="mt-4 w-full sm:w-auto px-8 py-3 bg-[var(--blue)] text-white font-semibold text-sm rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                  >
+                    {formStatus === "sending" ? (isNl ? "Versturen..." : "Sending...") : (isNl ? "Aanvraag versturen" : "Submit request")}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </ScrollReveal>
