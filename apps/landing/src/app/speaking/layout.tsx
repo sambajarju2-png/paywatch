@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Gastcolleges & Spreekbeurten — Samba Jarju over schuldenpreventie",
+  title: "Gastcolleges & Spreekbeurten over schuldenpreventie en ondernemen",
   description:
-    "Boek Samba Jarju voor een gastcollege over schuldenpreventie, maatschappelijk ondernemen en fintech. Geschikt voor HBO, MBO, universiteiten, gemeentes en events.",
+    "Boek Samba Jarju en Mariama Sesay voor een gastcollege, keynote of workshop over schuldenpreventie, maatschappelijk ondernemen en fintech. Voor HBO, MBO, universiteiten, gemeentes en events in Nederland.",
   alternates: { canonical: "https://paywatch.app/speaking" },
   openGraph: {
-    title: "Gastcolleges — PayWatch",
+    title: "Gastcolleges schuldenpreventie en ondernemen — PayWatch",
     description:
-      "Samba Jarju geeft gastcolleges over schulden voorkomen, maatschappelijk betrokken ondernemen en de toekomst van fintech in Nederland.",
+      "Samba Jarju en Mariama Sesay geven gastcolleges bij hogescholen en events over schulden voorkomen, maatschappelijk betrokken ondernemen en fintech in Nederland.",
     url: "https://paywatch.app/speaking",
     images: [{ url: "https://paywatch.app/speaking-stage.png", width: 1200, height: 630 }],
   },

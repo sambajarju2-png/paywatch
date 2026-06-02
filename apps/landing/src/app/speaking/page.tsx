@@ -195,8 +195,8 @@ export default function SpeakingPage() {
         <ScrollReveal delay={120}>
           <p className="text-base sm:text-lg text-[var(--muted)] mt-5 max-w-2xl leading-relaxed">
             {isNl
-              ? "Wij zijn Samba Jarju en Mariama Sesay, co-founders van PayWatch. We geven samen gastcolleges bij hogescholen, universiteiten en events over schuldenpreventie, maatschappelijk ondernemen en de toekomst van fintech in Nederland."
-              : "We are Samba Jarju and Mariama Sesay, co-founders of PayWatch. Together we give guest lectures at universities and events about debt prevention, social entrepreneurship, and the future of fintech in the Netherlands."}
+              ? "Wij zijn Samba Jarju en Mariama Sesay, co-founders van PayWatch. We geven gastcolleges en keynotes bij hogescholen, universiteiten, gemeentes en startup events door heel Nederland. Onze onderwerpen: schuldenpreventie, maatschappelijk ondernemen, fintech en financieel bewustzijn onder jongeren."
+              : "We are Samba Jarju and Mariama Sesay, co-founders of PayWatch. We give guest lectures and keynotes at universities, municipalities, and startup events across the Netherlands. Our topics: debt prevention, social entrepreneurship, fintech, and financial literacy among young people."}
           </p>
           <button
             onClick={scrollToForm}
@@ -276,35 +276,42 @@ export default function SpeakingPage() {
                 ? "\u201CDe meeste mensen komen niet in de schulden door een grote fout, maar door tien kleine betalingen die uit beeld raken.\u201D"
                 : "\u201CMost people don\u2019t get into debt through one big mistake, but through ten small payments that slip out of sight.\u201D"}
             </p>
-            <p className="text-sm text-[var(--muted)] mt-4 font-medium">Samba Jarju</p>
+            <p className="text-sm text-[var(--muted)] mt-4 font-medium">Mariama Sesay</p>
           </div>
         </ScrollReveal>
       </section>
 
-      {/* ── Formats (horizontal scroll on mobile) ── */}
+      {/* ── Formats (iOS-style) ── */}
       <section className="mx-auto max-w-6xl px-4 sm:px-6 pb-12 sm:pb-16">
         <ScrollReveal>
           <h2 className="text-xl sm:text-2xl font-extrabold text-[var(--navy)] mb-6">
             {isNl ? "Beschikbare formats" : "Available formats"}
           </h2>
         </ScrollReveal>
-        <div className="flex sm:grid sm:grid-cols-4 gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible">
-          {FORMATS[lang].map((f, i) => (
-            <ScrollReveal key={f.label} delay={i * 60}>
-              <button onClick={() => { setForm(prev => ({ ...prev, type: ["gastcollege","keynote","panel","workshop"][i] })); scrollToForm(); }}
-                className="snap-start shrink-0 w-[160px] sm:w-auto rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5 text-center hover:border-[var(--blue)]/30 transition-all group cursor-pointer">
-                <div className="w-8 h-8 rounded-lg mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: f.color + "12" }}>
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: f.color }} />
-                </div>
-                <p className="text-sm font-bold text-[var(--navy)]">{f.label}</p>
-                <p className="text-[11px] text-[var(--muted)] mt-1">{f.desc}</p>
-                <p className="text-[10px] font-semibold text-[var(--blue)] mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {isNl ? "Selecteer \u2192" : "Select \u2192"}
-                </p>
-              </button>
-            </ScrollReveal>
-          ))}
-        </div>
+        <ScrollReveal delay={60}>
+          <div className="flex flex-wrap gap-2">
+            {FORMATS[lang].map((f, i) => {
+              const icons = [
+                <svg key="gc" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>,
+                <svg key="kn" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>,
+                <svg key="pd" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+                <svg key="ws" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>,
+              ];
+              const formKeys = ["gastcollege", "keynote", "panel", "workshop"];
+              return (
+                <button
+                  key={f.label}
+                  onClick={() => { setForm(prev => ({ ...prev, type: formKeys[i] })); scrollToForm(); }}
+                  className="group flex items-center gap-2.5 px-4 py-2.5 rounded-full border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--blue)] hover:bg-[var(--blue)]/5 transition-all cursor-pointer"
+                >
+                  <span className="text-[var(--muted)] group-hover:text-[var(--blue)] transition-colors">{icons[i]}</span>
+                  <span className="text-sm font-semibold text-[var(--navy)]">{f.label}</span>
+                  <span className="text-[11px] text-[var(--muted)] hidden sm:inline">{f.desc}</span>
+                </button>
+              );
+            })}
+          </div>
+        </ScrollReveal>
       </section>
 
       {/* ── Doelgroepen ── */}
@@ -347,13 +354,13 @@ export default function SpeakingPage() {
             <div className="max-w-3xl">
               <p className="text-sm text-[var(--muted)] leading-relaxed">
                 {isNl
-                  ? "Wij zijn Samba Jarju (CTO) en Mariama Sesay (CMO), de co-founders van PayWatch. We bouwen aan een platform dat huishoudens helpt schulden te voorkomen door rekeningen, abonnementen en escalaties bij te houden met AI en open banking. PayWatch wordt gebruikt door consumenten, gemeentes en incassobureaus en we bouwen het vanuit Rotterdam."
-                  : "We are Samba Jarju (CTO) and Mariama Sesay (CMO), the co-founders of PayWatch. We build a platform that helps households prevent debt by tracking bills, subscriptions, and escalations using AI and open banking. PayWatch is used by consumers, municipalities, and collection agencies, and we build it from Rotterdam."}
+                  ? "Wij zijn Samba Jarju (CTO) en Mariama Sesay (CMO), de oprichters van PayWatch, een fintech startup uit Rotterdam. We bouwen aan een platform dat Nederlandse huishoudens helpt schulden te voorkomen door rekeningen, abonnementen en escalaties bij te houden met AI en open banking. PayWatch wordt ingezet door consumenten, gemeentes, incassobureaus en hulporganisaties in het sociaal domein."
+                  : "We are Samba Jarju (CTO) and Mariama Sesay (CMO), founders of PayWatch, a fintech startup from Rotterdam. We build a platform that helps Dutch households prevent debt by tracking bills, subscriptions, and escalations using AI and open banking. PayWatch is used by consumers, municipalities, collection agencies, and social support organizations."}
               </p>
               <p className="text-sm text-[var(--muted)] leading-relaxed mt-3">
                 {isNl
-                  ? "We geven gastcolleges bij hogescholen en universiteiten, spreken op startup events en delen onze ervaring als jonge ondernemers in de fintech. Geen opgepoetst succesverhaal, maar een eerlijk verhaal over bouwen, falen en doorzetten."
-                  : "We give guest lectures at universities, speak at startup events, and share our experience as young entrepreneurs in fintech. Not a polished success story, but an honest account of building, failing, and persisting."}
+                  ? "We geven gastcolleges bij hogescholen en universiteiten door heel Nederland, spreken op startup events en conferenties, en delen ons eerlijke verhaal als jonge ondernemers in de fintech. Van schuldenpreventie en de WIK-wetgeving tot het bouwen van een app met AI en open banking. Geen opgepoetst succesverhaal, maar een praktisch verhaal over bouwen, falen en doorzetten."
+                  : "We give guest lectures at universities across the Netherlands, speak at startup events and conferences, and share our honest story as young entrepreneurs in fintech. From debt prevention and legislation to building an app with AI and open banking. Not a polished success story, but a practical account of building, failing, and persisting."}
               </p>
             </div>
           </div>
