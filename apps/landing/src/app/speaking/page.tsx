@@ -281,37 +281,59 @@ export default function SpeakingPage() {
         </ScrollReveal>
       </section>
 
-      {/* ── Formats (iOS-style) ── */}
+      {/* ── Formats ── */}
       <section className="mx-auto max-w-6xl px-4 sm:px-6 pb-12 sm:pb-16">
         <ScrollReveal>
           <h2 className="text-xl sm:text-2xl font-extrabold text-[var(--navy)] mb-6">
             {isNl ? "Beschikbare formats" : "Available formats"}
           </h2>
         </ScrollReveal>
-        <ScrollReveal delay={60}>
-          <div className="flex flex-wrap gap-2">
-            {FORMATS[lang].map((f, i) => {
-              const icons = [
-                <svg key="gc" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>,
-                <svg key="kn" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>,
-                <svg key="pd" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
-                <svg key="ws" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>,
-              ];
-              const formKeys = ["gastcollege", "keynote", "panel", "workshop"];
-              return (
-                <button
-                  key={f.label}
-                  onClick={() => { setForm(prev => ({ ...prev, type: formKeys[i] })); scrollToForm(); }}
-                  className="group flex items-center gap-2.5 px-4 py-2.5 rounded-full border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--blue)] hover:bg-[var(--blue)]/5 transition-all cursor-pointer"
-                >
-                  <span className="text-[var(--muted)] group-hover:text-[var(--blue)] transition-colors">{icons[i]}</span>
-                  <span className="text-sm font-semibold text-[var(--navy)]">{f.label}</span>
-                  <span className="text-[11px] text-[var(--muted)] hidden sm:inline">{f.desc}</span>
-                </button>
-              );
-            })}
-          </div>
-        </ScrollReveal>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {([
+            {
+              icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>,
+              key: "gastcollege",
+              title: { nl: "Gastcollege", en: "Guest Lecture" },
+              time: "45-90 min",
+              desc: { nl: "Een interactief college binnen het bestaande curriculum. We passen de inhoud aan op de opleiding en het niveau. Inclusief vragenronde.", en: "An interactive lecture within the existing curriculum. We tailor content to the program and level. Includes Q&A." },
+            },
+            {
+              icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>,
+              key: "keynote",
+              title: { nl: "Keynote", en: "Keynote" },
+              time: "15-30 min",
+              desc: { nl: "Een korte, krachtige presentatie op een event of conferentie. Gericht op inspiratie en een helder standpunt.", en: "A short, powerful presentation at an event or conference. Focused on inspiration and a clear perspective." },
+            },
+            {
+              icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+              key: "panel",
+              title: { nl: "Paneldiscussie", en: "Panel Discussion" },
+              time: { nl: "Flexibel", en: "Flexible" },
+              desc: { nl: "Als panellid of moderator. Geschikt voor events waar meerdere perspectieven op schulden, fintech of sociaal ondernemen samenkomen.", en: "As panelist or moderator. Suitable for events where multiple perspectives on debt, fintech, or social entrepreneurship come together." },
+            },
+            {
+              icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>,
+              key: "workshop",
+              title: { nl: "Workshop", en: "Workshop" },
+              time: "2-3 uur",
+              desc: { nl: "Hands-on sessie waarin studenten zelf aan de slag gaan met financiele scenario's, de PayWatch tools uitproberen en in groepjes werken aan oplossingen.", en: "Hands-on session where students work with financial scenarios, try PayWatch tools, and collaborate on solutions in small groups." },
+            },
+          ] as const).map((f, i) => (
+            <ScrollReveal key={f.key} delay={i * 60}>
+              <button
+                onClick={() => { setForm(prev => ({ ...prev, type: f.key })); scrollToForm(); }}
+                className="w-full text-left group rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5 hover:border-[var(--blue)] hover:shadow-sm transition-all cursor-pointer"
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-[var(--muted)] group-hover:text-[var(--blue)] transition-colors">{f.icon}</span>
+                  <span className="text-sm font-bold text-[var(--navy)]">{typeof f.title === "string" ? f.title : f.title[lang]}</span>
+                  <span className="text-[11px] text-[var(--muted)] ml-auto">{typeof f.time === "string" ? f.time : f.time[lang]}</span>
+                </div>
+                <p className="text-xs text-[var(--muted)] leading-relaxed">{typeof f.desc === "string" ? f.desc : f.desc[lang]}</p>
+              </button>
+            </ScrollReveal>
+          ))}
+        </div>
       </section>
 
       {/* ── Doelgroepen ── */}
