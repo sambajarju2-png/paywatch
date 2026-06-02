@@ -280,7 +280,7 @@ export default function LeadsPage() {
       </div>
 
       {/* Loading */}
-      {loading && (
+      {loading && activeTab === "b2b" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} style={{ padding: 16, borderRadius: 12, border: `1px solid ${C.border}`, background: C.surface }}>
@@ -297,7 +297,7 @@ export default function LeadsPage() {
       )}
 
       {/* Empty state */}
-      {!loading && filtered.length === 0 && (
+      {!loading && activeTab === "b2b" && filtered.length === 0 && (
         <div style={{ textAlign: "center", padding: "48px 0" }}>
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="1" style={{ opacity: 0.4, margin: "0 auto 12px" }}>
             <rect x="4" y="2" width="16" height="20" rx="2" ry="2" /><path d="M9 22v-4h6v4" /><path d="M8 6h.01" /><path d="M16 6h.01" /><path d="M12 6h.01" />
@@ -309,7 +309,7 @@ export default function LeadsPage() {
       )}
 
       {/* Leads list */}
-      {!loading && filtered.length > 0 && (
+      {!loading && activeTab === "b2b" && filtered.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {filtered.map((lead) => {
             const type = TYPE_CONFIG[lead.request_type] || TYPE_CONFIG.gemeente;
@@ -471,6 +471,20 @@ export default function LeadsPage() {
                         );
                       })}
 
+                      <a
+                        href={`mailto:${lead.email}?subject=PayWatch — ${lead.organization}`}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          padding: "6px 12px", borderRadius: 6, border: `1px solid ${C.border}`,
+                          background: "#EFF6FF", color: C.blue, fontSize: 12, fontWeight: 600,
+                          cursor: "pointer", fontFamily: "'Plus Jakarta Sans', system-ui",
+                          display: "flex", alignItems: "center", gap: 4, textDecoration: "none",
+                        }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 5L2 7"/></svg>
+                        E-mail
+                      </a>
+
                       <button
                         onClick={() => {
                           const note = prompt("Notitie toevoegen:", lead.notes || "");
@@ -567,6 +581,11 @@ export default function LeadsPage() {
                             return (<button key={s} disabled={active || updating === sr.id} onClick={() => updateStatus(sr.id, s, undefined, "speaking")}
                               style={{ padding: "6px 12px", borderRadius: 6, border: active ? `2px solid ${cfg.text}` : `1px solid ${C.border}`, background: active ? cfg.bg : C.surface, color: active ? cfg.text : C.muted, fontSize: 12, fontWeight: 600, cursor: active ? "default" : "pointer", opacity: updating === sr.id ? 0.5 : 1, fontFamily: "'Plus Jakarta Sans', system-ui" }}>{cfg.label}</button>);
                           })}
+                          <a href={`mailto:${sr.email}?subject=Gastcollege — ${sr.organization}`} onClick={(e) => e.stopPropagation()}
+                            style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${C.border}`, background: "#EFF6FF", color: C.blue, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Plus Jakarta Sans', system-ui", display: "flex", alignItems: "center", gap: 4, textDecoration: "none" }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 5L2 7"/></svg>
+                            E-mail
+                          </a>
                           <button onClick={() => { const n = prompt("Notitie:", sr.notes || ""); if (n !== null) updateStatus(sr.id, sr.status, n, "speaking"); }}
                             style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${C.border}`, background: C.surface, color: C.navy, fontSize: 12, fontWeight: 500, cursor: "pointer", marginLeft: "auto", fontFamily: "'Plus Jakarta Sans', system-ui" }}>Notitie</button>
                         </div>
