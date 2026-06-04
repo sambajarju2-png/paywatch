@@ -81,3 +81,53 @@ export async function checkPublicRateLimit(
     return null; // Fail open
   }
 }
+
+/**
+ * Global daily ceiling across ALL IPs for an endpoint.
+ * Bounds total spend on a public, paid endpoint (e.g. AI scans) so it can
+ * never run away under distributed abuse. Counts existing rows for the
+ * endpoint in the window (checkPublicRateLimit inserts those rows per request).
+ *
+ * Returns null if under the cap, or a NextResponse 429 if the global cap is hit.
+ * Call BEFORE checkPublicRateLimit so the just-recorded request isn't counted
+ * against itself.
+ */
+export async function checkGlobalDailyCap(
+  endpoint: string,
+  maxTotal: number,
+  windowMinutes: number
+): Promise<NextResponse | null> {
+  try {
+    const supabase = getSupabase();
+    const windowStart = new Date(
+      Date.now() - windowMinutes * 60 * 1000
+    ).toISOString();
+
+    const { count, error } = await supabase
+      .from("public_rate_limits")
+      .select("*", { count: "exact", head: true })
+      .eq("endpoint", endpoint)
+      .gte("window_start", windowStart);
+
+    if (error) {
+      console.error("Global cap check error:", error);
+      return null; // Fail open
+    }
+
+    if ((count || 0) >= maxTotal) {
+      return NextResponse.json(
+        {
+          error: "busy",
+          message:
+            "De demo is even erg druk. Probeer het later opnieuw, of maak een gratis account om direct verder te gaan.",
+        },
+        { status: 429 }
+      );
+    }
+
+    return null;
+  } catch (err) {
+    console.error("Global cap error:", err);
+    return null; // Fail open
+  }
+}
