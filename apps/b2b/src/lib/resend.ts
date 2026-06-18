@@ -7,7 +7,7 @@ function getResendClient() {
   return new Resend(key);
 }
 
-type InviteLang = "nl" | "en" | "pl" | "tr";
+type InviteLang = "nl" | "en" | "pl" | "tr" | "fr" | "ar";
 
 interface InviteEmailOptions {
   to: string;
@@ -71,6 +71,26 @@ const INVITE_COPY: Record<InviteLang, {
     validity: "Bu davet 30 gün geçerlidir.",
     footer: "PayWatch — Rotterdam, Hollanda",
   },
+  fr: {
+    subject: (org) => `${org} vous invite sur PayWatch`,
+    via: "via PayWatch",
+    title: "Vous êtes invité",
+    body: (org) => `${org} vous invite à utiliser PayWatch. Avec PayWatch, vous gardez une vue d'ensemble de vos factures et de vos paiements.`,
+    cta: "Créer un compte",
+    copyLink: "Ou copiez ce lien :",
+    validity: "Cette invitation est valable 30 jours.",
+    footer: "PayWatch — Rotterdam, Pays-Bas",
+  },
+  ar: {
+    subject: (org) => `${org} يدعوك إلى PayWatch`,
+    via: "عبر PayWatch",
+    title: "لقد تمت دعوتك",
+    body: (org) => `يدعوك ${org} لاستخدام PayWatch. مع PayWatch تحافظ على نظرة شاملة لفواتيرك ومدفوعاتك.`,
+    cta: "إنشاء حساب",
+    copyLink: "أو انسخ هذا الرابط:",
+    validity: "هذه الدعوة صالحة لمدة 30 يومًا.",
+    footer: "PayWatch — روتردام، هولندا",
+  },
 };
 
 export async function sendInviteEmail({ to, orgName, orgColor, inviteUrl, inviterName, language }: InviteEmailOptions) {
@@ -85,7 +105,7 @@ export async function sendInviteEmail({ to, orgName, orgColor, inviteUrl, invite
 
   const html = `
 <!DOCTYPE html>
-<html lang="${language || "nl"}">
+<html lang="${language || "nl"}" dir="${language === "ar" ? "rtl" : "ltr"}">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#F4F7FB;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F7FB;padding:40px 20px">

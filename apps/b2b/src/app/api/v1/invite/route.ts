@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
   }
 
   // The recipient is onboarded in this language (invite email + app locale).
-  const ALLOWED_LANGS = ["nl", "en", "pl", "tr"];
+  const ALLOWED_LANGS = ["nl", "en", "pl", "tr", "fr", "ar"];
   const lang = language && ALLOWED_LANGS.includes(language) ? language : "nl";
 
   const token = randomBytes(24).toString("hex");

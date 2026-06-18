@@ -15,6 +15,8 @@ const LANGS = [
   { code: "en", label: "English", flag: "🇬🇧" },
   { code: "pl", label: "Polski", flag: "🇵🇱" },
   { code: "tr", label: "Türkçe", flag: "🇹🇷" },
+  { code: "fr", label: "Français", flag: "🇫🇷" },
+  { code: "ar", label: "العربية", flag: "🇸🇦" },
 ] as const;
 
 const LANG_LABEL: Record<string, string> = Object.fromEntries(
