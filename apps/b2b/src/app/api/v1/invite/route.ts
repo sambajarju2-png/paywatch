@@ -38,17 +38,24 @@ export async function POST(request: NextRequest) {
   // Accept both JSON and FormData
   let email: string | null = null;
   let external_id: string | null = null;
+  let language: string | null = null;
 
   const contentType = request.headers.get("content-type") || "";
   if (contentType.includes("application/json")) {
     const body = await request.json();
     email = body.email || null;
     external_id = body.external_id || null;
+    language = body.language || null;
   } else {
     const formData = await request.formData();
     email = formData.get("email") as string || null;
     external_id = formData.get("external_id") as string || null;
+    language = formData.get("language") as string || null;
   }
+
+  // The recipient is onboarded in this language (invite email + app locale).
+  const ALLOWED_LANGS = ["nl", "en", "pl", "tr"];
+  const lang = language && ALLOWED_LANGS.includes(language) ? language : "nl";
 
   const token = randomBytes(24).toString("hex");
   // Short human-readable code for manual entry (e.g. PW-XKN8H2)
@@ -78,6 +85,7 @@ export async function POST(request: NextRequest) {
     invite_type: "single",
     expires_at,
     qr_code_url,
+    language: lang,
   }).select("id, token, short_code").single();
 
   if (error) {
@@ -92,6 +100,7 @@ export async function POST(request: NextRequest) {
       orgName,
       orgColor,
       inviteUrl: invite_url,
+      language: lang,
     });
     emailSent = result.success;
   }
@@ -104,7 +113,7 @@ export async function POST(request: NextRequest) {
     action: "invite.created",
     target_type: "invite",
     target_id: invite.id,
-    metadata: { email, external_id, email_sent: emailSent },
+    metadata: { email, external_id, language: lang, email_sent: emailSent },
   }).then(() => {});
 
   return NextResponse.json({

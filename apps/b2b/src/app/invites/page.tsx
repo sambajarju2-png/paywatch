@@ -14,7 +14,7 @@ export default async function InvitesPage() {
   const supabase = createSupabaseAdmin();
   const { data: invites } = await supabase
     .from("b2b_invites")
-    .select("id, email, external_id, token, status, invite_type, created_at, expires_at, activated_at, qr_code_url")
+    .select("id, email, external_id, token, status, invite_type, created_at, expires_at, activated_at, qr_code_url, language")
     .eq("organization_id", tenant.orgId)
     .order("created_at", { ascending: false })
     .limit(100);

@@ -7,26 +7,85 @@ function getResendClient() {
   return new Resend(key);
 }
 
+type InviteLang = "nl" | "en" | "pl" | "tr";
+
 interface InviteEmailOptions {
   to: string;
   orgName: string;
   orgColor: string;
   inviteUrl: string;
   inviterName?: string;
+  /** Language the recipient is onboarded in. Defaults to Dutch. */
+  language?: string;
 }
 
-export async function sendInviteEmail({ to, orgName, orgColor, inviteUrl, inviterName }: InviteEmailOptions) {
+// Invite-email copy per language. Informal register throughout (PL ty / TR sen).
+// Brand names kept verbatim. Falls back to Dutch for any unknown code.
+const INVITE_COPY: Record<InviteLang, {
+  subject: (org: string) => string;
+  via: string;
+  title: string;
+  body: (org: string) => string;
+  cta: string;
+  copyLink: string;
+  validity: string;
+  footer: string;
+}> = {
+  nl: {
+    subject: (org) => `${org} nodigt je uit voor PayWatch`,
+    via: "via PayWatch",
+    title: "Je bent uitgenodigd",
+    body: (org) => `${org} nodigt je uit om PayWatch te gebruiken. Met PayWatch houd je overzicht over je rekeningen en betalingen.`,
+    cta: "Account aanmaken",
+    copyLink: "Of kopieer deze link:",
+    validity: "Deze uitnodiging is 30 dagen geldig.",
+    footer: "PayWatch — Rotterdam, Nederland",
+  },
+  en: {
+    subject: (org) => `${org} invited you to PayWatch`,
+    via: "via PayWatch",
+    title: "You've been invited",
+    body: (org) => `${org} invites you to use PayWatch. With PayWatch you keep track of your bills and payments.`,
+    cta: "Create account",
+    copyLink: "Or copy this link:",
+    validity: "This invitation is valid for 30 days.",
+    footer: "PayWatch — Rotterdam, Netherlands",
+  },
+  pl: {
+    subject: (org) => `${org} zaprasza Cię do PayWatch`,
+    via: "przez PayWatch",
+    title: "Masz zaproszenie",
+    body: (org) => `${org} zaprasza Cię do korzystania z PayWatch. Dzięki PayWatch masz pełen przegląd swoich rachunków i płatności.`,
+    cta: "Załóż konto",
+    copyLink: "Albo skopiuj ten link:",
+    validity: "To zaproszenie jest ważne przez 30 dni.",
+    footer: "PayWatch — Rotterdam, Holandia",
+  },
+  tr: {
+    subject: (org) => `${org} seni PayWatch'e davet ediyor`,
+    via: "PayWatch üzerinden",
+    title: "Davet edildin",
+    body: (org) => `${org} seni PayWatch'i kullanmaya davet ediyor. PayWatch ile faturalarını ve ödemelerini kolayca takip edersin.`,
+    cta: "Hesap oluştur",
+    copyLink: "Ya da bu bağlantıyı kopyala:",
+    validity: "Bu davet 30 gün geçerlidir.",
+    footer: "PayWatch — Rotterdam, Hollanda",
+  },
+};
+
+export async function sendInviteEmail({ to, orgName, orgColor, inviteUrl, inviterName, language }: InviteEmailOptions) {
   const resend = getResendClient();
   if (!resend) {
     console.warn("[Resend] No API key configured, skipping email");
     return { success: false, error: "RESEND_API_KEY not set" };
   }
 
+  const t = INVITE_COPY[(language as InviteLang)] || INVITE_COPY.nl;
   const fromName = inviterName || orgName;
 
   const html = `
 <!DOCTYPE html>
-<html>
+<html lang="${language || "nl"}">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#F4F7FB;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F7FB;padding:40px 20px">
@@ -34,26 +93,26 @@ export async function sendInviteEmail({ to, orgName, orgColor, inviteUrl, invite
       <table width="480" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border-radius:12px;overflow:hidden;border:1px solid #E2E8F0">
         <tr><td style="background:${orgColor};padding:24px 32px">
           <span style="color:#FFFFFF;font-size:16px;font-weight:700">${orgName}</span>
-          <span style="color:rgba(255,255,255,0.6);font-size:12px;font-weight:500;margin-left:8px">via PayWatch</span>
+          <span style="color:rgba(255,255,255,0.6);font-size:12px;font-weight:500;margin-left:8px">${t.via}</span>
         </td></tr>
         <tr><td style="padding:32px">
-          <h1 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#0F172A">Je bent uitgenodigd</h1>
+          <h1 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#0F172A">${t.title}</h1>
           <p style="margin:0 0 24px;font-size:14px;color:#64748B;line-height:1.6">
-            ${orgName} nodigt je uit om PayWatch te gebruiken. Met PayWatch houd je overzicht over je rekeningen en betalingen.
+            ${t.body(orgName)}
           </p>
           <a href="${inviteUrl}" style="display:inline-block;padding:12px 24px;background:${orgColor};color:#FFFFFF;text-decoration:none;border-radius:4px;font-size:14px;font-weight:600">
-            Account aanmaken
+            ${t.cta}
           </a>
           <p style="margin:24px 0 0;font-size:12px;color:#94A3B8;line-height:1.5">
-            Of kopieer deze link:<br>
+            ${t.copyLink}<br>
             <span style="color:#64748B;word-break:break-all">${inviteUrl}</span>
           </p>
           <p style="margin:16px 0 0;font-size:11px;color:#CBD5E1">
-            Deze uitnodiging is 30 dagen geldig.
+            ${t.validity}
           </p>
         </td></tr>
         <tr><td style="padding:16px 32px;background:#F8FAFC;border-top:1px solid #E2E8F0">
-          <span style="font-size:11px;color:#94A3B8">PayWatch — Rotterdam, Nederland</span>
+          <span style="font-size:11px;color:#94A3B8">${t.footer}</span>
         </td></tr>
       </table>
     </td></tr>
@@ -65,7 +124,7 @@ export async function sendInviteEmail({ to, orgName, orgColor, inviteUrl, invite
     const { data, error } = await resend.emails.send({
       from: `${fromName} via PayWatch <noreply@paywatch.app>`,
       to,
-      subject: `${orgName} nodigt je uit voor PayWatch`,
+      subject: t.subject(orgName),
       html,
     });
 

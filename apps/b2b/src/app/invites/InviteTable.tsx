@@ -12,7 +12,17 @@ interface Invite {
   activated_at: string | null;
   qr_code_url: string | null;
   short_code?: string | null;
+  language?: string | null;
 }
+
+const LANG_BADGE: Record<string, { flag: string; label: string }> = {
+  nl: { flag: '🇳🇱', label: 'NL' },
+  en: { flag: '🇬🇧', label: 'EN' },
+  pl: { flag: '🇵🇱', label: 'PL' },
+  tr: { flag: '🇹🇷', label: 'TR' },
+  ar: { flag: '🇸🇦', label: 'AR' },
+  fr: { flag: '🇫🇷', label: 'FR' },
+};
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
   pending: { label: 'In afwachting', bg: 'bg-pw-bg', text: 'text-pw-muted' },
@@ -32,6 +42,7 @@ export default function InviteTable({ invites }: { invites: Invite[] }) {
       <thead className="bg-pw-bg border-b border-pw-border">
         <tr>
           <th className="text-left py-3 px-5 text-[11px] font-bold text-pw-muted uppercase tracking-wider">Ontvanger</th>
+          <th className="text-left py-3 px-5 text-[11px] font-bold text-pw-muted uppercase tracking-wider">Taal</th>
           <th className="text-left py-3 px-5 text-[11px] font-bold text-pw-muted uppercase tracking-wider">Status</th>
           <th className="text-left py-3 px-5 text-[11px] font-bold text-pw-muted uppercase tracking-wider">Link</th>
           <th className="text-left py-3 px-5 text-[11px] font-bold text-pw-muted uppercase tracking-wider">Datum</th>
@@ -53,6 +64,17 @@ export default function InviteTable({ invites }: { invites: Invite[] }) {
                     {inv.external_id && <div className="text-[10px] text-pw-muted font-mono">Ref: {inv.external_id}</div>}
                   </div>
                 </div>
+              </td>
+              <td className="py-3 px-5">
+                {(() => {
+                  const lb = LANG_BADGE[inv.language || 'nl'] || LANG_BADGE.nl;
+                  return (
+                    <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-pw-navy">
+                      <span style={{ fontSize: 14, lineHeight: 1 }}>{lb.flag}</span>
+                      {lb.label}
+                    </span>
+                  );
+                })()}
               </td>
               <td className="py-3 px-5">
                 <span className={`text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded ${sc.bg} ${sc.text}`}>{sc.label}</span>
