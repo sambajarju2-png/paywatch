@@ -107,23 +107,19 @@ export default async function UserDetailPage({
   const grantedScopes = new Set(
     consents.filter((c: any) => c.granted).map((c: any) => c.scope)
   );
+  // Privacy-first consent gating. A scope is visible to the org only if the user
+  // explicitly granted it, or granted full_access (legacy "everything"). There is
+  // deliberately NO blanket fallback: absence of a granular grant means the org does
+  // not see that data. `aggregated` is the most restrictive tier (anonymized /
+  // aggregate only) and therefore exposes no individual data on this per-user view.
   const hasFullAccess = grantedScopes.has("full_access");
   const consentFlags = {
-    contact_info: true, // always visible if user connected to org
+    contact_info: hasFullAccess || grantedScopes.has("contact_info"),
     view_bills: hasFullAccess || grantedScopes.has("view_bills"),
     financial_overview: hasFullAccess || grantedScopes.has("financial_overview"),
     payment_plans: hasFullAccess || grantedScopes.has("payment_plans"),
     messaging: hasFullAccess || grantedScopes.has("messaging"),
   };
-  // Legacy fallback: if old consent format (no granular scopes), treat as full access
-  const hasAnyConsent = consents.some((c: any) => c.granted);
-  if (hasAnyConsent && !hasFullAccess && grantedScopes.size <= 1) {
-    // Old-style consent without granular scopes — allow everything
-    consentFlags.view_bills = true;
-    consentFlags.financial_overview = true;
-    consentFlags.payment_plans = true;
-    consentFlags.messaging = true;
-  }
 
   const name =
     settings?.display_name ||
