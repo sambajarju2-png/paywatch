@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
+import { seedFeatures } from "@paywatch/config";
 
 const SUPER_ADMINS = ["sambajarju2@gmail.com", "reiskenners@gmail.com", "ayeitssamba@gmail.com", "samba@paywatch.nl", "samba@paywatch.app", "mariama@paywatch.nl", "mariama@paywatch.com", "mariama@paywatch.app"];
 
@@ -49,13 +50,7 @@ export async function POST(request: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  const featureDefaults: Record<string, object> = {
-    gemeente: { bank_sync: true, ai_insights: true, payment_plans: true, community: false, camera_scan: true, buddy_system: true, spending_analytics: true, push_notifications: true, export_reports: true, escalation_alerts: true },
-    incasso: { bank_sync: false, ai_insights: true, payment_plans: true, community: false, camera_scan: true, buddy_system: true, spending_analytics: false, push_notifications: true, export_reports: true, escalation_alerts: true },
-    bewindvoerder: { bank_sync: true, ai_insights: true, payment_plans: true, community: false, camera_scan: true, buddy_system: true, spending_analytics: true, push_notifications: true, export_reports: true, escalation_alerts: true },
-    hulporganisatie: { bank_sync: false, ai_insights: true, payment_plans: true, community: true, camera_scan: true, buddy_system: true, spending_analytics: false, push_notifications: true, export_reports: true, escalation_alerts: false },
-    kredietbank: { bank_sync: true, ai_insights: true, payment_plans: true, community: false, camera_scan: true, buddy_system: true, spending_analytics: true, push_notifications: true, export_reports: true, escalation_alerts: true },
-  };
+  const tierValue = tier || "pilot";
 
   const { data: org, error } = await supabase
     .from("organizations")
@@ -64,7 +59,7 @@ export async function POST(request: NextRequest) {
       slug,
       type,
       primary_color: primary_color || "#2563EB",
-      tier: tier || "pilot",
+      tier: tierValue,
       contact_email: contact_email || null,
       contact_name: contact_name || null,
       logo_url: logo_url || null,
@@ -72,7 +67,7 @@ export async function POST(request: NextRequest) {
       kvk_number: kvk_number || null,
       website: website || null,
       custom_intro_text: custom_intro_text || null,
-      features: featureDefaults[type] || featureDefaults.gemeente,
+      features: seedFeatures(tierValue, type),
     })
     .select("id")
     .single();

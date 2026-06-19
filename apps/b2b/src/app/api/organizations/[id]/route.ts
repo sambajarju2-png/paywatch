@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
+import { clampFeaturesToTier } from "@paywatch/config";
 
 const SUPER_ADMINS = ["sambajarju2@gmail.com", "reiskenners@gmail.com", "ayeitssamba@gmail.com", "samba@paywatch.nl", "samba@paywatch.app", "mariama@paywatch.nl", "mariama@paywatch.com", "mariama@paywatch.app"];
 
@@ -41,6 +42,21 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (body[key] !== undefined) updates[key] = body[key];
   }
   updates.updated_at = new Date().toISOString();
+
+  // Clamp incoming feature toggles to the (possibly new) tier ceiling, so the
+  // stored jsonb can never claim a feature the org's tier doesn't include.
+  if (updates.features !== undefined) {
+    let targetTier = body.tier as string | undefined;
+    if (targetTier === undefined) {
+      const { data: current } = await supabase
+        .from("organizations")
+        .select("tier")
+        .eq("id", id)
+        .single();
+      targetTier = current?.tier ?? undefined;
+    }
+    updates.features = clampFeaturesToTier(updates.features, targetTier);
+  }
 
   const { data, error } = await supabase
     .from("organizations")
