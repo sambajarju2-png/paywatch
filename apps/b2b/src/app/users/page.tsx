@@ -13,7 +13,7 @@ export default async function UsersPage() {
   const supabase = createSupabaseAdmin();
 
   const [usersResult, settingsResult, buddiesResult, membersResult, authUsersResult] = await Promise.all([
-    supabase.from("user_organizations").select("id, user_id, status, external_id, onboarded_at").eq("organization_id", tenant.orgId).order("created_at", { ascending: false }),
+    supabase.from("user_organizations").select("id, user_id, status, external_id, onboarded_at").eq("organization_id", tenant.orgId).neq("status", "exited").order("created_at", { ascending: false }),
     supabase.from("user_settings").select("user_id, display_name, first_name, last_name, gemeente, last_active_at"),
     supabase.from("b2b_buddies").select("user_id, buddy_member_id").eq("organization_id", tenant.orgId).eq("status", "active"),
     supabase.from("organization_members").select("id, invite_email").eq("organization_id", tenant.orgId),

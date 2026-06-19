@@ -101,6 +101,7 @@ const STATUS_MAP: Record<string, { label: string; variant: "success" | "warning"
   active: { label: "Actief", variant: "success" },
   invited: { label: "Uitgenodigd", variant: "warning" },
   paused: { label: "Gepauzeerd", variant: "default" },
+  exited: { label: "Vertrokken", variant: "default" },
 };
 
 export default function UserDetailClient({
