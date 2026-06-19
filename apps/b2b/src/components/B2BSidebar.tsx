@@ -22,6 +22,7 @@ const SUPER_NAV = [
 const ADMIN_NAV = [
   { href: "/", label: "Dashboard", key: "dashboard", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
   { href: "/users", label: "Gebruikers", key: "users", icon: "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" },
+  { href: "/community", label: "Community", key: "community", icon: "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" },
   { href: "/invites", label: "Uitnodigen", key: "invites", icon: "M22 2L11 13M22 2l-7 20-4-9-9-4 20-7Z" },
   { href: "/buddies", label: "Coaches", key: "buddies", icon: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" },
   { href: "/analytics", label: "Rapportage", key: "analytics", icon: "M18 20V10M12 20V4M6 20v-6" },
@@ -34,6 +35,7 @@ const ADMIN_NAV = [
 // Coach nav — only see their clients
 const COACH_NAV = [
   { href: "/buddies", label: "Mijn cliënten", key: "buddies", icon: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" },
+  { href: "/community", label: "Community", key: "community", icon: "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" },
 ];
 
 // Viewer nav — read-only overview
