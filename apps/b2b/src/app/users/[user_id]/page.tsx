@@ -120,6 +120,9 @@ export default async function UserDetailPage({
     payment_plans: hasFullAccess || grantedScopes.has("payment_plans"),
     messaging: hasFullAccess || grantedScopes.has("messaging"),
   };
+  // Assisted entry is a WRITE permission: explicit grant only, never implied by
+  // full_access (legacy users consented to viewing, not to edits on their behalf).
+  const canAssist = grantedScopes.has("assisted_entry");
 
   const name =
     settings?.display_name ||
@@ -154,6 +157,7 @@ export default async function UserDetailPage({
           onboardingComplete={settings?.onboarding_complete || false}
           coachEmail={coachEmail}
           consent={consentFlags}
+          canAssist={canAssist}
           finances={consentFlags.financial_overview ? finances : null}
           bills={consentFlags.view_bills ? bills : []}
           paymentPlans={consentFlags.payment_plans ? paymentPlans : []}

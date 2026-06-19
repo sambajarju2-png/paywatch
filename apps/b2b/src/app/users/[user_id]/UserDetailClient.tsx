@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 
 const ESCALATION_COLORS: Record<string, string> = {
@@ -72,6 +73,7 @@ interface Props {
   onboardingComplete: boolean;
   coachEmail: string | null;
   consent: { contact_info: boolean; view_bills: boolean; financial_overview: boolean; payment_plans: boolean; messaging: boolean };
+  canAssist: boolean;
   finances: Finances | null;
   bills: Bill[];
   paymentPlans: PaymentPlan[];
@@ -102,8 +104,8 @@ const STATUS_MAP: Record<string, { label: string; variant: "success" | "warning"
 };
 
 export default function UserDetailClient({
-  name, email, status, externalId, onboardedAt, lastActive,
-  gemeente, language, onboardingComplete, coachEmail, consent,
+  userOrgId, name, email, status, externalId, onboardedAt, lastActive,
+  gemeente, language, onboardingComplete, coachEmail, consent, canAssist,
   finances, bills, paymentPlans, auditLog,
 }: Props) {
   const st = STATUS_MAP[status] || STATUS_MAP.active;
@@ -142,6 +144,16 @@ export default function UserDetailClient({
           </div>
         </div>
       </div>
+
+      {/* Assisted entry — edit on the user's behalf (Phase 5) */}
+      {canAssist && (
+        <AssistedPanel
+          userOrgId={userOrgId}
+          currentLanguage={language}
+          finances={finances}
+          canEditFinances={consent.financial_overview}
+        />
+      )}
 
       {/* No consent banner */}
       {!consent.view_bills && !consent.financial_overview && (
@@ -300,6 +312,138 @@ export default function UserDetailClient({
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function AssistedPanel({ userOrgId, currentLanguage, finances, canEditFinances }: {
+  userOrgId: string;
+  currentLanguage: string;
+  finances: Finances | null;
+  canEditFinances: boolean;
+}) {
+  const LANGS: Array<[string, string]> = [
+    ["nl", "Nederlands"], ["en", "English"], ["pl", "Polski"],
+    ["tr", "Türkçe"], ["fr", "Français"], ["ar", "العربية"],
+  ];
+  const toEuro = (c: number | null | undefined) => (c ?? 0) / 100;
+  const [lang, setLang] = useState(currentLanguage);
+  const [fin, setFin] = useState({
+    netto_inkomen: toEuro(finances?.netto_inkomen),
+    partner_inkomen: toEuro(finances?.partner_inkomen),
+    uitkering_inkomen: toEuro(finances?.uitkering_inkomen),
+    toeslagen_inkomen: toEuro(finances?.toeslagen_inkomen),
+    overig_inkomen: toEuro(finances?.overig_inkomen),
+    monthly_rent: toEuro(finances?.monthly_rent),
+  });
+  const [saving, setSaving] = useState<string | null>(null);
+  const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+
+  async function save(payload: unknown, which: string) {
+    setSaving(which);
+    setMsg(null);
+    try {
+      const res = await fetch(`/users/${userOrgId}/api/assisted`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const d = await res.json();
+      if (res.ok) setMsg({ kind: "ok", text: "Opgeslagen. De gebruiker krijgt hiervan een melding." });
+      else setMsg({ kind: "err", text: d.error || "Opslaan mislukt" });
+    } catch {
+      setMsg({ kind: "err", text: "Opslaan mislukt" });
+    }
+    setSaving(null);
+  }
+
+  function saveFinances() {
+    const values: Record<string, number> = {};
+    (Object.keys(fin) as Array<keyof typeof fin>).forEach((k) => {
+      values[k] = Math.round((fin[k] || 0) * 100);
+    });
+    save({ type: "finances", values }, "finances");
+  }
+
+  const FIN_LABELS: Array<[keyof typeof fin, string]> = [
+    ["netto_inkomen", "Netto inkomen"],
+    ["partner_inkomen", "Partner inkomen"],
+    ["uitkering_inkomen", "Uitkering"],
+    ["toeslagen_inkomen", "Toeslagen"],
+    ["overig_inkomen", "Overig"],
+    ["monthly_rent", "Maandhuur"],
+  ];
+
+  return (
+    <div className="bg-white border border-pw-border rounded-2xl overflow-hidden mb-5">
+      <div className="px-5 py-4 border-b border-pw-border flex items-center gap-2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        <h2 className="text-sm font-bold text-pw-navy">Namens gebruiker bijwerken</h2>
+      </div>
+      <div className="p-5 space-y-5">
+        <p className="text-xs text-pw-muted">
+          Deze gebruiker heeft toestemming gegeven om gegevens namens hen bij te werken. Elke wijziging wordt vastgelegd en de gebruiker krijgt er een melding van.
+        </p>
+
+        <div className="flex items-end gap-3">
+          <div className="flex-1">
+            <label className="block text-[11px] font-bold text-pw-muted uppercase tracking-wider mb-1">Taal</label>
+            <select
+              value={lang}
+              onChange={(e) => setLang(e.target.value)}
+              className="w-full border border-pw-border rounded-lg px-3 py-2 text-sm text-pw-navy bg-white"
+            >
+              {LANGS.map(([code, label]) => (
+                <option key={code} value={code}>{label}</option>
+              ))}
+            </select>
+          </div>
+          <button
+            onClick={() => save({ type: "language", value: lang }, "language")}
+            disabled={saving === "language" || lang === currentLanguage}
+            className="px-4 py-2 bg-pw-blue text-white text-sm font-semibold rounded-lg disabled:opacity-50"
+          >
+            {saving === "language" ? "Bezig..." : "Opslaan"}
+          </button>
+        </div>
+
+        {canEditFinances && finances && (
+          <div className="border-t border-pw-border pt-5">
+            <label className="block text-[11px] font-bold text-pw-muted uppercase tracking-wider mb-2">Financiele gegevens (euro per maand)</label>
+            <div className="grid grid-cols-2 gap-3">
+              {FIN_LABELS.map(([key, label]) => (
+                <div key={key}>
+                  <label className="block text-[11px] text-pw-muted mb-1">{label}</label>
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={fin[key]}
+                    onChange={(e) => setFin((p) => ({ ...p, [key]: Number(e.target.value) }))}
+                    className="w-full border border-pw-border rounded-lg px-3 py-2 text-sm text-pw-navy"
+                  />
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={saveFinances}
+              disabled={saving === "finances"}
+              className="mt-3 px-4 py-2 bg-pw-blue text-white text-sm font-semibold rounded-lg disabled:opacity-50"
+            >
+              {saving === "finances" ? "Bezig..." : "Financien opslaan"}
+            </button>
+          </div>
+        )}
+        {canEditFinances && !finances && (
+          <p className="text-xs text-pw-muted border-t border-pw-border pt-5">Nog geen financiele gegevens om bij te werken.</p>
+        )}
+
+        {msg && (
+          <div className={`text-xs rounded-lg px-3 py-2 ${msg.kind === "ok" ? "bg-green-50 text-pw-green border border-green-200" : "bg-red-50 text-pw-red border border-red-200"}`}>
+            {msg.text}
+          </div>
+        )}
       </div>
     </div>
   );
