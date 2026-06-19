@@ -136,6 +136,7 @@ export async function POST(request: NextRequest) {
           from_user_id: staff.id,
           from_display_name: tenant.orgName || "Je organisatie",
           post_id: post.id,
+          group_id: body.group_id,
           content_preview: content.slice(0, 140),
           is_read: false,
         }))
