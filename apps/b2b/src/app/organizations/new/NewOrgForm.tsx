@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { defaultSeatLimitFor, TIER_PRICING, type Tier } from "@paywatch/config";
 
 export default function NewOrgForm() {
   const router = useRouter();
@@ -22,6 +23,31 @@ export default function NewOrgForm() {
   const [customIntro, setCustomIntro] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  // Billing & contract (defaults seeded from the tier, fully editable)
+  const initPrice = (t: string) => String((TIER_PRICING[t as Tier]?.per_seat ?? 0) / 100);
+  const initMonthly = (t: string) => String((TIER_PRICING[t as Tier]?.monthly_fee ?? 0) / 100);
+  const [contactPhone, setContactPhone] = useState("");
+  const [seatLimit, setSeatLimit] = useState(String(defaultSeatLimitFor("pilot")));
+  const [pricePerSeat, setPricePerSeat] = useState(initPrice("pilot"));
+  const [monthlyFee, setMonthlyFee] = useState(initMonthly("pilot"));
+  const [billingPeriod, setBillingPeriod] = useState("monthly");
+  const [billingEmail, setBillingEmail] = useState("");
+  const [contractStart, setContractStart] = useState("");
+  const [contractEnd, setContractEnd] = useState("");
+  const [invoiceReference, setInvoiceReference] = useState("");
+  const [billingNotes, setBillingNotes] = useState("");
+
+  // Changing the tier refreshes the seat-limit + pricing defaults (still overridable).
+  function handleTierChange(newTier: string) {
+    setTier(newTier);
+    setSeatLimit(String(defaultSeatLimitFor(newTier)));
+    setPricePerSeat(initPrice(newTier));
+    setMonthlyFee(initMonthly(newTier));
+  }
+
+  const labelStyle: React.CSSProperties = { fontSize: 12, fontWeight: 500, color: "#64748B", display: "block", marginBottom: 4 };
+  const inputStyle: React.CSSProperties = { width: "100%", padding: "9px 12px", border: "1px solid #E2E8F0", borderRadius: 8, fontSize: 13, boxSizing: "border-box" };
 
   function autoSlug(val: string) {
     return val.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").substring(0, 30);
@@ -63,6 +89,17 @@ export default function NewOrgForm() {
     formData.set("kvk_number", kvkNumber);
     formData.set("website", website || domain);
     formData.set("custom_intro_text", customIntro);
+    formData.set("secondary_color", textColor);
+    formData.set("contact_phone", contactPhone);
+    formData.set("seat_limit", seatLimit);
+    formData.set("price_per_seat", String(Math.round(parseFloat(pricePerSeat || "0") * 100)));
+    formData.set("monthly_fee", String(Math.round(parseFloat(monthlyFee || "0") * 100)));
+    formData.set("billing_period", billingPeriod);
+    formData.set("billing_email", billingEmail);
+    formData.set("contract_start_at", contractStart);
+    formData.set("contract_end_at", contractEnd);
+    formData.set("invoice_reference", invoiceReference);
+    formData.set("billing_notes", billingNotes);
 
     try {
       const res = await fetch("/api/organizations", { method: "POST", body: formData });
@@ -215,13 +252,18 @@ export default function NewOrgForm() {
                 <input value={kvkNumber} onChange={e => setKvkNumber(e.target.value)} placeholder="12345678"
                   style={{ width: "100%", padding: "9px 12px", border: "1px solid #E2E8F0", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }} />
               </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 500, color: "#64748B", display: "block", marginBottom: 4 }}>Telefoon</label>
+                <input value={contactPhone} onChange={e => setContactPhone(e.target.value)} placeholder="010 123 4567"
+                  style={{ width: "100%", padding: "9px 12px", border: "1px solid #E2E8F0", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }} />
+              </div>
             </div>
 
             <div style={{ marginTop: 12 }}>
               <label style={{ fontSize: 12, fontWeight: 500, color: "#64748B", display: "block", marginBottom: 4 }}>Tier</label>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
                 {tiers.map(t => (
-                  <button key={t.value} type="button" onClick={() => setTier(t.value)}
+                  <button key={t.value} type="button" onClick={() => handleTierChange(t.value)}
                     style={{
                       padding: "10px 12px", textAlign: "left", borderRadius: 8, cursor: "pointer",
                       border: tier === t.value ? "2px solid #0A2540" : "1px solid #E2E8F0",
@@ -232,6 +274,54 @@ export default function NewOrgForm() {
                   </button>
                 ))}
               </div>
+            </div>
+          </div>
+
+          {/* Billing & contract */}
+          <div style={{ background: "white", border: "1px solid #E2E8F0", borderRadius: 12, padding: 24, marginBottom: 16 }}>
+            <h2 style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", marginBottom: 4 }}>Facturering & contract</h2>
+            <p style={{ fontSize: 11, color: "#64748B", marginBottom: 16 }}>Vooringevuld op basis van de tier. Pas vrij aan.</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={labelStyle}>Seat-limiet</label>
+                <input type="number" min={0} value={seatLimit} onChange={e => setSeatLimit(e.target.value)} style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Facturatieperiode</label>
+                <select value={billingPeriod} onChange={e => setBillingPeriod(e.target.value)} style={{ ...inputStyle, background: "white" }}>
+                  <option value="monthly">Maandelijks</option>
+                  <option value="quarterly">Per kwartaal</option>
+                  <option value="annual">Jaarlijks</option>
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Prijs per seat (€)</label>
+                <input type="number" min={0} step="0.01" value={pricePerSeat} onChange={e => setPricePerSeat(e.target.value)} style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Maandbedrag (€)</label>
+                <input type="number" min={0} step="0.01" value={monthlyFee} onChange={e => setMonthlyFee(e.target.value)} style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Contract start</label>
+                <input type="date" value={contractStart} onChange={e => setContractStart(e.target.value)} style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Contract eind</label>
+                <input type="date" value={contractEnd} onChange={e => setContractEnd(e.target.value)} style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Facturatie-e-mail</label>
+                <input type="email" value={billingEmail} onChange={e => setBillingEmail(e.target.value)} placeholder="facturen@gemeente.nl" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Factuurreferentie</label>
+                <input value={invoiceReference} onChange={e => setInvoiceReference(e.target.value)} placeholder="PO-nummer" style={inputStyle} />
+              </div>
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <label style={labelStyle}>Notities</label>
+              <textarea value={billingNotes} onChange={e => setBillingNotes(e.target.value)} rows={2} style={{ ...inputStyle, resize: "vertical" }} />
             </div>
           </div>
 

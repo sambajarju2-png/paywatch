@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
-import { seedFeatures } from "@paywatch/config";
+import { seedFeatures, defaultSeatLimitFor } from "@paywatch/config";
 
 const SUPER_ADMINS = ["sambajarju2@gmail.com", "reiskenners@gmail.com", "ayeitssamba@gmail.com", "samba@paywatch.nl", "samba@paywatch.app", "mariama@paywatch.nl", "mariama@paywatch.com", "mariama@paywatch.app"];
 
@@ -40,6 +40,17 @@ export async function POST(request: NextRequest) {
   const kvk_number = formData.get("kvk_number") as string;
   const website = formData.get("website") as string;
   const custom_intro_text = formData.get("custom_intro_text") as string;
+  const secondary_color = formData.get("secondary_color") as string;
+  const contact_phone = formData.get("contact_phone") as string;
+  const seat_limit = formData.get("seat_limit") as string;
+  const price_per_seat = formData.get("price_per_seat") as string;
+  const monthly_fee = formData.get("monthly_fee") as string;
+  const billing_period = formData.get("billing_period") as string;
+  const billing_email = formData.get("billing_email") as string;
+  const contract_start_at = formData.get("contract_start_at") as string;
+  const contract_end_at = formData.get("contract_end_at") as string;
+  const invoice_reference = formData.get("invoice_reference") as string;
+  const billing_notes = formData.get("billing_notes") as string;
 
   if (!name || !slug || !type) {
     return NextResponse.json({ error: "Naam, slug en type zijn verplicht" }, { status: 400 });
@@ -67,6 +78,18 @@ export async function POST(request: NextRequest) {
       kvk_number: kvk_number || null,
       website: website || null,
       custom_intro_text: custom_intro_text || null,
+      secondary_color: secondary_color || null,
+      contact_phone: contact_phone || null,
+      status: "active",
+      seat_limit: seat_limit ? parseInt(seat_limit, 10) : defaultSeatLimitFor(tierValue),
+      price_per_seat: price_per_seat ? parseInt(price_per_seat, 10) : null,
+      monthly_fee: monthly_fee ? parseInt(monthly_fee, 10) : null,
+      billing_period: billing_period || "monthly",
+      billing_email: billing_email || null,
+      contract_start_at: contract_start_at || null,
+      contract_end_at: contract_end_at || null,
+      invoice_reference: invoice_reference || null,
+      billing_notes: billing_notes || null,
       features: seedFeatures(tierValue, type),
     })
     .select("id")
