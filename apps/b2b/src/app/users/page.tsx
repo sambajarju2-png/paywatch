@@ -12,12 +12,13 @@ export default async function UsersPage() {
 
   const supabase = createSupabaseAdmin();
 
-  const [usersResult, settingsResult, buddiesResult, membersResult, authUsersResult] = await Promise.all([
+  const [usersResult, settingsResult, buddiesResult, membersResult, authUsersResult, groupsResult] = await Promise.all([
     supabase.from("user_organizations").select("id, user_id, status, external_id, onboarded_at").eq("organization_id", tenant.orgId).neq("status", "exited").order("created_at", { ascending: false }),
     supabase.from("user_settings").select("user_id, display_name, first_name, last_name, gemeente, last_active_at"),
     supabase.from("b2b_buddies").select("user_id, buddy_member_id").eq("organization_id", tenant.orgId).eq("status", "active"),
     supabase.from("organization_members").select("id, invite_email").eq("organization_id", tenant.orgId),
     supabase.auth.admin.listUsers({ perPage: 1000 }),
+    supabase.from("community_groups").select("id, name, is_default").eq("organization_id", tenant.orgId).order("is_default", { ascending: false }).order("created_at", { ascending: true }),
   ]);
 
   const userOrgs = usersResult.data || [];
@@ -25,6 +26,20 @@ export default async function UsersPage() {
   const buddies = buddiesResult.data || [];
   const members = membersResult.data || [];
   const authUsers = authUsersResult.data?.users || [];
+  const groups = (groupsResult.data || []) as { id: string; name: string; is_default: boolean }[];
+
+  // Map each user to the groups they already belong to (for chips + dedup on bulk-add).
+  const groupIds = groups.map((g) => g.id);
+  const { data: memberRows } = groupIds.length
+    ? await supabase.from("community_group_members").select("group_id, user_id").in("group_id", groupIds)
+    : { data: [] as { group_id: string; user_id: string }[] };
+  const groupNameById = new Map(groups.map((g) => [g.id, g.name]));
+  const userGroups = new Map<string, { id: string; name: string }[]>();
+  for (const m of (memberRows || []) as { group_id: string; user_id: string }[]) {
+    const arr = userGroups.get(m.user_id) || [];
+    arr.push({ id: m.group_id, name: groupNameById.get(m.group_id) || "Groep" });
+    userGroups.set(m.user_id, arr);
+  }
 
   const settingsMap = new Map(settings.map((s: any) => [s.user_id, s]));
   const memberMap = new Map(members.map((m: any) => [m.id, m.invite_email]));
@@ -50,12 +65,13 @@ export default async function UsersPage() {
       last_active: s?.last_active_at || null,
       coach_email: coachMap.get(uo.user_id) || null,
       gemeente: s?.gemeente || null,
+      groups: userGroups.get(uo.user_id) || [],
     };
   });
 
   return (
     <PageShell tenant={tenant} userEmail={user.email || ""}>
-      <UsersClient users={users} />
+      <UsersClient users={users} groups={groups} />
     </PageShell>
   );
 }

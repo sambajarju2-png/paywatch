@@ -2,6 +2,54 @@
 
 import { useState } from "react";
 
+const REACTION_META: Record<string, { emoji: string }> = {
+  heart: { emoji: "❤️" },
+  goed: { emoji: "👍" },
+  trots: { emoji: "🏆" },
+  steun: { emoji: "🤝" },
+  sterkte: { emoji: "💪" },
+  herkenbaar: { emoji: "🙌" },
+  dankbaar: { emoji: "🙏" },
+};
+function reactionEmoji(type: string) {
+  return REACTION_META[type]?.emoji || "💬";
+}
+function timeAgo(iso: string) {
+  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (mins < 1) return "Net";
+  if (mins < 60) return `${mins} min geleden`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} uur geleden`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days} ${days === 1 ? "dag" : "dagen"} geleden`;
+  return new Date(iso).toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
+}
+function initialsOf(name: string) {
+  return name.split(" ").map((n) => n[0]).filter(Boolean).join("").substring(0, 2).toUpperCase() || "?";
+}
+
+interface FeedAuthor {
+  type: "org" | "user";
+  name: string;
+  logo_url: string | null;
+}
+interface FeedComment {
+  id: string;
+  content: string;
+  created_at: string;
+  author: FeedAuthor;
+}
+interface FeedPost {
+  id: string;
+  content: string;
+  created_at: string;
+  is_announcement: boolean;
+  author: FeedAuthor;
+  reactions: Record<string, number>;
+  comment_count: number;
+  comments: FeedComment[];
+}
+
 interface Group {
   id: string;
   name: string;
@@ -31,6 +79,10 @@ export default function CommunityClient({ initialGroups, users, primaryColor }: 
   const [announceBusy, setAnnounceBusy] = useState<string | null>(null);
   const [memberPick, setMemberPick] = useState<Record<string, string>>({});
   const [memberBusy, setMemberBusy] = useState<string | null>(null);
+
+  const [feedOpen, setFeedOpen] = useState<Record<string, boolean>>({});
+  const [feedData, setFeedData] = useState<Record<string, FeedPost[]>>({});
+  const [feedBusy, setFeedBusy] = useState<Record<string, boolean>>({});
 
   async function call(body: Record<string, unknown>) {
     const res = await fetch("/community/api", {
@@ -97,6 +149,24 @@ export default function CommunityClient({ initialGroups, users, primaryColor }: 
       setMsg({ kind: "err", text: (e as Error).message });
     }
     setMemberBusy(null);
+  }
+
+  async function toggleFeed(groupId: string) {
+    const willOpen = !feedOpen[groupId];
+    setFeedOpen((s) => ({ ...s, [groupId]: willOpen }));
+    if (willOpen && !(groupId in feedData)) {
+      setFeedBusy((s) => ({ ...s, [groupId]: true }));
+      try {
+        const res = await fetch(`/community/api?action=group_feed&group_id=${encodeURIComponent(groupId)}`);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "Kon berichten niet laden");
+        setFeedData((s) => ({ ...s, [groupId]: (data.posts || []) as FeedPost[] }));
+      } catch (e) {
+        setMsg({ kind: "err", text: (e as Error).message });
+        setFeedOpen((s) => ({ ...s, [groupId]: false }));
+      }
+      setFeedBusy((s) => ({ ...s, [groupId]: false }));
+    }
   }
 
   return (
@@ -214,6 +284,92 @@ export default function CommunityClient({ initialGroups, users, primaryColor }: 
                   {memberBusy === g.id ? "..." : "Toevoegen"}
                 </button>
               </div>
+            </div>
+
+            {/* Read-only feed of this group's posts, reactions and comments */}
+            <div className="mt-3 border-t border-slate-100 pt-3">
+              <button
+                onClick={() => toggleFeed(g.id)}
+                className="flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900"
+              >
+                <svg
+                  className={`h-3.5 w-3.5 transition-transform ${feedOpen[g.id] ? "rotate-90" : ""}`}
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                >
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+                {feedOpen[g.id] ? "Berichten verbergen" : "Berichten bekijken"}
+              </button>
+
+              {feedOpen[g.id] && (
+                <div className="mt-3 space-y-3">
+                  {feedBusy[g.id] && <p className="text-xs text-slate-400">Laden...</p>}
+                  {!feedBusy[g.id] && (feedData[g.id] || []).length === 0 && (
+                    <p className="text-xs text-slate-400">Nog geen berichten in deze groep.</p>
+                  )}
+                  {(feedData[g.id] || []).map((post) => (
+                    <div key={post.id} className="rounded-lg border border-slate-200 bg-slate-50/50 p-3">
+                      <div className="flex items-center gap-2">
+                        {post.author.logo_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={post.author.logo_url} alt="" className="h-7 w-7 rounded-full object-cover" />
+                        ) : (
+                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-700 text-[10px] font-bold text-white">
+                            {initialsOf(post.author.name)}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-semibold text-slate-900">{post.author.name}</span>
+                            {post.is_announcement && (
+                              <span className="rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-600">
+                                Mededeling
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-slate-400">{timeAgo(post.created_at)}</span>
+                        </div>
+                      </div>
+
+                      <p className="mt-2 whitespace-pre-wrap text-xs text-slate-700">{post.content}</p>
+
+                      {(Object.keys(post.reactions).length > 0 || post.comment_count > 0) && (
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          {Object.entries(post.reactions).map(([type, count]) => (
+                            <span
+                              key={type}
+                              className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] text-slate-600"
+                            >
+                              <span>{reactionEmoji(type)}</span>
+                              {count}
+                            </span>
+                          ))}
+                          {post.comment_count > 0 && (
+                            <span className="inline-flex items-center gap-1 text-[11px] text-slate-500">
+                              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                              </svg>
+                              {post.comment_count}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {post.comments.length > 0 && (
+                        <div className="mt-2 space-y-1.5 border-l-2 border-slate-200 pl-3">
+                          {post.comments.map((c) => (
+                            <div key={c.id} className="text-[11px]">
+                              <span className="font-semibold text-slate-700">{c.author.name}</span>
+                              <span className="text-slate-400"> · {timeAgo(c.created_at)}</span>
+                              <p className="whitespace-pre-wrap text-slate-600">{c.content}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         ))}
