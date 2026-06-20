@@ -12,6 +12,7 @@ export default function NewOrgForm() {
   const [domain, setDomain] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [logoLoading, setLogoLoading] = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
   const [primaryColor, setPrimaryColor] = useState("#2563EB");
   const [textColor, setTextColor] = useState("#FFFFFF");
   const [tier, setTier] = useState("pilot");
@@ -69,6 +70,23 @@ export default function NewOrgForm() {
       if (data.logoUrl) setLogoUrl(data.logoUrl);
     } catch {}
     setLogoLoading(false);
+  }
+
+  async function uploadLogo(file: File) {
+    setLogoUploading(true);
+    setError("");
+    try {
+      const fd = new FormData();
+      fd.set("file", file);
+      fd.set("slug", slug || "org");
+      const res = await fetch("/api/logo/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (data.logoUrl) setLogoUrl(data.logoUrl);
+      else setError(data.error || "Upload mislukt");
+    } catch {
+      setError("Upload mislukt");
+    }
+    setLogoUploading(false);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -188,6 +206,15 @@ export default function NewOrgForm() {
                   {logoLoading ? "Laden..." : "Logo ophalen"}
                 </button>
               </div>
+            </div>
+
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 12, fontWeight: 500, color: "#64748B", display: "block", marginBottom: 4 }}>Of upload een logo (PNG, JPG, SVG · max 2MB)</label>
+              <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                disabled={logoUploading}
+                onChange={e => { const f = e.target.files?.[0]; if (f) uploadLogo(f); }}
+                style={{ fontSize: 12, color: "#64748B" }} />
+              {logoUploading && <span style={{ fontSize: 11, color: "#64748B", marginLeft: 8 }}>Uploaden...</span>}
             </div>
 
             {logoUrl && (

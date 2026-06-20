@@ -47,6 +47,21 @@ export default function EditOrgForm({ orgId, initialData }: { orgId: string; ini
     if (data.logoUrl) setOrg({ ...org, logo_url: data.logoUrl });
   }
 
+  async function uploadLogo(file: File) {
+    setError("");
+    try {
+      const fd = new FormData();
+      fd.set("file", file);
+      fd.set("slug", org?.slug || "org");
+      const res = await fetch("/api/logo/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (data.logoUrl) setOrg({ ...org, logo_url: data.logoUrl });
+      else setError(data.error || "Upload mislukt");
+    } catch {
+      setError("Upload mislukt");
+    }
+  }
+
   function toggleFeature(key: string) {
     const features = { ...org.features };
     features[key] = !features[key];
@@ -173,6 +188,12 @@ export default function EditOrgForm({ orgId, initialData }: { orgId: string; ini
                 Logo ophalen
               </button>
             </div>
+          </div>
+          <div className="mt-3">
+            <label className="block text-caption text-pw-muted font-medium mb-1">Of upload een logo (PNG, JPG, SVG · max 2MB)</label>
+            <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp"
+              onChange={e => { const f = e.target.files?.[0]; if (f) uploadLogo(f); }}
+              className="text-caption text-pw-muted" />
           </div>
           {org.logo_url && (
             <div className="mt-3 flex items-center gap-3">
