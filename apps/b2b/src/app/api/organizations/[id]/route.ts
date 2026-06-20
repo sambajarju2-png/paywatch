@@ -35,7 +35,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   // Only allow updating specific fields
   const allowed = ["name", "primary_color", "secondary_color", "logo_url", "contact_name",
     "contact_email", "contact_phone", "city", "kvk_number", "website", "custom_intro_text",
-    "tier", "status", "features", "settings"];
+    "tier", "status", "features", "settings",
+    "seat_limit", "price_per_seat", "monthly_fee", "billing_period", "billing_email",
+    "contract_start_at", "contract_end_at", "invoice_reference", "billing_notes"];
 
   const updates: Record<string, any> = {};
   for (const key of allowed) {

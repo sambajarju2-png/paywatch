@@ -2,19 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-const FEATURE_LABELS: Record<string, string> = {
-  bank_sync: "Bankrekening koppeling",
-  ai_insights: "AI inzichten",
-  payment_plans: "Betalingsregelingen",
-  community: "Community feed",
-  camera_scan: "Camera scan",
-  buddy_system: "Buddy / coach systeem",
-  spending_analytics: "Uitgavenanalyse",
-  push_notifications: "Push notificaties",
-  export_reports: "Rapportage export",
-  escalation_alerts: "Escalatie waarschuwingen",
-};
+import { FEATURE_FLAGS, FEATURE_LABELS, tierIncludes } from "@paywatch/config";
 
 export default function EditOrgForm({ orgId, initialData }: { orgId: string; initialData: any }) {
   const router = useRouter();
@@ -22,6 +10,8 @@ export default function EditOrgForm({ orgId, initialData }: { orgId: string; ini
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [priceEuro, setPriceEuro] = useState(initialData?.price_per_seat != null ? String(initialData.price_per_seat / 100) : "");
+  const [monthlyEuro, setMonthlyEuro] = useState(initialData?.monthly_fee != null ? String(initialData.monthly_fee / 100) : "");
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -30,10 +20,15 @@ export default function EditOrgForm({ orgId, initialData }: { orgId: string; ini
     setMessage("");
 
     try {
+      const payload = {
+        ...org,
+        price_per_seat: priceEuro === "" ? null : Math.round(parseFloat(priceEuro) * 100),
+        monthly_fee: monthlyEuro === "" ? null : Math.round(parseFloat(monthlyEuro) * 100),
+      };
       const res = await fetch(`/api/organizations/${orgId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(org),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (data.error) setError(data.error);
@@ -79,8 +74,9 @@ export default function EditOrgForm({ orgId, initialData }: { orgId: string; ini
               <select value={org.status} onChange={e => setOrg({...org, status: e.target.value})}
                 className="w-full px-3 py-2 border border-pw-border rounded-input text-label bg-white">
                 <option value="active">Active</option>
-                <option value="suspended">Suspended</option>
                 <option value="pending">Pending</option>
+                <option value="suspended">Suspended</option>
+                <option value="churned">Churned</option>
               </select>
             </div>
             <div>
@@ -103,17 +99,21 @@ export default function EditOrgForm({ orgId, initialData }: { orgId: string; ini
         <div className="bg-pw-surface border border-pw-border rounded-card p-6 mb-4">
           <h2 className="text-card-title text-pw-text mb-4">Features</h2>
           <div className="grid grid-cols-2 gap-2">
-            {Object.keys(FEATURE_LABELS).map((key) => {
-              const enabled = features[key] ?? false;
+            {FEATURE_FLAGS.map((key) => {
+              const allowed = tierIncludes(org.tier, key);
+              const enabled = allowed && features[key] === true;
               return (
                 <button
                   key={key}
                   type="button"
-                  onClick={() => toggleFeature(key)}
+                  disabled={!allowed}
+                  onClick={() => { if (allowed) toggleFeature(key); }}
                   className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-left transition-colors"
                   style={{
                     background: enabled ? "rgba(5, 150, 105, 0.06)" : "transparent",
                     border: `1px solid ${enabled ? "rgba(5, 150, 105, 0.2)" : "#E2E8F0"}`,
+                    opacity: allowed ? 1 : 0.45,
+                    cursor: allowed ? "pointer" : "not-allowed",
                   }}
                 >
                   <div
@@ -132,7 +132,7 @@ export default function EditOrgForm({ orgId, initialData }: { orgId: string; ini
                   </div>
                   <div>
                     <div className="text-label font-medium text-pw-text">{FEATURE_LABELS[key]}</div>
-                    <div className="text-caption text-pw-muted">{enabled ? "Aan" : "Uit"}</div>
+                    <div className="text-caption text-pw-muted">{allowed ? (enabled ? "Aan" : "Uit") : "Niet in tier"}</div>
                   </div>
                 </button>
               );
@@ -220,6 +220,66 @@ export default function EditOrgForm({ orgId, initialData }: { orgId: string; ini
               <input value={org.kvk_number || ""} onChange={e => setOrg({...org, kvk_number: e.target.value})}
                 className="w-full px-3 py-2 border border-pw-border rounded-input text-label" />
             </div>
+            <div>
+              <label className="block text-caption text-pw-muted font-medium mb-1">Telefoon</label>
+              <input value={org.contact_phone || ""} onChange={e => setOrg({...org, contact_phone: e.target.value})}
+                className="w-full px-3 py-2 border border-pw-border rounded-input text-label" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-pw-surface border border-pw-border rounded-card p-6 mb-4">
+          <h2 className="text-card-title text-pw-text mb-4">Facturering & contract</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-caption text-pw-muted font-medium mb-1">Seat-limiet</label>
+              <input type="number" min={0} value={org.seat_limit ?? ""} onChange={e => setOrg({...org, seat_limit: e.target.value === "" ? null : parseInt(e.target.value, 10)})}
+                className="w-full px-3 py-2 border border-pw-border rounded-input text-label" />
+            </div>
+            <div>
+              <label className="block text-caption text-pw-muted font-medium mb-1">Facturatieperiode</label>
+              <select value={org.billing_period || "monthly"} onChange={e => setOrg({...org, billing_period: e.target.value})}
+                className="w-full px-3 py-2 border border-pw-border rounded-input text-label bg-white">
+                <option value="monthly">Maandelijks</option>
+                <option value="quarterly">Per kwartaal</option>
+                <option value="annual">Jaarlijks</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-caption text-pw-muted font-medium mb-1">Prijs per seat (€)</label>
+              <input type="number" min={0} step="0.01" value={priceEuro} onChange={e => setPriceEuro(e.target.value)}
+                className="w-full px-3 py-2 border border-pw-border rounded-input text-label" />
+            </div>
+            <div>
+              <label className="block text-caption text-pw-muted font-medium mb-1">Maandbedrag (€)</label>
+              <input type="number" min={0} step="0.01" value={monthlyEuro} onChange={e => setMonthlyEuro(e.target.value)}
+                className="w-full px-3 py-2 border border-pw-border rounded-input text-label" />
+            </div>
+            <div>
+              <label className="block text-caption text-pw-muted font-medium mb-1">Contract start</label>
+              <input type="date" value={(org.contract_start_at || "").slice(0, 10)} onChange={e => setOrg({...org, contract_start_at: e.target.value || null})}
+                className="w-full px-3 py-2 border border-pw-border rounded-input text-label" />
+            </div>
+            <div>
+              <label className="block text-caption text-pw-muted font-medium mb-1">Contract eind</label>
+              <input type="date" value={(org.contract_end_at || "").slice(0, 10)} onChange={e => setOrg({...org, contract_end_at: e.target.value || null})}
+                className="w-full px-3 py-2 border border-pw-border rounded-input text-label" />
+            </div>
+            <div>
+              <label className="block text-caption text-pw-muted font-medium mb-1">Facturatie-e-mail</label>
+              <input value={org.billing_email || ""} onChange={e => setOrg({...org, billing_email: e.target.value})}
+                className="w-full px-3 py-2 border border-pw-border rounded-input text-label" />
+            </div>
+            <div>
+              <label className="block text-caption text-pw-muted font-medium mb-1">Factuurreferentie</label>
+              <input value={org.invoice_reference || ""} onChange={e => setOrg({...org, invoice_reference: e.target.value})}
+                className="w-full px-3 py-2 border border-pw-border rounded-input text-label" />
+            </div>
+          </div>
+          <div className="mt-3">
+            <label className="block text-caption text-pw-muted font-medium mb-1">Notities</label>
+            <textarea value={org.billing_notes || ""} onChange={e => setOrg({...org, billing_notes: e.target.value})}
+              rows={2} className="w-full px-3 py-2 border border-pw-border rounded-input text-label resize-y" />
           </div>
         </div>
 
