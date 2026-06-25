@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "next-sanity";
+import { jobListings } from "@/lib/config";
 
 const client = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "pwf6qbjc",
@@ -47,13 +48,16 @@ export async function GET(request: NextRequest) {
   try {
     if (jobId) {
       const job = await client.fetch(SINGLE_JOB_QUERY, { jobId });
-      return NextResponse.json({ job: job || null });
+      return NextResponse.json({ job: job || jobListings.find((j) => j.id === jobId) || null });
     }
 
     const jobs = await client.fetch(ALL_JOBS_QUERY);
-    return NextResponse.json({ jobs: jobs || [] });
+    return NextResponse.json({ jobs: jobs && jobs.length > 0 ? jobs : jobListings });
   } catch (e) {
     console.error("[Sanity] Job listings API error:", e);
-    return NextResponse.json({ jobs: [], job: null });
+    if (jobId) {
+      return NextResponse.json({ job: jobListings.find((j) => j.id === jobId) || null });
+    }
+    return NextResponse.json({ jobs: jobListings });
   }
 }
