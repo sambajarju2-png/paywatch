@@ -129,21 +129,63 @@ export default function JobDetailPage() {
 
 function ApplyForm({ jobId, jobTitle, lang }: { jobId: string; jobTitle: string; lang: "nl" | "en" }) {
   const isNl = lang === "nl";
-  const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", linkedin: "", personalProjects: "", message: "" });
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [cvError, setCvError] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+
+  const MAX_CV_BYTES = 3 * 1024 * 1024; // 3MB
+
+  function handleCvChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setCvError(null);
+    const file = e.target.files?.[0] || null;
+    if (!file) { setCvFile(null); return; }
+    const lower = file.name.toLowerCase();
+    if (![".pdf", ".doc", ".docx"].some((ext) => lower.endsWith(ext))) {
+      setCvFile(null);
+      setCvError(isNl ? "Alleen PDF of Word-bestanden." : "PDF or Word files only.");
+      e.target.value = "";
+      return;
+    }
+    if (file.size > MAX_CV_BYTES) {
+      setCvFile(null);
+      setCvError(isNl ? "Bestand is te groot (max 3MB)." : "File is too large (max 3MB).");
+      e.target.value = "";
+      return;
+    }
+    setCvFile(file);
+  }
+
+  function fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+      reader.onerror = () => reject(new Error("read failed"));
+      reader.readAsDataURL(file);
+    });
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setStatus("sending");
     try {
+      let cvBase64: string | undefined;
+      let cvFilename: string | undefined;
+      let cvContentType: string | undefined;
+      if (cvFile) {
+        cvBase64 = await fileToBase64(cvFile);
+        cvFilename = cvFile.name;
+        cvContentType = cvFile.type || "application/octet-stream";
+      }
       const res = await fetch("/api/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, jobId, jobTitle, lang }),
+        body: JSON.stringify({ ...form, jobId, jobTitle, lang, cvBase64, cvFilename, cvContentType }),
       });
       if (res.ok) {
         setStatus("sent");
-        setForm({ name: "", email: "", phone: "", message: "" });
+        setForm({ name: "", email: "", phone: "", linkedin: "", personalProjects: "", message: "" });
+        setCvFile(null);
       } else {
         setStatus("error");
       }
@@ -195,6 +237,26 @@ function ApplyForm({ jobId, jobTitle, lang }: { jobId: string; jobTitle: string;
           <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
             placeholder={isNl ? "Optioneel" : "Optional"}
             className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-4 py-2.5 text-sm text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)]" />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">LinkedIn</label>
+          <input type="url" value={form.linkedin} onChange={(e) => setForm({ ...form, linkedin: e.target.value })}
+            placeholder={isNl ? "linkedin.com/in/... (optioneel)" : "linkedin.com/in/... (optional)"}
+            className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-4 py-2.5 text-sm text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)]" />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">{isNl ? "Persoonlijke projecten" : "Personal projects"}</label>
+          <input type="text" value={form.personalProjects} onChange={(e) => setForm({ ...form, personalProjects: e.target.value })}
+            placeholder={isNl ? "GitHub, portfolio, links... (optioneel)" : "GitHub, portfolio, links... (optional)"}
+            className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-4 py-2.5 text-sm text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)]" />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">{isNl ? "CV / resume" : "CV / resume"}</label>
+          <input type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleCvChange}
+            className="w-full text-sm text-[var(--muted)] file:mr-3 file:rounded-md file:border-0 file:bg-[var(--blue)] file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:opacity-90 file:cursor-pointer cursor-pointer" />
+          <p className="text-[11px] text-[var(--muted)] mt-1">{isNl ? "PDF of Word, optioneel (max 3MB)" : "PDF or Word, optional (max 3MB)"}</p>
+          {cvFile && <p className="text-[11px] text-[var(--green)] mt-1">{isNl ? "Gekozen: " : "Selected: "}{cvFile.name}</p>}
+          {cvError && <p className="text-[11px] text-[var(--red)] mt-1">{cvError}</p>}
         </div>
         <div>
           <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">{isNl ? "Bericht / motivatie" : "Message / motivation"}</label>

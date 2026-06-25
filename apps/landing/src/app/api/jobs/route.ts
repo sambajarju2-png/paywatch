@@ -13,7 +13,7 @@ function getResend() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { jobId, jobTitle, name, email, phone, message, lang } = body;
+    const { jobId, jobTitle, name, email, phone, message, lang, linkedin, personalProjects, cvBase64, cvFilename, cvContentType } = body;
 
     if (!name || !email || !jobId || !jobTitle) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -21,18 +21,49 @@ export async function POST(request: Request) {
 
     const isNl = lang === "nl";
 
+    /* Decode optional CV (capped to keep request and email sane) */
+    let cvBuffer: Buffer | null = null;
+    if (cvBase64 && typeof cvBase64 === "string") {
+      try {
+        const buf = Buffer.from(cvBase64, "base64");
+        if (buf.length > 0 && buf.length <= 5 * 1024 * 1024) cvBuffer = buf;
+      } catch {
+        cvBuffer = null;
+      }
+    }
+
     /* Save to Supabase */
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+    let cvStoragePath: string | null = null;
+
     if (supabaseUrl && supabaseKey) {
       const supabase = createClient(supabaseUrl, supabaseKey);
+
+      /* Best-effort: archive CV to the private job-applications bucket */
+      if (cvBuffer && cvFilename) {
+        const safeName = String(cvFilename).replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = `${jobId}/${Date.now()}-${safeName}`;
+        const { error: upErr } = await supabase.storage
+          .from("job-applications")
+          .upload(path, cvBuffer, { contentType: cvContentType || "application/octet-stream", upsert: false });
+        if (upErr) {
+          console.error("CV storage upload error:", JSON.stringify(upErr));
+        } else {
+          cvStoragePath = path;
+        }
+      }
+
       const { error: dbError } = await supabase.from("job_applications").insert({
         job_id: jobId,
         job_title: jobTitle,
         name,
         email,
         phone: phone || null,
+        linkedin_url: linkedin || null,
+        personal_projects: personalProjects || null,
+        cv_url: cvStoragePath,
         message: message || null,
         lang: lang || "nl",
       });
@@ -57,10 +88,14 @@ export async function POST(request: Request) {
               <tr><td style="padding:8px 0;color:#64748B;font-size:13px">Naam</td><td style="padding:8px 0;font-weight:600">${name}</td></tr>
               <tr><td style="padding:8px 0;color:#64748B;font-size:13px">E-mail</td><td style="padding:8px 0"><a href="mailto:${email}" style="color:#2563EB">${email}</a></td></tr>
               ${phone ? `<tr><td style="padding:8px 0;color:#64748B;font-size:13px">Telefoon</td><td style="padding:8px 0">${phone}</td></tr>` : ""}
+              ${linkedin ? `<tr><td style="padding:8px 0;color:#64748B;font-size:13px">LinkedIn</td><td style="padding:8px 0"><a href="${linkedin}" style="color:#2563EB">${linkedin}</a></td></tr>` : ""}
+              ${personalProjects ? `<tr><td style="padding:8px 0;color:#64748B;font-size:13px">Projecten</td><td style="padding:8px 0">${personalProjects}</td></tr>` : ""}
+              ${cvBuffer && cvFilename ? `<tr><td style="padding:8px 0;color:#64748B;font-size:13px">CV</td><td style="padding:8px 0">${cvFilename} (bijgevoegd)</td></tr>` : ""}
             </table>
             ${message ? `<div style="margin-top:16px;padding:12px;background:#F4F7FB;border-radius:8px"><p style="margin:0;font-size:13px;color:#0F172A;white-space:pre-wrap">${message}</p></div>` : ""}
           </div>
         `,
+        ...(cvBuffer && cvFilename ? { attachments: [{ filename: String(cvFilename), content: cvBuffer }] } : {}),
       });
 
       await resend.emails.send({
