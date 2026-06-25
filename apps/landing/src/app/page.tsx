@@ -47,11 +47,27 @@ export default function HomePage() {
               <Link href="/features" className="text-sm font-medium text-[var(--muted)] hover:text-[var(--text)] transition-colors underline underline-offset-4">{t.hero.secondary}</Link>
             </div>
             <p className="text-center text-xs text-[var(--muted)] mt-4">{t.hero.trust}</p>
-            <div className="flex justify-center mt-3">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-[11px] font-medium text-[var(--muted)]">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                {t.hero.languages}
-              </span>
+            {/* Languages the app speaks, each in its own script */}
+            <div className="mt-5 flex flex-col items-center gap-2.5">
+              <div className="flex flex-wrap items-center justify-center gap-2 max-w-xl mx-auto">
+                {[
+                  { flag: "🇳🇱", name: "Nederlands" },
+                  { flag: "🇬🇧", name: "English" },
+                  { flag: "🇫🇷", name: "Français" },
+                  { flag: "🇸🇦", name: "العربية" },
+                  { flag: "🇵🇱", name: "Polski" },
+                  { flag: "🇹🇷", name: "Türkçe" },
+                ].map((l) => (
+                  <span key={l.name} dir="auto" className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-medium text-[var(--text)]">
+                    <span className="text-sm leading-none">{l.flag}</span>
+                    {l.name}
+                  </span>
+                ))}
+              </div>
+              <p className="flex items-center gap-1.5 text-xs text-[var(--muted)]">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                {t.hero.voiceNote}
+              </p>
             </div>
           </ScrollReveal>
           <ScrollReveal delay={400}>
