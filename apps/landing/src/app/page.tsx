@@ -47,6 +47,12 @@ export default function HomePage() {
               <Link href="/features" className="text-sm font-medium text-[var(--muted)] hover:text-[var(--text)] transition-colors underline underline-offset-4">{t.hero.secondary}</Link>
             </div>
             <p className="text-center text-xs text-[var(--muted)] mt-4">{t.hero.trust}</p>
+            <div className="flex justify-center mt-3">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-[11px] font-medium text-[var(--muted)]">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                {t.hero.languages}
+              </span>
+            </div>
           </ScrollReveal>
           <ScrollReveal delay={400}>
             <div className="mt-8 flex justify-center"><HeroBanner /></div>

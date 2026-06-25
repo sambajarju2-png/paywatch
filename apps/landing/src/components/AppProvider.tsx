@@ -34,6 +34,7 @@ const translations = {
       cta: "Start gratis",
       secondary: "Bekijk functies",
       trust: "Beschikbaar in 43+ gemeenten",
+      languages: "6 talen waaronder Frans & Arabisch, inclusief spraakassistent",
     },
     trustBar: {
       eu: "EU Product",
@@ -253,6 +254,7 @@ const translations = {
       cta: "Start free",
       secondary: "View features",
       trust: "Available in 43+ municipalities",
+      languages: "6 languages including French & Arabic, voice assistant included",
     },
     trustBar: {
       eu: "EU Product",
