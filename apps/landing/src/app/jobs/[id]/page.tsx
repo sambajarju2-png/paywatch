@@ -252,10 +252,16 @@ function ApplyForm({ jobId, jobTitle, lang }: { jobId: string; jobTitle: string;
         </div>
         <div>
           <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">{isNl ? "CV / resume" : "CV / resume"}</label>
-          <input type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleCvChange}
-            className="w-full text-sm text-[var(--muted)] file:mr-3 file:rounded-md file:border-0 file:bg-[var(--blue)] file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:opacity-90 file:cursor-pointer cursor-pointer" />
+          <div className="flex items-center gap-3">
+            <label className="inline-flex items-center rounded-md bg-[var(--blue)] px-3 py-2 text-xs font-semibold text-white cursor-pointer hover:opacity-90">
+              {isNl ? "Bestand kiezen" : "Choose file"}
+              <input type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleCvChange} className="hidden" />
+            </label>
+            <span className={cvFile ? "text-xs text-[var(--green)] truncate" : "text-xs text-[var(--muted)] truncate"}>
+              {cvFile ? cvFile.name : (isNl ? "Geen bestand gekozen" : "No file chosen")}
+            </span>
+          </div>
           <p className="text-[11px] text-[var(--muted)] mt-1">{isNl ? "PDF of Word, optioneel (max 3MB)" : "PDF or Word, optional (max 3MB)"}</p>
-          {cvFile && <p className="text-[11px] text-[var(--green)] mt-1">{isNl ? "Gekozen: " : "Selected: "}{cvFile.name}</p>}
           {cvError && <p className="text-[11px] text-[var(--red)] mt-1">{cvError}</p>}
         </div>
         <div>
