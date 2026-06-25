@@ -18,11 +18,12 @@ interface Application {
   personal_projects?: string;
   cv_url?: string;
   admin_notes?: string;
+  starred?: boolean;
   created_at: string;
 }
 
-const TABS = ["all", "new", "read", "done"] as const;
-const TAB_LABELS: Record<string, string> = { all: "Alles", new: "Nieuw", read: "Gelezen", done: "Afgehandeld" };
+const TABS = ["all", "starred", "new", "read", "done"] as const;
+const TAB_LABELS: Record<string, string> = { all: "Alles", starred: "Favorieten", new: "Nieuw", read: "Gelezen", done: "Afgehandeld" };
 const STATUS_COLORS: Record<string, string> = { new: C.blue, read: C.amber, done: C.green };
 
 export default function ApplicationsPage() {
@@ -46,6 +47,11 @@ export default function ApplicationsPage() {
   async function updateStatus(id: string, status: string) {
     await fetch("/api/admin/applications", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status }) });
     setApps(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+  }
+
+  async function toggleStar(id: string, starred: boolean) {
+    setApps(prev => prev.map(a => a.id === id ? { ...a, starred } : a));
+    await fetch("/api/admin/applications", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, starred }) });
   }
 
   async function updateField(id: string, field: string, value: string) {
@@ -75,7 +81,7 @@ export default function ApplicationsPage() {
     finally { setSending(false); }
   }
 
-  const filtered = tab === "all" ? apps : apps.filter(a => a.status === tab);
+  const filtered = tab === "all" ? apps : tab === "starred" ? apps.filter(a => a.starred) : apps.filter(a => a.status === tab);
 
   return (
     <div>
@@ -85,7 +91,7 @@ export default function ApplicationsPage() {
       <div style={{ display: "flex", gap: 4, marginBottom: 16, background: C.borderLight, borderRadius: 8, padding: 4, width: "fit-content" }}>
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)} style={{ padding: "6px 16px", borderRadius: 6, border: "none", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: tab === t ? C.surface : "transparent", color: tab === t ? C.navy : C.muted, boxShadow: tab === t ? "0 1px 2px rgba(0,0,0,0.06)" : "none" }}>
-            {TAB_LABELS[t]} {t !== "all" && `(${apps.filter(a => a.status === t).length})`}
+            {TAB_LABELS[t]} {t !== "all" && `(${t === "starred" ? apps.filter(a => a.starred).length : apps.filter(a => a.status === t).length})`}
           </button>
         ))}
       </div>
@@ -113,6 +119,14 @@ export default function ApplicationsPage() {
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <button onClick={e => { e.stopPropagation(); toggleStar(a.id, !a.starred); }}
+                        onMouseDown={e => e.stopPropagation()}
+                        title={a.starred ? "Verwijder favoriet" : "Markeer als favoriet"}
+                        style={{ background: "none", border: "none", padding: 4, cursor: "pointer", display: "flex", alignItems: "center", lineHeight: 0 }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill={a.starred ? "#F59E0B" : "none"} stroke={a.starred ? "#F59E0B" : C.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                      </button>
                       <span style={{ fontSize: 11, color: C.muted }}>{new Date(a.created_at).toLocaleDateString("nl-NL")}</span>
                       <select value={a.status} onChange={e => { e.stopPropagation(); updateStatus(a.id, e.target.value); }}
                         onClick={e => e.stopPropagation()}

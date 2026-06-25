@@ -35,7 +35,7 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { id, status, linkedin_url, admin_notes } = body;
+    const { id, status, linkedin_url, admin_notes, starred } = body;
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
     const supabase = getAdmin();
@@ -43,6 +43,7 @@ export async function PATCH(request: NextRequest) {
     if (status !== undefined) updates.status = status;
     if (linkedin_url !== undefined) updates.linkedin_url = linkedin_url;
     if (admin_notes !== undefined) updates.admin_notes = admin_notes;
+    if (starred !== undefined) updates.starred = starred;
 
     await supabase.from("job_applications").update(updates).eq("id", id);
 
