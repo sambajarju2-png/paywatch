@@ -15,6 +15,8 @@ interface Application {
   lang: string;
   status: string;
   linkedin_url?: string;
+  personal_projects?: string;
+  cv_url?: string;
   admin_notes?: string;
   created_at: string;
 }
@@ -35,6 +37,7 @@ export default function ApplicationsPage() {
   const [notesDraft, setNotesDraft] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
   const [linkedInDraft, setLinkedInDraft] = useState<Record<string, string>>({});
+  const [cvLoading, setCvLoading] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/applications").then(r => r.json()).then(d => setApps(d.applications || [])).catch(() => {}).finally(() => setLoading(false));
@@ -48,6 +51,17 @@ export default function ApplicationsPage() {
   async function updateField(id: string, field: string, value: string) {
     await fetch("/api/admin/applications", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, [field]: value }) });
     setApps(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
+  }
+
+  async function downloadCv(id: string) {
+    setCvLoading(id);
+    try {
+      const r = await fetch(`/api/admin/applications/cv?id=${encodeURIComponent(id)}`);
+      const d = await r.json();
+      if (d.url) window.open(d.url, "_blank", "noopener,noreferrer");
+      else alert("CV niet beschikbaar");
+    } catch { alert("CV ophalen mislukt"); }
+    finally { setCvLoading(null); }
   }
 
   async function sendReply() {
@@ -115,6 +129,27 @@ export default function ApplicationsPage() {
                   <div style={{ borderTop: `1px solid ${C.borderLight}`, padding: "0 20px 20px" }}>
                     {/* Message */}
                     <p style={{ margin: "16px 0 0", fontSize: 14, color: "#374151", lineHeight: 1.7 }}>{a.message}</p>
+
+                    {/* Personal projects + CV row */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 16 }}>
+                      <div>
+                        <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 600, color: C.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>Persoonlijke projecten</p>
+                        <div style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 12, color: a.personal_projects ? "#374151" : C.muted, lineHeight: 1.5, minHeight: 38, background: "#FAFBFC", wordBreak: "break-word" }}>
+                          {a.personal_projects || "Niet opgegeven"}
+                        </div>
+                      </div>
+                      <div>
+                        <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 600, color: C.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>CV</p>
+                        {a.cv_url ? (
+                          <button onClick={() => downloadCv(a.id)} disabled={cvLoading === a.id}
+                            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, border: `1px solid ${C.border}`, background: "#EFF6FF", color: C.blue, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                            {cvLoading === a.id ? "Laden..." : "CV downloaden"}
+                          </button>
+                        ) : (
+                          <div style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 12, color: C.muted, background: "#FAFBFC" }}>Geen CV geüpload</div>
+                        )}
+                      </div>
+                    </div>
 
                     {/* LinkedIn + notes row */}
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 16 }}>
