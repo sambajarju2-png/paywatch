@@ -89,7 +89,7 @@ export default function JobsPage() {
                   </span>
                 </div>
 
-                <p className="text-base font-extrabold text-[var(--blue)] mb-3">{job.salary}</p>
+                <p className="text-base font-extrabold text-[var(--blue)] mb-3">{job.salary[lang]}</p>
                 <p className="text-sm text-[var(--muted)] leading-relaxed mb-4">{job.description[lang]}</p>
 
                 <div className="flex flex-wrap gap-2 mb-4">

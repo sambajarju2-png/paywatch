@@ -70,7 +70,7 @@ export default function JobDetailPage() {
               {locLabels[job.location]}
             </span>
           </div>
-          <p className="text-2xl font-extrabold text-[var(--blue)] mb-4">{job.salary}</p>
+          <p className="text-2xl font-extrabold text-[var(--blue)] mb-4">{job.salary[lang]}</p>
           <p className="text-base text-[var(--text)] leading-relaxed">{job.longDescription[lang]}</p>
           <div className="mt-6">
             <a href="#apply" className="inline-flex rounded bg-[var(--blue)] px-6 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity">

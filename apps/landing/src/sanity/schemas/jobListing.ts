@@ -45,8 +45,12 @@ export default defineType({
     defineField({
       name: "salary",
       title: "Salary",
-      type: "string",
-      description: 'e.g. "€3.500 – €5.000/mo"',
+      type: "object",
+      fields: [
+        { name: "nl", title: "Nederlands", type: "string" },
+        { name: "en", title: "English", type: "string" },
+      ],
+      description: 'e.g. "In overleg" / "Let\'s talk"',
     }),
     defineField({
       name: "description",

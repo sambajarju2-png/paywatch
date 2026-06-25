@@ -214,7 +214,7 @@ export interface JobListing {
   department: { nl: string; en: string };
   seniority: "Junior" | "Mid" | "Senior";
   location: "remote" | "hybrid" | "office";
-  salary: string;
+  salary: { nl: string; en: string };
   description: { nl: string; en: string };
   longDescription: { nl: string; en: string };
   requirements: { nl: string[]; en: string[] };
@@ -229,7 +229,7 @@ export const jobListings: JobListing[] = [
     department: { nl: "Engineering", en: "Engineering" },
     seniority: "Senior",
     location: "remote",
-    salary: "In overleg",
+    salary: { nl: "In overleg", en: "Let's talk" },
     description: {
       nl: "Word onze founding developer. We bouwen de hele app opnieuw op, frontend en backend, en jij bepaalt hoe.",
       en: "Become our founding developer. We're rebuilding the whole app from scratch, frontend and backend, and you call the shots.",
@@ -293,7 +293,7 @@ export const jobListings: JobListing[] = [
     department: { nl: "Creative", en: "Creative" },
     seniority: "Mid",
     location: "remote",
-    salary: "In overleg",
+    salary: { nl: "In overleg", en: "Let's talk" },
     description: {
       nl: "PayWatch wordt een content-first bedrijf. Vertel ons verhaal in video, foto en design, op elk kanaal.",
       en: "PayWatch is becoming a content-first company. Tell our story in video, photo, and design, across every channel.",

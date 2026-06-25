@@ -18,7 +18,7 @@ export function generateJobPostingSchema(jobs: {
   longDescription: { nl: string; en: string };
   department: { nl: string; en: string };
   location: 'remote' | 'hybrid' | 'office';
-  salary: string;
+  salary: { nl: string; en: string };
   seniority: string;
 }[]) {
   return jobs.map((job) => ({
