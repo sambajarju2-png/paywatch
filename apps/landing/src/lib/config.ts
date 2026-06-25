@@ -222,6 +222,7 @@ export interface JobListing {
   perks: { nl: string[]; en: string[] };
 }
 
+// Job listings (salary is localized per language: { nl, en }).
 export const jobListings: JobListing[] = [
   {
     id: "founding-engineer",
