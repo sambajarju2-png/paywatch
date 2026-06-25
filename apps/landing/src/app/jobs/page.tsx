@@ -75,7 +75,7 @@ export default function JobsPage() {
                 <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
                   <div>
                     <h2 className="text-lg font-bold text-[var(--navy)]">{job.title[lang]}</h2>
-                    <p className="text-sm text-[var(--muted)] mt-0.5">{job.department[lang]} · {job.seniority}</p>
+                    <p className="text-sm text-[var(--muted)] mt-0.5">{job.department[lang]}</p>
                   </div>
                   <span
                     className="inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-semibold"

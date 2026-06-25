@@ -62,7 +62,7 @@ export default function JobDetailPage() {
           <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--navy)]">{job.title[lang]}</h1>
-              <p className="text-sm text-[var(--muted)] mt-1">{job.department[lang]} · {job.seniority}</p>
+              <p className="text-sm text-[var(--muted)] mt-1">{job.department[lang]}</p>
             </div>
             <span className="inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-semibold"
               style={{ color: locColors[job.location], background: `color-mix(in srgb, ${locColors[job.location]} 10%, transparent)` }}>
