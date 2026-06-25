@@ -236,8 +236,8 @@ export const jobListings: JobListing[] = [
       en: "Become our founding developer. We're rebuilding the whole app from scratch, frontend and backend, and you call the shots.",
     },
     longDescription: {
-      nl: "Je wordt onze founding developer, de technische kern van PayWatch. We hebben een live product, echte gebruikers en samenwerkingen met de overheid die al lopen. Het werkt. Nu willen we het geweldig maken. Jij leidt de rebuild en bent eigenaar van de hele stack, van begin tot eind. Dit is geen taakjes-uit-een-lijstje rol. Jij bouwt het fundament waar al het andere op staat. We werken snel en zoeken dingen gaandeweg uit. Eerlijk is eerlijk: we zijn een early-stage startup, dus budget is nog niet onze sterkste kant. We zijn flexibel in hoe we het regelen: salaris, freelance, equity of een mix. Vertel ons wat je nodig hebt en we komen er samen uit.",
-      en: "You'll be our founding developer, the technical core of PayWatch. We've got a live product, real users, and government partnerships already in motion. It works. Now we want to make it great. You'll lead the rebuild and own the whole stack, end to end. This isn't a pick-up-tickets job. You're building the foundation everything else stands on. We ship fast and figure things out as we go. Real talk: we're an early-stage startup so budget isn't our strong suit yet. But we're flexible on how we set it up: salary, freelance, equity, or a mix. Tell us what you need and we'll figure it out together.",
+      nl: "PayWatch is een fintech-startup met een missie, gevestigd in Rotterdam. We helpen Nederlandse huishoudens grip te houden op hun rekeningen en schulden voordat het uit de hand loopt, met AI-tools zoals PayBuddy, automatische bezwaarbrieven, e-mailscanning en veilige bankkoppeling. Echte technologie voor een echt probleem, met sociale impact aan beide kanten van de betaalketen. Je wordt onze founding developer, de technische kern van PayWatch. We hebben een live product, echte gebruikers en samenwerkingen met de overheid die al lopen. Het werkt. Nu willen we het geweldig maken. Jij leidt de rebuild en bent eigenaar van de hele stack, van begin tot eind. Dit is geen taakjes-uit-een-lijstje rol. Jij bouwt het fundament waar al het andere op staat. We werken snel en zoeken dingen gaandeweg uit. Eerlijk is eerlijk: we zijn een early-stage startup, dus budget is nog niet onze sterkste kant. We zijn flexibel in hoe we het regelen: salaris, freelance, equity of een mix. Vertel ons wat je nodig hebt en we komen er samen uit.",
+      en: "PayWatch is a mission-driven fintech startup based in Rotterdam. We help Dutch households stay on top of their bills and debts before things escalate, using AI tools like PayBuddy, automatic dispute letters, email scanning, and secure bank linking. Real tech for a real problem, with social impact on both sides of the payment chain. You'll be our founding developer, the technical core of PayWatch. We've got a live product, real users, and government partnerships already in motion. It works. Now we want to make it great. You'll lead the rebuild and own the whole stack, end to end. This isn't a pick-up-tickets job. You're building the foundation everything else stands on. We ship fast and figure things out as we go. Real talk: we're an early-stage startup so budget isn't our strong suit yet. But we're flexible on how we set it up: salary, freelance, equity, or a mix. Tell us what you need and we'll figure it out together.",
     },
     requirements: {
       nl: [
@@ -269,21 +269,21 @@ export const jobListings: JobListing[] = [
     },
     perks: {
       nl: [
-        "Remote binnen Europa",
+        "Freelance of salaris, wat voor jou werkt",
+        "Remote binnen Europa (kernteam in Rotterdam)",
         "Claude Max plan",
-        "De tools die je nodig hebt",
-        "Flexibele uren",
+        "De tools en hardware die je nodig hebt",
+        "Flexibele uren en volledige autonomie",
         "Equity op tafel",
-        "Volledige autonomie",
         "Klein team, goede vibe",
       ],
       en: [
-        "Remote within Europe",
+        "Freelance or salaried, whatever works for you",
+        "Remote within Europe (core team in Rotterdam)",
         "Claude Max plan",
-        "The tools you need",
-        "Flexible hours",
+        "The tools and hardware you need",
+        "Flexible hours and full autonomy",
         "Equity on the table",
-        "Full autonomy",
         "Small team, good vibes",
       ],
     },
@@ -300,8 +300,8 @@ export const jobListings: JobListing[] = [
       en: "PayWatch is becoming a content-first company. Tell our story in video, photo, and design, across every channel.",
     },
     longDescription: {
-      nl: "We bouwen een merk rond een missie die ertoe doet: huishoudens uit onnodige schulden houden. Jij bent de creatieve kracht die dat tot leven brengt, van productdemo's tot social content tot ons hele publieke gezicht. Eerlijk is eerlijk: we zijn een early-stage startup, dus budget is nog niet onze sterkste kant. We zijn flexibel in hoe we het regelen: salaris, freelance, equity of een mix. Vertel ons wat je nodig hebt en we komen er samen uit.",
-      en: "We're building a brand around a mission that matters: keeping households out of unnecessary debt. You'll be the creative force that brings it to life, from product demos to social content to our whole public face. Real talk: we're an early-stage startup so budget isn't our strong suit yet. But we're flexible on how we set it up: salary, freelance, equity, or a mix. Tell us what you need and we'll figure it out together.",
+      nl: "PayWatch is een fintech-startup met een missie, gevestigd in Rotterdam. We helpen Nederlandse huishoudens grip te houden op hun rekeningen en schulden voordat het uit de hand loopt, met AI-tools zoals PayBuddy, automatische bezwaarbrieven, e-mailscanning en veilige bankkoppeling. Echte technologie voor een echt probleem, met sociale impact aan beide kanten van de betaalketen. PayWatch wordt een content-first bedrijf en jij bent de creatieve kracht achter hoe de wereld ons ziet. Je vertelt ons verhaal in video, foto en design, van productdemo's tot social content tot ons hele publieke gezicht. Je plant en draait foto en video, knipt short-form content, ontwerpt assets zoals thumbnails, social posts, ads en infographics, en maakt complexe geldonderwerpen helder en menselijk. Je houdt onze brand consistent, kijkt naar wat werkt, experimenteert met nieuwe formats en brengt creatieve ideeën in bij campagnes en launches. Je werkt nauw samen met de founders aan storytelling en messaging. Eerlijk is eerlijk: we zijn een early-stage startup, dus budget is nog niet onze sterkste kant. We zijn flexibel in hoe we het regelen: salaris, freelance, equity of een mix. Vertel ons wat je nodig hebt en we komen er samen uit.",
+      en: "PayWatch is a mission-driven fintech startup based in Rotterdam. We help Dutch households stay on top of their bills and debts before things escalate, using AI tools like PayBuddy, automatic dispute letters, email scanning, and secure bank linking. Real tech for a real problem, with social impact on both sides of the payment chain. PayWatch is becoming a content-first company, and you'll be the creative force behind how the world sees us. You'll tell our story across video, photo, and design, from product demos to social content to our whole public face. You'll plan and shoot photo and video, cut short-form content, design assets like thumbnails, social posts, ads, and infographics, and turn complex money topics into clear, human visuals. You'll keep our brand consistent, look at what's working, experiment with new formats, and bring creative ideas to campaigns and launches. You'll work closely with the founders on storytelling and messaging. Real talk: we're an early-stage startup so budget isn't our strong suit yet. But we're flexible on how we set it up: salary, freelance, equity, or a mix. Tell us what you need and we'll figure it out together.",
     },
     requirements: {
       nl: [
@@ -310,6 +310,7 @@ export const jobListings: JobListing[] = [
         "Een portfolio met range: je kunt strak en je kunt scrappy",
         "Self-starter energie: je ziet een kans voor content en gaat ervoor",
         "Je snapt social media van nature, niet omdat een blog zei dat je 3x per week moet posten",
+        "Je maakt complexe of gevoelige geldonderwerpen toegankelijk en menselijk",
       ],
       en: [
         "Strong video editing skills (your tool of choice, we don't gatekeep software)",
@@ -317,6 +318,7 @@ export const jobListings: JobListing[] = [
         "A portfolio with range: you can do polished and you can do scrappy",
         "Self-starter energy: you spot a content opportunity and just go for it",
         "You get social media natively, not because a blog told you to post 3x a week",
+        "You can make complex or sensitive money topics approachable and human",
       ],
     },
     niceToHave: {
@@ -324,28 +326,32 @@ export const jobListings: JobListing[] = [
         "Motion design skills (echt een pro move)",
         "UI/UX design (Figma) om onze website en app opnieuw vorm te geven",
         "Een algemeen begrip van schulden en geldzorgen",
+        "Bekend met de Nederlandse markt of Nederlandstalige content",
         "Je hebt zelf een merk of publiek opgebouwd",
       ],
       en: [
         "Motion design skills (a real pro move)",
         "UI/UX design (Figma) to help redesign our website and app",
         "A general understanding of debt and money struggles",
+        "Familiar with the Dutch market or Dutch-language content",
         "You've built your own brand or audience before",
       ],
     },
     perks: {
       nl: [
-        "Remote binnen Europa",
+        "Freelance of salaris, wat voor jou werkt",
+        "Remote binnen Europa (kernteam in Rotterdam)",
         "Creatieve vrijheid",
-        "Flexibele uren",
+        "Flexibele uren en volledige autonomie",
         "Equity op tafel",
         "De tools die je nodig hebt",
         "Klein team, goede vibe",
       ],
       en: [
-        "Remote within Europe",
+        "Freelance or salaried, whatever works for you",
+        "Remote within Europe (core team in Rotterdam)",
         "Creative freedom",
-        "Flexible hours",
+        "Flexible hours and full autonomy",
         "Equity on the table",
         "The tools you need",
         "Small team, good vibes",
