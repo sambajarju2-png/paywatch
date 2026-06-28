@@ -33,7 +33,7 @@ const translations = {
       subtitle: "PayWatch verzamelt al je rekeningen op één plek en waarschuwt je voordat een betalingstermijn verloopt. Je ziet direct welke rekening vandaag je aandacht nodig heeft, zodat je incassokosten voor bent en altijd grip houdt op je budget.",
       cta: "Start gratis",
       secondary: "Bekijk functies",
-      trust: "Beschikbaar in 43+ gemeenten",
+      trust: "Beschikbaar in elke gemeente",
       voiceNote: "Inclusief spraakassistent",
     },
     trustBar: {
@@ -72,7 +72,7 @@ const translations = {
       subtitle: "Omdat niemand wakker zou moeten liggen van rekeningen.",
       stats: [
         { value: "€ 760", label: "gemiddeld bespaard aan incassokosten" },
-        { value: "43+", label: "gemeenten beschikbaar" },
+        { value: "Alle", label: "gemeenten beschikbaar" },
         { value: "2 min", label: "om je inbox te scannen" },
         { value: "100%", label: "gratis in beta" },
       ],
@@ -253,7 +253,7 @@ const translations = {
       subtitle: "PayWatch collects all your bills in one place and alerts you before a payment deadline passes. See which bill needs your attention today, so you stay ahead of collection costs and always keep grip on your budget.",
       cta: "Start free",
       secondary: "View features",
-      trust: "Available in 43+ municipalities",
+      trust: "Available in every municipality",
       voiceNote: "Voice assistant included",
     },
     trustBar: {
@@ -292,7 +292,7 @@ const translations = {
       subtitle: "Because nobody should lose sleep over bills.",
       stats: [
         { value: "€ 760", label: "average saved in collection costs" },
-        { value: "43+", label: "municipalities available" },
+        { value: "All", label: "municipalities available" },
         { value: "2 min", label: "to scan your inbox" },
         { value: "100%", label: "free in beta" },
       ],

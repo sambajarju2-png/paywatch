@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     default: "PayWatch — Grip op je rekeningen",
     template: "%s | PayWatch",
   },
-  description: "PayWatch scant je e-mail, herkent rekeningen, toont escalatiefases en helpt je handelen voordat het duurder wordt. Gratis beschikbaar in 43+ gemeenten.",
+  description: "PayWatch scant je e-mail, herkent rekeningen, toont escalatiefases en helpt je handelen voordat het duurder wordt. Gratis beschikbaar in elke gemeente in Nederland.",
   keywords: [
     "rekeningen bijhouden", "schulden tracker", "incassokosten besparen",
     "escalatie tracking", "bill tracker", "debt management", "Netherlands",
@@ -112,7 +112,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               applicationCategory: "FinanceApplication",
               operatingSystem: "Android, iOS, Windows, macOS",
               offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
-              description: "Huishoudelijke rekeningen tracker die je inbox scant, escalatiefases toont en je helpt incassokosten te voorkomen. Gratis beschikbaar in 335+ Nederlandse gemeenten.",
+              description: "Huishoudelijke rekeningen tracker die je inbox scant, escalatiefases toont en je helpt incassokosten te voorkomen. Gratis beschikbaar in elke Nederlandse gemeente.",
               inLanguage: ["nl", "en"],
               featureList: "Gmail scanning, Outlook scanning, Escalation tracking, AI draft letters, Cashflow forecast, Financial health score, Payment plans, Camera bill scan, Community feed",
               provider: { "@type": "Organization", name: "PayWatch", url: "https://paywatch.app" },

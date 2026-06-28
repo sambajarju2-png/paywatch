@@ -99,7 +99,7 @@ export default function NetherlandsMap() {
 
   const t = {
     title: isNl ? "Beschikbaar in jouw gemeente" : "Available in your municipality",
-    subtitle: isNl ? "PayWatch werkt in 335+ gemeenten door heel Nederland" : "PayWatch works in 335+ municipalities across the Netherlands",
+    subtitle: isNl ? "PayWatch werkt in elke gemeente in Nederland" : "PayWatch works in every municipality in the Netherlands",
     search: isNl ? "Zoek jouw gemeente..." : "Search your municipality...",
     available: isNl ? "beschikbaar" : "available",
     municipalities: isNl ? "Gemeenten" : "Municipalities",
@@ -211,7 +211,7 @@ export default function NetherlandsMap() {
         </svg>
 
         <div className="flex justify-center gap-8 sm:gap-12 pt-3 mt-2 border-t border-[var(--border)]">
-          {[{ v: "335+", l: t.municipalities }, { v: "100%", l: t.free }, { v: "24/7", l: t.always }].map((s) => (
+          {[{ v: isNl ? "Alle" : "All", l: t.municipalities }, { v: "100%", l: t.free }, { v: "24/7", l: t.always }].map((s) => (
             <div key={s.l} className="text-center">
               <p className="text-lg sm:text-xl font-extrabold text-[var(--blue)] tracking-tight">{s.v}</p>
               <p className="text-[10px] sm:text-xs text-[var(--muted)] mt-0.5">{s.l}</p>
